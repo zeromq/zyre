@@ -108,7 +108,6 @@ s_uuid_str (uuid_t uuid)
     return string;
 }
 
-
 //  Callback when we remove peer from agent->peers
 
 static void
@@ -130,7 +129,7 @@ typedef struct {
     zhash_t *peers;             //  Hash of known peers, fast lookup
 } agent_t;
 
-agent_t *
+static agent_t *
 agent_new (zctx_t *ctx, void *pipe)
 {
     agent_t *self = (agent_t *) zmalloc (sizeof (agent_t));
@@ -142,7 +141,7 @@ agent_new (zctx_t *ctx, void *pipe)
     return self;
 }
 
-void
+static void
 agent_destroy (agent_t **self_p)
 {
     assert (self_p);
@@ -157,7 +156,7 @@ agent_destroy (agent_t **self_p)
 
 //  Here we handle the different control messages from the front-end;
 
-int
+static int
 agent_control_message (agent_t *self)
 {
     //  Get the whole message off the pipe in one go
@@ -178,7 +177,7 @@ agent_control_message (agent_t *self)
 
 //  Handle beacon
 
-int
+static int
 agent_handle_beacon (agent_t *self)
 {
     uuid_t uuid;
@@ -207,7 +206,7 @@ agent_handle_beacon (agent_t *self)
 
 //  Reap peer if no signs of life by expiry time
 
-int
+static int
 agent_reap_peer (const char *key, void *item, void *argument)
 {
     agent_t *self = (agent_t *) argument;
@@ -223,7 +222,7 @@ agent_reap_peer (const char *key, void *item, void *argument)
 
 //  The agent handles API commands
 
-void
+static void
 zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
 {
     //  Create agent instance to pass around
