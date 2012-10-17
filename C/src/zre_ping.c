@@ -9,6 +9,7 @@ int main (int argc, char *argv [])
         if (!msg)
             break;              //  Interrupted
         zmsg_dump (msg);
+        zmsg_destroy (&msg);
     }
     zre_interface_destroy (&interface);
     return 0;

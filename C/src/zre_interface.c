@@ -92,6 +92,22 @@ zre_interface_recv (zre_interface_t *self)
 //  =====================================================================
 //  Asynchronous part, works in the background
 
+//  Beacon frame has this format:
+//
+//  Z R E       3 bytes
+//  version     1 byte, %x01
+//  UUID        16 bytes
+//  port        2 bytes in network order
+
+#define BEACON_PROTOCOL     "ZRE"
+#define BEACON_VERSION      0x01
+
+typedef struct {
+    byte protocol [3];
+    byte version;
+    uuid_t uuid;
+    uint16_t port;
+} beacon_t;
 
 //  Convert binary UUID to freshly allocated string
 
@@ -126,6 +142,8 @@ typedef struct {
     void *pipe;                 //  Pipe back to application
     zre_udp_t *udp;             //  UDP object
     uuid_t uuid;                //  Our UUID as binary blob
+    void *router;               //  Our router socket
+    int port;                   //  Our router port number
     zhash_t *peers;             //  Hash of known peers, fast lookup
 } agent_t;
 
@@ -136,6 +154,7 @@ agent_new (zctx_t *ctx, void *pipe)
     self->ctx = ctx;
     self->pipe = pipe;
     self->udp = zre_udp_new (PING_PORT_NUMBER);
+    self->router = zsocket_new (self->ctx, ZMQ_ROUTER);
     self->peers = zhash_new ();
     uuid_generate (self->uuid);
     return self;
@@ -175,24 +194,61 @@ agent_control_message (agent_t *self)
     return 0;
 }
 
+//  Send moar beacon
+
+static void
+agent_beacon_send (agent_t *self)
+{
+    //  Beacon object
+    beacon_t beacon;
+
+    //  Format beacon fields
+    beacon.protocol [0] = 'Z';
+    beacon.protocol [1] = 'R';
+    beacon.protocol [2] = 'E';
+    beacon.version = BEACON_VERSION;
+    memcpy (beacon.uuid, self->uuid, sizeof (uuid_t));
+    beacon.port = htons (self->port);
+
+    //  Broadcast the beacon to anyone who is listening
+    zre_udp_send (self->udp, (byte *) &beacon, sizeof (beacon_t));
+}
+
+
 //  Handle beacon
 
 static int
-agent_handle_beacon (agent_t *self)
+agent_beacon_recv (agent_t *self)
 {
-    uuid_t uuid;
-    ssize_t size = zre_udp_recv (self->udp, uuid, sizeof (uuid_t));
+    beacon_t beacon;
+    //  Get beacon frame from network
+    ssize_t size = zre_udp_recv (self->udp, (byte *) &beacon, sizeof (beacon_t));
+
+    //  Basic validation on the frame
+    if (size != sizeof (beacon_t)
+    ||  beacon.protocol [0] != 'Z'
+    ||  beacon.protocol [1] != 'R'
+    ||  beacon.protocol [2] != 'E'
+    ||  beacon.version != BEACON_VERSION)
+        return 0;               //  Ignore invalid beacons
 
     //  If we got a UUID and it's not our own beacon, we have a peer
-    if (size == sizeof (uuid_t)
-    &&  memcmp (uuid, self->uuid, sizeof (uuid))) {
-        char *uuid_str = s_uuid_str (uuid);
+    if (memcmp (beacon.uuid, self->uuid, sizeof (uuid_t))) {
+        char *uuid_str = s_uuid_str (beacon.uuid);
         //  Find or create peer via its UUID string
         zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, uuid_str);
         if (peer == NULL) {
-            peer = zre_peer_new (uuid, uuid_str);
+            //  Connect our router socket to peer
+            char *address = zre_udp_sender (self->udp);
+            int port = ntohs (beacon.port);
+            zsocket_connect (self->router, "tcp://%s:%d", address, port);
+            free (address);
+
+            //  Create new peer entity in hash table
+            peer = zre_peer_new (beacon.uuid, uuid_str);
             zhash_insert (self->peers, uuid_str, peer);
             zhash_freefn (self->peers, uuid_str, s_delete_peer);
+            
             //  Report peer joined the network
             zstr_sendm (self->pipe, "JOINED");
             zstr_send (self->pipe, uuid_str);
@@ -246,10 +302,10 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
             agent_control_message (self);
         
         if (pollitems [1].revents & ZMQ_POLLIN)
-            agent_handle_beacon (self);
+            agent_beacon_recv (self);
 
         if (zclock_time () >= ping_at) {
-            zre_udp_send (self->udp, self->uuid, sizeof (uuid_t));
+            agent_beacon_send (self);
             ping_at = zclock_time () + PING_INTERVAL;
         }
         //  Delete and report any expired peers

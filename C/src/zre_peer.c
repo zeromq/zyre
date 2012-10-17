@@ -35,7 +35,7 @@
 struct _zre_peer_t {
     uuid_t uuid;                //  Peer's UUID as binary blob
     char *uuid_str;             //  UUID as printable string
-    uint64_t expires_at;
+    uint64_t expires_at;        //  Peer expires at this time
 };
 
 

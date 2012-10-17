@@ -35,6 +35,7 @@ struct _zre_udp_t {
     int port_nbr;               //  UDP port number we work on
     struct sockaddr_in address;     //  Own address
     struct sockaddr_in broadcast;   //  Broadcast address
+    struct sockaddr_in sender;      //  Where last recv came from
 };
 
 //  Handle error from I/O operation
@@ -186,13 +187,21 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
 {
     assert (self);
     
-    struct sockaddr_in sockaddr;
     socklen_t si_len = sizeof (struct sockaddr_in);
 
-    ssize_t size = recvfrom (self->handle, buffer, length, 0, 
-                             (struct sockaddr *) &sockaddr, &si_len);
+    ssize_t size = recvfrom (self->handle,
+        buffer, length, 0, (struct sockaddr *) &self->sender, &si_len);
     if (size == -1)
         s_handle_io_error ("recvfrom");
 
     return size;
+}
+
+
+//  Return IP address of peer that sent last message
+//  Caller must free string when done with it.
+char *
+zre_udp_sender (zre_udp_t *self)
+{
+    return strdup (inet_ntoa (self->sender.sin_addr));
 }

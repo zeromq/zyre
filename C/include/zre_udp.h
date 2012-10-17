@@ -53,6 +53,10 @@ void
 ssize_t
     zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length);
 
+//  Return IP address of peer that sent last message
+char *
+    zre_udp_sender (zre_udp_t *self);
+    
 #ifdef __cplusplus
 }
 #endif
