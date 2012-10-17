@@ -79,9 +79,11 @@ zre_udp_new (int port_nbr)
                     SO_REUSEADDR, &on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_REUSEADDR)");
 
+#if defined (SO_REUSEPORT)
     if (setsockopt (self->handle, SOL_SOCKET,
                     SO_REUSEPORT, &on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_REUSEPORT)");
+#endif
 
     struct sockaddr_in sockaddr = { 0 };
     sockaddr.sin_family = AF_INET;
