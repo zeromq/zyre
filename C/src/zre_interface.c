@@ -155,6 +155,7 @@ agent_new (zctx_t *ctx, void *pipe)
     self->pipe = pipe;
     self->udp = zre_udp_new (PING_PORT_NUMBER);
     self->router = zsocket_new (self->ctx, ZMQ_ROUTER);
+    self->port = zsocket_bind (self->router, "tcp://*:*");
     self->peers = zhash_new ();
     uuid_generate (self->uuid);
     return self;
@@ -242,6 +243,7 @@ agent_beacon_recv (agent_t *self)
             char *address = zre_udp_sender (self->udp);
             int port = ntohs (beacon.port);
             zsocket_connect (self->router, "tcp://%s:%d", address, port);
+            printf ("Connecting to: %s:%d\n", address, port);
             free (address);
 
             //  Create new peer entity in hash table
