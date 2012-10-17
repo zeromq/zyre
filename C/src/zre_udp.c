@@ -1,3 +1,29 @@
+/*  =========================================================================
+    zre_udp - UDP management class
+
+    -------------------------------------------------------------------------
+    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright other contributors as noted in the AUTHORS file.
+
+    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
+    http://zyre.org.
+
+    This is free software; you can redistribute it and/or modify it under
+    the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or (at
+    your option) any later version.
+
+    This software is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>.
+    =========================================================================
+*/
+
 #include <czmq.h>
 #include "../include/zre.h"
 
@@ -9,6 +35,7 @@ struct _zre_udp_t {
     int port_nbr;               //  UDP port number we work on
     struct sockaddr_in address;     //  Own address
     struct sockaddr_in broadcast;   //  Broadcast address
+    struct sockaddr_in sender;      //  Where last recv came from
 };
 
 //  Handle error from I/O operation
@@ -79,9 +106,11 @@ zre_udp_new (int port_nbr)
                     SO_REUSEADDR, &on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_REUSEADDR)");
 
+#if defined (SO_REUSEPORT)
     if (setsockopt (self->handle, SOL_SOCKET,
                     SO_REUSEPORT, &on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_REUSEPORT)");
+#endif
 
     struct sockaddr_in sockaddr = { 0 };
     sockaddr.sin_family = AF_INET;
@@ -158,13 +187,21 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
 {
     assert (self);
     
-    struct sockaddr_in sockaddr;
     socklen_t si_len = sizeof (struct sockaddr_in);
 
-    ssize_t size = recvfrom (self->handle, buffer, length, 0, 
-                             (struct sockaddr *) &sockaddr, &si_len);
+    ssize_t size = recvfrom (self->handle,
+        buffer, length, 0, (struct sockaddr *) &self->sender, &si_len);
     if (size == -1)
         s_handle_io_error ("recvfrom");
 
     return size;
+}
+
+
+//  Return IP address of peer that sent last message
+//  Caller must free string when done with it.
+char *
+zre_udp_sender (zre_udp_t *self)
+{
+    return strdup (inet_ntoa (self->sender.sin_addr));
 }
