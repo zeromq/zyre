@@ -76,6 +76,7 @@ zre_interface_destroy (zre_interface_t **self_p)
     }
 }
 
+
 //  ---------------------------------------------------------------------
 //  Receive next message from interface
 //  Returns zmsg_t object, or NULL if interrupted
@@ -87,6 +88,20 @@ zre_interface_recv (zre_interface_t *self)
     zmsg_t *msg = zmsg_recv (self->pipe);
     return msg;
 }
+
+
+//  ---------------------------------------------------------------------
+//  Send message to single peer
+//  Destroys message after sending
+
+int
+zre_interface_send (zre_interface_t *self, zframe_t *peer, zmsg_t **msg_p)
+{
+    assert (self);
+    zmsg_destroy (msg_p);
+    return 0;
+}
+
 
 
 //  =====================================================================

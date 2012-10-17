@@ -45,6 +45,10 @@ void
 zmsg_t *
     zre_interface_recv (zre_interface_t *self);
 
+//  Destroys message after sending
+int
+    zre_interface_send (zre_interface_t *self, zframe_t *peer, zmsg_t **msg_p);
+    
 #ifdef __cplusplus
 }
 #endif
