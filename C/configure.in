@@ -217,9 +217,11 @@ AC_HEADER_TIME
 AC_TYPE_UINT32_T
 AC_C_VOLATILE
 
-
 # Math libraries
 AC_CHECK_LIB([m], [pow])
+
+# Other libraries
+AC_CHECK_LIB(uuid, uuid_generate)
 
 # These options are GNU compiler specific.
 if test "x$GCC" = "xyes"; then
