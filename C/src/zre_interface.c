@@ -1,13 +1,33 @@
-//  Interface class for Chapter 8
-//  This implements an "interface" to our network of nodes
+/*  =========================================================================
+    zre_interface - interface to a ZyRE network
+
+    -------------------------------------------------------------------------
+    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright other contributors as noted in the AUTHORS file.
+
+    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
+    http://zyre.org.
+
+    This is free software; you can redistribute it and/or modify it under
+    the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or (at
+    your option) any later version.
+
+    This software is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>.
+    =========================================================================
+*/
 
 #include <czmq.h>
 #include <uuid/uuid.h>
 #include "../include/zre.h"
 
-
-//  =====================================================================
-//  Synchronous part, works in our application thread
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
@@ -15,13 +35,18 @@
 struct _zre_interface_t {
     zctx_t *ctx;                //  Our context wrapper
     void *pipe;                 //  Pipe through to agent
-} ;
+};
+
+//  =====================================================================
+//  Synchronous part, works in our application thread
 
 //  This is the thread that handles our real interface class
 static void
     zre_interface_agent (void *args, zctx_t *ctx, void *pipe);
 
-//  Constructor and destructor for the interface class:
+    
+//  ---------------------------------------------------------------------
+//  Constructor
 
 zre_interface_t *
 zre_interface_new (void)
@@ -35,6 +60,10 @@ zre_interface_new (void)
     return self;
 }
 
+
+//  ---------------------------------------------------------------------
+//  Destructor
+
 void
 zre_interface_destroy (zre_interface_t **self_p)
 {
@@ -47,7 +76,8 @@ zre_interface_destroy (zre_interface_t **self_p)
     }
 }
 
-//  Wait for message from the interface
+//  ---------------------------------------------------------------------
+//  Receive next message from interface
 //  Returns zmsg_t object, or NULL if interrupted
 
 zmsg_t *
@@ -62,14 +92,10 @@ zre_interface_recv (zre_interface_t *self)
 //  =====================================================================
 //  Asynchronous part, works in the background
 
-#define PING_PORT_NUMBER 9999
-#define PING_INTERVAL    1000  //  Once per second
-#define PEER_EXPIRY      5000  //  Five seconds and it's gone
-
 
 //  Convert binary UUID to freshly allocated string
 
-char *
+static char *
 s_uuid_str (uuid_t uuid)
 {
     char hex_char [] = "0123456789ABCDEF";
@@ -82,73 +108,16 @@ s_uuid_str (uuid_t uuid)
     return string;
 }
 
-//  This structure defines each peer that we discover and track
 
-typedef struct {
-    uuid_t uuid;                //  Peer's UUID as binary blob
-    char *uuid_str;             //  UUID as printable string
-    uint64_t expires_at;
-} peer_t;
+//  Callback when we remove peer from agent->peers
 
-//  Construct new peer object
-
-peer_t *
-peer_new (uuid_t uuid)
+static void
+s_delete_peer (void *argument)
 {
-    peer_t *self = (peer_t *) zmalloc (sizeof (peer_t));
-    memcpy (self->uuid, uuid, sizeof (uuid_t));
-    self->uuid_str = s_uuid_str (self->uuid);
-    return self;
+    zre_peer_t *peer = (zre_peer_t *) argument;
+    zre_peer_destroy (&peer);
 }
 
-//  Destroy peer object
-
-void
-peer_destroy (peer_t **self_p)
-{
-    assert (self_p);
-    if (*self_p) {
-        peer_t *self = *self_p;
-        free (self->uuid_str);
-        free (self);
-        *self_p = NULL;
-    }
-}
-
-//  Return peer UUID blob
-
-byte *
-peer_uuid (peer_t *self)
-{
-    assert (self);
-    return self->uuid;
-}
-
-//  Return peer UUID string
-
-char *
-peer_uuid_str (peer_t *self)
-{
-    assert (self);
-    return self->uuid_str;
-}
-
-//  Peer hash calls this handler automatically whenever we delete
-//  peer from agent peers, or destroy that hash table.
-
-void
-peer_freefn (void *argument)
-{
-    peer_t *peer = (peer_t *) argument;
-    peer_destroy (&peer);
-}
-
-void
-peer_is_alive (peer_t *self)
-{
-    assert (self);
-    self->expires_at = zclock_time () + PEER_EXPIRY;
-}
 
 //  This structure holds the context for our agent, so we can
 //  pass that around cleanly to methods which need it
@@ -220,17 +189,17 @@ agent_handle_beacon (agent_t *self)
     &&  memcmp (uuid, self->uuid, sizeof (uuid))) {
         char *uuid_str = s_uuid_str (uuid);
         //  Find or create peer via its UUID string
-        peer_t *peer = (peer_t *) zhash_lookup (self->peers, uuid_str);
+        zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, uuid_str);
         if (peer == NULL) {
-            peer = peer_new (uuid);
+            peer = zre_peer_new (uuid, uuid_str);
             zhash_insert (self->peers, uuid_str, peer);
-            zhash_freefn (self->peers, uuid_str, peer_freefn);
+            zhash_freefn (self->peers, uuid_str, s_delete_peer);
             //  Report peer joined the network
             zstr_sendm (self->pipe, "JOINED");
             zstr_send (self->pipe, uuid_str);
         }
         //  Any activity from the peer means it's alive
-        peer_is_alive (peer);
+        zre_peer_is_alive (peer);
         free (uuid_str);
     }
     return 0;
@@ -242,12 +211,12 @@ int
 agent_reap_peer (const char *key, void *item, void *argument)
 {
     agent_t *self = (agent_t *) argument;
-    peer_t *peer = (peer_t *) item;
-    if (zclock_time () >= peer->expires_at) {
+    zre_peer_t *peer = (zre_peer_t *) item;
+    if (zclock_time () >= zre_peer_expires_at (peer)) {
         //  Report peer left the network
         zstr_sendm (self->pipe, "LEFT");
-        zstr_send (self->pipe, peer_uuid_str (peer));
-        zhash_delete (self->peers, peer_uuid_str (peer));
+        zstr_send (self->pipe, zre_peer_uuid_str (peer));
+        zhash_delete (self->peers, zre_peer_uuid_str (peer));
     }
     return 0;
 }

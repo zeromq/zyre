@@ -7,12 +7,13 @@ include_HEADERS = \
     ../include/zre.h
 
 libzre_la_SOURCES = \
-    zre_udp.c \
-    zre_interface.c
+    zre_interface.c \
+    zre_peer.c \
+    zre_udp.c 
 
 INCLUDES = -I$(top_srcdir)/include
-bin_PROGRAMS = zyre 
-zyre_LDADD = libzre.la
+bin_PROGRAMS = zre_ping
+zre_ping_LDADD = libzre.la
 
 if ON_MINGW
 libzre_la_LDFLAGS = -no-undefined -avoid-version -version-info @LTVER@

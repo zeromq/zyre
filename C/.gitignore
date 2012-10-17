@@ -25,10 +25,6 @@ src/stamp-h1
 *.lo
 *.la
 *.lst
-filemq
-track
 core
-fmq_selftest
-src/fmqroot/send/*
-src/fmqroot/recv/*
-src/fmqroot/logs/*
+zre_selftest
+zre_ping

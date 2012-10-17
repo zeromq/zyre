@@ -8,7 +8,7 @@ ZyRE comes from [Chapter 8 of the 0MQ Guide](http://zguide.zeromq.org/page:all#t
 
 * My kids are in the back seat during the road-trip, and they're playing a game, each on their tablets.
 
-* The car, a rental, streams music from my phone. The kids don't like the dubstep, so they play Gangnam Style.
+* The car, a rental, streams music from our phones. The kids don't like the dubstep, so they play Gangnam Style.
 
 * As I take pictures with my camera, I can review, delete, edit them immediately on my tablet.
 
@@ -16,11 +16,11 @@ ZyRE comes from [Chapter 8 of the 0MQ Guide](http://zguide.zeromq.org/page:all#t
 
 * In the hotel bar, my wife and I can monitor the kids sleeping, with a secure video stream from the hotel room.
 
-* After the trip I want to share the photos with my cousin, from my phone to his tablet.
+* After the trip I share the photos with my cousin, sending them from my phone to his tablet.
 
 * In the office, on Monday, I make an interactive presentation where everyone in the room can participate.
 
-* That evening at the game, we follow the shared photo feed and vote on the pictures we like best.
+* That evening at the game, we follow the shared photo feed and vote on the game pictures we like best.
 
 * My photos are automatically copied to my laptop, and via the hard cable connection to my cloud storage.
 
@@ -30,7 +30,7 @@ ZyRE will run on everything that speaks TCP/IP and has space for code. This mean
 
 ## Project Organization
 
-ZyRE is basically a protocol (ZRE) and a set of interoperable implementations in various languages, starting with C and Java. We've structured the project as a collection of implementations in different languages. All protocols are on the [0MQ protocol site](http://rfc.zeromq.org).
+ZyRE is a protocol (ZRE) plus a set of implementations. We've structured the project as a collection of interoperable implementations in different languages, starting with C and Java. All protocols are on the [0MQ protocol site](http://rfc.zeromq.org).
 
 ## Who owns ZyRE?
 
@@ -58,8 +58,6 @@ Whether we're connecting a roomful of mobile devices over WiFi, or a cluster of 
 
 * *Connectivity* - how do we actually connect one node to another? Do we use local networking, wide-area networking, or do we use a central message broker to do the forwarding?
 
-* *Security* - how do we protect the confidentiality of information, and make sure people are who they claim to be? Do we use a centralised trust network, or do we use use some kind of distributed key management?
-
 * *Point-to-point messaging* - how do we send a message from one node to another? Do we send this to the node's network address, or do we use some indirect addressing via a centralized message broker?
 
 * *Group messaging* - how do we send a message from one node to a group of others? Do we work via centralized message broker, or do we use a publish-subscribe model like 0MQ?
@@ -70,6 +68,8 @@ Whether we're connecting a roomful of mobile devices over WiFi, or a cluster of 
 
 * *Reliability* - how do we recover from network failures that cause messages to be dropped? Do we use a central message server with proper transactions, or do we allow nodes to recover from each other?
 
+* *Security* - how do we protect the confidentiality of information, and make sure people are who they claim to be? Do we use a centralised trust network, or do we use use some kind of distributed key management?
+
 * *Bridging* - how do we connect our networks across the Internet? Do we use the cloud as our central point for all messaging or do we create bridges that join groups to other groups?
 
 * *Logging* - how do we track what this cloud of nodes is doing so we can detect performance problems and failures? Do we create a centralized logging service, or do we allow every device to log the world around it?
@@ -77,3 +77,5 @@ Whether we're connecting a roomful of mobile devices over WiFi, or a cluster of 
 * *Simulation* - how do we simulate large numbers of nodes so we can test performance properly? Do we have to buy two dozen Android tablets, or can we use pure software simulation?
 
 If we can solve these dozen problems reasonably well, we get something like a framework for what I might call "Really Cool Distributed Applications", or as my grandkids call it, "the software our world runs on".
+
+-- Pieter Hintjens, "0MQ - The Guide", October 2012

@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre.h - ZyRE framework in C
+    zre_peer - peer to a ZyRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -24,28 +24,41 @@
     =========================================================================
 */
 
-#ifndef __ZRE_H_INCLUDED__
-#define __ZRE_H_INCLUDED__
+#ifndef __ZRE_PEER_H_INCLUDED__
+#define __ZRE_PEER_H_INCLUDED__
 
-#define ZRE_VERSION_MAJOR 1
-#define ZRE_VERSION_MINOR 0
-#define ZRE_VERSION_PATCH 0
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define ZRE_MAKE_VERSION(major, minor, patch) \
-    ((major) * 10000 + (minor) * 100 + (patch))
-#define ZRE_VERSION \
-    ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
+typedef struct _zre_peer_t zre_peer_t;
 
-//  Constants, to be configured/reviewed
+//  Constructor
+zre_peer_t *
+    zre_peer_new (uuid_t uuid, char *uuid_str);
 
-#define PING_PORT_NUMBER 9999
-#define PING_INTERVAL    1000  //  Once per second
-#define PEER_EXPIRY      5000  //  Five seconds and it's gone
+//  Destructor
+void
+    zre_peer_destroy (zre_peer_t **self_p);
 
-//  Classes in this stack
+//  Return peer UUID blob
+byte *
+    zre_peer_uuid (zre_peer_t *self);
+    
+//  Return peer UUID string
+char *
+    zre_peer_uuid_str (zre_peer_t *self);
+    
+//  Register activity at peer
+void
+    zre_peer_is_alive (zre_peer_t *self);
+    
+//  Return peer expiry time
+int64_t
+    zre_peer_expires_at (zre_peer_t *self);
 
-#include "zre_interface.h"
-#include "zre_peer.h"
-#include "zre_udp.h"
+#ifdef __cplusplus
+}
+#endif
 
 #endif
