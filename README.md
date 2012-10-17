@@ -60,11 +60,11 @@ Whether we're connecting a roomful of mobile devices over WiFi, or a cluster of 
 
 * *Security* - how do we protect the confidentiality of information, and make sure people are who they claim to be? Do we use a centralised trust network, or do we use use some kind of distributed key management?
 
-* *Unicast messaging* - how do we send a message from one node to another? Do we send this to the node's network address, or do we use some indirect addressing via a centralied message broker?
+* *Point-to-point messaging* - how do we send a message from one node to another? Do we send this to the node's network address, or do we use some indirect addressing via a centralized message broker?
 
-* *Multicast messaging* - how do we send a message from one node to a group of others? Do we work via centralized message broker, or do we use a publish-subscribe model like 0MQ?
+* *Group messaging* - how do we send a message from one node to a group of others? Do we work via centralized message broker, or do we use a publish-subscribe model like 0MQ?
 
-* *File transfer* - how do we send files from one node to another? Do we centralised protocols like FTP or HTTP, or do we use decentralized protocols like FILEMQ?
+* *File transfer* - how do we send files from one node to another? Do we use server-centric protocols like FTP or HTTP, or do we use decentralized protocols like FILEMQ?
 
 * *Event synchronization* - how do we ensure that many nodes receive the same unique stream of events? Do we send events via single central point, or do we use a distributed eventually consistent model?
 
