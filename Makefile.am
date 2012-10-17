@@ -1,0 +1,4 @@
+ACLOCAL_AMFLAGS = -I config
+
+SUBDIRS = src 
+DIST_SUBDIRS = src 
