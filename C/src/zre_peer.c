@@ -25,7 +25,6 @@
 */
 
 #include <czmq.h>
-#include <uuid/uuid.h>
 #include "../include/zre.h"
 
 
@@ -33,21 +32,41 @@
 //  Structure of our class
 
 struct _zre_peer_t {
-    uuid_t uuid;                //  Peer's UUID as binary blob
-    char *uuid_str;             //  UUID as printable string
-    uint64_t expires_at;        //  Peer expires at this time
+    zctx_t *ctx;                //  CZMQ context
+    void *mailbox;              //  Socket through to peer
+    char *identity;             //  Identity string
+    uint64_t evasive_at;        //  Peer is being evasive
+    uint64_t expired_at;        //  Peer has expired by now
+    bool connected;             //  Peer is ready for work
 };
+
+
+//  Callback when we remove peer from container
+
+static void
+s_delete_peer (void *argument)
+{
+    zre_peer_t *peer = (zre_peer_t *) argument;
+    zre_peer_destroy (&peer);
+}
 
 
 //  ---------------------------------------------------------------------
 //  Construct new peer object
 
 zre_peer_t *
-zre_peer_new (uuid_t uuid, char *uuid_str)
+zre_peer_new (zctx_t *ctx, char *identity, zhash_t *container)
 {
     zre_peer_t *self = (zre_peer_t *) zmalloc (sizeof (zre_peer_t));
-    memcpy (self->uuid, uuid, sizeof (uuid_t));
-    self->uuid_str = strdup (uuid_str);
+    self->ctx = ctx;
+    self->mailbox = zsocket_new (ctx, ZMQ_DEALER);
+    self->identity = strdup (identity);
+    
+    //  Insert into container if requested
+    if (container) {
+        zhash_insert (container, identity, self);
+        zhash_freefn (container, identity, s_delete_peer);
+    }
     return self;
 }
 
@@ -61,7 +80,7 @@ zre_peer_destroy (zre_peer_t **self_p)
     assert (self_p);
     if (*self_p) {
         zre_peer_t *self = *self_p;
-        free (self->uuid_str);
+        free (self->identity);
         free (self);
         *self_p = NULL;
     }
@@ -69,24 +88,50 @@ zre_peer_destroy (zre_peer_t **self_p)
 
 
 //  ---------------------------------------------------------------------
-//  Return peer UUID blob
+//  Connect peer mailbox
+//  Configures mailbox and connects to peer's router endpoint
 
-byte *
-zre_peer_uuid (zre_peer_t *self)
+void
+zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port)
 {
-    assert (self);
-    return self->uuid;
+    //  Not allowed to call if already connected
+    assert (!self->connected);
+
+    //  Set our caller 'From' identity so that receiving node
+    //  knows who each message came from.
+    zsocket_set_identity (self->mailbox, reply_to);
+
+    //  We'll use credit based flow control later, for now set a
+    //  low high-water mark to provoke blockage during tests
+    zsocket_set_sndhwm (self->mailbox, 10);
+
+    //  Connect through to peer node
+    printf ("DEALER connecting to: tcp://%s:%d\n", address, port);
+    zsocket_connect (self->mailbox, "tcp://%s:%d", address, port);
+
+    self->connected = true;
 }
 
 
 //  ---------------------------------------------------------------------
-//  Return peer UUID string
+//  Return peer connected status
 
-char *
-zre_peer_uuid_str (zre_peer_t *self)
+bool
+zre_peer_connected (zre_peer_t *self)
 {
     assert (self);
-    return self->uuid_str;
+    return self->connected;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Return peer identity string
+
+char *
+zre_peer_identity (zre_peer_t *self)
+{
+    assert (self);
+    return self->identity;
 }
 
 
@@ -94,18 +139,42 @@ zre_peer_uuid_str (zre_peer_t *self)
 //  Register activity at peer
 
 void
-zre_peer_is_alive (zre_peer_t *self)
+zre_peer_refresh (zre_peer_t *self)
 {
     assert (self);
-    self->expires_at = zclock_time () + PEER_EXPIRY;
+    self->evasive_at = zclock_time () + PEER_EVASIVE;
+    self->expired_at = zclock_time () + PEER_EXPIRED;
 }
 
+
 //  ---------------------------------------------------------------------
-//  Return peer expiry time
+//  Return peer future evasive time
 
 int64_t
-zre_peer_expires_at (zre_peer_t *self)
+zre_peer_evasive_at (zre_peer_t *self)
 {
     assert (self);
-    return self->expires_at;
+    return self->evasive_at;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Return peer future expired time
+
+int64_t
+zre_peer_expired_at (zre_peer_t *self)
+{
+    assert (self);
+    return self->expired_at;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Return peer mailbox
+
+void *
+zre_peer_mailbox (zre_peer_t *self)
+{
+    assert (self);
+    return self->mailbox;
 }

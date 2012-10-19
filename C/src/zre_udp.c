@@ -36,6 +36,8 @@ struct _zre_udp_t {
     struct sockaddr_in address;     //  Own address
     struct sockaddr_in broadcast;   //  Broadcast address
     struct sockaddr_in sender;      //  Where last recv came from
+    char *host;                 //  Our own address as string
+    char *from;                 //  Sender address of last message
 };
 
 //  Handle error from I/O operation
@@ -111,7 +113,8 @@ zre_udp_new (int port_nbr)
                     SO_REUSEPORT, &on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_REUSEPORT)");
 #endif
-
+    //  PROBLEM: this design will not survive the network interface being
+    //  killed and restarted while the program is running.
     struct sockaddr_in sockaddr = { 0 };
     sockaddr.sin_family = AF_INET;
     sockaddr.sin_port = htons (self->port_nbr);
@@ -134,6 +137,8 @@ zre_udp_new (int port_nbr)
         }
     }
     freeifaddrs (interfaces);
+    free (self->host);
+    self->host = strdup (inet_ntoa (self->address.sin_addr));
 #   else
 #       error "Interface detection TBD on this operating system"
 #   endif
@@ -151,12 +156,15 @@ zre_udp_destroy (zre_udp_t **self_p)
     if (*self_p) {
         zre_udp_t *self = *self_p;
         close (self->handle);
+        free (self->host);
+        free (self->from);
         free (self);
         *self_p = NULL;
     }
 }
 
 
+//  -----------------------------------------------------------------
 //  Returns UDP socket handle
 
 int
@@ -166,6 +174,8 @@ zre_udp_handle (zre_udp_t *self)
     return self->handle;
 }
 
+
+//  -----------------------------------------------------------------
 //  Send message using UDP broadcast
 
 void
@@ -179,6 +189,8 @@ zre_udp_send (zre_udp_t *self, byte *buffer, size_t length)
         s_handle_io_error ("sendto");
 }
 
+
+//  -----------------------------------------------------------------
 //  Receive message from UDP broadcast
 //  Returns size of received message, or -1
 
@@ -188,20 +200,36 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
     assert (self);
     
     socklen_t si_len = sizeof (struct sockaddr_in);
-
     ssize_t size = recvfrom (self->handle,
         buffer, length, 0, (struct sockaddr *) &self->sender, &si_len);
     if (size == -1)
         s_handle_io_error ("recvfrom");
 
+    //  Store sender address as printable string
+    free (self->from);
+    self->from = strdup (inet_ntoa (self->sender.sin_addr));
+    
     return size;
 }
 
 
-//  Return IP address of peer that sent last message
-//  Caller must free string when done with it.
+//  -----------------------------------------------------------------
+//  Return our own IP address as printable string
+
 char *
-zre_udp_sender (zre_udp_t *self)
+zre_udp_host (zre_udp_t *self)
 {
-    return strdup (inet_ntoa (self->sender.sin_addr));
+    assert (self);
+    return self->host;
+}
+
+
+//  -----------------------------------------------------------------
+//  Return IP address of peer that sent last message
+
+char *
+zre_udp_from (zre_udp_t *self)
+{
+    assert (self);
+    return self->from;
 }

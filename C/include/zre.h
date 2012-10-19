@@ -27,8 +27,8 @@
 #ifndef __ZRE_H_INCLUDED__
 #define __ZRE_H_INCLUDED__
 
-#define ZRE_VERSION_MAJOR 1
-#define ZRE_VERSION_MINOR 0
+#define ZRE_VERSION_MAJOR 0
+#define ZRE_VERSION_MINOR 1
 #define ZRE_VERSION_PATCH 0
 
 #define ZRE_MAKE_VERSION(major, minor, patch) \
@@ -40,11 +40,13 @@
 
 #define PING_PORT_NUMBER 9999
 #define PING_INTERVAL    1000  //  Once per second
-#define PEER_EXPIRY      5000  //  Five seconds and it's gone
+#define PEER_EVASIVE     3000  //  Three seconds' silence is evasive
+#define PEER_EXPIRED     5000  //  Five seconds' silence is expired
 
 //  Classes in this stack
 
 #include "zre_interface.h"
+#include "zre_msg.h"
 #include "zre_peer.h"
 #include "zre_udp.h"
 

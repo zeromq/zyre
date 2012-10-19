@@ -1,0 +1,114 @@
+/*  =========================================================================
+    zre_msg.h
+    
+    Generated codec header for zre_msg
+    -------------------------------------------------------------------------
+    Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
+    Copyright other contributors as noted in the AUTHORS file.              
+                                                                            
+    This file is part of FILEMQ, see http://filemq.org.                     
+                                                                            
+    This is free software; you can redistribute it and/or modify it under   
+    the terms of the GNU Lesser General Public License as published by the  
+    Free Software Foundation; either version 3 of the License, or (at your  
+    option) any later version.                                              
+                                                                            
+    This software is distributed in the hope that it will be useful, but    
+    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTA-   
+    BILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General  
+    Public License for more details.                                        
+                                                                            
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program. If not, see http://www.gnu.org/licenses/.      
+    =========================================================================
+*/
+
+#ifndef __ZRE_MSG_H_INCLUDED__
+#define __ZRE_MSG_H_INCLUDED__
+
+/*  These are the zre_msg messages
+
+    OHAI - The server sends a chunk of data
+        cookies       frame 
+
+    HUGZ - Peer sends a heartbeat
+        from          string 
+        port          number 
+
+    HUGZ_OK - Peer answers a heartbeat
+        from          string 
+        port          number 
+*/
+
+#define ZRE_MSG_VERSION                     1
+
+#define ZRE_MSG_OHAI                        1
+#define ZRE_MSG_HUGZ                        2
+#define ZRE_MSG_HUGZ_OK                     3
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+//  Opaque class structure
+typedef struct _zre_msg_t zre_msg_t;
+
+//  Create a new zre_msg
+zre_msg_t *
+    zre_msg_new (int id);
+
+//  Destroy the zre_msg
+void
+    zre_msg_destroy (zre_msg_t **self_p);
+
+//  Receive and parse a zre_msg from the socket
+zre_msg_t *
+    zre_msg_recv (void *socket);
+
+//  Send the zre_msg to the socket, and destroy it
+void
+    zre_msg_send (zre_msg_t **self_p, void *socket);
+
+//  Print contents of message to stdout
+void
+    zre_msg_dump (zre_msg_t *self);
+
+//  Get/set the message address
+zframe_t *
+    zre_msg_address (zre_msg_t *self);
+void
+    zre_msg_address_set (zre_msg_t *self, zframe_t *address);
+
+//  Get the zre_msg id
+int
+    zre_msg_id (zre_msg_t *self);
+void
+    zre_msg_id_set (zre_msg_t *self, int id);
+
+//  Get/set the cookies field
+zframe_t *
+    zre_msg_cookies (zre_msg_t *self);
+void
+    zre_msg_cookies_set (zre_msg_t *self, zframe_t *frame);
+
+//  Get/set the from field
+char *
+    zre_msg_from (zre_msg_t *self);
+void
+    zre_msg_from_set (zre_msg_t *self, char *format, ...);
+
+//  Get/set the port field
+int64_t
+    zre_msg_port (zre_msg_t *self);
+void
+    zre_msg_port_set (zre_msg_t *self, int64_t port);
+
+//  Self test of this class
+int
+    zre_msg_test (bool verbose);
+    
+#ifdef __cplusplus
+}
+#endif
+
+#endif

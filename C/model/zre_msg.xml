@@ -1,0 +1,25 @@
+<class name = "zre_msg" script = "codec_c.gsl">
+This is the ZRE protocol version 1.0
+<include filename = "license.xml" />
+
+<!-- Protocol version -->
+<define name = "VERSION" value = "1" />
+
+<message name = "OHAI" id = "1">
+The server sends a chunk of data
+    <field name = "cookies" type = "frame" />
+</message>
+
+<message name = "HUGZ" id = "2">
+    <field name = "from" type = "string" />
+    <field name = "port" type = "number" octets = "2" />
+Peer sends a heartbeat
+</message>
+
+<message name = "HUGZ-OK" id = "3">
+    <field name = "from" type = "string" />
+    <field name = "port" type = "number" octets = "2" />
+Peer answers a heartbeat
+</message>
+
+</class>

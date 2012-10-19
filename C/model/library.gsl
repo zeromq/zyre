@@ -1,0 +1,16 @@
+.#  Library functions
+.#
+.function resolve_includes ()
+    for class.include
+        if defined (include.filename)
+            my.include_file = class.load_file (filename)
+            if defined (my.include_file)
+                move my.include_file after include
+            else
+                preproc_error ("Error loading include file: $(filename): $(xml.error?)")
+            endif
+        else
+            echo "E: required attribute 'filename' not defined"
+        endif
+    endfor
+.endfunction
