@@ -35,27 +35,47 @@ typedef struct _zre_peer_t zre_peer_t;
 
 //  Constructor
 zre_peer_t *
-    zre_peer_new (uuid_t uuid, char *uuid_str);
+    zre_peer_new (zctx_t *ctx, char *identity, zhash_t *container);
 
 //  Destructor
 void
     zre_peer_destroy (zre_peer_t **self_p);
 
-//  Return peer UUID blob
-byte *
-    zre_peer_uuid (zre_peer_t *self);
-    
-//  Return peer UUID string
+//  Connect peer mailbox
+void
+    zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port);
+
+//  Return peer connected status
+bool
+    zre_peer_connected (zre_peer_t *self);
+
+//  Return peer identity string
 char *
-    zre_peer_uuid_str (zre_peer_t *self);
+    zre_peer_identity (zre_peer_t *self);
     
 //  Register activity at peer
 void
-    zre_peer_is_alive (zre_peer_t *self);
+    zre_peer_refresh (zre_peer_t *self);
     
-//  Return peer expiry time
+//  Return peer future evasive time
 int64_t
-    zre_peer_expires_at (zre_peer_t *self);
+    zre_peer_evasive_at (zre_peer_t *self);
+
+//  Return peer future expired time
+int64_t
+    zre_peer_expired_at (zre_peer_t *self);
+
+//  Return peer ready flag
+bool
+    zre_peer_ready (zre_peer_t *self);
+    
+//  Set peer ready flag
+bool
+    zre_peer_ready_set (zre_peer_t *self, bool ready);
+
+//  Return peer mailbox
+void *
+    zre_peer_mailbox (zre_peer_t *self);
 
 #ifdef __cplusplus
 }
