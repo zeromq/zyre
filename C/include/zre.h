@@ -27,8 +27,8 @@
 #ifndef __ZRE_H_INCLUDED__
 #define __ZRE_H_INCLUDED__
 
-#define ZRE_VERSION_MAJOR 1
-#define ZRE_VERSION_MINOR 0
+#define ZRE_VERSION_MAJOR 0
+#define ZRE_VERSION_MINOR 1
 #define ZRE_VERSION_PATCH 0
 
 #define ZRE_MAKE_VERSION(major, minor, patch) \
