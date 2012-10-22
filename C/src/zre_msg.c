@@ -33,9 +33,9 @@ struct _zre_msg_t {
     int id;                     //  zre_msg message ID
     byte *needle;               //  Read/write pointer for serialization
     byte *ceiling;              //  Valid upper limit for read pointer
-    zframe_t *cookies;
     char *from;
     int64_t port;
+    zframe_t *cookies;
 };
 
 //  --------------------------------------------------------------------------
@@ -144,8 +144,8 @@ zre_msg_destroy (zre_msg_t **self_p)
 
         //  Free class properties
         zframe_destroy (&self->address);
-        zframe_destroy (&self->cookies);
         free (self->from);
+        zframe_destroy (&self->cookies);
 
         //  Free object itself
         free (self);
@@ -188,6 +188,12 @@ zre_msg_recv (void *socket)
 
     switch (self->id) {
         case ZRE_MSG_OHAI:
+            free (self->from);
+            GET_STRING (self->from);
+            GET_NUMBER (self->port);
+            break;
+
+        case ZRE_MSG_NOM:
             //  Get next frame, leave current untouched
             if (!zsocket_rcvmore (socket))
                 goto malformed;
@@ -195,15 +201,9 @@ zre_msg_recv (void *socket)
             break;
 
         case ZRE_MSG_HUGZ:
-            free (self->from);
-            GET_STRING (self->from);
-            GET_NUMBER (self->port);
             break;
 
         case ZRE_MSG_HUGZ_OK:
-            free (self->from);
-            GET_STRING (self->from);
-            GET_NUMBER (self->port);
             break;
 
         default:
@@ -239,24 +239,21 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
     size_t frame_size = 1;
     switch (self->id) {
         case ZRE_MSG_OHAI:
+            //  from is a string with 1-byte length
+            frame_size++;       //  Size is one octet
+            if (self->from)
+                frame_size += strlen (self->from);
+            //  port is an 8-byte integer
+            frame_size += 8;
+            break;
+            
+        case ZRE_MSG_NOM:
             break;
             
         case ZRE_MSG_HUGZ:
-            //  from is a string with 1-byte length
-            frame_size++;       //  Size is one octet
-            if (self->from)
-                frame_size += strlen (self->from);
-            //  port is an 8-byte integer
-            frame_size += 8;
             break;
             
         case ZRE_MSG_HUGZ_OK:
-            //  from is a string with 1-byte length
-            frame_size++;       //  Size is one octet
-            if (self->from)
-                frame_size += strlen (self->from);
-            //  port is an 8-byte integer
-            frame_size += 8;
             break;
             
         default:
@@ -272,25 +269,22 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
 
     switch (self->id) {
         case ZRE_MSG_OHAI:
+            if (self->from) {
+                PUT_STRING (self->from);
+            }
+            else
+                PUT_OCTET (0);      //  Empty string
+            PUT_NUMBER (self->port);
+            break;
+            
+        case ZRE_MSG_NOM:
             frame_flags = ZFRAME_MORE;
             break;
             
         case ZRE_MSG_HUGZ:
-            if (self->from) {
-                PUT_STRING (self->from);
-            }
-            else
-                PUT_OCTET (0);      //  Empty string
-            PUT_NUMBER (self->port);
             break;
             
         case ZRE_MSG_HUGZ_OK:
-            if (self->from) {
-                PUT_STRING (self->from);
-            }
-            else
-                PUT_OCTET (0);      //  Empty string
-            PUT_NUMBER (self->port);
             break;
             
     }
@@ -304,7 +298,7 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
     
     //  Now send any frame fields, in order
     switch (self->id) {
-        case ZRE_MSG_OHAI:
+        case ZRE_MSG_NOM:
         //  If cookies isn't set, send an empty frame
         if (!self->cookies)
             self->cookies = zframe_new (NULL, 0);
@@ -327,6 +321,15 @@ zre_msg_dump (zre_msg_t *self)
     switch (self->id) {
         case ZRE_MSG_OHAI:
             puts ("OHAI:");
+            if (self->from)
+                printf ("    from='%s'\n", self->from);
+            else
+                printf ("    from=\n");
+            printf ("    port=%ld\n", (long) self->port);
+            break;
+            
+        case ZRE_MSG_NOM:
+            puts ("NOM:");
             printf ("    cookies={\n");
             if (self->cookies) {
                 size_t size = zframe_size (self->cookies);
@@ -346,20 +349,10 @@ zre_msg_dump (zre_msg_t *self)
             
         case ZRE_MSG_HUGZ:
             puts ("HUGZ:");
-            if (self->from)
-                printf ("    from='%s'\n", self->from);
-            else
-                printf ("    from=\n");
-            printf ("    port=%ld\n", (long) self->port);
             break;
             
         case ZRE_MSG_HUGZ_OK:
             puts ("HUGZ_OK:");
-            if (self->from)
-                printf ("    from='%s'\n", self->from);
-            else
-                printf ("    from=\n");
-            printf ("    port=%ld\n", (long) self->port);
             break;
             
     }
@@ -399,26 +392,6 @@ void
 zre_msg_id_set (zre_msg_t *self, int id)
 {
     self->id = id;
-}
-
-//  --------------------------------------------------------------------------
-//  Get/set the cookies field
-
-zframe_t *
-zre_msg_cookies (zre_msg_t *self)
-{
-    assert (self);
-    return self->cookies;
-}
-
-//  Takes ownership of supplied frame
-void
-zre_msg_cookies_set (zre_msg_t *self, zframe_t *frame)
-{
-    assert (self);
-    if (self->cookies)
-        zframe_destroy (&self->cookies);
-    self->cookies = frame;
 }
 
 //  --------------------------------------------------------------------------
@@ -464,6 +437,26 @@ zre_msg_port_set (zre_msg_t *self, int64_t port)
 }
 
 
+//  --------------------------------------------------------------------------
+//  Get/set the cookies field
+
+zframe_t *
+zre_msg_cookies (zre_msg_t *self)
+{
+    assert (self);
+    return self->cookies;
+}
+
+//  Takes ownership of supplied frame
+void
+zre_msg_cookies_set (zre_msg_t *self, zframe_t *frame)
+{
+    assert (self);
+    if (self->cookies)
+        zframe_destroy (&self->cookies);
+    self->cookies = frame;
+}
+
 
 //  --------------------------------------------------------------------------
 //  Selftest
@@ -492,6 +485,17 @@ zre_msg_test (bool verbose)
     //  Encode/send/decode and verify each message type
 
     self = zre_msg_new (ZRE_MSG_OHAI);
+    zre_msg_from_set (self, "Life is short but Now lasts for ever");
+    zre_msg_port_set (self, 12345678);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (streq (zre_msg_from (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_port (self) == 12345678);
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_NOM);
     zre_msg_cookies_set (self, zframe_new ("Captcha Diem", 12));
     zre_msg_send (&self, output);
     
@@ -501,25 +505,17 @@ zre_msg_test (bool verbose)
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_HUGZ);
-    zre_msg_from_set (self, "Life is short but Now lasts for ever");
-    zre_msg_port_set (self, 12345678);
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (streq (zre_msg_from (self), "Life is short but Now lasts for ever"));
-    assert (zre_msg_port (self) == 12345678);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_HUGZ_OK);
-    zre_msg_from_set (self, "Life is short but Now lasts for ever");
-    zre_msg_port_set (self, 12345678);
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (streq (zre_msg_from (self), "Life is short but Now lasts for ever"));
-    assert (zre_msg_port (self) == 12345678);
     zre_msg_destroy (&self);
 
     zctx_destroy (&ctx);
