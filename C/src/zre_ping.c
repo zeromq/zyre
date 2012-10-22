@@ -11,7 +11,7 @@ int main (int argc, char *argv [])
 
         //  If new peer, say hello to it and wait for it to answer us
         char *event = zmsg_popstr (incoming);
-        if (streq (event, "READY")) {
+        if (streq (event, "JOINED")) {
             char *peer = zmsg_popstr (incoming);
             printf ("I: [%s] new peer\n", peer);
             zmsg_t *outgoing = zmsg_new ();
@@ -23,11 +23,11 @@ int main (int argc, char *argv [])
         else
         if (streq (event, "FROM")) {
             char *peer = zmsg_popstr (incoming);
-            printf ("I: [%s] received OHAI\n", peer);
+            printf ("I: [%s] received cookies\n", peer);
             free (peer);
         }
         else
-        if (streq (event, "EXPIRED")) {
+        if (streq (event, "LEFT")) {
             char *peer = zmsg_popstr (incoming);
             printf ("I: [%s] peer expired\n", peer);
             free (peer);

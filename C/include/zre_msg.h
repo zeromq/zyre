@@ -28,23 +28,24 @@
 
 /*  These are the zre_msg messages
 
-    OHAI - The server sends a chunk of data
+    OHAI - Say hello to a peer so it connect back to us
+        from          string 
+        port          number 
+
+    NOM - Send a message to a peer
         cookies       frame 
 
-    HUGZ - Peer sends a heartbeat
-        from          string 
-        port          number 
+    HUGZ - Send a heartbeat to a peer
 
-    HUGZ_OK - Peer answers a heartbeat
-        from          string 
-        port          number 
+    HUGZ_OK - Reply to a peer's heartbeat
 */
 
 #define ZRE_MSG_VERSION                     1
 
 #define ZRE_MSG_OHAI                        1
-#define ZRE_MSG_HUGZ                        2
-#define ZRE_MSG_HUGZ_OK                     3
+#define ZRE_MSG_NOM                         2
+#define ZRE_MSG_HUGZ                        3
+#define ZRE_MSG_HUGZ_OK                     4
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,12 +86,6 @@ int
 void
     zre_msg_id_set (zre_msg_t *self, int id);
 
-//  Get/set the cookies field
-zframe_t *
-    zre_msg_cookies (zre_msg_t *self);
-void
-    zre_msg_cookies_set (zre_msg_t *self, zframe_t *frame);
-
 //  Get/set the from field
 char *
     zre_msg_from (zre_msg_t *self);
@@ -102,6 +97,12 @@ int64_t
     zre_msg_port (zre_msg_t *self);
 void
     zre_msg_port_set (zre_msg_t *self, int64_t port);
+
+//  Get/set the cookies field
+zframe_t *
+    zre_msg_cookies (zre_msg_t *self);
+void
+    zre_msg_cookies_set (zre_msg_t *self, zframe_t *frame);
 
 //  Self test of this class
 int
