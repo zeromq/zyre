@@ -35,7 +35,7 @@ typedef struct _zre_peer_t zre_peer_t;
 
 //  Constructor
 zre_peer_t *
-    zre_peer_new (zctx_t *ctx, char *identity, zhash_t *container);
+    zre_peer_new (char *identity, zhash_t *container, zctx_t *ctx);
 
 //  Destructor
 void
@@ -48,6 +48,10 @@ void
 //  Return peer connected status
 bool
     zre_peer_connected (zre_peer_t *self);
+
+//  Send message to peer
+void
+    zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p);
 
 //  Return peer identity string
 char *
@@ -73,9 +77,13 @@ bool
 bool
     zre_peer_ready_set (zre_peer_t *self, bool ready);
 
-//  Return peer mailbox
-void *
-    zre_peer_mailbox (zre_peer_t *self);
+//  Update peer status
+void
+    zre_peer_status_bump (zre_peer_t *self);
+
+//  Return peer status
+byte
+    zre_peer_status (zre_peer_t *self);
 
 #ifdef __cplusplus
 }

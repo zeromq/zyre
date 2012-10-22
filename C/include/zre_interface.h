@@ -41,13 +41,25 @@ zre_interface_t *
 void
     zre_interface_destroy (zre_interface_t **self_p);
 
+//  Join a group
+int
+    zre_interface_join (zre_interface_t *self, const char *group);
+    
+//  Leave a group
+int
+    zre_interface_leave (zre_interface_t *self, const char *group);
+
 //  Receive next message from interface
 zmsg_t *
     zre_interface_recv (zre_interface_t *self);
 
-//  Destroys message after sending
+//  Send message to single peer; peer ID is first frame in message
 int
-    zre_interface_sendto (zre_interface_t *self, zmsg_t **msg_p);
+    zre_interface_whisper (zre_interface_t *self, zmsg_t **msg_p);
+    
+//  Send message to a group of peers
+int
+    zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p);
     
 #ifdef __cplusplus
 }

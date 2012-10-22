@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre.h - ZyRE framework in C
+    zre_group - group known to this node
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -24,31 +24,37 @@
     =========================================================================
 */
 
-#ifndef __ZRE_H_INCLUDED__
-#define __ZRE_H_INCLUDED__
+#ifndef __ZRE_GROUP_H_INCLUDED__
+#define __ZRE_GROUP_H_INCLUDED__
 
-#define ZRE_VERSION_MAJOR 0
-#define ZRE_VERSION_MINOR 1
-#define ZRE_VERSION_PATCH 0
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define ZRE_MAKE_VERSION(major, minor, patch) \
-    ((major) * 10000 + (minor) * 100 + (patch))
-#define ZRE_VERSION \
-    ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
+typedef struct _zre_group_t zre_group_t;
 
-//  Constants, to be configured/reviewed
+//  Constructor
+zre_group_t *
+    zre_group_new (char *name, zhash_t *container);
 
-#define PING_PORT_NUMBER 9999
-#define PING_INTERVAL    1000  //  Once per second
-#define PEER_EVASIVE     3000  //  Three seconds' silence is evasive
-#define PEER_EXPIRED     5000  //  Five seconds' silence is expired
+//  Destructor
+void
+    zre_group_destroy (zre_group_t **self_p);
 
-//  Classes in this stack
+//  Add peer to group
+void
+    zre_group_join (zre_group_t *self, zre_peer_t *peer);
 
-#include "zre_udp.h"
-#include "zre_msg.h"
-#include "zre_peer.h"
-#include "zre_group.h"
-#include "zre_interface.h"
+//  Remove peer from group
+void
+    zre_group_leave (zre_group_t *self, zre_peer_t *peer);
+
+//  Send message to all peers in group
+void
+    zre_group_send (zre_group_t *self, zre_msg_t **msg_p);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
