@@ -227,11 +227,8 @@ zre_peer_t *
 s_require_peer (agent_t *self, char *identity, char *address, int port)
 {
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
-    if (peer == NULL)
+    if (peer == NULL) {
         peer = zre_peer_new (self->ctx, identity, self->peers);
-
-    //  Connect peer opportunistically
-    if (!zre_peer_connected (peer) && address) {
         zre_peer_connect (peer, self->identity, address, port);
 
         //  Handshake discovery by sending OHAI as first message
@@ -240,14 +237,10 @@ s_require_peer (agent_t *self, char *identity, char *address, int port)
         zre_msg_port_set (msg, self->port);
         zre_msg_send (&msg, zre_peer_mailbox (peer));
 
-        //  Now tell the caller about the peer; it's safe to send
-        //  messages to it.
+        //  Now tell the caller about the peer
         zstr_sendm (self->pipe, "JOINED");
         zstr_send (self->pipe, identity);
     }
-    //  Any activity from the peer means it's alive
-    zre_peer_refresh (peer);
-    return peer;
 }
 
 
@@ -261,26 +254,25 @@ agent_recv_from_peer (agent_t *self)
     char *identity = zframe_strdup (zre_msg_address (msg));
     
     //  On OHAI we can connect back to peer if needed
-    if (zre_msg_id (msg) == ZRE_MSG_OHAI) {
-        zre_peer_t *peer = s_require_peer (
-            self, identity, zre_msg_from (msg), zre_msg_port (msg));
-    }
-    else {
-        //  We may create peer in non-connected state
-        zre_peer_t *peer = s_require_peer (self, identity, NULL, 0);
-        assert (zre_peer_connected (peer));
+    if (zre_msg_id (msg) == ZRE_MSG_OHAI)
+        s_require_peer (self, identity,
+            zre_msg_from (msg), zre_msg_port (msg));
+
+    //  Peer must exist by now or our code is wrong
+    zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
+    assert (peer);
+    zre_peer_refresh (peer);
         
-        if (zre_msg_id (msg) == ZRE_MSG_NOM) {
-            //  Pass up to caller API as RECVFROM event
-            zstr_sendm (self->pipe, "FROM");
-            zstr_sendm (self->pipe, identity);
-            zstr_send (self->pipe, "Cookies");
-        }
-        else
-        if (zre_msg_id (msg) == ZRE_MSG_HUGZ) {
-            zre_msg_t *msg = zre_msg_new (ZRE_MSG_HUGZ_OK);
-            zre_msg_send (&msg, zre_peer_mailbox (peer));
-        }
+    if (zre_msg_id (msg) == ZRE_MSG_NOM) {
+        //  Pass up to caller API as RECVFROM event
+        zstr_sendm (self->pipe, "FROM");
+        zstr_sendm (self->pipe, identity);
+        zstr_send (self->pipe, "Cookies");
+    }
+    else
+    if (zre_msg_id (msg) == ZRE_MSG_HUGZ) {
+        zre_msg_t *msg = zre_msg_new (ZRE_MSG_HUGZ_OK);
+        zre_msg_send (&msg, zre_peer_mailbox (peer));
     }
     free (identity);
     zre_msg_destroy (&msg);
@@ -328,8 +320,8 @@ agent_recv_udp_beacon (agent_t *self)
     //  If we got a UUID and it's not our own beacon, we have a peer
     if (memcmp (beacon.uuid, self->uuid, sizeof (uuid_t))) {
         char *identity = s_uuid_str (beacon.uuid);
-        zre_peer_t *peer = s_require_peer (
-            self, identity, zre_udp_from (self->udp), ntohs (beacon.port));
+        s_require_peer (self, identity,
+            zre_udp_from (self->udp), ntohs (beacon.port));
         free (identity);
     }
     return 0;
