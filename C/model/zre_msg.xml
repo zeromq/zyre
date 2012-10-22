@@ -6,20 +6,22 @@ This is the ZRE protocol version 1.0
 <define name = "VERSION" value = "1" />
 
 <message name = "OHAI" id = "1">
-The server sends a chunk of data
+    <field name = "from" type = "string" />
+    <field name = "port" type = "number" octets = "2" />
+Say hello to a peer so it connect back to us
+</message>
+
+<message name = "NOM" id = "2">
     <field name = "cookies" type = "frame" />
+Send a message to a peer
 </message>
 
-<message name = "HUGZ" id = "2">
-    <field name = "from" type = "string" />
-    <field name = "port" type = "number" octets = "2" />
-Peer sends a heartbeat
+<message name = "HUGZ" id = "3">
+Send a heartbeat to a peer
 </message>
 
-<message name = "HUGZ-OK" id = "3">
-    <field name = "from" type = "string" />
-    <field name = "port" type = "number" octets = "2" />
-Peer answers a heartbeat
+<message name = "HUGZ-OK" id = "4">
+Reply to a peer's heartbeat
 </message>
 
 </class>
