@@ -241,6 +241,7 @@ s_require_peer (agent_t *self, char *identity, char *address, int port)
         zstr_sendm (self->pipe, "JOINED");
         zstr_send (self->pipe, identity);
     }
+    return peer;
 }
 
 
