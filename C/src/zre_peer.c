@@ -38,6 +38,7 @@ struct _zre_peer_t {
     uint64_t evasive_at;        //  Peer is being evasive
     uint64_t expired_at;        //  Peer has expired by now
     bool connected;             //  Peer is ready for work
+    byte status;                //  Our status counter
 };
 
 
@@ -55,7 +56,7 @@ s_delete_peer (void *argument)
 //  Construct new peer object
 
 zre_peer_t *
-zre_peer_new (zctx_t *ctx, char *identity, zhash_t *container)
+zre_peer_new (char *identity, zhash_t *container, zctx_t *ctx)
 {
     zre_peer_t *self = (zre_peer_t *) zmalloc (sizeof (zre_peer_t));
     self->ctx = ctx;
@@ -125,6 +126,17 @@ zre_peer_connected (zre_peer_t *self)
 
 
 //  ---------------------------------------------------------------------
+//  Send message to peer
+
+void
+zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
+{
+    assert (self);
+    zre_msg_send (msg_p, self->mailbox);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Return peer identity string
 
 char *
@@ -170,11 +182,25 @@ zre_peer_expired_at (zre_peer_t *self)
 
 
 //  ---------------------------------------------------------------------
-//  Return peer mailbox
+//  Update peer status
+//  This gives us a state change count for the peer, which we can
+//  check against its claimed status, to detect message loss.
 
-void *
-zre_peer_mailbox (zre_peer_t *self)
+void
+zre_peer_status_bump (zre_peer_t *self)
 {
     assert (self);
-    return self->mailbox;
+    self->status++;
 }
+
+
+//  ---------------------------------------------------------------------
+//  Return peer cycle
+
+byte
+zre_peer_status (zre_peer_t *self)
+{
+    assert (self);
+    return self->status;
+}
+

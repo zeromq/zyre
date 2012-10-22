@@ -11,13 +11,19 @@ int main (int argc, char *argv [])
 
         //  If new peer, say hello to it and wait for it to answer us
         char *event = zmsg_popstr (incoming);
-        if (streq (event, "JOINED")) {
+        if (streq (event, "ENTER")) {
             char *peer = zmsg_popstr (incoming);
-            printf ("I: [%s] new peer\n", peer);
+            printf ("I: [%s] peer entered\n", peer);
             zmsg_t *outgoing = zmsg_new ();
             zmsg_addstr (outgoing, peer);
             zmsg_addstr (outgoing, "Hello");
-            zre_interface_sendto (interface, &outgoing);
+            zre_interface_whisper (interface, &outgoing);
+            free (peer);
+        }
+        else
+        if (streq (event, "EXIT")) {
+            char *peer = zmsg_popstr (incoming);
+            printf ("I: [%s] peer exited\n", peer);
             free (peer);
         }
         else
@@ -25,12 +31,14 @@ int main (int argc, char *argv [])
             char *peer = zmsg_popstr (incoming);
             printf ("I: [%s] received cookies\n", peer);
             free (peer);
-        }
-        else
-        if (streq (event, "LEFT")) {
-            char *peer = zmsg_popstr (incoming);
-            printf ("I: [%s] peer expired\n", peer);
-            free (peer);
+            zre_interface_join (interface, "GLOBAL");
+            zre_interface_join (interface, "MASHUP");
+            zre_interface_join (interface, "CANVAS");
+            zre_interface_join (interface, "ZEROMQ");
+            zre_interface_leave (interface, "GLOBAL");
+            zre_interface_leave (interface, "MASHUP");
+            zre_interface_leave (interface, "CANVAS");
+            zre_interface_leave (interface, "ZEROMQ");
         }
         free (event);
         zmsg_destroy (&incoming);

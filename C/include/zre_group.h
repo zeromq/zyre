@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_peer - peer to a ZyRE network
+    zre_group - group known to this node
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -24,58 +24,34 @@
     =========================================================================
 */
 
-#ifndef __ZRE_PEER_H_INCLUDED__
-#define __ZRE_PEER_H_INCLUDED__
+#ifndef __ZRE_GROUP_H_INCLUDED__
+#define __ZRE_GROUP_H_INCLUDED__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _zre_peer_t zre_peer_t;
+typedef struct _zre_group_t zre_group_t;
 
 //  Constructor
-zre_peer_t *
-    zre_peer_new (zctx_t *ctx, char *identity, zhash_t *container);
+zre_group_t *
+    zre_group_new (char *name, zhash_t *container);
 
 //  Destructor
 void
-    zre_peer_destroy (zre_peer_t **self_p);
+    zre_group_destroy (zre_group_t **self_p);
 
-//  Connect peer mailbox
+//  Add peer to group
 void
-    zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port);
+    zre_group_join (zre_group_t *self, zre_peer_t *peer);
 
-//  Return peer connected status
-bool
-    zre_peer_connected (zre_peer_t *self);
-
-//  Return peer identity string
-char *
-    zre_peer_identity (zre_peer_t *self);
-    
-//  Register activity at peer
+//  Remove peer from group
 void
-    zre_peer_refresh (zre_peer_t *self);
-    
-//  Return peer future evasive time
-int64_t
-    zre_peer_evasive_at (zre_peer_t *self);
+    zre_group_leave (zre_group_t *self, zre_peer_t *peer);
 
-//  Return peer future expired time
-int64_t
-    zre_peer_expired_at (zre_peer_t *self);
-
-//  Return peer ready flag
-bool
-    zre_peer_ready (zre_peer_t *self);
-    
-//  Set peer ready flag
-bool
-    zre_peer_ready_set (zre_peer_t *self, bool ready);
-
-//  Return peer mailbox
-void *
-    zre_peer_mailbox (zre_peer_t *self);
+//  Send message to all peers in group
+void
+    zre_group_send (zre_group_t *self, zre_msg_t **msg_p);
 
 #ifdef __cplusplus
 }

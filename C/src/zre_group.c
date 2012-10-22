@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_peer - one of our peers in a ZyRE network
+    zre_group - one of our groups in a ZyRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -31,56 +31,52 @@
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_peer_t {
-    zctx_t *ctx;                //  CZMQ context
-    void *mailbox;              //  Socket through to peer
-    char *identity;             //  Identity string
-    uint64_t evasive_at;        //  Peer is being evasive
-    uint64_t expired_at;        //  Peer has expired by now
-    bool connected;             //  Peer is ready for work
+struct _zre_group_t {
+    char *name;                 //  Group name
+    zhash_t *peers;             //  Peers in group
 };
 
 
-//  Callback when we remove peer from container
+//  Callback when we remove group from container
 
 static void
-s_delete_peer (void *argument)
+s_delete_group (void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) argument;
-    zre_peer_destroy (&peer);
+    zre_group_t *group = (zre_group_t *) argument;
+    zre_group_destroy (&group);
 }
 
 
 //  ---------------------------------------------------------------------
-//  Construct new peer object
+//  Construct new group object
 
-zre_peer_t *
-zre_peer_new (zctx_t *ctx, char *identity, zhash_t *container)
+zre_group_t *
+zre_group_new (char *name, zhash_t *container)
 {
-    zre_peer_t *self = (zre_peer_t *) zmalloc (sizeof (zre_peer_t));
-    self->ctx = ctx;
-    self->mailbox = zsocket_new (ctx, ZMQ_DEALER);
-    self->identity = strdup (identity);
+    zre_group_t *self = (zre_group_t *) zmalloc (sizeof (zre_group_t));
+    self->name = strdup (name);
+    self->peers = zhash_new ();
     
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, identity, self);
-        zhash_freefn (container, identity, s_delete_peer);
+        zhash_insert (container, name, self);
+        zhash_freefn (container, name, s_delete_group);
     }
     return self;
 }
 
 
 //  ---------------------------------------------------------------------
-//  Destroy peer object
+//  Destroy group object
 
 void
-zre_peer_destroy (zre_peer_t **self_p)
+zre_group_destroy (zre_group_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
-        zre_peer_t *self = *self_p;
-        free (self->identity);
+        zre_group_t *self = *self_p;
+        zhash_destroy (&self->peers);
+        free (self->name);
         free (self);
         *self_p = NULL;
     }
@@ -88,93 +84,48 @@ zre_peer_destroy (zre_peer_t **self_p)
 
 
 //  ---------------------------------------------------------------------
-//  Connect peer mailbox
-//  Configures mailbox and connects to peer's router endpoint
+//  Add peer to group
+//  Ignore duplicate joins
 
 void
-zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port)
-{
-    //  Not allowed to call if already connected
-    assert (!self->connected);
-
-    //  Set our caller 'From' identity so that receiving node
-    //  knows who each message came from.
-    zsocket_set_identity (self->mailbox, reply_to);
-
-    //  We'll use credit based flow control later, for now set a
-    //  low high-water mark to provoke blockage during tests
-    zsocket_set_sndhwm (self->mailbox, 10);
-
-    //  Connect through to peer node
-    printf ("DEALER connecting to: tcp://%s:%d\n", address, port);
-    zsocket_connect (self->mailbox, "tcp://%s:%d", address, port);
-
-    self->connected = true;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Return peer connected status
-
-bool
-zre_peer_connected (zre_peer_t *self)
+zre_group_join (zre_group_t *self, zre_peer_t *peer)
 {
     assert (self);
-    return self->connected;
+    assert (peer);
+    zhash_insert (self->peers, zre_peer_identity (peer), peer);
+    zre_peer_status_bump (peer);
 }
 
 
 //  ---------------------------------------------------------------------
-//  Return peer identity string
-
-char *
-zre_peer_identity (zre_peer_t *self)
-{
-    assert (self);
-    return self->identity;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Register activity at peer
+//  Remove peer from group
 
 void
-zre_peer_refresh (zre_peer_t *self)
+zre_group_leave (zre_group_t *self, zre_peer_t *peer)
 {
     assert (self);
-    self->evasive_at = zclock_time () + PEER_EVASIVE;
-    self->expired_at = zclock_time () + PEER_EXPIRED;
+    assert (peer);
+    zhash_delete (self->peers, zre_peer_identity (peer));
+    zre_peer_status_bump (peer);
 }
 
 
-//  ---------------------------------------------------------------------
-//  Return peer future evasive time
-
-int64_t
-zre_peer_evasive_at (zre_peer_t *self)
+static int
+s_peer_send (const char *key, void *item, void *argument)
 {
-    assert (self);
-    return self->evasive_at;
+    zre_peer_t *peer = (zre_peer_t *) item;
+    zre_msg_t *msg = zre_msg_dup ((zre_msg_t *) argument);
+    zre_peer_send (peer, &msg);
+    return 0;
 }
 
-
 //  ---------------------------------------------------------------------
-//  Return peer future expired time
+//  Send message to all peers in group
 
-int64_t
-zre_peer_expired_at (zre_peer_t *self)
+void
+zre_group_send (zre_group_t *self, zre_msg_t **msg_p)
 {
     assert (self);
-    return self->expired_at;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Return peer mailbox
-
-void *
-zre_peer_mailbox (zre_peer_t *self)
-{
-    assert (self);
-    return self->mailbox;
+    zhash_foreach (self->peers, s_peer_send, *msg_p);
+    zre_msg_destroy (msg_p);
 }

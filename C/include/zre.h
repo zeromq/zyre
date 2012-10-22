@@ -45,9 +45,10 @@
 
 //  Classes in this stack
 
-#include "zre_interface.h"
+#include "zre_udp.h"
 #include "zre_msg.h"
 #include "zre_peer.h"
-#include "zre_udp.h"
+#include "zre_group.h"
+#include "zre_interface.h"
 
 #endif

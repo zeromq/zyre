@@ -91,14 +91,53 @@ zre_interface_recv (zre_interface_t *self)
 
 
 //  ---------------------------------------------------------------------
+//  Join a group
+
+int
+zre_interface_join (zre_interface_t *self, const char *group)
+{
+    assert (self);
+    zstr_sendm (self->pipe, "JOIN");
+    zstr_send  (self->pipe, group);
+    return 0;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Leave a group
+
+int
+zre_interface_leave (zre_interface_t *self, const char *group)
+{
+    assert (self);
+    zstr_sendm (self->pipe, "LEAVE");
+    zstr_send  (self->pipe, group);
+    return 0;
+}
+
+
+//  ---------------------------------------------------------------------
 //  Send message to single peer; peer ID is first frame in message
 //  Destroys message after sending
 
 int
-zre_interface_sendto (zre_interface_t *self, zmsg_t **msg_p)
+zre_interface_whisper (zre_interface_t *self, zmsg_t **msg_p)
 {
     assert (self);
-    zstr_sendm (self->pipe, "SENDTO");
+    zstr_sendm (self->pipe, "WHISPER");
+    zmsg_send (msg_p, self->pipe);
+    return 0;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Send message to a group of peers
+
+int
+zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p)
+{
+    assert (self);
+    zstr_sendm (self->pipe, "SHOUT");
     zmsg_send (msg_p, self->pipe);
     return 0;
 }
@@ -114,6 +153,7 @@ zre_interface_sendto (zre_interface_t *self, zmsg_t **msg_p)
 //  version     1 byte, %x01
 //  UUID        16 bytes
 //  port        2 bytes in network order
+//  status      peer status as single byte
 
 #define BEACON_PROTOCOL     "ZRE"
 #define BEACON_VERSION      0x01
@@ -123,6 +163,7 @@ typedef struct {
     byte version;
     uuid_t uuid;
     uint16_t port;
+    byte status;
 } beacon_t;
 
 //  Convert binary UUID to freshly allocated string
@@ -153,7 +194,9 @@ typedef struct {
     void *inbox;                //  Our inbox socket (ROUTER)
     char *host;                 //  Our host IP address
     int port;                   //  Our inbox port number
+    byte status;                //  Our own change counter
     zhash_t *peers;             //  Hash of known peers, fast lookup
+    zhash_t *groups;            //  All known groups, by name
 } agent_t;
 
 static agent_t *
@@ -169,6 +212,7 @@ agent_new (zctx_t *ctx, void *pipe)
     uuid_generate (self->uuid);
     self->identity = s_uuid_str (self->uuid);
     self->peers = zhash_new ();
+    self->groups = zhash_new ();
     return self;
 }
 
@@ -179,6 +223,7 @@ agent_destroy (agent_t **self_p)
     if (*self_p) {
         agent_t *self = *self_p;
         zhash_destroy (&self->peers);
+        zhash_destroy (&self->groups);
         zre_udp_destroy (&self->udp);
         free (self->identity);
         free (self);
@@ -186,7 +231,20 @@ agent_destroy (agent_t **self_p)
     }
 }
 
-//  Here we handle the different control messages from the front-end;
+
+//  Send message to all peers
+
+static int
+s_peer_send (const char *key, void *item, void *argument)
+{
+    zre_peer_t *peer = (zre_peer_t *) item;
+    zre_msg_t *msg = zre_msg_dup ((zre_msg_t *) argument);
+    zre_peer_send (peer, &msg);
+    return 0;
+}
+
+
+//  Here we handle the different control messages from the front-end
 
 static int
 agent_recv_from_api (agent_t *self)
@@ -197,7 +255,7 @@ agent_recv_from_api (agent_t *self)
     if (command == NULL)
         return -1;      //  Interrupted
 
-    if (streq (command, "SENDTO")) {
+    if (streq (command, "WHISPER")) {
         //  Get peer to send message to
         char *identity = zmsg_popstr (request);
         zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
@@ -206,14 +264,38 @@ agent_recv_from_api (agent_t *self)
         //  Send frame on out to peer's mailbox, drop message
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
-            zre_msg_t *msg = zre_msg_new (ZRE_MSG_NOM);
+            zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
             zre_msg_cookies_set (msg, zmsg_pop (request));
-            zre_msg_send (&msg, zre_peer_mailbox (peer));
+            zre_peer_send (peer, &msg);
         }
         else
             printf ("W: trying to send to %s, no longer exists\n", identity);
         
         free (identity);
+    }
+    else
+    if (streq (command, "SHOUT")) {
+        //  Get group to send message to
+        char *name = zmsg_popstr (request);
+        zre_group_t *group = (zre_group_t *) zhash_lookup (self->groups, name);
+        if (group) {
+            zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
+            zre_msg_cookies_set (msg, zmsg_pop (request));
+            zre_group_send (group, &msg);
+        }
+        free (name);
+    }
+    else
+    if (streq (command, "JOIN")
+    ||  streq (command, "LEAVE")) {
+        char *name = zmsg_popstr (request);
+        zre_msg_t *msg = zre_msg_new (
+            streq (command, "JOIN")? ZRE_MSG_JOIN: ZRE_MSG_LEAVE);
+        zre_msg_group_set (msg, name);
+        zre_msg_status_set (msg, self->status++);
+        zhash_foreach (self->peers, s_peer_send, msg);
+        zre_msg_destroy (&msg);
+        free (name);
     }
     free (command);
     zmsg_destroy (&request);
@@ -223,25 +305,37 @@ agent_recv_from_api (agent_t *self)
 
 //  Find or create peer via its UUID string
 
-zre_peer_t * 
+static zre_peer_t *
 s_require_peer (agent_t *self, char *identity, char *address, int port)
 {
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
     if (peer == NULL) {
-        peer = zre_peer_new (self->ctx, identity, self->peers);
+        peer = zre_peer_new (identity, self->peers, self->ctx);
         zre_peer_connect (peer, self->identity, address, port);
 
-        //  Handshake discovery by sending OHAI as first message
-        zre_msg_t *msg = zre_msg_new (ZRE_MSG_OHAI);
+        //  Handshake discovery by sending HELLO as first message
+        zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
         zre_msg_from_set (msg, zre_udp_host (self->udp));
         zre_msg_port_set (msg, self->port);
-        zre_msg_send (&msg, zre_peer_mailbox (peer));
+        zre_peer_send (peer, &msg);
 
         //  Now tell the caller about the peer
-        zstr_sendm (self->pipe, "JOINED");
+        zstr_sendm (self->pipe, "ENTER");
         zstr_send (self->pipe, identity);
     }
     return peer;
+}
+
+
+//  Find or create group via its name
+
+static zre_group_t *
+s_require_group (agent_t *self, char *name)
+{
+    zre_group_t *group = (zre_group_t *) zhash_lookup (self->groups, name);
+    if (group == NULL)
+        group = zre_group_new (name, self->groups);
+    return group;
 }
 
 
@@ -254,8 +348,8 @@ agent_recv_from_peer (agent_t *self)
     zre_msg_t *msg = zre_msg_recv (self->inbox);
     char *identity = zframe_strdup (zre_msg_address (msg));
     
-    //  On OHAI we can connect back to peer if needed
-    if (zre_msg_id (msg) == ZRE_MSG_OHAI)
+    //  On HELLO we can connect back to peer if needed
+    if (zre_msg_id (msg) == ZRE_MSG_HELLO)
         s_require_peer (self, identity,
             zre_msg_from (msg), zre_msg_port (msg));
 
@@ -264,16 +358,30 @@ agent_recv_from_peer (agent_t *self)
     assert (peer);
     zre_peer_refresh (peer);
         
-    if (zre_msg_id (msg) == ZRE_MSG_NOM) {
+    if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as RECVFROM event
         zstr_sendm (self->pipe, "FROM");
         zstr_sendm (self->pipe, identity);
         zstr_send (self->pipe, "Cookies");
     }
     else
-    if (zre_msg_id (msg) == ZRE_MSG_HUGZ) {
-        zre_msg_t *msg = zre_msg_new (ZRE_MSG_HUGZ_OK);
-        zre_msg_send (&msg, zre_peer_mailbox (peer));
+    if (zre_msg_id (msg) == ZRE_MSG_SHOUT) {
+        // todo
+    }
+    else
+    if (zre_msg_id (msg) == ZRE_MSG_PING) {
+        zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING_OK);
+        zre_peer_send (peer, &msg);
+    }
+    else
+    if (zre_msg_id (msg) == ZRE_MSG_JOIN) {
+        zre_group_t *group = s_require_group (self, zre_msg_group (msg));
+        zre_group_join (group, peer);
+    }
+    else
+    if (zre_msg_id (msg) == ZRE_MSG_LEAVE) {
+        zre_group_t *group = s_require_group (self, zre_msg_group (msg));
+        zre_group_leave (group, peer);
     }
     free (identity);
     zre_msg_destroy (&msg);
@@ -295,6 +403,7 @@ agent_beacon_send (agent_t *self)
     beacon.version = BEACON_VERSION;
     memcpy (beacon.uuid, self->uuid, sizeof (uuid_t));
     beacon.port = htons (self->port);
+    beacon.status = self->status;
 
     //  Broadcast the beacon to anyone who is listening
     zre_udp_send (self->udp, (byte *) &beacon, sizeof (beacon_t));
@@ -321,8 +430,11 @@ agent_recv_udp_beacon (agent_t *self)
     //  If we got a UUID and it's not our own beacon, we have a peer
     if (memcmp (beacon.uuid, self->uuid, sizeof (uuid_t))) {
         char *identity = s_uuid_str (beacon.uuid);
-        s_require_peer (self, identity,
+        zre_peer_t *peer = s_require_peer (self, identity,
             zre_udp_from (self->udp), ntohs (beacon.port));
+        if (beacon.status != zre_peer_status (peer))
+            printf ("W: inconsistent status detected (have %d, claimed %d)\n",
+                zre_peer_status (peer), beacon.status);
         free (identity);
     }
     return 0;
@@ -339,7 +451,7 @@ agent_ping_peer (const char *key, void *item, void *argument)
     zre_peer_t *peer = (zre_peer_t *) item;
     if (zclock_time () >= zre_peer_expired_at (peer)) {
         //  If peer has really vanished, expire it
-        zstr_sendm (self->pipe, "LEFT");
+        zstr_sendm (self->pipe, "EXIT");
         zstr_send (self->pipe, zre_peer_identity (peer));
         zhash_delete (self->peers, zre_peer_identity (peer));
     }
@@ -349,8 +461,8 @@ agent_ping_peer (const char *key, void *item, void *argument)
         //  TODO: do this only once for a peer in this state;
         //  it would be nicer to use a proper state machine
         //  for peer management.
-        zre_msg_t *msg = zre_msg_new (ZRE_MSG_HUGZ);
-        zre_msg_send (&msg, zre_peer_mailbox (peer));
+        zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING);
+        zre_peer_send (peer, &msg);
     }
     return 0;
 }
@@ -370,7 +482,6 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
         { self->inbox, 0, ZMQ_POLLIN, 0 },
         { 0, zre_udp_handle (self->udp), ZMQ_POLLIN, 0 }
     };
-    
     while (!zctx_interrupted) {
         long timeout = (long) (ping_at - zclock_time ());
         if (timeout < 0)
