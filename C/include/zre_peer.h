@@ -77,13 +77,13 @@ bool
 bool
     zre_peer_ready_set (zre_peer_t *self, bool ready);
 
-//  Update peer status
-void
-    zre_peer_status_bump (zre_peer_t *self);
-
 //  Return peer status
 byte
     zre_peer_status (zre_peer_t *self);
+
+//  Set peer status
+void
+    zre_peer_status_set (zre_peer_t *self, byte status);
 
 #ifdef __cplusplus
 }

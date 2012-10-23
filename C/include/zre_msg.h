@@ -31,6 +31,8 @@
     HELLO - Say hello to a peer so it connect back to us.
         from          string 
         port          number 
+        groups        strings 
+        status        octet 
 
     WHISPER - Send a message to a peer.
         cookies       frame 
@@ -44,16 +46,12 @@
     PING_OK - Reply to a peer's ping.
 
     JOIN - Join a group.
-        status        octet 
         group         string 
+        status        octet 
 
     LEAVE - Leave a group.
-        status        octet 
         group         string 
-
-    GROUPS - Inform a peer of all our groups.
         status        octet 
-        groups        strings 
 */
 
 #define ZRE_MSG_VERSION                     1
@@ -65,7 +63,6 @@
 #define ZRE_MSG_PING_OK                     5
 #define ZRE_MSG_JOIN                        6
 #define ZRE_MSG_LEAVE                       7
-#define ZRE_MSG_GROUPS                      8
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,6 +119,28 @@ int64_t
 void
     zre_msg_port_set (zre_msg_t *self, int64_t port);
 
+//  Get/set the groups field
+zlist_t *
+    zre_msg_groups (zre_msg_t *self);
+void
+    zre_msg_groups_set (zre_msg_t *self, zlist_t *groups);
+
+//  Iterate through the groups field, and append a groups value
+char *
+    zre_msg_groups_first (zre_msg_t *self);
+char *
+    zre_msg_groups_next (zre_msg_t *self);
+void
+    zre_msg_groups_append (zre_msg_t *self, char *format, ...);
+size_t
+    zre_msg_groups_size (zre_msg_t *self);
+
+//  Get/set the status field
+byte
+    zre_msg_status (zre_msg_t *self);
+void
+    zre_msg_status_set (zre_msg_t *self, byte status);
+
 //  Get/set the cookies field
 zframe_t *
     zre_msg_cookies (zre_msg_t *self);
@@ -133,22 +152,6 @@ char *
     zre_msg_group (zre_msg_t *self);
 void
     zre_msg_group_set (zre_msg_t *self, char *format, ...);
-
-//  Get/set the status field
-byte
-    zre_msg_status (zre_msg_t *self);
-void
-    zre_msg_status_set (zre_msg_t *self, byte status);
-
-//  Iterate through the groups field, and append a groups value
-char *
-    zre_msg_groups_first (zre_msg_t *self);
-char *
-    zre_msg_groups_next (zre_msg_t *self);
-void
-    zre_msg_groups_append (zre_msg_t *self, char *format, ...);
-size_t
-    zre_msg_groups_size (zre_msg_t *self);
 
 //  Self test of this class
 int

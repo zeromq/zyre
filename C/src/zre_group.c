@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_group - one of our groups in a ZyRE network
+    zre_group - group known to this node
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -93,7 +93,7 @@ zre_group_join (zre_group_t *self, zre_peer_t *peer)
     assert (self);
     assert (peer);
     zhash_insert (self->peers, zre_peer_identity (peer), peer);
-    zre_peer_status_bump (peer);
+    zre_peer_status_set (peer, zre_peer_status (peer) + 1);
 }
 
 
@@ -106,7 +106,7 @@ zre_group_leave (zre_group_t *self, zre_peer_t *peer)
     assert (self);
     assert (peer);
     zhash_delete (self->peers, zre_peer_identity (peer));
-    zre_peer_status_bump (peer);
+    zre_peer_status_set (peer, zre_peer_status (peer) + 1);
 }
 
 

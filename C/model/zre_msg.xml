@@ -8,6 +8,8 @@ This is the ZRE protocol version 1.
 <message name = "HELLO" id = "1">
     <field name = "from" type = "string" />
     <field name = "port" type = "number" octets = "2" />
+    <field name = "groups" type = "strings" />
+    <field name = "status" type = "octet" />
 Say hello to a peer so it connect back to us.
 </message>
 
@@ -31,21 +33,15 @@ Reply to a peer's ping.
 </message>
 
 <message name = "JOIN" id = "6">
-    <field name = "status" type = "octet" />
     <field name = "group" type = "string" />
+    <field name = "status" type = "octet" />
 Join a group.
 </message>
 
 <message name = "LEAVE" id = "7">
-    <field name = "status" type = "octet" />
     <field name = "group" type = "string" />
-Leave a group.
-</message>
-
-<message name = "GROUPS" id = "8">
     <field name = "status" type = "octet" />
-    <field name = "groups" type = "strings" />
-Inform a peer of all our groups.
+Leave a group.
 </message>
 
 </class>

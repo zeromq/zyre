@@ -104,7 +104,7 @@ zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port)
 
     //  We'll use credit based flow control later, for now set a
     //  low high-water mark to provoke blockage during tests
-    zsocket_set_sndhwm (self->mailbox, 10);
+    zsocket_set_sndhwm (self->mailbox, 4);
 
     //  Connect through to peer node
     printf ("DEALER connecting to: tcp://%s:%d\n", address, port);
@@ -182,20 +182,9 @@ zre_peer_expired_at (zre_peer_t *self)
 
 
 //  ---------------------------------------------------------------------
-//  Update peer status
+//  Return peer cycle
 //  This gives us a state change count for the peer, which we can
 //  check against its claimed status, to detect message loss.
-
-void
-zre_peer_status_bump (zre_peer_t *self)
-{
-    assert (self);
-    self->status++;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Return peer cycle
 
 byte
 zre_peer_status (zre_peer_t *self)
@@ -204,3 +193,13 @@ zre_peer_status (zre_peer_t *self)
     return self->status;
 }
 
+
+//  ---------------------------------------------------------------------
+//  Set peer status
+
+void
+zre_peer_status_set (zre_peer_t *self, byte status)
+{
+    assert (self);
+    self->status = status;
+}
