@@ -126,6 +126,12 @@ void
     $(class.name)_$(name)_set ($(class.name)_t *self, char *format, ...);
 .#
 .   elsif type = "strings"
+//  Get/set the $(name) field
+zlist_t *
+    $(class.name)_$(name) ($(class.name)_t *self);
+void
+    $(class.name)_$(name)_set ($(class.name)_t *self, zlist_t *$(name));
+
 //  Iterate through the $(name) field, and append a $(name) value
 char *
     $(class.name)_$(name)_first ($(class.name)_t *self);
@@ -137,6 +143,12 @@ size_t
     $(class.name)_$(name)_size ($(class.name)_t *self);
 .#
 .   elsif type = "dictionary"
+//  Get/set the $(name) field
+zhash_t *
+    $(class.name)_$(name) ($(class.name)_t *self);
+void
+    $(class.name)_$(name)_set ($(class.name)_t *self, zhash_t *$(name));
+    
 //  Get/set a value in the $(name) dictionary
 char *
     $(class.name)_$(name)_string ($(class.name)_t *self, char *key, char *default_value);
@@ -200,10 +212,9 @@ struct _$(class.name)_t {
     char *$(name);
 .   elsif type = "strings"
     zlist_t *$(name);
-    size_t $(name)_bytes;
 .   elsif type = "dictionary"
     zhash_t *$(name);
-    size_t $(name)_bytes;
+    size_t $(name)_bytes;       //  Size of dictionary content
 .   elsif type = "frame"
     zframe_t *$(name);
 .   endif
@@ -320,11 +331,8 @@ $(class.name)_destroy ($(class.name)_t **self_p)
 .   if type = "string"
         free (self->$(name));
 .   elsif type = "strings"
-        if (self->$(name)) {
-            while (zlist_size (self->$(name)))
-                free (zlist_pop (self->$(name)));
+        if (self->$(name))
             zlist_destroy (&self->$(name));
-        }
 .   elsif type = "dictionary"
         zhash_destroy (&self->$(name));
 .   elsif type = "frame"
@@ -399,11 +407,11 @@ $(class.name)_recv (void *socket)
 .       elsif type = "strings"
             GET_OCTET (list_size);
             self->$(name) = zlist_new ();
+            zlist_autofree (self->$(name));
             while (list_size--) {
                 char *string;
                 GET_STRING (string);
                 zlist_append (self->$(name), string);
-                self->$(name)_bytes += strlen (string);
             }
 .       elsif type = "dictionary"
             GET_OCTET (hash_size);
@@ -416,7 +424,6 @@ $(class.name)_recv (void *socket)
                     *value++ = 0;
                 zhash_insert (self->$(name), string, strdup (value));
                 zhash_freefn (self->$(name), string, free);
-                self->$(name)_bytes += 1 + strlen (string) + 1 + strlen (value);
                 free (string);
             }
 .       elsif type = "frame"
@@ -445,10 +452,18 @@ $(class.name)_recv (void *socket)
         return (NULL);
 }
 
-
 .for class.field where type = "dictionary"
+//  Count size of key=value pair
+static int
+s_$(name)_count (const char *key, void *item, void *argument)
+{
+    $(class.name)_t *self = ($(class.name)_t *) argument;
+    self->$(name)_bytes += strlen (key) + 1 + strlen (char *) item + 1;
+    return 0;
+}
+
 //  Serialize $(name) key=value pair
-int
+static int
 s_$(name)_write (const char *key, void *item, void *argument)
 {
     $(class.name)_t *self = ($(class.name)_t *) argument;
@@ -499,13 +514,23 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
 .       elsif type = "strings"
             //  $(name) is an array of strings
             frame_size++;       //  Size is one octet
-            if (self->$(name))
-                frame_size += zlist_size (self->$(name)) + self->$(name)_bytes;
+            if (self->$(name)) {
+                //  Add up size of list contents
+                char *$(name) = (char *) zlist_first (self->$(name));
+                while ($(name)) {
+                    frame_size += 1 + strlen ($(name));
+                    $(name) = (char *) zlist_next (self->$(name));
+                }
+            }
 .       elsif type = "dictionary"
             //  $(name) is an array of key=value strings
             frame_size++;       //  Size is one octet
-            if (self->$(name))
-                frame_size += zhash_size (self->$(name)) + self->$(name)_bytes;
+            if (self->$(name)) {
+                self->$(name)_bytes = 0;
+                //  Add up size of dictionary contents
+                zhash_foreach (self->$(name), s_$(name)_count, self);
+            }
+            frame_size += self->$(name)_bytes;
 .       endif
 .   endfor
             break;
@@ -606,6 +631,46 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
 }
 
 
+//  --------------------------------------------------------------------------
+//  Duplicate the $(class.name) message
+
+$(class.name)_t *
+$(class.name)_dup ($(class.name)_t *self)
+{
+    if (!self)
+        return NULL;
+        
+    $(class.name)_t *copy = $(class.name)_new (self->id);
+    if (self->address)
+        copy->address = zframe_dup (self->address);
+    switch (self->id) {
+.for class.message
+        case $(CLASS.NAME)_$(MESSAGE.NAME):
+.   for field
+.       if type = "octet"
+            copy->$(name) = self->$(name);
+.       elsif type = "octets"
+            memcpy (copy->$(name), self->$(name), $(size));
+.       elsif type = "number"
+            copy->$(name) = self->$(name);
+.       elsif type = "string"
+            copy->$(name) = strdup (self->$(name));
+.       elsif type = "strings"
+            copy->$(name) = zlist_copy (self->$(name));
+.       elsif type = "dictionary"
+            copy->$(name) = zhash_dup (self->$(name));
+.       elsif type = "frame"
+            copy->$(name) = zframe_dup (self->$(name));
+.       endif
+.   endfor
+            break;
+
+.endfor
+    }
+    return copy;
+}
+
+
 .for class.field where type = "dictionary"
 //  Dump $(name) key=value pair to stdout
 int
@@ -617,43 +682,6 @@ s_$(name)_dump (const char *key, void *item, void *argument)
 }
 
 .endfor
-
-//  --------------------------------------------------------------------------
-//  Duplicate the $(class.name) message
-
-$(class.name)_t *
-$(class.name)_dup ($(class.name)_t *self)
-{
-    $(class.name)_t *dup = $(class.name)_new (self->id);
-    if (self->address)
-        dup->address = zframe_dup (self->address);
-    switch (self->id) {
-.for class.message
-        case $(CLASS.NAME)_$(MESSAGE.NAME):
-.   for field
-.       if type = "octet"
-            dup->$(name) = self->$(name);
-.       elsif type = "octets"
-            memcpy (dup->$(name), self->$(name), $(size));
-.       elsif type = "number"
-            dup->$(name) = self->$(name);
-.       elsif type = "string"
-            dup->$(name) = strdup (self->$(name));
-.       elsif type = "strings"
-            dup->$(name) = zlist_copy (self->$(name));
-.       elsif type = "dictionary"
-.           echo "W: dup not implemented for $(name)"
-.       elsif type = "frame"
-            dup->$(name) = zframe_dup (self->$(name));
-.       endif
-.   endfor
-            break;
-
-.endfor
-    }
-    return dup;
-}
-
 
 //  --------------------------------------------------------------------------
 //  Print contents of message to stdout
@@ -854,6 +882,27 @@ $(class.name)_$(name)_set ($(class.name)_t *self, char *format, ...)
 
 .   elsif type = "strings"
 //  --------------------------------------------------------------------------
+//  Get/set the $(name) field
+
+zlist_t *
+$(class.name)_$(name) ($(class.name)_t *self)
+{
+    assert (self);
+    return self->$(name);
+}
+
+//  Greedy function, takes ownership of name; if you don't want that
+//  then use zlist_dup() to pass a copy of $(name)
+
+void
+$(class.name)_$(name)_set ($(class.name)_t *self, zlist_t *$(name))
+{
+    assert (self);
+    zlist_destroy (&self->$(name));
+    self->$(name) = $(name);
+}
+
+//  --------------------------------------------------------------------------
 //  Iterate through the $(name) field, and append a $(name) value
 
 char *
@@ -889,10 +938,11 @@ $(class.name)_$(name)_append ($(class.name)_t *self, char *format, ...)
     va_end (argptr);
     
     //  Attach string to list
-    if (!self->$(name))
+    if (!self->$(name)) {
         self->$(name) = zlist_new ();
+        zlist_autofree (self->$(name));
+    }
     zlist_append (self->$(name), string);
-    self->$(name)_bytes += strlen (string);
 }
 
 size_t
@@ -902,6 +952,27 @@ $(class.name)_$(name)_size ($(class.name)_t *self)
 }
 
 .   elsif type = "dictionary"
+//  --------------------------------------------------------------------------
+//  Get/set the $(name) field
+
+zhash_t *
+$(class.name)_$(name) ($(class.name)_t *self)
+{
+    assert (self);
+    return self->$(name);
+}
+
+//  Greedy function, takes ownership of name; if you don't want that
+//  then use zhash_dup() to pass a copy of $(name)
+
+void
+$(class.name)_$(name)_set ($(class.name)_t *self, zhash_t *$(name))
+{
+    assert (self);
+    zhash_destroy (&self->$(name));
+    self->$(name) = $(name);
+}
+
 //  --------------------------------------------------------------------------
 //  Get/set a value in the $(name) dictionary
 
@@ -947,11 +1018,8 @@ $(class.name)_$(name)_insert ($(class.name)_t *self, char *key, char *format, ..
     //  Store string in hash table
     if (!self->$(name))
         self->$(name) = zhash_new ();
-    if (zhash_insert (self->$(name), key, string) == 0) {
+    if (zhash_insert (self->$(name), key, string) == 0)
         zhash_freefn (self->$(name), key, free);
-        //  Count key=value
-        self->$(name)_bytes += strlen (key) + 1 + strlen (string);
-    }
 }
 
 size_t

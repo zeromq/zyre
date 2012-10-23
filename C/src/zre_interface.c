@@ -154,6 +154,7 @@ zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p)
 //  UUID        16 bytes
 //  port        2 bytes in network order
 //  status      peer status as single byte
+//  unused      single unused byte
 
 #define BEACON_PROTOCOL     "ZRE"
 #define BEACON_VERSION      0x01
@@ -164,6 +165,7 @@ typedef struct {
     uuid_t uuid;
     uint16_t port;
     byte status;
+    byte unused;
 } beacon_t;
 
 //  Convert binary UUID to freshly allocated string
@@ -196,7 +198,8 @@ typedef struct {
     int port;                   //  Our inbox port number
     byte status;                //  Our own change counter
     zhash_t *peers;             //  Hash of known peers, fast lookup
-    zhash_t *groups;            //  All known groups, by name
+    zhash_t *peer_groups;       //  Groups that our peers are in
+    zhash_t *own_groups;        //  Groups that we are in
 } agent_t;
 
 static agent_t *
@@ -212,7 +215,8 @@ agent_new (zctx_t *ctx, void *pipe)
     uuid_generate (self->uuid);
     self->identity = s_uuid_str (self->uuid);
     self->peers = zhash_new ();
-    self->groups = zhash_new ();
+    self->peer_groups = zhash_new ();
+    self->own_groups = zhash_new ();
     return self;
 }
 
@@ -223,7 +227,8 @@ agent_destroy (agent_t **self_p)
     if (*self_p) {
         agent_t *self = *self_p;
         zhash_destroy (&self->peers);
-        zhash_destroy (&self->groups);
+        zhash_destroy (&self->peer_groups);
+        zhash_destroy (&self->own_groups);
         zre_udp_destroy (&self->udp);
         free (self->identity);
         free (self);
@@ -252,7 +257,7 @@ agent_recv_from_api (agent_t *self)
     //  Get the whole message off the pipe in one go
     zmsg_t *request = zmsg_recv (self->pipe);
     char *command = zmsg_popstr (request);
-    if (command == NULL)
+    if (!command)
         return -1;      //  Interrupted
 
     if (streq (command, "WHISPER")) {
@@ -277,24 +282,42 @@ agent_recv_from_api (agent_t *self)
     if (streq (command, "SHOUT")) {
         //  Get group to send message to
         char *name = zmsg_popstr (request);
-        zre_group_t *group = (zre_group_t *) zhash_lookup (self->groups, name);
+        zre_group_t *group = (zre_group_t *) zhash_lookup (self->peer_groups, name);
         if (group) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
+            zre_msg_group_set (msg, name);
             zre_msg_cookies_set (msg, zmsg_pop (request));
             zre_group_send (group, &msg);
         }
         free (name);
     }
     else
-    if (streq (command, "JOIN")
-    ||  streq (command, "LEAVE")) {
+    if (streq (command, "JOIN")) {
         char *name = zmsg_popstr (request);
-        zre_msg_t *msg = zre_msg_new (
-            streq (command, "JOIN")? ZRE_MSG_JOIN: ZRE_MSG_LEAVE);
-        zre_msg_group_set (msg, name);
-        zre_msg_status_set (msg, self->status++);
-        zhash_foreach (self->peers, s_peer_send, msg);
-        zre_msg_destroy (&msg);
+        zre_group_t *group = (zre_group_t *) zhash_lookup (self->own_groups, name);
+        if (!group) {
+            //  Only send if we're not already in group
+            group = zre_group_new (name, self->own_groups);
+            zre_msg_t *msg = zre_msg_new (ZRE_MSG_JOIN);
+            zre_msg_group_set (msg, name);
+            zre_msg_status_set (msg, self->status++);
+            zhash_foreach (self->peers, s_peer_send, msg);
+            zre_msg_destroy (&msg);
+        }
+        free (name);
+    }
+    else
+    if (streq (command, "LEAVE")) {
+        char *name = zmsg_popstr (request);
+        zre_group_t *group = (zre_group_t *) zhash_lookup (self->own_groups, name);
+        if (group) {
+            //  Only send if we are actually in group
+            zre_msg_t *msg = zre_msg_new (ZRE_MSG_LEAVE);
+            zre_msg_group_set (msg, name);
+            zre_msg_status_set (msg, self->status++);
+            zhash_foreach (self->peers, s_peer_send, msg);
+            zre_msg_destroy (&msg);
+        }
         free (name);
     }
     free (command);
@@ -302,14 +325,13 @@ agent_recv_from_api (agent_t *self)
     return 0;
 }
 
-
 //  Find or create peer via its UUID string
 
 static zre_peer_t *
 s_require_peer (agent_t *self, char *identity, char *address, int port)
 {
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
-    if (peer == NULL) {
+    if (!peer) {
         peer = zre_peer_new (identity, self->peers, self->ctx);
         zre_peer_connect (peer, self->identity, address, port);
 
@@ -317,6 +339,8 @@ s_require_peer (agent_t *self, char *identity, char *address, int port)
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
         zre_msg_from_set (msg, zre_udp_host (self->udp));
         zre_msg_port_set (msg, self->port);
+        zre_msg_groups_set (msg, zhash_keys (self->own_groups));
+        zre_msg_status_set (msg, self->status);
         zre_peer_send (peer, &msg);
 
         //  Now tell the caller about the peer
@@ -330,11 +354,11 @@ s_require_peer (agent_t *self, char *identity, char *address, int port)
 //  Find or create group via its name
 
 static zre_group_t *
-s_require_group (agent_t *self, char *name)
+s_require_peer_group (agent_t *self, char *name)
 {
-    zre_group_t *group = (zre_group_t *) zhash_lookup (self->groups, name);
-    if (group == NULL)
-        group = zre_group_new (name, self->groups);
+    zre_group_t *group = (zre_group_t *) zhash_lookup (self->peer_groups, name);
+    if (!group)
+        group = zre_group_new (name, self->peer_groups);
     return group;
 }
 
@@ -349,24 +373,39 @@ agent_recv_from_peer (agent_t *self)
     char *identity = zframe_strdup (zre_msg_address (msg));
     
     //  On HELLO we can connect back to peer if needed
-    if (zre_msg_id (msg) == ZRE_MSG_HELLO)
-        s_require_peer (self, identity,
-            zre_msg_from (msg), zre_msg_port (msg));
-
+    if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
+        zre_peer_t *peer = s_require_peer (
+            self, identity, zre_msg_from (msg), zre_msg_port (msg));
+        //  Join peer to listed groups
+        char *name = zre_msg_groups_first (msg);
+        while (name) {
+            zre_group_t *group = s_require_peer_group (self, name);
+            zre_group_join (group, peer);
+            name = zre_msg_groups_next (msg);
+        }
+    }
     //  Peer must exist by now or our code is wrong
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
+    if (!peer) {
+        puts ("PEER NOT CREATED FOR COMMAND");
+        zre_msg_dump (msg);
+    }
     assert (peer);
     zre_peer_refresh (peer);
         
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
-        //  Pass up to caller API as RECVFROM event
-        zstr_sendm (self->pipe, "FROM");
+        //  Pass up to caller API as WHISPER event
+        zstr_sendm (self->pipe, "WHISPER");
         zstr_sendm (self->pipe, identity);
         zstr_send (self->pipe, "Cookies");
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_SHOUT) {
-        // todo
+        //  Pass up to caller as SHOUT event
+        zstr_sendm (self->pipe, "SHOUT");
+        zstr_sendm (self->pipe, identity);
+        zstr_sendm (self->pipe, zre_msg_group (msg));
+        zstr_send (self->pipe, "Cookies");
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_PING) {
@@ -375,12 +414,12 @@ agent_recv_from_peer (agent_t *self)
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_JOIN) {
-        zre_group_t *group = s_require_group (self, zre_msg_group (msg));
+        zre_group_t *group = s_require_peer_group (self, zre_msg_group (msg));
         zre_group_join (group, peer);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_LEAVE) {
-        zre_group_t *group = s_require_group (self, zre_msg_group (msg));
+        zre_group_t *group = s_require_peer_group (self, zre_msg_group (msg));
         zre_group_leave (group, peer);
     }
     free (identity);
@@ -395,6 +434,7 @@ agent_beacon_send (agent_t *self)
 {
     //  Beacon object
     beacon_t beacon;
+    assert (sizeof (beacon) == 24);
 
     //  Format beacon fields
     beacon.protocol [0] = 'Z';
@@ -404,7 +444,8 @@ agent_beacon_send (agent_t *self)
     memcpy (beacon.uuid, self->uuid, sizeof (uuid_t));
     beacon.port = htons (self->port);
     beacon.status = self->status;
-
+    beacon.unused = 0;
+    
     //  Broadcast the beacon to anyone who is listening
     zre_udp_send (self->udp, (byte *) &beacon, sizeof (beacon_t));
 }
@@ -430,13 +471,30 @@ agent_recv_udp_beacon (agent_t *self)
     //  If we got a UUID and it's not our own beacon, we have a peer
     if (memcmp (beacon.uuid, self->uuid, sizeof (uuid_t))) {
         char *identity = s_uuid_str (beacon.uuid);
-        zre_peer_t *peer = s_require_peer (self, identity,
-            zre_udp_from (self->udp), ntohs (beacon.port));
-        if (beacon.status != zre_peer_status (peer))
+        zre_peer_t *peer = s_require_peer (
+            self, identity, zre_udp_from (self->udp), ntohs (beacon.port));
+        zre_peer_refresh (peer);
+        free (identity);
+
+        //  Check status is as expected
+        //  If peer_status is zero it probably means it's brand new
+        //  so then don't warn... this should be handled by peer FSM
+        if (beacon.status != zre_peer_status (peer)
+        && zre_peer_status (peer) != 0)
             printf ("W: inconsistent status detected (have %d, claimed %d)\n",
                 zre_peer_status (peer), beacon.status);
-        free (identity);
     }
+    return 0;
+}
+
+//  Remove peer from group, if it's a member
+
+static int
+agent_peer_delete (const char *key, void *item, void *argument)
+{
+    zre_group_t *group = (zre_group_t *) item;
+    zre_peer_t *peer = (zre_peer_t *) argument;
+    zre_group_leave (group, peer);
     return 0;
 }
 
@@ -453,6 +511,7 @@ agent_ping_peer (const char *key, void *item, void *argument)
         //  If peer has really vanished, expire it
         zstr_sendm (self->pipe, "EXIT");
         zstr_send (self->pipe, zre_peer_identity (peer));
+        zhash_foreach (self->peer_groups, agent_peer_delete, peer);
         zhash_delete (self->peers, zre_peer_identity (peer));
     }
     else

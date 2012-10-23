@@ -36,6 +36,10 @@
 #define ZRE_VERSION \
     ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
 
+#if CZMQ_VERSION < 10301
+#   error "ZyRE needs CZMQ/1.3.1 or later, please get from GitHub"
+#endif
+
 //  Constants, to be configured/reviewed
 
 #define PING_PORT_NUMBER 9999
