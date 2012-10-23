@@ -76,6 +76,10 @@ $(class.name)_t *
 void
     $(class.name)_send ($(class.name)_t **self_p, void *socket);
 
+//  Duplicate the $(class.name) message
+$(class.name)_t *
+    $(class.name)_dup ($(class.name)_t *self);
+
 //  Print contents of message to stdout
 void
     $(class.name)_dump ($(class.name)_t *self);
@@ -613,6 +617,43 @@ s_$(name)_dump (const char *key, void *item, void *argument)
 }
 
 .endfor
+
+//  --------------------------------------------------------------------------
+//  Duplicate the $(class.name) message
+
+$(class.name)_t *
+$(class.name)_dup ($(class.name)_t *self)
+{
+    $(class.name)_t *dup = $(class.name)_new (self->id);
+    if (self->address)
+        dup->address = zframe_dup (self->address);
+    switch (self->id) {
+.for class.message
+        case $(CLASS.NAME)_$(MESSAGE.NAME):
+.   for field
+.       if type = "octet"
+            dup->$(name) = self->$(name);
+.       elsif type = "octets"
+            memcpy (dup->$(name), self->$(name), $(size));
+.       elsif type = "number"
+            dup->$(name) = self->$(name);
+.       elsif type = "string"
+            dup->$(name) = strdup (self->$(name));
+.       elsif type = "strings"
+            dup->$(name) = zlist_copy (self->$(name));
+.       elsif type = "dictionary"
+.           echo "W: dup not implemented for $(name)"
+.       elsif type = "frame"
+            dup->$(name) = zframe_dup (self->$(name));
+.       endif
+.   endfor
+            break;
+
+.endfor
+    }
+    return dup;
+}
+
 
 //  --------------------------------------------------------------------------
 //  Print contents of message to stdout

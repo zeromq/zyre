@@ -28,24 +28,44 @@
 
 /*  These are the zre_msg messages
 
-    OHAI - Say hello to a peer so it connect back to us
+    HELLO - Say hello to a peer so it connect back to us.
         from          string 
         port          number 
 
-    NOM - Send a message to a peer
+    WHISPER - Send a message to a peer.
         cookies       frame 
 
-    HUGZ - Send a heartbeat to a peer
+    SHOUT - Send a message to a group.
+        group         string 
+        cookies       frame 
 
-    HUGZ_OK - Reply to a peer's heartbeat
+    PING - Ping a peer that has gone silent.
+
+    PING_OK - Reply to a peer's ping.
+
+    JOIN - Join a group.
+        status        octet 
+        group         string 
+
+    LEAVE - Leave a group.
+        status        octet 
+        group         string 
+
+    GROUPS - Inform a peer of all our groups.
+        status        octet 
+        groups        strings 
 */
 
 #define ZRE_MSG_VERSION                     1
 
-#define ZRE_MSG_OHAI                        1
-#define ZRE_MSG_NOM                         2
-#define ZRE_MSG_HUGZ                        3
-#define ZRE_MSG_HUGZ_OK                     4
+#define ZRE_MSG_HELLO                       1
+#define ZRE_MSG_WHISPER                     2
+#define ZRE_MSG_SHOUT                       3
+#define ZRE_MSG_PING                        4
+#define ZRE_MSG_PING_OK                     5
+#define ZRE_MSG_JOIN                        6
+#define ZRE_MSG_LEAVE                       7
+#define ZRE_MSG_GROUPS                      8
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,6 +89,10 @@ zre_msg_t *
 //  Send the zre_msg to the socket, and destroy it
 void
     zre_msg_send (zre_msg_t **self_p, void *socket);
+
+//  Duplicate the zre_msg message
+zre_msg_t *
+    zre_msg_dup (zre_msg_t *self);
 
 //  Print contents of message to stdout
 void
@@ -103,6 +127,28 @@ zframe_t *
     zre_msg_cookies (zre_msg_t *self);
 void
     zre_msg_cookies_set (zre_msg_t *self, zframe_t *frame);
+
+//  Get/set the group field
+char *
+    zre_msg_group (zre_msg_t *self);
+void
+    zre_msg_group_set (zre_msg_t *self, char *format, ...);
+
+//  Get/set the status field
+byte
+    zre_msg_status (zre_msg_t *self);
+void
+    zre_msg_status_set (zre_msg_t *self, byte status);
+
+//  Iterate through the groups field, and append a groups value
+char *
+    zre_msg_groups_first (zre_msg_t *self);
+char *
+    zre_msg_groups_next (zre_msg_t *self);
+void
+    zre_msg_groups_append (zre_msg_t *self, char *format, ...);
+size_t
+    zre_msg_groups_size (zre_msg_t *self);
 
 //  Self test of this class
 int
