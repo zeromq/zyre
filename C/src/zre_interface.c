@@ -387,7 +387,7 @@ agent_recv_from_peer (agent_t *self)
     //  Peer must exist by now or our code is wrong
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
     if (!peer) {
-        puts ("PEER NOT CREATED FOR COMMAND");
+        printf ("PEER '%s' NOT CREATED FOR COMMAND\n", identity);
         zre_msg_dump (msg);
     }
     assert (peer);
