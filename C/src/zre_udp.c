@@ -137,8 +137,11 @@ zre_udp_new (int port_nbr)
         }
     }
     freeifaddrs (interfaces);
-    free (self->host);
-    self->host = strdup (inet_ntoa (self->address.sin_addr));
+    if (self->host)
+        free (self->host);
+    self->host = zmalloc (INET_ADDRSTRLEN);
+    inet_ntop (AF_INET, &self->address.sin_addr, self->host, sizeof (sockaddr));
+
 #   else
 #       error "Interface detection TBD on this operating system"
 #   endif
@@ -206,8 +209,10 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
         s_handle_io_error ("recvfrom");
 
     //  Store sender address as printable string
-    free (self->from);
-    self->from = strdup (inet_ntoa (self->sender.sin_addr));
+    if (self->from)
+        free (self->from);
+    self->from = zmalloc (INET_ADDRSTRLEN);
+    inet_ntop (AF_INET, &self->sender.sin_addr, self->from, si_len);
     
     return size;
 }
