@@ -14,8 +14,9 @@ libzre_la_SOURCES = \
     zre_udp.c 
 
 INCLUDES = -I$(top_srcdir)/include
-bin_PROGRAMS = zre_ping
+bin_PROGRAMS = zre_ping zre_tester
 zre_ping_LDADD = libzre.la
+zre_tester_LDADD = libzre.la
 
 if ON_MINGW
 libzre_la_LDFLAGS = -no-undefined -avoid-version -version-info @LTVER@
