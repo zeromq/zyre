@@ -277,11 +277,11 @@ agent_recv_from_api (agent_t *self)
         //  Get peer to send message to
         char *identity = zmsg_popstr (request);
         zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
-        assert (zre_peer_connected (peer));
         
         //  Send frame on out to peer's mailbox, drop message
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
+            assert (zre_peer_connected (peer));
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
             zre_msg_cookies_set (msg, zmsg_pop (request));
             zre_peer_send (peer, &msg);
