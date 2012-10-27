@@ -107,9 +107,7 @@ zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port)
     zsocket_set_sndhwm (self->mailbox, 4);
 
     //  Connect through to peer node
-    printf ("DEALER connecting to: tcp://%s:%d\n", address, port);
     zsocket_connect (self->mailbox, "tcp://%s:%d", address, port);
-
     self->connected = true;
 }
 

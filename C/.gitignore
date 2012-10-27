@@ -28,3 +28,5 @@ src/stamp-h1
 core
 zre_selftest
 zre_ping
+zre_tester
+
