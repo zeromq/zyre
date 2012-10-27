@@ -49,14 +49,14 @@ static void
 //  Constructor
 
 zre_interface_t *
-zre_interface_new (void)
+zre_interface_new (bool verbose)
 {
     zre_interface_t
         *self;
 
     self = (zre_interface_t *) zmalloc (sizeof (zre_interface_t));
     self->ctx = zctx_new ();
-    self->pipe = zthread_fork (self->ctx, zre_interface_agent, NULL);
+    self->pipe = zthread_fork (self->ctx, zre_interface_agent, (void *) verbose);
     return self;
 }
 
@@ -143,6 +143,16 @@ zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p)
 }
 
 
+//  ---------------------------------------------------------------------
+//  Return interface handle, for polling
+
+void *
+zre_interface_handle (zre_interface_t *self)
+{
+    assert (self);    
+    return self->pipe;
+}
+
 
 //  =====================================================================
 //  Asynchronous part, works in the background
@@ -153,8 +163,6 @@ zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p)
 //  version     1 byte, %x01
 //  UUID        16 bytes
 //  port        2 bytes in network order
-//  status      peer status as single byte
-//  unused      single unused byte
 
 #define BEACON_PROTOCOL     "ZRE"
 #define BEACON_VERSION      0x01
@@ -164,8 +172,6 @@ typedef struct {
     byte version;
     uuid_t uuid;
     uint16_t port;
-    byte status;
-    byte unused;
 } beacon_t;
 
 //  Convert binary UUID to freshly allocated string
@@ -200,10 +206,11 @@ typedef struct {
     zhash_t *peers;             //  Hash of known peers, fast lookup
     zhash_t *peer_groups;       //  Groups that our peers are in
     zhash_t *own_groups;        //  Groups that we are in
+    bool verbose;               //  Trace activity?
 } agent_t;
 
 static agent_t *
-agent_new (zctx_t *ctx, void *pipe)
+agent_new (zctx_t *ctx, void *pipe, bool verbose)
 {
     agent_t *self = (agent_t *) zmalloc (sizeof (agent_t));
     self->ctx = ctx;
@@ -217,6 +224,10 @@ agent_new (zctx_t *ctx, void *pipe)
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
     self->own_groups = zhash_new ();
+    self->verbose = verbose;
+    if (self->verbose)
+        zclock_log ("I: [%s] +++ interface created on %d",
+                    self->identity, self->port);
     return self;
 }
 
@@ -226,6 +237,8 @@ agent_destroy (agent_t **self_p)
     assert (self_p);
     if (*self_p) {
         agent_t *self = *self_p;
+        if (self->verbose)
+            zclock_log ("I: [%s] --- interface destroyed", self->identity);
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
@@ -264,17 +277,18 @@ agent_recv_from_api (agent_t *self)
         //  Get peer to send message to
         char *identity = zmsg_popstr (request);
         zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
-        assert (zre_peer_connected (peer));
         
         //  Send frame on out to peer's mailbox, drop message
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
+            assert (zre_peer_connected (peer));
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
             zre_msg_cookies_set (msg, zmsg_pop (request));
             zre_peer_send (peer, &msg);
         }
         else
-            printf ("W: trying to send to %s, no longer exists\n", identity);
+            zclock_log ("W: [%s] can't send to %s, not found",
+                        self->identity, identity);
         
         free (identity);
     }
@@ -300,9 +314,12 @@ agent_recv_from_api (agent_t *self)
             group = zre_group_new (name, self->own_groups);
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_JOIN);
             zre_msg_group_set (msg, name);
-            zre_msg_status_set (msg, self->status++);
+            //  Update status before sending command
+            zre_msg_status_set (msg, ++(self->status));
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
+            if (self->verbose)
+                zclock_log ("I: [%s] join group (%d)", self->identity, self->status);
         }
         free (name);
     }
@@ -314,9 +331,12 @@ agent_recv_from_api (agent_t *self)
             //  Only send if we are actually in group
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_LEAVE);
             zre_msg_group_set (msg, name);
-            zre_msg_status_set (msg, self->status++);
+            //  Update status before sending command
+            zre_msg_status_set (msg, ++(self->status));
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
+            if (self->verbose)
+                zclock_log ("I: [%s] leave group (%d)", self->identity, self->status);
         }
         free (name);
     }
@@ -334,6 +354,9 @@ s_require_peer (agent_t *self, char *identity, char *address, int port)
     if (!peer) {
         peer = zre_peer_new (identity, self->peers, self->ctx);
         zre_peer_connect (peer, self->identity, address, port);
+        if (self->verbose)
+            zclock_log ("I: [%s] connect to %s at %s:%d",
+                        self->identity, identity, address, port);
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
@@ -342,10 +365,14 @@ s_require_peer (agent_t *self, char *identity, char *address, int port)
         zre_msg_groups_set (msg, zhash_keys (self->own_groups));
         zre_msg_status_set (msg, self->status);
         zre_peer_send (peer, &msg);
+        if (self->verbose)
+            zclock_log ("I: [%s] send HELLO to %s", self->identity, identity);
 
         //  Now tell the caller about the peer
         zstr_sendm (self->pipe, "ENTER");
         zstr_send (self->pipe, identity);
+        if (self->verbose)
+            zclock_log ("I: [%s] peer %s enters", self->identity, identity);
     }
     return peer;
 }
@@ -371,7 +398,11 @@ agent_recv_from_peer (agent_t *self)
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_recv (self->inbox);
     char *identity = zframe_strdup (zre_msg_address (msg));
-    
+
+    if (self->verbose)
+        zclock_log ("I: [%s] recv %s from %s",
+                    self->identity, zre_msg_command (msg), identity);
+        
     //  On HELLO we can connect back to peer if needed
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         zre_peer_t *peer = s_require_peer (
@@ -383,16 +414,26 @@ agent_recv_from_peer (agent_t *self)
             zre_group_join (group, peer);
             name = zre_msg_groups_next (msg);
         }
+        //  Hello command holds latest status of peer
+        zre_peer_status_set (peer, zre_msg_status (msg));
+
+        //  Handshake greeting by sending HELLO-OK back to peer
+        zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO_OK);
+        zre_msg_groups_set (msg, zhash_keys (self->own_groups));
+        zre_msg_status_set (msg, self->status);
+        zre_peer_send (peer, &msg);
+        if (self->verbose)
+            zclock_log ("I: [%s] send HELLO-OK to %s", self->identity, identity);
     }
     //  Peer must exist by now or our code is wrong
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
     if (!peer) {
-        printf ("PEER '%s' NOT CREATED FOR COMMAND\n", identity);
+        zclock_log ("E: [%s] peer %s not found", self->identity, identity);
         zre_msg_dump (msg);
     }
     assert (peer);
     zre_peer_refresh (peer);
-        
+
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as WHISPER event
         zstr_sendm (self->pipe, "WHISPER");
@@ -411,16 +452,26 @@ agent_recv_from_peer (agent_t *self)
     if (zre_msg_id (msg) == ZRE_MSG_PING) {
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING_OK);
         zre_peer_send (peer, &msg);
+        if (self->verbose)
+            zclock_log ("I: [%s] send PING to %s", self->identity, identity);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_JOIN) {
         zre_group_t *group = s_require_peer_group (self, zre_msg_group (msg));
         zre_group_join (group, peer);
+        if (self->verbose)
+            zclock_log ("I: [%s] peer %s joins %s (%d==%d)", self->identity, identity,
+                    zre_msg_group (msg), zre_msg_status (msg), zre_peer_status (peer));
+        assert (zre_msg_status (msg) == zre_peer_status (peer));
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_LEAVE) {
         zre_group_t *group = s_require_peer_group (self, zre_msg_group (msg));
         zre_group_leave (group, peer);
+        if (self->verbose)
+            zclock_log ("I: [%s] peer %s leaves %s (%d==%d)", self->identity, identity,
+                    zre_msg_group (msg), zre_msg_status (msg), zre_peer_status (peer));
+        assert (zre_msg_status (msg) == zre_peer_status (peer));
     }
     free (identity);
     zre_msg_destroy (&msg);
@@ -434,7 +485,7 @@ agent_beacon_send (agent_t *self)
 {
     //  Beacon object
     beacon_t beacon;
-    assert (sizeof (beacon) == 24);
+    assert (sizeof (beacon) == 22);
 
     //  Format beacon fields
     beacon.protocol [0] = 'Z';
@@ -443,8 +494,6 @@ agent_beacon_send (agent_t *self)
     beacon.version = BEACON_VERSION;
     memcpy (beacon.uuid, self->uuid, sizeof (uuid_t));
     beacon.port = htons (self->port);
-    beacon.status = self->status;
-    beacon.unused = 0;
     
     //  Broadcast the beacon to anyone who is listening
     zre_udp_send (self->udp, (byte *) &beacon, sizeof (beacon_t));
@@ -473,16 +522,10 @@ agent_recv_udp_beacon (agent_t *self)
         char *identity = s_uuid_str (beacon.uuid);
         zre_peer_t *peer = s_require_peer (
             self, identity, zre_udp_from (self->udp), ntohs (beacon.port));
+//         if (self->verbose)
+//             zclock_log ("I: [%s] recv BEACON from %s", self->identity, identity);
         zre_peer_refresh (peer);
         free (identity);
-
-        //  Check status is as expected
-        //  If peer_status is zero it probably means it's brand new
-        //  so then don't warn... this should be handled by peer FSM
-        if (beacon.status != zre_peer_status (peer)
-        && zre_peer_status (peer) != 0)
-            printf ("W: inconsistent status detected (have %d, claimed %d)\n",
-                zre_peer_status (peer), beacon.status);
     }
     return 0;
 }
@@ -507,12 +550,15 @@ agent_ping_peer (const char *key, void *item, void *argument)
 {
     agent_t *self = (agent_t *) argument;
     zre_peer_t *peer = (zre_peer_t *) item;
+    char *identity = zre_peer_identity (peer);
     if (zclock_time () >= zre_peer_expired_at (peer)) {
+        if (self->verbose)
+            zclock_log ("I: [%s] peer %s exit", self->identity, identity);
         //  If peer has really vanished, expire it
         zstr_sendm (self->pipe, "EXIT");
-        zstr_send (self->pipe, zre_peer_identity (peer));
+        zstr_send (self->pipe, identity);
         zhash_foreach (self->peer_groups, agent_peer_delete, peer);
-        zhash_delete (self->peers, zre_peer_identity (peer));
+        zhash_delete (self->peers, identity);
     }
     else
     if (zclock_time () >= zre_peer_evasive_at (peer)) {
@@ -522,6 +568,8 @@ agent_ping_peer (const char *key, void *item, void *argument)
         //  for peer management.
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING);
         zre_peer_send (peer, &msg);
+        if (self->verbose)
+            zclock_log ("I: [%s] send PING to %s", self->identity, identity);
     }
     return 0;
 }
@@ -532,7 +580,7 @@ static void
 zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
 {
     //  Create agent instance to pass around
-    agent_t *self = agent_new (ctx, pipe);
+    agent_t *self = agent_new (ctx, pipe, (bool) args);
     
     //  Send first beacon immediately
     uint64_t ping_at = zclock_time ();
@@ -543,6 +591,7 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
     };
     while (!zctx_interrupted) {
         long timeout = (long) (ping_at - zclock_time ());
+        assert (timeout <= PING_INTERVAL);
         if (timeout < 0)
             timeout = 0;
         if (zmq_poll (pollitems, 3, timeout * ZMQ_POLL_MSEC) == -1)
@@ -558,6 +607,8 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
             agent_recv_udp_beacon (self);
 
         if (zclock_time () >= ping_at) {
+            if (self->verbose)
+                zclock_log ("I: [%s] send BEACON to all", self->identity);
             agent_beacon_send (self);
             ping_at = zclock_time () + PING_INTERVAL;
             //  Ping all peers and reap any expired ones

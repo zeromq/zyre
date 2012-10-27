@@ -28,9 +28,13 @@
 
 /*  These are the zre_msg messages
 
-    HELLO - Say hello to a peer so it connect back to us.
+    HELLO - Greet a peer so it connect back to us.
         from          string 
         port          number 
+        groups        strings 
+        status        octet 
+
+    HELLO_OK - Handshake a greeting so our peer gets our status.
         groups        strings 
         status        octet 
 
@@ -57,12 +61,13 @@
 #define ZRE_MSG_VERSION                     1
 
 #define ZRE_MSG_HELLO                       1
-#define ZRE_MSG_WHISPER                     2
-#define ZRE_MSG_SHOUT                       3
-#define ZRE_MSG_PING                        4
-#define ZRE_MSG_PING_OK                     5
-#define ZRE_MSG_JOIN                        6
-#define ZRE_MSG_LEAVE                       7
+#define ZRE_MSG_HELLO_OK                    2
+#define ZRE_MSG_WHISPER                     3
+#define ZRE_MSG_SHOUT                       4
+#define ZRE_MSG_PING                        5
+#define ZRE_MSG_PING_OK                     6
+#define ZRE_MSG_JOIN                        7
+#define ZRE_MSG_LEAVE                       8
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,11 +106,13 @@ zframe_t *
 void
     zre_msg_address_set (zre_msg_t *self, zframe_t *address);
 
-//  Get the zre_msg id
+//  Get the zre_msg id and printable command
 int
     zre_msg_id (zre_msg_t *self);
 void
     zre_msg_id_set (zre_msg_t *self, int id);
+char *
+    zre_msg_command (zre_msg_t *self);
 
 //  Get/set the from field
 char *

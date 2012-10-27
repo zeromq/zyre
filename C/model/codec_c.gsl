@@ -90,11 +90,13 @@ zframe_t *
 void
     $(class.name)_address_set ($(class.name)_t *self, zframe_t *address);
 
-//  Get the $(class.name) id
+//  Get the $(class.name) id and printable command
 int
     $(class.name)_id ($(class.name)_t *self);
 void
     $(class.name)_id_set ($(class.name)_t *self, int id);
+char *
+    $(class.name)_command ($(class.name)_t *self);
 
 .for class.field where !defined (value)
 .   if type = "octet"
@@ -799,6 +801,24 @@ $(class.name)_id_set ($(class.name)_t *self, int id)
 {
     self->id = id;
 }
+
+//  --------------------------------------------------------------------------
+//  Return a printable command string
+
+char *
+$(class.name)_command ($(class.name)_t *self)
+{
+    assert (self);
+    switch (self->id) {
+.for class.message
+        case $(CLASS.NAME)_$(MESSAGE.NAME):
+            return ("$(MESSAGE.NAME)");
+            break;
+.endfor
+    }
+    return "?";
+}
+
 
 .for class.field where !defined (value)
 .   if type = "octet"

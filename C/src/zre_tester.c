@@ -1,168 +1,136 @@
 #include <czmq.h>
 #include "../include/zre.h"
 
-#define INTEFACE_MODULO 10
-#define GROUP_MODULO 5
 #define MAX_GROUP 10
-#define SLEEP 1
-#define DUMMY "value"
 
 //  List of active interfaces
-zhash_t *interfaces;
+static zhash_t *interfaces;
 
 static void
-random_group_name (char *buffer, int size, int seed)
+interface_task (void *args, zctx_t *ctx, void *pipe)
 {
-    assert (size >= 10);
-    sprintf (buffer, "GROUP%04X", randof (seed));
-}
-
-static void *
-zhash_key_at (zhash_t *table, int idx)
-{
-    assert (zhash_size (table) > idx);
-    zlist_t *list = zhash_keys (table);
-    void *value = zlist_first (list);
-    while (idx-- > 0) {
-        value = zlist_next (list);
-    }
-    return value;
-
-}
-
-static zmsg_t *
-gen_msg (char *sender, char *target, char *prefix, uint64_t msg_id)
-{
-    zmsg_t *outgoing = zmsg_new ();
-    zmsg_addstr (outgoing, target);
-    zmsg_addstr (outgoing, "%s-%s-%lu", sender, prefix, msg_id);
-
-    return outgoing;
-}
-
-static void *
-interface_task (void *args)
-{
-    char *interface_id = (char *) args;
-    uint64_t msg_id = 0;
-    zre_interface_t *interface = zre_interface_new ();
-    printf ("%s: started total %d\n", interface_id, (int) zhash_size (interfaces));
-
-    while (zhash_lookup (interfaces, interface_id)) { // need a nicer way to stop/wake up interface
-
-        if (randof (GROUP_MODULO) == 0) {
-            // join a group
-            char name [20];
-            random_group_name (name, sizeof(name), MAX_GROUP);
-            printf ("%s: JOIN group %s\n", interface_id, name);
-            zre_interface_join (interface, name);
-
-            zmsg_t *outgoing = gen_msg (interface_id, name, "S", msg_id++);
-            zre_interface_shout (interface, &outgoing);
-        }
-
-        if (randof (GROUP_MODULO) == 1) {
-            // leave a group
-            char name [20];
-            random_group_name (name, sizeof(name), MAX_GROUP);
-            printf ("%s: LEAVE group %s\n", interface_id, name);
-            zre_interface_leave (interface, name);
-        }
-
-        zmsg_t *incoming = zre_interface_recv (interface);
-        if (!incoming) {
-            printf ("%s: Interrupted\n", interface_id);
+    zre_interface_t *interface = zre_interface_new (true);
+    int64_t counter = 0;
+    char *to_peer = NULL;        //  Either of these set,
+    char *to_group = NULL;       //    and we set a message
+    
+    zmq_pollitem_t pollitems [] = {
+        { pipe,                             0, ZMQ_POLLIN, 0 },
+        { zre_interface_handle (interface), 0, ZMQ_POLLIN, 0 }
+    };
+    //  Do something once a second
+    int64_t trigger = zclock_time () + 1000;
+    while (!zctx_interrupted) {
+        if (zmq_poll (pollitems, 2, randof (1000) * ZMQ_POLL_MSEC) == -1)
             break;              //  Interrupted
-        }
 
-        //  If new peer, say hello to it and wait for it to answer us
-        char *event = zmsg_popstr (incoming);
-        if (streq (event, "ENTER")) {
-            char *peer = zmsg_popstr (incoming);
-            printf ("%s: [%s] peer entered\n", interface_id, peer);
+        if (pollitems [0].revents & ZMQ_POLLIN)
+            break;              //  Any command from parent means EXIT
 
-            zmsg_t *outgoing = gen_msg (interface_id, peer, "H", msg_id++);
-            zre_interface_whisper (interface, &outgoing);
-            free (peer);
-        }
-        else
-        if (streq (event, "EXIT")) {
-            char *peer = zmsg_popstr (incoming);
-            printf ("%s: [%s] peer exited\n", interface_id, peer);
-            free (peer);
-        }
-        else
-        if (streq (event, "WHISPER")) {
-            char *peer = zmsg_popstr (incoming);
-            char name [10];
-            random_group_name (name, sizeof(name), MAX_GROUP);
-            printf ("%s: [%s] received cookies\n", interface_id, peer);
+        //  Process an event from interface
+        if (pollitems [1].revents & ZMQ_POLLIN) {
+            zmsg_t *incoming = zre_interface_recv (interface);
+            if (!incoming)
+                break;              //  Interrupted
 
-            if (randof(2) == 0) { // sometimes response back
-                zmsg_t *outgoing = gen_msg (interface_id, peer, "W", msg_id++);
-                zre_interface_whisper (interface, &outgoing);
+            char *event = zmsg_popstr (incoming);
+            if (streq (event, "ENTER")) {
+                //  Always say hello to new peer
+                to_peer = zmsg_popstr (incoming);
             }
-            free (peer);
-        }
-        else
-        if (streq (event, "SHOUT")) {
-            char *peer = zmsg_popstr (incoming);
-            char *group = zmsg_popstr (incoming);
-            printf ("%s: [%s](%s) received COOKIES\n", interface_id, peer, group);
-            if (randof(3) == 0) { // sometimes response back
-                zmsg_t *outgoing = gen_msg (interface_id, group, "S", msg_id++);
+            else
+            if (streq (event, "EXIT")) {
+                //  Always try talk to departed peer
+                to_peer = zmsg_popstr (incoming);
+            }
+            else
+            if (streq (event, "WHISPER")) {
+                //  Send back response 1/2 the time
+                if (randof (2) == 0)
+                    to_peer = zmsg_popstr (incoming);
+            }
+            else
+            if (streq (event, "SHOUT")) {
+                to_peer = zmsg_popstr (incoming);
+                to_group = zmsg_popstr (incoming);
+                //  Send peer response 1/3rd the time
+                if (randof (3) > 0) {
+                    free (to_peer);
+                    to_peer = NULL;
+                }
+                //  Send group response 1/3rd the time
+                if (randof (3) > 0) {
+                    free (to_group);
+                    to_group = NULL;
+                }
+            }
+            free (event);
+            zmsg_destroy (&incoming);
+
+            //  Send outgoing messages if needed
+            if (to_peer) {
+                zmsg_t *outgoing = zmsg_new ();
+                zmsg_addstr (outgoing, to_peer);
+                zmsg_addstr (outgoing, "%lu", counter++);
+                zre_interface_whisper (interface, &outgoing);
+                free (to_peer);
+                to_peer = NULL;
+            }
+            if (to_group) {
+                zmsg_t *outgoing = zmsg_new ();
+                zmsg_addstr (outgoing, to_group);
+                zmsg_addstr (outgoing, "%lu", counter++);
                 zre_interface_shout (interface, &outgoing);
+                free (to_group);
+                to_group = NULL;
             }
-            if (randof(3) == 1) { // sometimes send a whisper
-                zmsg_t *outgoing = gen_msg (interface_id, peer, "W", msg_id++);
-                zre_interface_whisper (interface, &outgoing);
-            }
-
-            free (peer);
-            free (group);
         }
-        free (event);
-        zmsg_destroy (&incoming);
-
+        if (zclock_time () >= trigger) {
+            trigger = zclock_time () + 1000;
+            char group [10];
+            sprintf (group, "GROUP%03d", randof (MAX_GROUP));
+            if (randof (4) == 0)
+                zre_interface_join (interface, group);
+            else
+                zre_interface_leave (interface, group);
+        }
     }
-
-    printf ("%s: stop interface total:%d\n", interface_id, (int) zhash_size (interfaces));
     zre_interface_destroy (&interface);
-    free (interface_id);
-
-    return NULL;
 }
+
 
 int main (int argc, char *argv [])
 {
-    interfaces =  zhash_new ();
+    //  Initialize context for talking to tasks
+    zctx_t *ctx = zctx_new ();
+    zctx_set_linger (ctx, 100);
+    
+    //  Get number of interfaces to simulate, default 100
     int max_interface = 100;
+    int nbr_interfaces = 0;
     if (argc > 1)
-        max_interface = atoi (argv[1]);
-    int iid = 0;
-    int quotient = 0;
+        max_interface = atoi (argv [1]);
 
-    while (iid < max_interface && !zctx_interrupted) {
+    //  We address interfaces as an array of pipes
+    void **pipes = zmalloc (sizeof (void *) * max_interface);
 
-        if (quotient == 0) { // new interface at startup
-            // create new interface
-            char interface_id [10];
-            sprintf (interface_id, "IF-%04d", ++iid);
-            zhash_insert (interfaces, interface_id, DUMMY);   // faster lookup
-            zthread_new (interface_task, strdup (interface_id));
+    //  We will randomly start and stop interface threads
+    while (!zctx_interrupted) {
+        uint index = randof (max_interface);
+        //  Toggle interface thread
+        if (pipes [index]) {
+            zstr_send (pipes [index], "STOP");
+            zsocket_destroy (ctx, pipes [index]);
+            pipes [index] = NULL;
+            zclock_log ("I: Stopped interface (%d running)", --nbr_interfaces);
         }
-        if (quotient == 1 && zhash_size (interfaces) > 0) {
-            // destroy a random interface
-            char *interface_id = zhash_key_at (interfaces, randof (zhash_size (interfaces)));
-            // might need a nicer way to stop/wake up a interface
-            zhash_delete (interfaces, interface_id);
+        else {
+            pipes [index] = zthread_fork (ctx, interface_task, NULL);
+            zclock_log ("I: Started interface (%d running)", ++nbr_interfaces);
         }
-        sleep (1);
-        if (iid > 3) // start 3 interface at least
-            quotient = randof (INTEFACE_MODULO);
+        //  Sleep ~750 msecs randomly so we smooth out activity
+        zclock_sleep (randof (500) + 500);
     }
-
-    zhash_destroy (&interfaces);
-
+    zctx_destroy (&ctx);
     return 0;
 }
