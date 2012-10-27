@@ -208,6 +208,18 @@ zre_msg_recv (void *socket)
             GET_OCTET (self->status);
             break;
 
+        case ZRE_MSG_HELLO_OK:
+            GET_OCTET (list_size);
+            self->groups = zlist_new ();
+            zlist_autofree (self->groups);
+            while (list_size--) {
+                char *string;
+                GET_STRING (string);
+                zlist_append (self->groups, string);
+            }
+            GET_OCTET (self->status);
+            break;
+
         case ZRE_MSG_WHISPER:
             //  Get next frame, leave current untouched
             if (!zsocket_rcvmore (socket))
@@ -294,6 +306,21 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             frame_size += 1;
             break;
             
+        case ZRE_MSG_HELLO_OK:
+            //  groups is an array of strings
+            frame_size++;       //  Size is one octet
+            if (self->groups) {
+                //  Add up size of list contents
+                char *groups = (char *) zlist_first (self->groups);
+                while (groups) {
+                    frame_size += 1 + strlen (groups);
+                    groups = (char *) zlist_next (self->groups);
+                }
+            }
+            //  status is an octet
+            frame_size += 1;
+            break;
+            
         case ZRE_MSG_WHISPER:
             break;
             
@@ -347,6 +374,20 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             else
                 PUT_OCTET (0);      //  Empty string
             PUT_NUMBER (self->port);
+            if (self->groups != NULL) {
+                PUT_OCTET (zlist_size (self->groups));
+                char *groups = (char *) zlist_first (self->groups);
+                while (groups) {
+                    PUT_STRING (groups);
+                    groups = (char *) zlist_next (self->groups);
+                }
+            }
+            else
+                PUT_OCTET (0);      //  Empty string array
+            PUT_OCTET (self->status);
+            break;
+            
+        case ZRE_MSG_HELLO_OK:
             if (self->groups != NULL) {
                 PUT_OCTET (zlist_size (self->groups));
                 char *groups = (char *) zlist_first (self->groups);
@@ -446,6 +487,11 @@ zre_msg_dup (zre_msg_t *self)
             copy->status = self->status;
             break;
 
+        case ZRE_MSG_HELLO_OK:
+            copy->groups = zlist_copy (self->groups);
+            copy->status = self->status;
+            break;
+
         case ZRE_MSG_WHISPER:
             copy->cookies = zframe_dup (self->cookies);
             break;
@@ -492,6 +538,20 @@ zre_msg_dump (zre_msg_t *self)
             else
                 printf ("    from=\n");
             printf ("    port=%ld\n", (long) self->port);
+            printf ("    groups={");
+            if (self->groups) {
+                char *groups = (char *) zlist_first (self->groups);
+                while (groups) {
+                    printf (" '%s'", groups);
+                    groups = (char *) zlist_next (self->groups);
+                }
+            }
+            printf (" }\n");
+            printf ("    status=%d\n", self->status);
+            break;
+            
+        case ZRE_MSG_HELLO_OK:
+            puts ("HELLO_OK:");
             printf ("    groups={");
             if (self->groups) {
                 char *groups = (char *) zlist_first (self->groups);
@@ -610,6 +670,43 @@ zre_msg_id_set (zre_msg_t *self, int id)
 {
     self->id = id;
 }
+
+//  --------------------------------------------------------------------------
+//  Return a printable command string
+
+char *
+zre_msg_command (zre_msg_t *self)
+{
+    assert (self);
+    switch (self->id) {
+        case ZRE_MSG_HELLO:
+            return ("HELLO");
+            break;
+        case ZRE_MSG_HELLO_OK:
+            return ("HELLO_OK");
+            break;
+        case ZRE_MSG_WHISPER:
+            return ("WHISPER");
+            break;
+        case ZRE_MSG_SHOUT:
+            return ("SHOUT");
+            break;
+        case ZRE_MSG_PING:
+            return ("PING");
+            break;
+        case ZRE_MSG_PING_OK:
+            return ("PING_OK");
+            break;
+        case ZRE_MSG_JOIN:
+            return ("JOIN");
+            break;
+        case ZRE_MSG_LEAVE:
+            return ("LEAVE");
+            break;
+    }
+    return "?";
+}
+
 
 //  --------------------------------------------------------------------------
 //  Get/set the from field
@@ -827,6 +924,20 @@ zre_msg_test (bool verbose)
     assert (self);
     assert (streq (zre_msg_from (self), "Life is short but Now lasts for ever"));
     assert (zre_msg_port (self) == 12345678);
+    assert (zre_msg_groups_size (self) == 2);
+    assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
+    assert (streq (zre_msg_groups_next (self), "Age: 43"));
+    assert (zre_msg_status (self) == 123);
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_HELLO_OK);
+    zre_msg_groups_append (self, "Name: %s", "Brutus");
+    zre_msg_groups_append (self, "Age: %d", 43);
+    zre_msg_status_set (self, 123);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
     assert (zre_msg_groups_size (self) == 2);
     assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
     assert (streq (zre_msg_groups_next (self), "Age: 43"));

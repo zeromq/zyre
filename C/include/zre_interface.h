@@ -35,11 +35,15 @@ typedef struct _zre_interface_t zre_interface_t;
 
 //  Constructor
 zre_interface_t *
-    zre_interface_new (void);
+    zre_interface_new (bool verbose);
 
 //  Destructor
 void
     zre_interface_destroy (zre_interface_t **self_p);
+
+//  Set interface tracing on or off
+void
+    zre_interface_verbose_set (zre_interface_t *self, bool verbose);
 
 //  Join a group
 int
@@ -61,6 +65,10 @@ int
 int
     zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p);
     
+//  Return interface handle, for polling
+void *
+    zre_interface_handle (zre_interface_t *self);
+
 #ifdef __cplusplus
 }
 #endif

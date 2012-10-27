@@ -36,16 +36,16 @@
 #define ZRE_VERSION \
     ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
 
-#if CZMQ_VERSION < 10301
-#   error "ZyRE needs CZMQ/1.3.1 or later, please get from GitHub"
+#if CZMQ_VERSION < 10302
+#   error "ZyRE needs CZMQ/1.3.2 or later"
 #endif
 
 //  Constants, to be configured/reviewed
 
 #define PING_PORT_NUMBER 9999
-#define PING_INTERVAL    1000  //  Once per second
-#define PEER_EVASIVE     3000  //  Three seconds' silence is evasive
-#define PEER_EXPIRED     5000  //  Five seconds' silence is expired
+#define PING_INTERVAL    1000   //  Once per second
+#define PEER_EVASIVE     5000   //  Five seconds' silence is evasive
+#define PEER_EXPIRED    10000   //  Ten seconds' silence is expired
 
 //  Classes in this stack
 
