@@ -13,38 +13,32 @@ This is the ZRE protocol version 1.
 Greet a peer so it connect back to us.
 </message>
 
-<message name = "HELLO-OK" id = "2">
-    <field name = "groups" type = "strings" />
-    <field name = "status" type = "octet" />
-Handshake a greeting so our peer gets our status.
-</message>
-
-<message name = "WHISPER" id = "3">
+<message name = "WHISPER" id = "2">
     <field name = "cookies" type = "frame" />
 Send a message to a peer.
 </message>
 
-<message name = "SHOUT" id = "4">
+<message name = "SHOUT" id = "3">
     <field name = "group" type = "string" />
     <field name = "cookies" type = "frame" />
 Send a message to a group.
 </message>
 
-<message name = "PING" id = "5">
+<message name = "PING" id = "4">
 Ping a peer that has gone silent.
 </message>
 
-<message name = "PING-OK" id = "6">
+<message name = "PING-OK" id = "5">
 Reply to a peer's ping.
 </message>
 
-<message name = "JOIN" id = "7">
+<message name = "JOIN" id = "6">
     <field name = "group" type = "string" />
     <field name = "status" type = "octet" />
 Join a group.
 </message>
 
-<message name = "LEAVE" id = "8">
+<message name = "LEAVE" id = "7">
     <field name = "group" type = "string" />
     <field name = "status" type = "octet" />
 Leave a group.

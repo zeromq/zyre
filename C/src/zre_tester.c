@@ -92,6 +92,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
             if (randof (4) == 0)
                 zre_interface_join (interface, group);
             else
+            if (randof (3) == 0)
                 zre_interface_leave (interface, group);
         }
     }
