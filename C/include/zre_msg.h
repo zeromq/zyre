@@ -34,10 +34,6 @@
         groups        strings 
         status        octet 
 
-    HELLO_OK - Handshake a greeting so our peer gets our status.
-        groups        strings 
-        status        octet 
-
     WHISPER - Send a message to a peer.
         cookies       frame 
 
@@ -61,13 +57,12 @@
 #define ZRE_MSG_VERSION                     1
 
 #define ZRE_MSG_HELLO                       1
-#define ZRE_MSG_HELLO_OK                    2
-#define ZRE_MSG_WHISPER                     3
-#define ZRE_MSG_SHOUT                       4
-#define ZRE_MSG_PING                        5
-#define ZRE_MSG_PING_OK                     6
-#define ZRE_MSG_JOIN                        7
-#define ZRE_MSG_LEAVE                       8
+#define ZRE_MSG_WHISPER                     2
+#define ZRE_MSG_SHOUT                       3
+#define ZRE_MSG_PING                        4
+#define ZRE_MSG_PING_OK                     5
+#define ZRE_MSG_JOIN                        6
+#define ZRE_MSG_LEAVE                       7
 
 #ifdef __cplusplus
 extern "C" {

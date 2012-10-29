@@ -397,16 +397,31 @@ agent_recv_from_peer (agent_t *self)
 {
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_recv (self->inbox);
+    if (msg == NULL) {
+        zclock_log ("W: [%s] interrupted? %s", self->identity, strerror (errno));
+        assert (false);
+    }
     char *identity = zframe_strdup (zre_msg_address (msg));
-
     if (self->verbose)
         zclock_log ("I: [%s] recv %s from %s",
-                    self->identity, zre_msg_command (msg), identity);
+            self->identity, zre_msg_command (msg), identity);
         
-    //  On HELLO we can connect back to peer if needed
-    if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
-        zre_peer_t *peer = s_require_peer (
+    //  On HELLO we may create the peer if it doesn't exist
+    //  On other commands, the peer must already exist
+    zre_peer_t *peer;
+    if (zre_msg_id (msg) == ZRE_MSG_HELLO)
+        peer = s_require_peer (
             self, identity, zre_msg_from (msg), zre_msg_port (msg));
+    else
+        peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
+        
+    //  Peer must exist by now or our code is wrong
+    if (!peer) {
+        zclock_log ("E: [%s] peer %s not found", self->identity, identity);
+        assert (peer);
+    }
+    //  Now process each command
+    if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         //  Join peer to listed groups
         char *name = zre_msg_groups_first (msg);
         while (name) {
@@ -416,24 +431,8 @@ agent_recv_from_peer (agent_t *self)
         }
         //  Hello command holds latest status of peer
         zre_peer_status_set (peer, zre_msg_status (msg));
-
-        //  Handshake greeting by sending HELLO-OK back to peer
-        zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO_OK);
-        zre_msg_groups_set (msg, zhash_keys (self->own_groups));
-        zre_msg_status_set (msg, self->status);
-        zre_peer_send (peer, &msg);
-        if (self->verbose)
-            zclock_log ("I: [%s] send HELLO-OK to %s", self->identity, identity);
     }
-    //  Peer must exist by now or our code is wrong
-    zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
-    if (!peer) {
-        zclock_log ("E: [%s] peer %s not found", self->identity, identity);
-        zre_msg_dump (msg);
-    }
-    assert (peer);
-    zre_peer_refresh (peer);
-
+    else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as WHISPER event
         zstr_sendm (self->pipe, "WHISPER");
@@ -475,6 +474,9 @@ agent_recv_from_peer (agent_t *self)
     }
     free (identity);
     zre_msg_destroy (&msg);
+    
+    //  Activity from peer resets peer timers
+    zre_peer_refresh (peer);
     return 0;
 }
 
