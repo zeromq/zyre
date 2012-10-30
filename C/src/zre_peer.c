@@ -35,9 +35,11 @@ struct _zre_peer_t {
     zctx_t *ctx;                //  CZMQ context
     void *mailbox;              //  Socket through to peer
     char *identity;             //  Identity string
+    char *endpoint;             //  Endpoint connected to
     uint64_t evasive_at;        //  Peer is being evasive
     uint64_t expired_at;        //  Peer has expired by now
-    bool connected;             //  Peer is ready for work
+    bool connected;             //  Peer will send messages
+    bool ready;                 //  Peer has said Hello to us
     byte status;                //  Our status counter
 };
 
@@ -60,8 +62,8 @@ zre_peer_new (char *identity, zhash_t *container, zctx_t *ctx)
 {
     zre_peer_t *self = (zre_peer_t *) zmalloc (sizeof (zre_peer_t));
     self->ctx = ctx;
-    self->mailbox = zsocket_new (ctx, ZMQ_DEALER);
     self->identity = strdup (identity);
+    self->ready = false;
     
     //  Insert into container if requested
     if (container) {
@@ -82,6 +84,7 @@ zre_peer_destroy (zre_peer_t **self_p)
     if (*self_p) {
         zre_peer_t *self = *self_p;
         free (self->identity);
+        free (self->endpoint);
         free (self);
         *self_p = NULL;
     }
@@ -93,13 +96,17 @@ zre_peer_destroy (zre_peer_t **self_p)
 //  Configures mailbox and connects to peer's router endpoint
 
 void
-zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port)
+zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
 {
-    //  Not allowed to call if already connected
-    assert (!self->connected);
+    //  If already connected, destroy old socket and start again
+    if (self->connected)
+        zsocket_destroy (self->ctx, self->mailbox);
 
-    //  Set our caller 'From' identity so that receiving node
-    //  knows who each message came from.
+    //  Create new outgoing socket (drop any messages in transit)
+    self->mailbox = zsocket_new (self->ctx, ZMQ_DEALER);
+    
+    //  Set our caller 'From' identity so that receiving node knows
+    //  who each message came from.
     zsocket_set_identity (self->mailbox, reply_to);
 
     //  We'll use credit based flow control later, for now set a
@@ -107,8 +114,39 @@ zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port)
     zsocket_set_sndhwm (self->mailbox, 4);
 
     //  Connect through to peer node
-    zsocket_connect (self->mailbox, "tcp://%s:%d", address, port);
+    zsocket_connect (self->mailbox, "tcp://%s", endpoint);
+    self->endpoint = strdup (endpoint);
     self->connected = true;
+    self->ready = false;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Disconnect peer mailbox
+//  No more messages will be sent to peer until connected again
+
+void
+zre_peer_disconnect (zre_peer_t *self)
+{
+    //  If already connected, destroy old socket and start again
+    if (self->connected) {
+        zsocket_destroy (self->ctx, self->mailbox);
+        free (self->endpoint);
+        self->endpoint = NULL;
+        self->connected = false;
+    }
+}
+
+
+//  ---------------------------------------------------------------------
+//  Send message to peer
+
+void
+zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
+{
+    assert (self);
+    if (self->connected)
+        zre_msg_send (msg_p, self->mailbox);
 }
 
 
@@ -124,17 +162,6 @@ zre_peer_connected (zre_peer_t *self)
 
 
 //  ---------------------------------------------------------------------
-//  Send message to peer
-
-void
-zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
-{
-    assert (self);
-    zre_msg_send (msg_p, self->mailbox);
-}
-
-
-//  ---------------------------------------------------------------------
 //  Return peer identity string
 
 char *
@@ -142,6 +169,20 @@ zre_peer_identity (zre_peer_t *self)
 {
     assert (self);
     return self->identity;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Return peer connection endpoint
+
+char *
+zre_peer_endpoint (zre_peer_t *self)
+{
+    assert (self);
+    if (self->connected)
+        return self->endpoint;
+    else
+        return "";
 }
 
 
@@ -200,4 +241,26 @@ zre_peer_status_set (zre_peer_t *self, byte status)
 {
     assert (self);
     self->status = status;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Return peer ready state
+
+byte
+zre_peer_ready (zre_peer_t *self)
+{
+    assert (self);
+    return self->ready;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Set peer ready
+
+void
+zre_peer_ready_set (zre_peer_t *self, bool ready)
+{
+    assert (self);
+    self->ready = ready;
 }

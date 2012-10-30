@@ -43,11 +43,19 @@ void
 
 //  Connect peer mailbox
 void
-    zre_peer_connect (zre_peer_t *self, char *reply_to, char *address, int port);
+    zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint);
+
+//  Connect peer mailbox
+void
+    zre_peer_disconnect (zre_peer_t *self);
 
 //  Return peer connected status
 bool
     zre_peer_connected (zre_peer_t *self);
+
+//  Return peer connection endpoint
+char *
+    zre_peer_endpoint (zre_peer_t *self);
 
 //  Send message to peer
 void
@@ -69,14 +77,6 @@ int64_t
 int64_t
     zre_peer_expired_at (zre_peer_t *self);
 
-//  Return peer ready flag
-bool
-    zre_peer_ready (zre_peer_t *self);
-    
-//  Set peer ready flag
-bool
-    zre_peer_ready_set (zre_peer_t *self, bool ready);
-
 //  Return peer status
 byte
     zre_peer_status (zre_peer_t *self);
@@ -85,6 +85,14 @@ byte
 void
     zre_peer_status_set (zre_peer_t *self, byte status);
 
+//  Return peer ready state
+byte
+    zre_peer_ready (zre_peer_t *self);
+    
+//  Set peer ready
+void
+    zre_peer_ready_set (zre_peer_t *self, bool ready);
+    
 #ifdef __cplusplus
 }
 #endif
