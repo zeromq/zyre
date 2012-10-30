@@ -130,7 +130,7 @@ zre_peer_disconnect (zre_peer_t *self)
 {
     //  If already connected, destroy old socket and start again
     if (self->connected) {
-        zsocket_destroy (self->ctx, self->mailbox);
+//         zsocket_destroy (self->ctx, self->mailbox);
         free (self->endpoint);
         self->endpoint = NULL;
         self->connected = false;
