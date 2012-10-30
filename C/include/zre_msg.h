@@ -34,16 +34,14 @@
         groups        strings 
         status        octet 
 
+    RESET - Tell peer to reset their connection to us.
+
     WHISPER - Send a message to a peer.
         cookies       frame 
 
     SHOUT - Send a message to a group.
         group         string 
         cookies       frame 
-
-    PING - Ping a peer that has gone silent.
-
-    PING_OK - Reply to a peer's ping.
 
     JOIN - Join a group.
         group         string 
@@ -52,17 +50,22 @@
     LEAVE - Leave a group.
         group         string 
         status        octet 
+
+    PING - Ping a peer that has gone silent.
+
+    PING_OK - Reply to a peer's ping.
 */
 
 #define ZRE_MSG_VERSION                     1
 
-#define ZRE_MSG_HELLO                       1
-#define ZRE_MSG_WHISPER                     2
-#define ZRE_MSG_SHOUT                       3
-#define ZRE_MSG_PING                        4
-#define ZRE_MSG_PING_OK                     5
-#define ZRE_MSG_JOIN                        6
-#define ZRE_MSG_LEAVE                       7
+#define ZRE_MSG_HELLO                       10
+#define ZRE_MSG_RESET                       11
+#define ZRE_MSG_WHISPER                     20
+#define ZRE_MSG_SHOUT                       21
+#define ZRE_MSG_JOIN                        22
+#define ZRE_MSG_LEAVE                       23
+#define ZRE_MSG_PING                        40
+#define ZRE_MSG_PING_OK                     41
 
 #ifdef __cplusplus
 extern "C" {
