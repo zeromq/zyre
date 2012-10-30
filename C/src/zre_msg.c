@@ -208,6 +208,9 @@ zre_msg_recv (void *socket)
             GET_OCTET (self->status);
             break;
 
+        case ZRE_MSG_RESET:
+            break;
+
         case ZRE_MSG_WHISPER:
             //  Get next frame, leave current untouched
             if (!zsocket_rcvmore (socket))
@@ -224,12 +227,6 @@ zre_msg_recv (void *socket)
             self->cookies = zframe_recv (socket);
             break;
 
-        case ZRE_MSG_PING:
-            break;
-
-        case ZRE_MSG_PING_OK:
-            break;
-
         case ZRE_MSG_JOIN:
             free (self->group);
             GET_STRING (self->group);
@@ -240,6 +237,12 @@ zre_msg_recv (void *socket)
             free (self->group);
             GET_STRING (self->group);
             GET_OCTET (self->status);
+            break;
+
+        case ZRE_MSG_PING:
+            break;
+
+        case ZRE_MSG_PING_OK:
             break;
 
         default:
@@ -294,6 +297,9 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             frame_size += 1;
             break;
             
+        case ZRE_MSG_RESET:
+            break;
+            
         case ZRE_MSG_WHISPER:
             break;
             
@@ -302,12 +308,6 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             frame_size++;       //  Size is one octet
             if (self->group)
                 frame_size += strlen (self->group);
-            break;
-            
-        case ZRE_MSG_PING:
-            break;
-            
-        case ZRE_MSG_PING_OK:
             break;
             
         case ZRE_MSG_JOIN:
@@ -326,6 +326,12 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
                 frame_size += strlen (self->group);
             //  status is an octet
             frame_size += 1;
+            break;
+            
+        case ZRE_MSG_PING:
+            break;
+            
+        case ZRE_MSG_PING_OK:
             break;
             
         default:
@@ -360,6 +366,9 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             PUT_OCTET (self->status);
             break;
             
+        case ZRE_MSG_RESET:
+            break;
+            
         case ZRE_MSG_WHISPER:
             frame_flags = ZFRAME_MORE;
             break;
@@ -371,12 +380,6 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             else
                 PUT_OCTET (0);      //  Empty string
             frame_flags = ZFRAME_MORE;
-            break;
-            
-        case ZRE_MSG_PING:
-            break;
-            
-        case ZRE_MSG_PING_OK:
             break;
             
         case ZRE_MSG_JOIN:
@@ -395,6 +398,12 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             else
                 PUT_OCTET (0);      //  Empty string
             PUT_OCTET (self->status);
+            break;
+            
+        case ZRE_MSG_PING:
+            break;
+            
+        case ZRE_MSG_PING_OK:
             break;
             
     }
@@ -446,6 +455,9 @@ zre_msg_dup (zre_msg_t *self)
             copy->status = self->status;
             break;
 
+        case ZRE_MSG_RESET:
+            break;
+
         case ZRE_MSG_WHISPER:
             copy->cookies = zframe_dup (self->cookies);
             break;
@@ -453,12 +465,6 @@ zre_msg_dup (zre_msg_t *self)
         case ZRE_MSG_SHOUT:
             copy->group = strdup (self->group);
             copy->cookies = zframe_dup (self->cookies);
-            break;
-
-        case ZRE_MSG_PING:
-            break;
-
-        case ZRE_MSG_PING_OK:
             break;
 
         case ZRE_MSG_JOIN:
@@ -469,6 +475,12 @@ zre_msg_dup (zre_msg_t *self)
         case ZRE_MSG_LEAVE:
             copy->group = strdup (self->group);
             copy->status = self->status;
+            break;
+
+        case ZRE_MSG_PING:
+            break;
+
+        case ZRE_MSG_PING_OK:
             break;
 
     }
@@ -502,6 +514,10 @@ zre_msg_dump (zre_msg_t *self)
             }
             printf (" }\n");
             printf ("    status=%d\n", self->status);
+            break;
+            
+        case ZRE_MSG_RESET:
+            puts ("RESET:");
             break;
             
         case ZRE_MSG_WHISPER:
@@ -546,14 +562,6 @@ zre_msg_dump (zre_msg_t *self)
             printf ("    }\n");
             break;
             
-        case ZRE_MSG_PING:
-            puts ("PING:");
-            break;
-            
-        case ZRE_MSG_PING_OK:
-            puts ("PING_OK:");
-            break;
-            
         case ZRE_MSG_JOIN:
             puts ("JOIN:");
             if (self->group)
@@ -570,6 +578,14 @@ zre_msg_dump (zre_msg_t *self)
             else
                 printf ("    group=\n");
             printf ("    status=%d\n", self->status);
+            break;
+            
+        case ZRE_MSG_PING:
+            puts ("PING:");
+            break;
+            
+        case ZRE_MSG_PING_OK:
+            puts ("PING_OK:");
             break;
             
     }
@@ -622,23 +638,26 @@ zre_msg_command (zre_msg_t *self)
         case ZRE_MSG_HELLO:
             return ("HELLO");
             break;
+        case ZRE_MSG_RESET:
+            return ("RESET");
+            break;
         case ZRE_MSG_WHISPER:
             return ("WHISPER");
             break;
         case ZRE_MSG_SHOUT:
             return ("SHOUT");
             break;
-        case ZRE_MSG_PING:
-            return ("PING");
-            break;
-        case ZRE_MSG_PING_OK:
-            return ("PING_OK");
-            break;
         case ZRE_MSG_JOIN:
             return ("JOIN");
             break;
         case ZRE_MSG_LEAVE:
             return ("LEAVE");
+            break;
+        case ZRE_MSG_PING:
+            return ("PING");
+            break;
+        case ZRE_MSG_PING_OK:
+            return ("PING_OK");
             break;
     }
     return "?";
@@ -867,6 +886,13 @@ zre_msg_test (bool verbose)
     assert (zre_msg_status (self) == 123);
     zre_msg_destroy (&self);
 
+    self = zre_msg_new (ZRE_MSG_RESET);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    zre_msg_destroy (&self);
+
     self = zre_msg_new (ZRE_MSG_WHISPER);
     zre_msg_cookies_set (self, zframe_new ("Captcha Diem", 12));
     zre_msg_send (&self, output);
@@ -885,20 +911,6 @@ zre_msg_test (bool verbose)
     assert (self);
     assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
     assert (zframe_streq (zre_msg_cookies (self), "Captcha Diem"));
-    zre_msg_destroy (&self);
-
-    self = zre_msg_new (ZRE_MSG_PING);
-    zre_msg_send (&self, output);
-    
-    self = zre_msg_recv (input);
-    assert (self);
-    zre_msg_destroy (&self);
-
-    self = zre_msg_new (ZRE_MSG_PING_OK);
-    zre_msg_send (&self, output);
-    
-    self = zre_msg_recv (input);
-    assert (self);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_JOIN);
@@ -921,6 +933,20 @@ zre_msg_test (bool verbose)
     assert (self);
     assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
     assert (zre_msg_status (self) == 123);
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_PING);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_PING_OK);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
     zre_msg_destroy (&self);
 
     zctx_destroy (&ctx);

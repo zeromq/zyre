@@ -5,7 +5,7 @@ This is the ZRE protocol version 1.
 <!-- Protocol version -->
 <define name = "VERSION" value = "1" />
 
-<message name = "HELLO" id = "1">
+<message name = "HELLO" id = "10">
     <field name = "from" type = "string" />
     <field name = "port" type = "number" octets = "2" />
     <field name = "groups" type = "strings" />
@@ -13,35 +13,35 @@ This is the ZRE protocol version 1.
 Greet a peer so it connect back to us.
 </message>
 
-<message name = "WHISPER" id = "2">
+<message name = "WHISPER" id = "20">
     <field name = "cookies" type = "frame" />
 Send a message to a peer.
 </message>
 
-<message name = "SHOUT" id = "3">
+<message name = "SHOUT" id = "21">
     <field name = "group" type = "string" />
     <field name = "cookies" type = "frame" />
 Send a message to a group.
 </message>
 
-<message name = "PING" id = "4">
-Ping a peer that has gone silent.
-</message>
-
-<message name = "PING-OK" id = "5">
-Reply to a peer's ping.
-</message>
-
-<message name = "JOIN" id = "6">
+<message name = "JOIN" id = "22">
     <field name = "group" type = "string" />
     <field name = "status" type = "octet" />
 Join a group.
 </message>
 
-<message name = "LEAVE" id = "7">
+<message name = "LEAVE" id = "23">
     <field name = "group" type = "string" />
     <field name = "status" type = "octet" />
 Leave a group.
+</message>
+
+<message name = "PING" id = "40">
+Ping a peer that has gone silent.
+</message>
+
+<message name = "PING-OK" id = "41">
+Reply to a peer's ping.
 </message>
 
 </class>

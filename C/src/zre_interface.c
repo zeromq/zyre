@@ -281,7 +281,6 @@ agent_recv_from_api (agent_t *self)
         //  Send frame on out to peer's mailbox, drop message
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
-            assert (zre_peer_connected (peer));
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
             zre_msg_cookies_set (msg, zmsg_pop (request));
             zre_peer_send (peer, &msg);
@@ -345,6 +344,20 @@ agent_recv_from_api (agent_t *self)
     return 0;
 }
 
+//  Delete peer for a given endpoint
+
+static int
+agent_peer_purge (const char *key, void *item, void *argument)
+{
+    zre_peer_t *peer = (zre_peer_t *) item;
+    char *endpoint = (char *) argument;
+    if (streq (zre_peer_endpoint (peer), endpoint)) {
+        zclock_log ("W: disconnect %s", key);
+        zre_peer_disconnect (peer);
+    }
+    return 0;
+}
+
 //  Find or create peer via its UUID string
 
 static zre_peer_t *
@@ -352,11 +365,16 @@ s_require_peer (agent_t *self, char *identity, char *address, int port)
 {
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
     if (!peer) {
+        //  Purge any previous peer on same endpoint
+        char endpoint [100];
+        snprintf (endpoint, 100, "%s:%d", address, port);
+        zhash_foreach (self->peers, agent_peer_purge, endpoint);
+
         peer = zre_peer_new (identity, self->peers, self->ctx);
-        zre_peer_connect (peer, self->identity, address, port);
+        zre_peer_connect (peer, self->identity, endpoint);
         if (self->verbose)
-            zclock_log ("I: [%s] connect to %s at %s:%d",
-                        self->identity, identity, address, port);
+            zclock_log ("I: [%s] connect to %s at %s", self->identity,
+                        identity, endpoint);
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
@@ -406,20 +424,17 @@ agent_recv_from_peer (agent_t *self)
         zclock_log ("I: [%s] recv %s from %s",
             self->identity, zre_msg_command (msg), identity);
         
-    //  On HELLO we may create the peer if it doesn't exist
-    //  On other commands, the peer must already exist
-    zre_peer_t *peer;
+    //  On HELLO we may create the peer if it's unknown
+    //  On other commands the peer must already exist
+    zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
     if (zre_msg_id (msg) == ZRE_MSG_HELLO)
         peer = s_require_peer (
             self, identity, zre_msg_from (msg), zre_msg_port (msg));
-    else
-        peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
-        
-    //  Peer must exist by now or our code is wrong
-    if (!peer) {
-        zclock_log ("E: [%s] peer %s not found", self->identity, identity);
-        assert (peer);
+    if (peer == NULL || !zre_peer_ready (peer)) {
+        zclock_log ("W: [%s] ignoring command from %s", self->identity, identity);
+        return 0;
     }
+    
     //  Now process each command
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         //  Join peer to listed groups
@@ -431,6 +446,7 @@ agent_recv_from_peer (agent_t *self)
         }
         //  Hello command holds latest status of peer
         zre_peer_status_set (peer, zre_msg_status (msg));
+        zre_peer_ready_set (peer, true);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
@@ -524,8 +540,6 @@ agent_recv_udp_beacon (agent_t *self)
         char *identity = s_uuid_str (beacon.uuid);
         zre_peer_t *peer = s_require_peer (
             self, identity, zre_udp_from (self->udp), ntohs (beacon.port));
-//         if (self->verbose)
-//             zclock_log ("I: [%s] recv BEACON from %s", self->identity, identity);
         zre_peer_refresh (peer);
         free (identity);
     }
