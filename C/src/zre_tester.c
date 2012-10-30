@@ -13,6 +13,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
+    char *cookie = NULL;
     
     zmq_pollitem_t pollitems [] = {
         { pipe,                             0, ZMQ_POLLIN, 0 },
@@ -46,13 +47,16 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
             else
             if (streq (event, "WHISPER")) {
                 //  Send back response 1/2 the time
-                if (randof (2) == 0)
+                if (randof (2) == 0) {
                     to_peer = zmsg_popstr (incoming);
+                    cookie = zmsg_popstr (incoming);
+                }
             }
             else
             if (streq (event, "SHOUT")) {
                 to_peer = zmsg_popstr (incoming);
                 to_group = zmsg_popstr (incoming);
+                cookie = zmsg_popstr (incoming);
                 //  Send peer response 1/3rd the time
                 if (randof (3) > 0) {
                     free (to_peer);
@@ -83,6 +87,10 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                 zre_interface_shout (interface, &outgoing);
                 free (to_group);
                 to_group = NULL;
+            }
+            if (cookie) {
+                free (cookie);
+                cookie = NULL;
             }
         }
         if (zclock_time () >= trigger) {

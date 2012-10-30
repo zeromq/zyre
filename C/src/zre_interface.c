@@ -435,17 +435,19 @@ agent_recv_from_peer (agent_t *self)
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as WHISPER event
+        zframe_t *cookie = zre_msg_cookies (msg);
         zstr_sendm (self->pipe, "WHISPER");
         zstr_sendm (self->pipe, identity);
-        zstr_send (self->pipe, "Cookies");
+        zframe_send (&cookie, self->pipe, ZFRAME_REUSE); // let msg free the frame
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_SHOUT) {
         //  Pass up to caller as SHOUT event
+        zframe_t *cookie = zre_msg_cookies (msg);
         zstr_sendm (self->pipe, "SHOUT");
         zstr_sendm (self->pipe, identity);
         zstr_sendm (self->pipe, zre_msg_group (msg));
-        zstr_send (self->pipe, "Cookies");
+        zframe_send (&cookie, self->pipe, ZFRAME_REUSE); // let msg free the frame
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_PING) {
@@ -616,6 +618,7 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
             //  Ping all peers and reap any expired ones
             zhash_foreach (self->peers, agent_ping_peer, self);
         }
+
     }
     agent_destroy (&self);
 }
