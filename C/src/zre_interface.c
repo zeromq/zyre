@@ -335,6 +335,7 @@ agent_recv_from_api (agent_t *self)
             zre_msg_status_set (msg, ++(self->status));
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
+            zhash_delete (self->own_groups, name);
             if (self->verbose)
                 zclock_log ("I: [%s] leave group (%d)", self->identity, self->status);
         }
