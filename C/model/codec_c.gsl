@@ -32,11 +32,23 @@
 .       else
 .           copy field to class
 .       endfor
-        $(name)       $(type) \
-.       if defined (size)
-[$(size)]
+.       if type = "number"
+.           size ?= 8
+.           if size = 1
+.               ctype = "byte"
+.           elsif size = 2
+.               ctype = "int16_t"
+.           elsif size = 4
+.               ctype = "int32_t"
+.           elsif size = 8
+.               ctype = "int64_t"
+.           else
+.               echo "E: bad size $(size) for $(name)"
+.           endif
+.       elsif type = "octets"
+        $(name)       $(type) [$(size)]
 .       else
-
+        $(name)       $(type)
 .       endif
 .   endfor
 .endfor
@@ -73,7 +85,7 @@ $(class.name)_t *
     $(class.name)_recv (void *socket);
 
 //  Send the $(class.name) to the socket, and destroy it
-void
+int
     $(class.name)_send ($(class.name)_t **self_p, void *socket);
 
 //  Duplicate the $(class.name) message
@@ -99,12 +111,12 @@ char *
     $(class.name)_command ($(class.name)_t *self);
 
 .for class.field where !defined (value)
-.   if type = "octet"
+.   if type = "number"
 //  Get/set the $(name) field
-byte
+$(ctype)
     $(class.name)_$(name) ($(class.name)_t *self);
 void
-    $(class.name)_$(name)_set ($(class.name)_t *self, byte $(name));
+    $(class.name)_$(name)_set ($(class.name)_t *self, $(ctype) $(name));
 .#
 .   elsif type = "octets"
 //  Get/set the $(name) field
@@ -112,13 +124,6 @@ byte *
     $(class.name)_$(name) ($(class.name)_t *self);
 void
     $(class.name)_$(name)_set ($(class.name)_t *self, byte *$(name));
-.#
-.   elsif type = "number"
-//  Get/set the $(name) field
-int64_t
-    $(class.name)_$(name) ($(class.name)_t *self);
-void
-    $(class.name)_$(name)_set ($(class.name)_t *self, int64_t $(name));
 .#
 .   elsif type = "string"
 //  Get/set the $(name) field
@@ -204,12 +209,10 @@ struct _$(class.name)_t {
     byte *needle;               //  Read/write pointer for serialization
     byte *ceiling;              //  Valid upper limit for read pointer
 .for class.field
-.   if type = "octet"
-    byte $(name);
+.   if type = "number"
+    $(ctype) $(name);
 .   elsif type = "octets"
     byte $(name) [$(size)];
-.   elsif type = "number"
-    int64_t $(name);
 .   elsif type = "string"
     char *$(name);
 .   elsif type = "strings"
@@ -229,20 +232,6 @@ struct _$(class.name)_t {
 //  Strings are encoded with 1-byte length
 #define STRING_MAX  255
 
-//  Put an octet to the frame
-#define PUT_OCTET(host) { \\
-    *(byte *) self->needle = (host); \\
-    self->needle++; \\
-    }
-
-//  Get an octet from the frame
-#define GET_OCTET(host) { \\
-    if (self->needle + 1 > self->ceiling) \\
-        goto malformed; \\
-    (host) = *(byte *) self->needle; \\
-    self->needle++; \\
-    }
-
 //  Put a block to the frame
 #define PUT_BLOCK(host,size) { \\
     memcpy (self->needle, (host), size); \\
@@ -257,8 +246,30 @@ struct _$(class.name)_t {
     self->needle += size; \\
     }
 
-//  Put a long long integer to the frame
-#define PUT_NUMBER(host) { \\
+//  Put a 1-byte number to the frame
+#define PUT_NUMBER1(host) { \\
+    *(byte *) self->needle = (host); \\
+    self->needle++; \\
+    }
+
+//  Put a 2-byte number to the frame
+#define PUT_NUMBER2(host) { \\
+    self->needle [0] = (byte) (((host) >> 8)  & 255); \\
+    self->needle [1] = (byte) (((host))       & 255); \\
+    self->needle += 2; \\
+    }
+
+//  Put a 4-byte number to the frame
+#define PUT_NUMBER4(host) { \\
+    self->needle [0] = (byte) (((host) >> 24) & 255); \\
+    self->needle [1] = (byte) (((host) >> 16) & 255); \\
+    self->needle [2] = (byte) (((host) >> 8)  & 255); \\
+    self->needle [3] = (byte) (((host))       & 255); \\
+    self->needle += 4; \\
+    }
+
+//  Put a 8-byte number to the frame
+#define PUT_NUMBER8(host) { \\
     self->needle [0] = (byte) (((host) >> 56) & 255); \\
     self->needle [1] = (byte) (((host) >> 48) & 255); \\
     self->needle [2] = (byte) (((host) >> 40) & 255); \\
@@ -270,8 +281,36 @@ struct _$(class.name)_t {
     self->needle += 8; \\
     }
 
-//  Get a number from the frame
-#define GET_NUMBER(host) { \\
+//  Get a 1-byte number from the frame
+#define GET_NUMBER1(host) { \\
+    if (self->needle + 1 > self->ceiling) \\
+        goto malformed; \\
+    (host) = *(byte *) self->needle; \\
+    self->needle++; \\
+    }
+
+//  Get a 2-byte number from the frame
+#define GET_NUMBER2(host) { \\
+    if (self->needle + 2 > self->ceiling) \\
+        goto malformed; \\
+    (host) = ((int16_t) (self->needle [0]) << 8) \\
+           +  (int16_t) (self->needle [1]); \\
+    self->needle += 2; \\
+    }
+
+//  Get a 4-byte number from the frame
+#define GET_NUMBER4(host) { \\
+    if (self->needle + 4 > self->ceiling) \\
+        goto malformed; \\
+    (host) = ((int32_t) (self->needle [0]) << 24) \\
+           + ((int32_t) (self->needle [1]) << 16) \\
+           + ((int32_t) (self->needle [2]) << 8) \\
+           +  (int32_t) (self->needle [3]); \\
+    self->needle += 4; \\
+    }
+
+//  Get a 8-byte number from the frame
+#define GET_NUMBER8(host) { \\
     if (self->needle + 8 > self->ceiling) \\
         goto malformed; \\
     (host) = ((int64_t) (self->needle [0]) << 56) \\
@@ -288,14 +327,14 @@ struct _$(class.name)_t {
 //  Put a string to the frame
 #define PUT_STRING(host) { \\
     string_size = strlen (host); \\
-    PUT_OCTET (string_size); \\
+    PUT_NUMBER1 (string_size); \\
     memcpy (self->needle, (host), string_size); \\
     self->needle += string_size; \\
     }
 
 //  Get a string from the frame
 #define GET_STRING(host) { \\
-    GET_OCTET (string_size); \\
+    GET_NUMBER1 (string_size); \\
     if (self->needle + string_size > (self->ceiling)) \\
         goto malformed; \\
     (host) = (char *) malloc (string_size + 1); \\
@@ -379,26 +418,20 @@ $(class.name)_recv (void *socket)
     size_t hash_size;
 
     //  Get message id, which is first byte in frame
-    GET_OCTET (self->id);
+    GET_NUMBER1 (self->id);
 
     switch (self->id) {
 .for class.message
         case $(CLASS.NAME)_$(MESSAGE.NAME):
 .   for field
-.       if type = "octet"
-            GET_OCTET (self->$(name));
+.       if type = "number"
+            GET_NUMBER$(size) (self->$(name));
 .           if defined (field.value)
             if (self->$(name) != $(field.value:))
                 goto malformed;
 .           endif
 .       elsif type = "octets"
             GET_BLOCK (self->$(name), $(size));
-.       elsif type = "number"
-            GET_NUMBER (self->$(name));
-.           if defined (field.value)
-            if (self->$(name) != $(field.value:))
-                goto malformed;
-.           endif
 .       elsif type = "string"
             free (self->$(name));
             GET_STRING (self->$(name));
@@ -407,7 +440,7 @@ $(class.name)_recv (void *socket)
                 goto malformed;
 .           endif
 .       elsif type = "strings"
-            GET_OCTET (list_size);
+            GET_NUMBER1 (list_size);
             self->$(name) = zlist_new ();
             zlist_autofree (self->$(name));
             while (list_size--) {
@@ -416,7 +449,7 @@ $(class.name)_recv (void *socket)
                 zlist_append (self->$(name), string);
             }
 .       elsif type = "dictionary"
-            GET_OCTET (hash_size);
+            GET_NUMBER1 (hash_size);
             self->$(name) = zhash_new ();
             while (hash_size--) {
                 char *string;
@@ -460,7 +493,7 @@ static int
 s_$(name)_count (const char *key, void *item, void *argument)
 {
     $(class.name)_t *self = ($(class.name)_t *) argument;
-    self->$(name)_bytes += strlen (key) + 1 + strlen (char *) item + 1;
+    self->$(name)_bytes += strlen (key) + 1 + strlen ((char *) item) + 1;
     return 0;
 }
 
@@ -480,8 +513,9 @@ s_$(name)_write (const char *key, void *item, void *argument)
 
 //  --------------------------------------------------------------------------
 //  Send the $(class.name) to the socket, and destroy it
+//  Returns 0 if OK, else -1
 
-void
+int
 $(class.name)_send ($(class.name)_t **self_p, void *socket)
 {
     assert (socket);
@@ -495,15 +529,12 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
 .for class.message
         case $(CLASS.NAME)_$(MESSAGE.NAME):
 .   for field
-.       if type = "octet"
-            //  $(name) is an octet
-            frame_size += 1;
+.       if type = "number"
+            //  $(name) is a $(size)-byte integer
+            frame_size += $(size);
 .       elsif type = "octets"
             //  $(name) is a block of $(size) bytes
             frame_size += $(size);
-.       elsif type = "number"
-            //  $(name) is an 8-byte integer
-            frame_size += 8;
 .       elsif type = "string"
             //  $(name) is a string with 1-byte length
 .           if defined (field.value)
@@ -540,33 +571,28 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
 .endfor
         default:
             printf ("E: bad message type '%d', not sent\\n", self->id);
-            return;
+            //  No recovery, this is a fatal application error
+            assert (false);
     }
     //  Now serialize message into the frame
     zframe_t *frame = zframe_new (NULL, frame_size + 1);
     self->needle = zframe_data (frame);
     size_t string_size;
     int frame_flags = 0;
-    PUT_OCTET (self->id);
+    PUT_NUMBER1 (self->id);
 
     switch (self->id) {
 .for class.message
         case $(CLASS.NAME)_$(MESSAGE.NAME):
 .   for field
-.       if type = "octet"
+.       if type = "number"
 .           if defined (field.value)
-            PUT_OCTET ($(field.value:));
+            PUT_NUMBER$(size) ($(field.value:));
 .           else
-            PUT_OCTET (self->$(name));
+            PUT_NUMBER$(size) (self->$(name));
 .           endif
 .       elsif type = "octets"
             PUT_BLOCK (self->$(name), $(size));
-.       elsif type = "number"
-.           if defined (field.value)
-            PUT_NUMBER ($(field.value:));
-.           else
-            PUT_NUMBER (self->$(name));
-.           endif
 .       elsif type = "string"
 .           if defined (field.value)
             PUT_STRING ("$(field.value:)");
@@ -575,11 +601,11 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
                 PUT_STRING (self->$(name));
             }
             else
-                PUT_OCTET (0);      //  Empty string
+                PUT_NUMBER1 (0);    //  Empty string
 .           endif
 .       elsif type = "strings"
             if (self->$(name) != NULL) {
-                PUT_OCTET (zlist_size (self->$(name)));
+                PUT_NUMBER1 (zlist_size (self->$(name)));
                 char *$(name) = (char *) zlist_first (self->$(name));
                 while ($(name)) {
                     PUT_STRING ($(name));
@@ -587,14 +613,14 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
                 }
             }
             else
-                PUT_OCTET (0);      //  Empty string array
+                PUT_NUMBER1 (0);    //  Empty string array
 .       elsif type = "dictionary"
             if (self->$(name) != NULL) {
-                PUT_OCTET (zhash_size (self->$(name)));
+                PUT_NUMBER1 (zhash_size (self->$(name)));
                 zhash_foreach (self->$(name), s_$(name)_write, self);
             }
             else
-                PUT_OCTET (0);      //  Empty dictionary
+                PUT_NUMBER1 (0);    //  Empty dictionary
 .       elsif type = "frame"
             frame_flags = ZFRAME_MORE;
 .       endif
@@ -606,30 +632,38 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
     //  If we're sending to a ROUTER, we send the address first
     if (zsockopt_type (socket) == ZMQ_ROUTER) {
         assert (self->address);
-        zframe_send (&self->address, socket, ZFRAME_MORE);
+        if (zframe_send (&self->address, socket, ZFRAME_MORE))
+            return -1;
     }
     //  Now send the data frame
-    zframe_send (&frame, socket, frame_flags);
+    if (zframe_send (&frame, socket, frame_flags)) {
+        zframe_destroy (&frame);
+        return -1;
+    }
     
     //  Now send any frame fields, in order
     switch (self->id) {
 .for class.message where count (field, type = "frame")
         case $(CLASS.NAME)_$(MESSAGE.NAME):
 .   for field where type = "frame"
-        //  If $(name) isn't set, send an empty frame
-        if (!self->$(field.name))
-            self->$(field.name) = zframe_new (NULL, 0);
+            //  If $(name) isn't set, send an empty frame
+            if (!self->$(field.name))
+                self->$(field.name) = zframe_new (NULL, 0);
 .       if last ()
-            zframe_send (&self->$(field.name), socket, 0);
+            if (zframe_send (&self->$(field.name), socket, 0)) {
 .       else
-            zframe_send (&self->$(field.name), socket, ZFRAME_MORE);
+            if (zframe_send (&self->$(field.name), socket, ZFRAME_MORE)) {
 .       endif
+                zframe_destroy (&frame);
+                return -1;
+            }
 .   endfor
             break;
 .endfor
     }
     //  Destroy $(class.name) object
     $(class.name)_destroy (self_p);
+    return 0;
 }
 
 
@@ -649,12 +683,10 @@ $(class.name)_dup ($(class.name)_t *self)
 .for class.message
         case $(CLASS.NAME)_$(MESSAGE.NAME):
 .   for field
-.       if type = "octet"
+.       if type = "number"
             copy->$(name) = self->$(name);
 .       elsif type = "octets"
             memcpy (copy->$(name), self->$(name), $(size));
-.       elsif type = "number"
-            copy->$(name) = self->$(name);
 .       elsif type = "string"
             copy->$(name) = strdup (self->$(name));
 .       elsif type = "strings"
@@ -697,11 +729,11 @@ $(class.name)_dump ($(class.name)_t *self)
         case $(CLASS.NAME)_$(MESSAGE.NAME):
             puts ("$(MESSAGE.NAME):");
 .   for field
-.       if type = "octet"
+.       if type = "number"
 .           if defined (field.value)
             printf ("    $(name)=$(field.value)\\n");
 .           else
-            printf ("    $(name)=%d\\n", self->$(name));
+            printf ("    $(name)=%ld\\n", (long) self->$(name));
 .           endif
 .       elsif type = "octets"
             printf ("    $(name)=");
@@ -712,12 +744,6 @@ $(class.name)_dump ($(class.name)_t *self)
                 printf ("%02X", self->$(name) [$(name)_index]);
             }
             printf ("\\n");
-.       elsif type = "number"
-.           if defined (field.value)
-            printf ("    $(name)=$(field.value)\\n");
-.           else
-            printf ("    $(name)=%ld\\n", (long) self->$(name));
-.           endif
 .       elsif type = "string"
 .           if defined (field.value)
             printf ("    $(name)=$(field.value)\\n");
@@ -821,11 +847,11 @@ $(class.name)_command ($(class.name)_t *self)
 
 
 .for class.field where !defined (value)
-.   if type = "octet"
+.   if type = "number"
 //  --------------------------------------------------------------------------
 //  Get/set the $(name) field
 
-byte
+$(ctype)
 $(class.name)_$(name) ($(class.name)_t *self)
 {
     assert (self);
@@ -833,7 +859,7 @@ $(class.name)_$(name) ($(class.name)_t *self)
 }
 
 void
-$(class.name)_$(name)_set ($(class.name)_t *self, byte $(name))
+$(class.name)_$(name)_set ($(class.name)_t *self, $(ctype) $(name))
 {
     assert (self);
     self->$(name) = $(name);
@@ -855,24 +881,6 @@ $(class.name)_$(name)_set ($(class.name)_t *self, byte *$(name))
 {
     assert (self);
     memcpy (self->$(name), $(name), $(size));
-}
-
-.   elsif type = "number"
-//  --------------------------------------------------------------------------
-//  Get/set the $(name) field
-
-int64_t
-$(class.name)_$(name) ($(class.name)_t *self)
-{
-    assert (self);
-    return self->$(name);
-}
-
-void
-$(class.name)_$(name)_set ($(class.name)_t *self, int64_t $(name))
-{
-    assert (self);
-    self->$(name) = $(name);
 }
 
 .   elsif type = "string"
@@ -1101,14 +1109,12 @@ $(class.name)_test (bool verbose)
 
     self = $(class.name)_new ($(CLASS.NAME)_$(MESSAGE.NAME));
 .   for field where !defined (value)
-.       if type = "octet"
+.       if type = "number"
     $(class.name)_$(name)_set (self, 123);
 .       elsif type = "octets"
     byte $(name)_data [$(CLASS.NAME)_$(FIELD.NAME)_SIZE];
     memset ($(name)_data, 123, $(CLASS.NAME)_$(FIELD.NAME)_SIZE);
     $(class.name)_$(name)_set (self, $(name)_data);
-.       elsif type = "number"
-    $(class.name)_$(name)_set (self, 12345678);
 .       elsif type = "string"
     $(class.name)_$(name)_set (self, "Life is short but Now lasts for ever");
 .       elsif type = "strings"
@@ -1126,13 +1132,11 @@ $(class.name)_test (bool verbose)
     self = $(class.name)_recv (input);
     assert (self);
 .   for field where !defined (value)
-.       if type = "octet"
+.       if type = "number"
     assert ($(class.name)_$(name) (self) == 123);
 .       elsif type = "octets"
     assert ($(class.name)_$(name) (self) [0] == 123);
     assert ($(class.name)_$(name) (self) [$(CLASS.NAME)_$(FIELD.NAME)_SIZE - 1] == 123);
-.       elsif type = "number"
-    assert ($(class.name)_$(name) (self) == 12345678);
 .       elsif type = "string"
     assert (streq ($(class.name)_$(name) (self), "Life is short but Now lasts for ever"));
 .       elsif type = "strings"
