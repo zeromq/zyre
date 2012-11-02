@@ -92,7 +92,11 @@ byte
 //  Set peer ready
 void
     zre_peer_ready_set (zre_peer_t *self, bool ready);
-    
+
+//  Check peer message sequence
+bool
+    zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg);
+
 #ifdef __cplusplus
 }
 #endif

@@ -29,27 +29,21 @@
 /*  These are the zre_msg messages
 
     HELLO - Greet a peer so it connect back to us.
-        from          string 
-        port          number 
-        groups        strings 
-        status        octet 
-
-    RESET - Tell peer to reset their connection to us.
+        from          string
+        groups        strings
 
     WHISPER - Send a message to a peer.
-        cookies       frame 
+        cookies       frame
 
     SHOUT - Send a message to a group.
-        group         string 
-        cookies       frame 
+        group         string
+        cookies       frame
 
     JOIN - Join a group.
-        group         string 
-        status        octet 
+        group         string
 
     LEAVE - Leave a group.
-        group         string 
-        status        octet 
+        group         string
 
     PING - Ping a peer that has gone silent.
 
@@ -59,7 +53,6 @@
 #define ZRE_MSG_VERSION                     1
 
 #define ZRE_MSG_HELLO                       10
-#define ZRE_MSG_RESET                       11
 #define ZRE_MSG_WHISPER                     20
 #define ZRE_MSG_SHOUT                       21
 #define ZRE_MSG_JOIN                        22
@@ -87,7 +80,7 @@ zre_msg_t *
     zre_msg_recv (void *socket);
 
 //  Send the zre_msg to the socket, and destroy it
-void
+int
     zre_msg_send (zre_msg_t **self_p, void *socket);
 
 //  Duplicate the zre_msg message
@@ -112,6 +105,12 @@ void
 char *
     zre_msg_command (zre_msg_t *self);
 
+//  Get/set the sequence field
+int32_t
+    zre_msg_sequence (zre_msg_t *self);
+void
+    zre_msg_sequence_set (zre_msg_t *self, int32_t sequence);
+
 //  Get/set the from field
 char *
     zre_msg_from (zre_msg_t *self);
@@ -119,10 +118,10 @@ void
     zre_msg_from_set (zre_msg_t *self, char *format, ...);
 
 //  Get/set the port field
-int64_t
+int32_t
     zre_msg_port (zre_msg_t *self);
 void
-    zre_msg_port_set (zre_msg_t *self, int64_t port);
+    zre_msg_port_set (zre_msg_t *self, int32_t port);
 
 //  Get/set the groups field
 zlist_t *
@@ -141,10 +140,10 @@ size_t
     zre_msg_groups_size (zre_msg_t *self);
 
 //  Get/set the status field
-byte
+int32_t
     zre_msg_status (zre_msg_t *self);
 void
-    zre_msg_status_set (zre_msg_t *self, byte status);
+    zre_msg_status_set (zre_msg_t *self, int32_t status);
 
 //  Get/set the cookies field
 zframe_t *
