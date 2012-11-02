@@ -31,6 +31,7 @@
     HELLO - Greet a peer so it connect back to us.
         from          string
         groups        strings
+        headers       dictionary
 
     WHISPER - Send a message to a peer.
         cookies       frame
@@ -144,6 +145,22 @@ int32_t
     zre_msg_status (zre_msg_t *self);
 void
     zre_msg_status_set (zre_msg_t *self, int32_t status);
+
+//  Get/set the headers field
+zhash_t *
+    zre_msg_headers (zre_msg_t *self);
+void
+    zre_msg_headers_set (zre_msg_t *self, zhash_t *headers);
+    
+//  Get/set a value in the headers dictionary
+char *
+    zre_msg_headers_string (zre_msg_t *self, char *key, char *default_value);
+int64_t
+    zre_msg_headers_number (zre_msg_t *self, char *key, int64_t default_value);
+void
+    zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...);
+size_t
+    zre_msg_headers_size (zre_msg_t *self);
 
 //  Get/set the cookies field
 zframe_t *
