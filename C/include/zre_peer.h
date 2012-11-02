@@ -58,7 +58,7 @@ char *
     zre_peer_endpoint (zre_peer_t *self);
 
 //  Send message to peer
-void
+int
     zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p);
 
 //  Return peer identity string
