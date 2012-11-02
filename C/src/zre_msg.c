@@ -38,6 +38,8 @@ struct _zre_msg_t {
     int32_t port;
     zlist_t *groups;
     int32_t status;
+    zhash_t *headers;
+    size_t headers_bytes;       //  Size of dictionary content
     zframe_t *cookies;
     char *group;
 };
@@ -187,6 +189,7 @@ zre_msg_destroy (zre_msg_t **self_p)
         free (self->from);
         if (self->groups)
             zlist_destroy (&self->groups);
+        zhash_destroy (&self->headers);
         zframe_destroy (&self->cookies);
         free (self->group);
 
@@ -244,6 +247,18 @@ zre_msg_recv (void *socket)
                 zlist_append (self->groups, string);
             }
             GET_NUMBER1 (self->status);
+            GET_NUMBER1 (hash_size);
+            self->headers = zhash_new ();
+            while (hash_size--) {
+                char *string;
+                GET_STRING (string);
+                char *value = strchr (string, '=');
+                if (value)
+                    *value++ = 0;
+                zhash_insert (self->headers, string, strdup (value));
+                zhash_freefn (self->headers, string, free);
+                free (string);
+            }
             break;
 
         case ZRE_MSG_WHISPER:
@@ -302,6 +317,27 @@ zre_msg_recv (void *socket)
         return (NULL);
 }
 
+//  Count size of key=value pair
+static int
+s_headers_count (const char *key, void *item, void *argument)
+{
+    zre_msg_t *self = (zre_msg_t *) argument;
+    self->headers_bytes += strlen (key) + 1 + strlen ((char *) item) + 1;
+    return 0;
+}
+
+//  Serialize headers key=value pair
+static int
+s_headers_write (const char *key, void *item, void *argument)
+{
+    zre_msg_t *self = (zre_msg_t *) argument;
+    char string [STRING_MAX + 1];
+    snprintf (string, STRING_MAX, "%s=%s", key, (char *) item);
+    size_t string_size;
+    PUT_STRING (string);
+    return 0;
+}
+
 
 //  --------------------------------------------------------------------------
 //  Send the zre_msg to the socket, and destroy it
@@ -339,6 +375,14 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             }
             //  status is a 1-byte integer
             frame_size += 1;
+            //  headers is an array of key=value strings
+            frame_size++;       //  Size is one octet
+            if (self->headers) {
+                self->headers_bytes = 0;
+                //  Add up size of dictionary contents
+                zhash_foreach (self->headers, s_headers_count, self);
+            }
+            frame_size += self->headers_bytes;
             break;
             
         case ZRE_MSG_WHISPER:
@@ -419,6 +463,12 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             else
                 PUT_NUMBER1 (0);    //  Empty string array
             PUT_NUMBER1 (self->status);
+            if (self->headers != NULL) {
+                PUT_NUMBER1 (zhash_size (self->headers));
+                zhash_foreach (self->headers, s_headers_write, self);
+            }
+            else
+                PUT_NUMBER1 (0);    //  Empty dictionary
             break;
             
         case ZRE_MSG_WHISPER:
@@ -523,6 +573,7 @@ zre_msg_dup (zre_msg_t *self)
             copy->port = self->port;
             copy->groups = zlist_copy (self->groups);
             copy->status = self->status;
+            copy->headers = zhash_dup (self->headers);
             break;
 
         case ZRE_MSG_WHISPER:
@@ -561,6 +612,15 @@ zre_msg_dup (zre_msg_t *self)
 }
 
 
+//  Dump headers key=value pair to stdout
+int
+s_headers_dump (const char *key, void *item, void *argument)
+{
+    zre_msg_t *self = (zre_msg_t *) argument;
+    printf ("        %s=%s\n", key, (char *) item);
+    return 0;
+}
+
 
 //  --------------------------------------------------------------------------
 //  Print contents of message to stdout
@@ -588,6 +648,10 @@ zre_msg_dump (zre_msg_t *self)
             }
             printf (" }\n");
             printf ("    status=%ld\n", (long) self->status);
+            printf ("    headers={\n");
+            if (self->headers)
+                zhash_foreach (self->headers, s_headers_dump, self);
+            printf ("    }\n");
             break;
             
         case ZRE_MSG_WHISPER:
@@ -888,6 +952,83 @@ zre_msg_status_set (zre_msg_t *self, int32_t status)
 
 
 //  --------------------------------------------------------------------------
+//  Get/set the headers field
+
+zhash_t *
+zre_msg_headers (zre_msg_t *self)
+{
+    assert (self);
+    return self->headers;
+}
+
+//  Greedy function, takes ownership of name; if you don't want that
+//  then use zhash_dup() to pass a copy of headers
+
+void
+zre_msg_headers_set (zre_msg_t *self, zhash_t *headers)
+{
+    assert (self);
+    zhash_destroy (&self->headers);
+    self->headers = headers;
+}
+
+//  --------------------------------------------------------------------------
+//  Get/set a value in the headers dictionary
+
+char *
+zre_msg_headers_string (zre_msg_t *self, char *key, char *default_value)
+{
+    assert (self);
+    char *value = NULL;
+    if (self->headers)
+        value = (char *) (zhash_lookup (self->headers, key));
+    if (!value)
+        value = default_value;
+
+    return value;
+}
+
+int64_t
+zre_msg_headers_number (zre_msg_t *self, char *key, int64_t default_value)
+{
+    assert (self);
+    int64_t value = default_value;
+    char *string;
+    if (self->headers)
+        string = (char *) (zhash_lookup (self->headers, key));
+    if (string)
+        value = atol (string);
+
+    return value;
+}
+
+void
+zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...)
+{
+    //  Format string into buffer
+    assert (self);
+    va_list argptr;
+    va_start (argptr, format);
+    char *string = (char *) malloc (STRING_MAX + 1);
+    assert (string);
+    vsnprintf (string, STRING_MAX, format, argptr);
+    va_end (argptr);
+
+    //  Store string in hash table
+    if (!self->headers)
+        self->headers = zhash_new ();
+    if (zhash_insert (self->headers, key, string) == 0)
+        zhash_freefn (self->headers, key, free);
+}
+
+size_t
+zre_msg_headers_size (zre_msg_t *self)
+{
+    return zhash_size (self->headers);
+}
+
+
+//  --------------------------------------------------------------------------
 //  Get/set the cookies field
 
 zframe_t *
@@ -966,6 +1107,8 @@ zre_msg_test (bool verbose)
     zre_msg_groups_append (self, "Name: %s", "Brutus");
     zre_msg_groups_append (self, "Age: %d", 43);
     zre_msg_status_set (self, 123);
+    zre_msg_headers_insert (self, "Name", "Brutus");
+    zre_msg_headers_insert (self, "Age", "%d", 43);
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
@@ -977,6 +1120,9 @@ zre_msg_test (bool verbose)
     assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
     assert (streq (zre_msg_groups_next (self), "Age: 43"));
     assert (zre_msg_status (self) == 123);
+    assert (zre_msg_headers_size (self) == 2);
+    assert (streq (zre_msg_headers_string (self, "Name", "?"), "Brutus"));
+    assert (zre_msg_headers_number (self, "Age", 0) == 43);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_WHISPER);

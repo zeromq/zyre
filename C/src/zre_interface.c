@@ -431,6 +431,7 @@ agent_recv_from_peer (agent_t *self)
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         peer = s_require_peer (
             self, identity, zre_msg_from (msg), zre_msg_port (msg));
+        assert (peer);
         zre_peer_ready_set (peer, true);
     }
     if (peer == NULL || !zre_peer_ready (peer)) {
@@ -632,8 +633,6 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
             agent_recv_udp_beacon (self);
 
         if (zclock_time () >= ping_at) {
-            if (self->verbose)
-                zclock_log ("I: [%s] send BEACON to all", self->identity);
             agent_beacon_send (self);
             ping_at = zclock_time () + PING_INTERVAL;
             //  Ping all peers and reap any expired ones

@@ -113,10 +113,12 @@ zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
     //  who each message came from.
     zsocket_set_identity (self->mailbox, reply_to);
 
-    //  We'll use credit based flow control later, for now set a
-    //  low high-water mark to provoke blockage during tests
-    zsocket_set_sndhwm (self->mailbox, 4);
-
+    //  Set a high-water mark that allows for reasonable activity
+    zsocket_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
+    
+    //  Send messages immediately or return EAGAIN
+    zsocket_set_sndtimeo (self->mailbox, 0);
+    
     //  Connect through to peer node
     zsocket_connect (self->mailbox, "tcp://%s", endpoint);
     self->endpoint = strdup (endpoint);
@@ -132,9 +134,10 @@ zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
 void
 zre_peer_disconnect (zre_peer_t *self)
 {
-    //  If already connected, destroy old socket and start again
+    //  If connected, destroy socket and drop all pending messages
+    assert (self);
     if (self->connected) {
-//         zsocket_destroy (self->ctx, self->mailbox);
+        zsocket_destroy (self->ctx, self->mailbox);
         free (self->endpoint);
         self->endpoint = NULL;
         self->connected = false;
@@ -145,14 +148,18 @@ zre_peer_disconnect (zre_peer_t *self)
 //  ---------------------------------------------------------------------
 //  Send message to peer
 
-void
+int
 zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
 {
     assert (self);
     if (self->connected) {
         zre_msg_sequence_set (*msg_p, ++(self->sent_sequence));
-        zre_msg_send (msg_p, self->mailbox);
+        if (zre_msg_send (msg_p, self->mailbox) && errno == EAGAIN) {
+            zre_peer_disconnect (self);
+            return -1;
+        }
     }
+    return 0;
 }
 
 
