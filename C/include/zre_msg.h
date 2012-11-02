@@ -82,7 +82,7 @@ zre_msg_t *
 
 //  Send the zre_msg to the socket, and destroy it
 int
-    zre_msg_send (zre_msg_t **self_p, void *socket);
+    zre_msg_send (zre_msg_t **self_p, void *socket, uint32_t sequence);
 
 //  Duplicate the zre_msg message
 zre_msg_t *
@@ -106,11 +106,9 @@ void
 char *
     zre_msg_command (zre_msg_t *self);
 
-//  Get/set the sequence field
-int32_t
+//  Get the zre_msg sequence 
+uint32_t
     zre_msg_sequence (zre_msg_t *self);
-void
-    zre_msg_sequence_set (zre_msg_t *self, int32_t sequence);
 
 //  Get/set the from field
 char *
@@ -119,10 +117,10 @@ void
     zre_msg_from_set (zre_msg_t *self, char *format, ...);
 
 //  Get/set the port field
-int32_t
+byte
     zre_msg_port (zre_msg_t *self);
 void
-    zre_msg_port_set (zre_msg_t *self, int32_t port);
+    zre_msg_port_set (zre_msg_t *self, byte port);
 
 //  Get/set the groups field
 zlist_t *
@@ -141,10 +139,10 @@ size_t
     zre_msg_groups_size (zre_msg_t *self);
 
 //  Get/set the status field
-int32_t
+byte
     zre_msg_status (zre_msg_t *self);
 void
-    zre_msg_status_set (zre_msg_t *self, int32_t status);
+    zre_msg_status_set (zre_msg_t *self, byte status);
 
 //  Get/set the headers field
 zhash_t *

@@ -33,11 +33,11 @@ struct _zre_msg_t {
     int id;                     //  zre_msg message ID
     byte *needle;               //  Read/write pointer for serialization
     byte *ceiling;              //  Valid upper limit for read pointer
-    int32_t sequence;
+    uint32_t sequence;          //  Message sequence
     char *from;
-    int32_t port;
+    byte port;
     zlist_t *groups;
-    int32_t status;
+    byte status;
     zhash_t *headers;
     size_t headers_bytes;       //  Size of dictionary content
     zframe_t *cookies;
@@ -170,6 +170,7 @@ zre_msg_new (int id)
 {
     zre_msg_t *self = (zre_msg_t *) zmalloc (sizeof (zre_msg_t));
     self->id = id;
+    self->sequence = 0;
     return self;
 }
 
@@ -231,10 +232,11 @@ zre_msg_recv (void *socket)
 
     //  Get message id, which is first byte in frame
     GET_NUMBER1 (self->id);
+    //  Get message sequence, which is next 4 bytes in frame
+    GET_NUMBER4 (self->sequence);
 
     switch (self->id) {
         case ZRE_MSG_HELLO:
-            GET_NUMBER4 (self->sequence);
             free (self->from);
             GET_STRING (self->from);
             GET_NUMBER2 (self->port);
@@ -262,7 +264,6 @@ zre_msg_recv (void *socket)
             break;
 
         case ZRE_MSG_WHISPER:
-            GET_NUMBER4 (self->sequence);
             //  Get next frame, leave current untouched
             if (!zsocket_rcvmore (socket))
                 goto malformed;
@@ -270,7 +271,6 @@ zre_msg_recv (void *socket)
             break;
 
         case ZRE_MSG_SHOUT:
-            GET_NUMBER4 (self->sequence);
             free (self->group);
             GET_STRING (self->group);
             //  Get next frame, leave current untouched
@@ -280,25 +280,21 @@ zre_msg_recv (void *socket)
             break;
 
         case ZRE_MSG_JOIN:
-            GET_NUMBER4 (self->sequence);
             free (self->group);
             GET_STRING (self->group);
             GET_NUMBER1 (self->status);
             break;
 
         case ZRE_MSG_LEAVE:
-            GET_NUMBER4 (self->sequence);
             free (self->group);
             GET_STRING (self->group);
             GET_NUMBER1 (self->status);
             break;
 
         case ZRE_MSG_PING:
-            GET_NUMBER4 (self->sequence);
             break;
 
         case ZRE_MSG_PING_OK:
-            GET_NUMBER4 (self->sequence);
             break;
 
         default:
@@ -344,7 +340,7 @@ s_headers_write (const char *key, void *item, void *argument)
 //  Returns 0 if OK, else -1
 
 int
-zre_msg_send (zre_msg_t **self_p, void *socket)
+zre_msg_send (zre_msg_t **self_p, void *socket, uint32_t sequence)
 {
     assert (socket);
     assert (self_p);
@@ -353,10 +349,10 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
     //  Calculate size of serialized data
     zre_msg_t *self = *self_p;
     size_t frame_size = 1;
+    self->sequence = sequence;
+    frame_size += 4;    // sequence size
     switch (self->id) {
         case ZRE_MSG_HELLO:
-            //  sequence is a 4-byte integer
-            frame_size += 4;
             //  from is a string with 1-byte length
             frame_size++;       //  Size is one octet
             if (self->from)
@@ -386,13 +382,9 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_WHISPER:
-            //  sequence is a 4-byte integer
-            frame_size += 4;
             break;
             
         case ZRE_MSG_SHOUT:
-            //  sequence is a 4-byte integer
-            frame_size += 4;
             //  group is a string with 1-byte length
             frame_size++;       //  Size is one octet
             if (self->group)
@@ -400,8 +392,6 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_JOIN:
-            //  sequence is a 4-byte integer
-            frame_size += 4;
             //  group is a string with 1-byte length
             frame_size++;       //  Size is one octet
             if (self->group)
@@ -411,8 +401,6 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_LEAVE:
-            //  sequence is a 4-byte integer
-            frame_size += 4;
             //  group is a string with 1-byte length
             frame_size++;       //  Size is one octet
             if (self->group)
@@ -422,13 +410,9 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_PING:
-            //  sequence is a 4-byte integer
-            frame_size += 4;
             break;
             
         case ZRE_MSG_PING_OK:
-            //  sequence is a 4-byte integer
-            frame_size += 4;
             break;
             
         default:
@@ -442,10 +426,10 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
     size_t string_size;
     int frame_flags = 0;
     PUT_NUMBER1 (self->id);
+    PUT_NUMBER4 (self->sequence);
 
     switch (self->id) {
         case ZRE_MSG_HELLO:
-            PUT_NUMBER4 (self->sequence);
             if (self->from) {
                 PUT_STRING (self->from);
             }
@@ -472,12 +456,10 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_WHISPER:
-            PUT_NUMBER4 (self->sequence);
             frame_flags = ZFRAME_MORE;
             break;
             
         case ZRE_MSG_SHOUT:
-            PUT_NUMBER4 (self->sequence);
             if (self->group) {
                 PUT_STRING (self->group);
             }
@@ -487,7 +469,6 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_JOIN:
-            PUT_NUMBER4 (self->sequence);
             if (self->group) {
                 PUT_STRING (self->group);
             }
@@ -497,7 +478,6 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_LEAVE:
-            PUT_NUMBER4 (self->sequence);
             if (self->group) {
                 PUT_STRING (self->group);
             }
@@ -507,11 +487,9 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_PING:
-            PUT_NUMBER4 (self->sequence);
             break;
             
         case ZRE_MSG_PING_OK:
-            PUT_NUMBER4 (self->sequence);
             break;
             
     }
@@ -564,11 +542,11 @@ zre_msg_dup (zre_msg_t *self)
         return NULL;
         
     zre_msg_t *copy = zre_msg_new (self->id);
+    copy->sequence = self->sequence;
     if (self->address)
         copy->address = zframe_dup (self->address);
     switch (self->id) {
         case ZRE_MSG_HELLO:
-            copy->sequence = self->sequence;
             copy->from = strdup (self->from);
             copy->port = self->port;
             copy->groups = zlist_copy (self->groups);
@@ -577,34 +555,28 @@ zre_msg_dup (zre_msg_t *self)
             break;
 
         case ZRE_MSG_WHISPER:
-            copy->sequence = self->sequence;
             copy->cookies = zframe_dup (self->cookies);
             break;
 
         case ZRE_MSG_SHOUT:
-            copy->sequence = self->sequence;
             copy->group = strdup (self->group);
             copy->cookies = zframe_dup (self->cookies);
             break;
 
         case ZRE_MSG_JOIN:
-            copy->sequence = self->sequence;
             copy->group = strdup (self->group);
             copy->status = self->status;
             break;
 
         case ZRE_MSG_LEAVE:
-            copy->sequence = self->sequence;
             copy->group = strdup (self->group);
             copy->status = self->status;
             break;
 
         case ZRE_MSG_PING:
-            copy->sequence = self->sequence;
             break;
 
         case ZRE_MSG_PING_OK:
-            copy->sequence = self->sequence;
             break;
 
     }
@@ -632,7 +604,6 @@ zre_msg_dump (zre_msg_t *self)
     switch (self->id) {
         case ZRE_MSG_HELLO:
             puts ("HELLO:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
             if (self->from)
                 printf ("    from='%s'\n", self->from);
             else
@@ -656,7 +627,6 @@ zre_msg_dump (zre_msg_t *self)
             
         case ZRE_MSG_WHISPER:
             puts ("WHISPER:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
             printf ("    cookies={\n");
             if (self->cookies) {
                 size_t size = zframe_size (self->cookies);
@@ -676,7 +646,6 @@ zre_msg_dump (zre_msg_t *self)
             
         case ZRE_MSG_SHOUT:
             puts ("SHOUT:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
             if (self->group)
                 printf ("    group='%s'\n", self->group);
             else
@@ -700,7 +669,6 @@ zre_msg_dump (zre_msg_t *self)
             
         case ZRE_MSG_JOIN:
             puts ("JOIN:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
             if (self->group)
                 printf ("    group='%s'\n", self->group);
             else
@@ -710,7 +678,6 @@ zre_msg_dump (zre_msg_t *self)
             
         case ZRE_MSG_LEAVE:
             puts ("LEAVE:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
             if (self->group)
                 printf ("    group='%s'\n", self->group);
             else
@@ -720,12 +687,10 @@ zre_msg_dump (zre_msg_t *self)
             
         case ZRE_MSG_PING:
             puts ("PING:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
             break;
             
         case ZRE_MSG_PING_OK:
             puts ("PING_OK:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
             break;
             
     }
@@ -800,24 +765,15 @@ zre_msg_command (zre_msg_t *self)
     return "?";
 }
 
-
 //  --------------------------------------------------------------------------
-//  Get/set the sequence field
+//  Get the zre_msg sequence
 
-int32_t
+uint32_t
 zre_msg_sequence (zre_msg_t *self)
 {
     assert (self);
     return self->sequence;
 }
-
-void
-zre_msg_sequence_set (zre_msg_t *self, int32_t sequence)
-{
-    assert (self);
-    self->sequence = sequence;
-}
-
 
 //  --------------------------------------------------------------------------
 //  Get/set the from field
@@ -847,7 +803,7 @@ zre_msg_from_set (zre_msg_t *self, char *format, ...)
 //  --------------------------------------------------------------------------
 //  Get/set the port field
 
-int32_t
+byte
 zre_msg_port (zre_msg_t *self)
 {
     assert (self);
@@ -855,7 +811,7 @@ zre_msg_port (zre_msg_t *self)
 }
 
 void
-zre_msg_port_set (zre_msg_t *self, int32_t port)
+zre_msg_port_set (zre_msg_t *self, byte port)
 {
     assert (self);
     self->port = port;
@@ -936,7 +892,7 @@ zre_msg_groups_size (zre_msg_t *self)
 //  --------------------------------------------------------------------------
 //  Get/set the status field
 
-int32_t
+byte
 zre_msg_status (zre_msg_t *self)
 {
     assert (self);
@@ -944,7 +900,7 @@ zre_msg_status (zre_msg_t *self)
 }
 
 void
-zre_msg_status_set (zre_msg_t *self, int32_t status)
+zre_msg_status_set (zre_msg_t *self, byte status)
 {
     assert (self);
     self->status = status;
@@ -1101,7 +1057,6 @@ zre_msg_test (bool verbose)
     //  Encode/send/decode and verify each message type
 
     self = zre_msg_new (ZRE_MSG_HELLO);
-    zre_msg_sequence_set (self, 123);
     zre_msg_from_set (self, "Life is short but Now lasts for ever");
     zre_msg_port_set (self, 123);
     zre_msg_groups_append (self, "Name: %s", "Brutus");
@@ -1109,11 +1064,10 @@ zre_msg_test (bool verbose)
     zre_msg_status_set (self, 123);
     zre_msg_headers_insert (self, "Name", "Brutus");
     zre_msg_headers_insert (self, "Age", "%d", 43);
-    zre_msg_send (&self, output);
+    zre_msg_send (&self, output, 1);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (zre_msg_sequence (self) == 123);
     assert (streq (zre_msg_from (self), "Life is short but Now lasts for ever"));
     assert (zre_msg_port (self) == 123);
     assert (zre_msg_groups_size (self) == 2);
@@ -1126,71 +1080,59 @@ zre_msg_test (bool verbose)
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_WHISPER);
-    zre_msg_sequence_set (self, 123);
     zre_msg_cookies_set (self, zframe_new ("Captcha Diem", 12));
-    zre_msg_send (&self, output);
+    zre_msg_send (&self, output, 1);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (zre_msg_sequence (self) == 123);
     assert (zframe_streq (zre_msg_cookies (self), "Captcha Diem"));
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_SHOUT);
-    zre_msg_sequence_set (self, 123);
     zre_msg_group_set (self, "Life is short but Now lasts for ever");
     zre_msg_cookies_set (self, zframe_new ("Captcha Diem", 12));
-    zre_msg_send (&self, output);
+    zre_msg_send (&self, output, 1);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (zre_msg_sequence (self) == 123);
     assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
     assert (zframe_streq (zre_msg_cookies (self), "Captcha Diem"));
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_JOIN);
-    zre_msg_sequence_set (self, 123);
     zre_msg_group_set (self, "Life is short but Now lasts for ever");
     zre_msg_status_set (self, 123);
-    zre_msg_send (&self, output);
+    zre_msg_send (&self, output, 1);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (zre_msg_sequence (self) == 123);
     assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
     assert (zre_msg_status (self) == 123);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_LEAVE);
-    zre_msg_sequence_set (self, 123);
     zre_msg_group_set (self, "Life is short but Now lasts for ever");
     zre_msg_status_set (self, 123);
-    zre_msg_send (&self, output);
+    zre_msg_send (&self, output, 1);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (zre_msg_sequence (self) == 123);
     assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
     assert (zre_msg_status (self) == 123);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_PING);
-    zre_msg_sequence_set (self, 123);
-    zre_msg_send (&self, output);
+    zre_msg_send (&self, output, 1);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (zre_msg_sequence (self) == 123);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_PING_OK);
-    zre_msg_sequence_set (self, 123);
-    zre_msg_send (&self, output);
+    zre_msg_send (&self, output, 1);
     
     self = zre_msg_recv (input);
     assert (self);
-    assert (zre_msg_sequence (self) == 123);
     zre_msg_destroy (&self);
 
     zctx_destroy (&ctx);

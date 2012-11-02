@@ -86,7 +86,7 @@ $(class.name)_t *
 
 //  Send the $(class.name) to the socket, and destroy it
 int
-    $(class.name)_send ($(class.name)_t **self_p, void *socket);
+    $(class.name)_send ($(class.name)_t **self_p, void *socket, uint32_t sequence);
 
 //  Duplicate the $(class.name) message
 $(class.name)_t *
@@ -109,6 +109,10 @@ void
     $(class.name)_id_set ($(class.name)_t *self, int id);
 char *
     $(class.name)_command ($(class.name)_t *self);
+
+//  Get the $(class.name) sequence 
+uint32_t
+    $(class.name)_sequence ($(class.name)_t *self);
 
 .for class.field where !defined (value)
 .   if type = "number"
@@ -208,6 +212,7 @@ struct _$(class.name)_t {
     int id;                     //  $(class.name) message ID
     byte *needle;               //  Read/write pointer for serialization
     byte *ceiling;              //  Valid upper limit for read pointer
+    uint32_t sequence;          //  Message sequence
 .for class.field
 .   if type = "number"
     $(ctype) $(name);
@@ -352,6 +357,7 @@ $(class.name)_new (int id)
 {
     $(class.name)_t *self = ($(class.name)_t *) zmalloc (sizeof ($(class.name)_t));
     self->id = id;
+    self->sequence = 0;
     return self;
 }
 
@@ -419,6 +425,8 @@ $(class.name)_recv (void *socket)
 
     //  Get message id, which is first byte in frame
     GET_NUMBER1 (self->id);
+    //  Get message sequence, which is next 4 bytes in frame
+    GET_NUMBER4 (self->sequence);
 
     switch (self->id) {
 .for class.message
@@ -516,7 +524,7 @@ s_$(name)_write (const char *key, void *item, void *argument)
 //  Returns 0 if OK, else -1
 
 int
-$(class.name)_send ($(class.name)_t **self_p, void *socket)
+$(class.name)_send ($(class.name)_t **self_p, void *socket, uint32_t sequence)
 {
     assert (socket);
     assert (self_p);
@@ -525,6 +533,8 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
     //  Calculate size of serialized data
     $(class.name)_t *self = *self_p;
     size_t frame_size = 1;
+    self->sequence = sequence;
+    frame_size += 4;    // sequence size
     switch (self->id) {
 .for class.message
         case $(CLASS.NAME)_$(MESSAGE.NAME):
@@ -580,6 +590,7 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
     size_t string_size;
     int frame_flags = 0;
     PUT_NUMBER1 (self->id);
+    PUT_NUMBER4 (self->sequence);
 
     switch (self->id) {
 .for class.message
@@ -677,6 +688,7 @@ $(class.name)_dup ($(class.name)_t *self)
         return NULL;
         
     $(class.name)_t *copy = $(class.name)_new (self->id);
+    copy->sequence = self->sequence;
     if (self->address)
         copy->address = zframe_dup (self->address);
     switch (self->id) {
@@ -845,6 +857,15 @@ $(class.name)_command ($(class.name)_t *self)
     return "?";
 }
 
+//  --------------------------------------------------------------------------
+//  Get the $(class.name) sequence
+
+uint32_t
+$(class.name)_sequence ($(class.name)_t *self)
+{
+    assert (self);
+    return self->sequence;
+}
 
 .for class.field where !defined (value)
 .   if type = "number"
@@ -1127,7 +1148,7 @@ $(class.name)_test (bool verbose)
     $(class.name)_$(name)_set (self, zframe_new ("Captcha Diem", 12));
 .       endif
 .   endfor
-    $(class.name)_send (&self, output);
+    $(class.name)_send (&self, output, 1);
     
     self = $(class.name)_recv (input);
     assert (self);
