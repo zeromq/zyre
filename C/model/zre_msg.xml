@@ -6,41 +6,48 @@ This is the ZRE protocol version 1.
 <define name = "VERSION" value = "1" />
 
 <message name = "HELLO" id = "10">
+    <field name = "sequence" type = "number" size = "4" />
     <field name = "from" type = "string" />
-    <field name = "port" type = "number" octets = "2" />
+    <field name = "port" type = "number" size = "2" />
     <field name = "groups" type = "strings" />
-    <field name = "status" type = "octet" />
+    <field name = "status" type = "number" size = "1" />
 Greet a peer so it connect back to us.
 </message>
 
 <message name = "WHISPER" id = "20">
+    <field name = "sequence" type = "number" size = "4" />
     <field name = "cookies" type = "frame" />
 Send a message to a peer.
 </message>
 
 <message name = "SHOUT" id = "21">
+    <field name = "sequence" type = "number" size = "4" />
     <field name = "group" type = "string" />
     <field name = "cookies" type = "frame" />
 Send a message to a group.
 </message>
 
 <message name = "JOIN" id = "22">
+    <field name = "sequence" type = "number" size = "4" />
     <field name = "group" type = "string" />
-    <field name = "status" type = "octet" />
+    <field name = "status" type = "number" size = "1"  />
 Join a group.
 </message>
 
 <message name = "LEAVE" id = "23">
+    <field name = "sequence" type = "number" size = "4" />
     <field name = "group" type = "string" />
-    <field name = "status" type = "octet" />
+    <field name = "status" type = "number" size = "1" />
 Leave a group.
 </message>
 
 <message name = "PING" id = "40">
+    <field name = "sequence" type = "number" size = "4" />
 Ping a peer that has gone silent.
 </message>
 
 <message name = "PING-OK" id = "41">
+    <field name = "sequence" type = "number" size = "4" />
 Reply to a peer's ping.
 </message>
 

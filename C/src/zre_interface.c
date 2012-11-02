@@ -226,8 +226,8 @@ agent_new (zctx_t *ctx, void *pipe, bool verbose)
     self->own_groups = zhash_new ();
     self->verbose = verbose;
     if (self->verbose)
-        zclock_log ("I: [%s] +++ interface created on %d",
-                    self->identity, self->port);
+        zclock_log ("I: [%s] +++ interface created on %s:%d",
+                    self->identity, self->host, self->port);
     return self;
 }
 
@@ -428,14 +428,21 @@ agent_recv_from_peer (agent_t *self)
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
-    if (zre_msg_id (msg) == ZRE_MSG_HELLO)
+    if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         peer = s_require_peer (
             self, identity, zre_msg_from (msg), zre_msg_port (msg));
+        zre_peer_ready_set (peer, true);
+    }
     if (peer == NULL || !zre_peer_ready (peer)) {
         zclock_log ("W: [%s] ignoring command from %s", self->identity, identity);
         return 0;
     }
     
+    if (!zre_peer_check_message (peer, msg)) {
+        zclock_log ("W: [%s] lost messages from %s", self->identity, identity);
+        assert (false);
+    }
+
     //  Now process each command
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         //  Join peer to listed groups
@@ -447,7 +454,6 @@ agent_recv_from_peer (agent_t *self)
         }
         //  Hello command holds latest status of peer
         zre_peer_status_set (peer, zre_msg_status (msg));
-        zre_peer_ready_set (peer, true);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
