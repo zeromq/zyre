@@ -5,6 +5,11 @@ This is the ZRE protocol version 1.
 <!-- Protocol version -->
 <define name = "VERSION" value = "1" />
 
+<!-- Header for all messages -->
+<header>
+    <field name = "sequence" type = "number" size = "2" />
+</header>
+
 <message name = "HELLO" id = "10">
     <field name = "from" type = "string" />
     <field name = "port" type = "number" size = "2" />

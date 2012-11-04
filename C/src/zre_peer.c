@@ -42,7 +42,7 @@ struct _zre_peer_t {
     bool ready;                 //  Peer has said Hello to us
     byte status;                //  Our status counter
     uint32_t sent_sequence;     //  Outgoing message sequence
-    uint32_t received_sequence; //  Incoming message sequence
+    uint32_t want_sequence;     //  Incoming message sequence
 };
 
 
@@ -67,7 +67,7 @@ zre_peer_new (char *identity, zhash_t *container, zctx_t *ctx)
     self->identity = strdup (identity);
     self->ready = false;
     self->sent_sequence = 0;
-    self->received_sequence = 0;
+    self->want_sequence = 0;
     
     //  Insert into container if requested
     if (container) {
@@ -153,8 +153,8 @@ zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
 {
     assert (self);
     if (self->connected) {
-        if (zre_msg_send (msg_p, self->mailbox, ++(self->sent_sequence)) 
-                            && errno == EAGAIN) {
+        zre_msg_sequence_set (*msg_p, ++(self->sent_sequence));
+        if (zre_msg_send (msg_p, self->mailbox) && errno == EAGAIN) {
             zre_peer_disconnect (self);
             return -1;
         }
@@ -286,11 +286,11 @@ zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg)
 {
     assert (self);
     assert (msg);
-    uint32_t received = (uint32_t) zre_msg_sequence (msg);
+    uint32_t recd_sequence = (uint32_t) zre_msg_sequence (msg);
 
-    bool valid = ++(self->received_sequence) == received;
+    bool valid = (++(self->want_sequence) == recd_sequence);
     if (!valid)
-        --(self->received_sequence); // rollback
+        --(self->want_sequence);    // rollback
 
     return valid;
 }
