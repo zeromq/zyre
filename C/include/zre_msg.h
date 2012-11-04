@@ -27,27 +27,29 @@
 #define __ZRE_MSG_H_INCLUDED__
 
 /*  These are the zre_msg messages
-
     HELLO - Greet a peer so it connect back to us.
+        sequence      number 2
         from          string
+        port          number 2
         groups        strings
+        status        number 1
         headers       dictionary
-
     WHISPER - Send a message to a peer.
+        sequence      number 2
         cookies       frame
-
     SHOUT - Send a message to a group.
+        sequence      number 2
         group         string
         cookies       frame
-
     JOIN - Join a group.
+        sequence      number 2
         group         string
-
+        status        number 1
     LEAVE - Leave a group.
+        sequence      number 2
         group         string
-
+        status        number 1
     PING - Ping a peer that has gone silent.
-
     PING_OK - Reply to a peer's ping.
 */
 
@@ -82,7 +84,7 @@ zre_msg_t *
 
 //  Send the zre_msg to the socket, and destroy it
 int
-    zre_msg_send (zre_msg_t **self_p, void *socket, uint32_t sequence);
+    zre_msg_send (zre_msg_t **self_p, void *socket);
 
 //  Duplicate the zre_msg message
 zre_msg_t *
@@ -106,9 +108,11 @@ void
 char *
     zre_msg_command (zre_msg_t *self);
 
-//  Get the zre_msg sequence 
-uint32_t
+//  Get/set the sequence field
+byte
     zre_msg_sequence (zre_msg_t *self);
+void
+    zre_msg_sequence_set (zre_msg_t *self, byte sequence);
 
 //  Get/set the from field
 char *
