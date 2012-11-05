@@ -26,6 +26,18 @@
 
 #include <czmq.h>
 #include "../include/zre.h"
+#include "platform.h"
+
+#ifdef HAVE_LINUX_WIRELESS_H
+# include <linux/wireless.h>
+#else
+#  ifdef HAVE_NET_IF_H
+#   include <net/if.h>
+#  endif
+#  ifdef HAVE_NET_IF_MEDIA_H
+#   include <net/if_media.h>
+#  endif
+#endif
 
 //  -----------------------------------------------------------------
 //  UDP instance
@@ -81,6 +93,35 @@ s_handle_io_error (char *reason)
     }
 }
 
+//  check if given NIC name is wireless
+static bool
+s_wireless_nic (const char* name)
+{
+    int sock = 0;
+    bool result = FALSE;
+
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        return FALSE;
+    }
+#   ifdef SIOCGIFMEDIA
+    struct ifmediareq ifmr;
+
+    memset (&ifmr, 0, sizeof (struct ifmediareq));
+    strlcpy(ifmr.ifm_name, name, sizeof(ifmr.ifm_name));
+    if (ioctl(sock, SIOCGIFMEDIA, (caddr_t) &ifmr) != -1) {
+        result = IFM_TYPE (ifmr.ifm_current) == IFM_IEEE80211;
+    }
+#   elif defined(SIOCGIWNAME)
+    struct iwreq wrq;
+
+    strncpy (wrq.ifr_name, name, IFNAMSIZ);
+    if (ioctl(sock, SIOCGIWNAME, (caddr_t) &wrq) != -1) {
+        result = TRUE;
+    }
+#   endif
+    close(sock);
+    return result;
+}
 
 //  -----------------------------------------------------------------
 //  Constructor
@@ -132,6 +173,9 @@ zre_udp_new (int port_nbr)
                 self->address = *(struct sockaddr_in *) interface->ifa_addr;
                 self->broadcast = *(struct sockaddr_in *) interface->ifa_broadaddr;
                 self->broadcast.sin_port = htons (self->port_nbr);
+
+                if (s_wireless_nic (interface->ifa_name))
+                    break;
             }
             interface = interface->ifa_next;
         }
