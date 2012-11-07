@@ -212,13 +212,22 @@ typedef struct {
 static agent_t *
 agent_new (zctx_t *ctx, void *pipe, bool verbose)
 {
+    void *inbox = zsocket_new (ctx, ZMQ_ROUTER);
+    if (!inbox) // interrupted
+        return NULL;
+
     agent_t *self = (agent_t *) zmalloc (sizeof (agent_t));
     self->ctx = ctx;
     self->pipe = pipe;
     self->udp = zre_udp_new (PING_PORT_NUMBER);
-    self->inbox = zsocket_new (self->ctx, ZMQ_ROUTER);
+    self->inbox = inbox;
     self->host = zre_udp_host (self->udp);
     self->port = zsocket_bind (self->inbox, "tcp://%s:*", self->host);
+    if (self->port < 0) { // interrupted
+        zre_udp_destroy (&self->udp);
+        free (self);
+        return NULL;
+    }
     uuid_generate (self->uuid);
     self->identity = s_uuid_str (self->uuid);
     self->peers = zhash_new ();
@@ -607,6 +616,8 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
 {
     //  Create agent instance to pass around
     agent_t *self = agent_new (ctx, pipe, (bool) args);
+    if (!self) // interrupted
+        return;
     
     //  Send first beacon immediately
     uint64_t ping_at = zclock_time ();
