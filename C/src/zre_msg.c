@@ -510,12 +510,16 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
     //  If we're sending to a ROUTER, we send the address first
     if (zsockopt_type (socket) == ZMQ_ROUTER) {
         assert (self->address);
-        if (zframe_send (&self->address, socket, ZFRAME_MORE))
+        if (zframe_send (&self->address, socket, ZFRAME_MORE)) {
+            zframe_destroy (&frame);
+            zre_msg_destroy (self_p);
             return -1;
+        }
     }
     //  Now send the data frame
     if (zframe_send (&frame, socket, frame_flags)) {
         zframe_destroy (&frame);
+        zre_msg_destroy (self_p);
         return -1;
     }
     
@@ -527,6 +531,7 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
                 self->cookies = zframe_new (NULL, 0);
             if (zframe_send (&self->cookies, socket, 0)) {
                 zframe_destroy (&frame);
+                zre_msg_destroy (self_p);
                 return -1;
             }
             break;
@@ -536,6 +541,7 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
                 self->cookies = zframe_new (NULL, 0);
             if (zframe_send (&self->cookies, socket, 0)) {
                 zframe_destroy (&frame);
+                zre_msg_destroy (self_p);
                 return -1;
             }
             break;

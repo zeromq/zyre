@@ -158,6 +158,8 @@ zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
             zre_peer_disconnect (self);
             return -1;
         }
+    } else {
+        zre_msg_destroy (msg_p);
     }
     return 0;
 }

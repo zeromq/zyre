@@ -148,5 +148,6 @@ int main (int argc, char *argv [])
     }
     zclock_log ("I: Stopped tester (%d tries)", nbr_tries);
     zctx_destroy (&ctx);
+    free (pipes);
     return 0;
 }

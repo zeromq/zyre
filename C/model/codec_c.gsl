@@ -638,12 +638,16 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
     //  If we're sending to a ROUTER, we send the address first
     if (zsockopt_type (socket) == ZMQ_ROUTER) {
         assert (self->address);
-        if (zframe_send (&self->address, socket, ZFRAME_MORE))
+        if (zframe_send (&self->address, socket, ZFRAME_MORE)) {
+            zframe_destroy (&frame);
+            $(class.name)_destroy (self_p);
             return -1;
+        }
     }
     //  Now send the data frame
     if (zframe_send (&frame, socket, frame_flags)) {
         zframe_destroy (&frame);
+        $(class.name)_destroy (self_p);
         return -1;
     }
     
@@ -661,6 +665,7 @@ $(class.name)_send ($(class.name)_t **self_p, void *socket)
             if (zframe_send (&self->$(field.name), socket, ZFRAME_MORE)) {
 .       endif
                 zframe_destroy (&frame);
+                $(class.name)_destroy (self_p);
                 return -1;
             }
 .   endfor
