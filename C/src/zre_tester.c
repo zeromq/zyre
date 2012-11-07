@@ -117,8 +117,12 @@ int main (int argc, char *argv [])
     //  Get number of interfaces to simulate, default 100
     int max_interface = 100;
     int nbr_interfaces = 0;
+    int max_tries = -1;
+    int nbr_tries = 0;
     if (argc > 1)
         max_interface = atoi (argv [1]);
+    if (argc > 2)
+        max_tries = atoi (argv [2]);
 
     //  We address interfaces as an array of pipes
     void **pipes = zmalloc (sizeof (void *) * max_interface);
@@ -137,9 +141,13 @@ int main (int argc, char *argv [])
             pipes [index] = zthread_fork (ctx, interface_task, NULL);
             zclock_log ("I: Started interface (%d running)", ++nbr_interfaces);
         }
+        if (max_tries > 0 && ++nbr_tries >= max_tries)
+            break;
         //  Sleep ~750 msecs randomly so we smooth out activity
         zclock_sleep (randof (500) + 500);
     }
+    zclock_log ("I: Stopped tester (%d tries)", nbr_tries);
     zctx_destroy (&ctx);
+    free (pipes);
     return 0;
 }
