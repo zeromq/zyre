@@ -66,6 +66,7 @@ zre_peer_new (char *identity, zhash_t *container, zctx_t *ctx)
     self->ctx = ctx;
     self->identity = strdup (identity);
     self->ready = false;
+    self->connected = false;
     self->sent_sequence = 0;
     self->want_sequence = 0;
     
@@ -87,8 +88,8 @@ zre_peer_destroy (zre_peer_t **self_p)
     assert (self_p);
     if (*self_p) {
         zre_peer_t *self = *self_p;
+        zre_peer_disconnect (self);
         free (self->identity);
-        free (self->endpoint);
         free (self);
         *self_p = NULL;
     }
@@ -102,9 +103,8 @@ zre_peer_destroy (zre_peer_t **self_p)
 void
 zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
 {
-    //  If already connected, destroy old socket and start again
-    if (self->connected)
-        zsocket_destroy (self->ctx, self->mailbox);
+    assert (self);
+    assert (!self->connected);
 
     //  Create new outgoing socket (drop any messages in transit)
     self->mailbox = zsocket_new (self->ctx, ZMQ_DEALER);
