@@ -371,13 +371,13 @@ agent_peer_purge (const char *key, void *item, void *argument)
 //  Find or create peer via its UUID string
 
 static zre_peer_t *
-s_require_peer (agent_t *self, char *identity, char *address, int port)
+s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
 {
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
     if (!peer) {
         //  Purge any previous peer on same endpoint
         char endpoint [100];
-        snprintf (endpoint, 100, "%s:%d", address, port);
+        snprintf (endpoint, 100, "%s:%hu", address, port);
         zhash_foreach (self->peers, agent_peer_purge, endpoint);
 
         peer = zre_peer_new (identity, self->peers, self->ctx);
@@ -400,7 +400,7 @@ s_require_peer (agent_t *self, char *identity, char *address, int port)
         zstr_sendm (self->pipe, "ENTER");
         zstr_send (self->pipe, identity);
         if (self->verbose)
-            zclock_log ("I: [%s] peer %s enters", self->identity, identity);
+            zclock_log ("I: [%s] peer %s enters (total: %d)", self->identity, identity, zhash_size (self->peers));
     }
     return peer;
 }
@@ -445,6 +445,7 @@ agent_recv_from_peer (agent_t *self)
     }
     if (peer == NULL || !zre_peer_ready (peer)) {
         zclock_log ("W: [%s] ignoring command from %s", self->identity, identity);
+        zre_msg_destroy (&msg);
         return 0;
     }
     
@@ -487,7 +488,7 @@ agent_recv_from_peer (agent_t *self)
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING_OK);
         zre_peer_send (peer, &msg);
         if (self->verbose)
-            zclock_log ("I: [%s] send PING to %s", self->identity, identity);
+            zclock_log ("I: [%s] send PING_OK to %s", self->identity, identity);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_JOIN) {

@@ -41,8 +41,8 @@ struct _zre_peer_t {
     bool connected;             //  Peer will send messages
     bool ready;                 //  Peer has said Hello to us
     byte status;                //  Our status counter
-    uint32_t sent_sequence;     //  Outgoing message sequence
-    uint32_t want_sequence;     //  Incoming message sequence
+    int16_t sent_sequence;     //  Outgoing message sequence
+    int16_t want_sequence;     //  Incoming message sequence
 };
 
 
@@ -288,7 +288,7 @@ zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg)
 {
     assert (self);
     assert (msg);
-    uint32_t recd_sequence = (uint32_t) zre_msg_sequence (msg);
+    int16_t recd_sequence = (int16_t) zre_msg_sequence (msg);
 
     bool valid = (++(self->want_sequence) == recd_sequence);
     if (!valid)
