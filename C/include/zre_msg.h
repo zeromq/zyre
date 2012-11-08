@@ -109,10 +109,10 @@ char *
     zre_msg_command (zre_msg_t *self);
 
 //  Get/set the sequence field
-byte
+int16_t
     zre_msg_sequence (zre_msg_t *self);
 void
-    zre_msg_sequence_set (zre_msg_t *self, byte sequence);
+    zre_msg_sequence_set (zre_msg_t *self, int16_t sequence);
 
 //  Get/set the from field
 char *
@@ -121,10 +121,10 @@ void
     zre_msg_from_set (zre_msg_t *self, char *format, ...);
 
 //  Get/set the port field
-byte
+int16_t
     zre_msg_port (zre_msg_t *self);
 void
-    zre_msg_port_set (zre_msg_t *self, byte port);
+    zre_msg_port_set (zre_msg_t *self, int16_t port);
 
 //  Get/set the groups field
 zlist_t *

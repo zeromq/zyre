@@ -33,9 +33,9 @@ struct _zre_msg_t {
     int id;                     //  zre_msg message ID
     byte *needle;               //  Read/write pointer for serialization
     byte *ceiling;              //  Valid upper limit for read pointer
-    byte sequence;
+    int16_t sequence;
     char *from;
-    byte port;
+    int16_t port;
     zlist_t *groups;
     byte status;
     zhash_t *headers;
@@ -797,7 +797,7 @@ zre_msg_command (zre_msg_t *self)
 //  --------------------------------------------------------------------------
 //  Get/set the sequence field
 
-byte
+int16_t
 zre_msg_sequence (zre_msg_t *self)
 {
     assert (self);
@@ -805,7 +805,7 @@ zre_msg_sequence (zre_msg_t *self)
 }
 
 void
-zre_msg_sequence_set (zre_msg_t *self, byte sequence)
+zre_msg_sequence_set (zre_msg_t *self, int16_t sequence)
 {
     assert (self);
     self->sequence = sequence;
@@ -840,7 +840,7 @@ zre_msg_from_set (zre_msg_t *self, char *format, ...)
 //  --------------------------------------------------------------------------
 //  Get/set the port field
 
-byte
+int16_t
 zre_msg_port (zre_msg_t *self)
 {
     assert (self);
@@ -848,7 +848,7 @@ zre_msg_port (zre_msg_t *self)
 }
 
 void
-zre_msg_port_set (zre_msg_t *self, byte port)
+zre_msg_port_set (zre_msg_t *self, int16_t port)
 {
     assert (self);
     self->port = port;

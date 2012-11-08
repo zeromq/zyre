@@ -30,24 +30,17 @@
     $(NAME) - $(string.trim (.?''):left)
 .   for field
 .       field.name = "$(field.name:c)"
-.       for class.field as cfield where cfield.name = field.name
-.           if cfield.type <> field.type
-.               echo "E: field '$(name)' must have same type everywhere"
-.           endif
-.       else
-.           copy field to class
-.       endfor
 .       if type = "number"
 .           size ?= 8
         $(name)       $(type) $(size)
 .           if size = 1
-.               ctype = "byte"
+.               field.ctype = "byte"
 .           elsif size = 2
-.               ctype = "int16_t"
+.               field.ctype = "int16_t"
 .           elsif size = 4
-.               ctype = "int32_t"
+.               field.ctype = "int32_t"
 .           elsif size = 8
-.               ctype = "int64_t"
+.               field.ctype = "int64_t"
 .           else
 .               echo "E: bad size $(size) for $(name)"
 .           endif
@@ -56,6 +49,13 @@
 .       else
         $(name)       $(type)
 .       endif
+.       for class.field as cfield where cfield.name = field.name
+.           if cfield.type <> field.type
+.               echo "E: field '$(name)' must have same type everywhere"
+.           endif
+.       else
+.           copy field to class
+.       endfor
 .   endfor
 .endfor
 */
