@@ -641,6 +641,7 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
         if (pollitems [1].revents & ZMQ_POLLIN)
             agent_recv_from_peer (self);
 
+        else
         if (pollitems [2].revents & ZMQ_POLLIN)
             agent_recv_udp_beacon (self);
 
