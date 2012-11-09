@@ -294,9 +294,11 @@ zre_msg_recv (void *socket)
             break;
 
         case ZRE_MSG_PING:
+            GET_NUMBER2 (self->sequence);
             break;
 
         case ZRE_MSG_PING_OK:
+            GET_NUMBER2 (self->sequence);
             break;
 
         default:
@@ -420,9 +422,13 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_PING:
+            //  sequence is a 2-byte integer
+            frame_size += 2;
             break;
             
         case ZRE_MSG_PING_OK:
+            //  sequence is a 2-byte integer
+            frame_size += 2;
             break;
             
         default:
@@ -501,9 +507,11 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             break;
             
         case ZRE_MSG_PING:
+            PUT_NUMBER2 (self->sequence);
             break;
             
         case ZRE_MSG_PING_OK:
+            PUT_NUMBER2 (self->sequence);
             break;
             
     }
@@ -598,9 +606,11 @@ zre_msg_dup (zre_msg_t *self)
             break;
 
         case ZRE_MSG_PING:
+            copy->sequence = self->sequence;
             break;
 
         case ZRE_MSG_PING_OK:
+            copy->sequence = self->sequence;
             break;
 
     }
@@ -716,10 +726,12 @@ zre_msg_dump (zre_msg_t *self)
             
         case ZRE_MSG_PING:
             puts ("PING:");
+            printf ("    sequence=%ld\n", (long) self->sequence);
             break;
             
         case ZRE_MSG_PING_OK:
             puts ("PING_OK:");
+            printf ("    sequence=%ld\n", (long) self->sequence);
             break;
             
     }
@@ -1169,17 +1181,21 @@ zre_msg_test (bool verbose)
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_PING);
+    zre_msg_sequence_set (self, 123);
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
     assert (self);
+    assert (zre_msg_sequence (self) == 123);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_PING_OK);
+    zre_msg_sequence_set (self, 123);
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
     assert (self);
+    assert (zre_msg_sequence (self) == 123);
     zre_msg_destroy (&self);
 
     zctx_destroy (&ctx);
