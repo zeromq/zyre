@@ -50,7 +50,9 @@
         group         string
         status        number 1
     PING - Ping a peer that has gone silent.
+        sequence      number 2
     PING_OK - Reply to a peer's ping.
+        sequence      number 2
 */
 
 #define ZRE_MSG_VERSION                     1
