@@ -25,6 +25,10 @@
 .       for class->header.field as hfield
 .           copy hfield before field
 .       endfor
+.   else
+.       for class->header.field as hfield
+.           copy hfield to message
+.       endfor
 .   endfor
 .
     $(NAME) - $(string.trim (.?''):left)
