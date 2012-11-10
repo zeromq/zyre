@@ -80,14 +80,61 @@ zre_msg_t *
 void
     zre_msg_destroy (zre_msg_t **self_p);
 
-//  Receive and parse a zre_msg from the socket
+//  Receive and parse a zre_msg from the input
 zre_msg_t *
-    zre_msg_recv (void *socket);
+    zre_msg_recv (void *input);
 
-//  Send the zre_msg to the socket, and destroy it
+//  Send the zre_msg to the output, and destroy it
 int
-    zre_msg_send (zre_msg_t **self_p, void *socket);
+    zre_msg_send (zre_msg_t **self_p, void *output);
 
+//  Send the HELLO to the output in one step
+int
+    zre_msg_send_hello (void *output,
+        int16_t sequence,
+        char *from,
+        int16_t port,
+        zlist_t *groups,
+        byte status,
+        zhash_t *headers);
+    
+//  Send the WHISPER to the output in one step
+int
+    zre_msg_send_whisper (void *output,
+        int16_t sequence,
+        zframe_t *cookies);
+    
+//  Send the SHOUT to the output in one step
+int
+    zre_msg_send_shout (void *output,
+        int16_t sequence,
+        char *group,
+        zframe_t *cookies);
+    
+//  Send the JOIN to the output in one step
+int
+    zre_msg_send_join (void *output,
+        int16_t sequence,
+        char *group,
+        byte status);
+    
+//  Send the LEAVE to the output in one step
+int
+    zre_msg_send_leave (void *output,
+        int16_t sequence,
+        char *group,
+        byte status);
+    
+//  Send the PING to the output in one step
+int
+    zre_msg_send_ping (void *output,
+        int16_t sequence);
+    
+//  Send the PING_OK to the output in one step
+int
+    zre_msg_send_ping_ok (void *output,
+        int16_t sequence);
+    
 //  Duplicate the zre_msg message
 zre_msg_t *
     zre_msg_dup (zre_msg_t *self);
