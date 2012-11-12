@@ -1,8 +1,12 @@
-<class name = "zre_msg" script = "codec_c.gsl">
-This is the ZRE protocol version 1.
+<class
+    name = "zre_msg"
+    script = "codec_c.gsl"
+    signature = "1"
+>
+This is the ZRE protocol raw version.
 <include filename = "license.xml" />
 
-<!-- Protocol version -->
+<!-- Protocol constants -->
 <define name = "VERSION" value = "1" />
 
 <!-- Header for all messages -->

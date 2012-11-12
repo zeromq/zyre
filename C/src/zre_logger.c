@@ -36,7 +36,7 @@ int main (int argc, char *argv [])
     zre_udp_t *udp = zre_udp_new (PING_PORT_NUMBER);
     char *host = zre_udp_host (udp);
     void *collector = zsocket_new (ctx, ZMQ_SUB);
-    zsocket_bind (collector, "tcp://*:%d", LOG_PORT_NUMBER);
+    zsocket_bind (collector, "tcp://%s:%d", host, LOG_PORT_NUMBER);
     zsocket_set_subscribe (collector, "");
 
     zre_interface_t *interface = zre_interface_new ();

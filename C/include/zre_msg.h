@@ -91,9 +91,9 @@ int
 //  Send the HELLO to the output in one step
 int
     zre_msg_send_hello (void *output,
-        int16_t sequence,
+        uint16_t sequence,
         char *from,
-        int16_t port,
+        uint16_t port,
         zlist_t *groups,
         byte status,
         zhash_t *headers);
@@ -101,39 +101,39 @@ int
 //  Send the WHISPER to the output in one step
 int
     zre_msg_send_whisper (void *output,
-        int16_t sequence,
+        uint16_t sequence,
         zframe_t *cookies);
     
 //  Send the SHOUT to the output in one step
 int
     zre_msg_send_shout (void *output,
-        int16_t sequence,
+        uint16_t sequence,
         char *group,
         zframe_t *cookies);
     
 //  Send the JOIN to the output in one step
 int
     zre_msg_send_join (void *output,
-        int16_t sequence,
+        uint16_t sequence,
         char *group,
         byte status);
     
 //  Send the LEAVE to the output in one step
 int
     zre_msg_send_leave (void *output,
-        int16_t sequence,
+        uint16_t sequence,
         char *group,
         byte status);
     
 //  Send the PING to the output in one step
 int
     zre_msg_send_ping (void *output,
-        int16_t sequence);
+        uint16_t sequence);
     
 //  Send the PING_OK to the output in one step
 int
     zre_msg_send_ping_ok (void *output,
-        int16_t sequence);
+        uint16_t sequence);
     
 //  Duplicate the zre_msg message
 zre_msg_t *
@@ -158,10 +158,10 @@ char *
     zre_msg_command (zre_msg_t *self);
 
 //  Get/set the sequence field
-int16_t
+uint16_t
     zre_msg_sequence (zre_msg_t *self);
 void
-    zre_msg_sequence_set (zre_msg_t *self, int16_t sequence);
+    zre_msg_sequence_set (zre_msg_t *self, uint16_t sequence);
 
 //  Get/set the from field
 char *
@@ -170,10 +170,10 @@ void
     zre_msg_from_set (zre_msg_t *self, char *format, ...);
 
 //  Get/set the port field
-int16_t
+uint16_t
     zre_msg_port (zre_msg_t *self);
 void
-    zre_msg_port_set (zre_msg_t *self, int16_t port);
+    zre_msg_port_set (zre_msg_t *self, uint16_t port);
 
 //  Get/set the groups field
 zlist_t *
@@ -206,8 +206,8 @@ void
 //  Get/set a value in the headers dictionary
 char *
     zre_msg_headers_string (zre_msg_t *self, char *key, char *default_value);
-int64_t
-    zre_msg_headers_number (zre_msg_t *self, char *key, int64_t default_value);
+uint64_t
+    zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value);
 void
     zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...);
 size_t

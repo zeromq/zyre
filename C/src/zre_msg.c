@@ -33,9 +33,9 @@ struct _zre_msg_t {
     int id;                     //  zre_msg message ID
     byte *needle;               //  Read/write pointer for serialization
     byte *ceiling;              //  Valid upper limit for read pointer
-    int16_t sequence;
+    uint16_t sequence;
     char *from;
-    int16_t port;
+    uint16_t port;
     zlist_t *groups;
     byte status;
     zhash_t *headers;
@@ -111,8 +111,8 @@ struct _zre_msg_t {
 #define GET_NUMBER2(host) { \
     if (self->needle + 2 > self->ceiling) \
         goto malformed; \
-    (host) = ((int16_t) (self->needle [0]) << 8) \
-           +  (int16_t) (self->needle [1]); \
+    (host) = ((uint16_t) (self->needle [0]) << 8) \
+           +  (uint16_t) (self->needle [1]); \
     self->needle += 2; \
     }
 
@@ -120,10 +120,10 @@ struct _zre_msg_t {
 #define GET_NUMBER4(host) { \
     if (self->needle + 4 > self->ceiling) \
         goto malformed; \
-    (host) = ((int32_t) (self->needle [0]) << 24) \
-           + ((int32_t) (self->needle [1]) << 16) \
-           + ((int32_t) (self->needle [2]) << 8) \
-           +  (int32_t) (self->needle [3]); \
+    (host) = ((uint32_t) (self->needle [0]) << 24) \
+           + ((uint32_t) (self->needle [1]) << 16) \
+           + ((uint32_t) (self->needle [2]) << 8) \
+           +  (uint32_t) (self->needle [3]); \
     self->needle += 4; \
     }
 
@@ -131,14 +131,14 @@ struct _zre_msg_t {
 #define GET_NUMBER8(host) { \
     if (self->needle + 8 > self->ceiling) \
         goto malformed; \
-    (host) = ((int64_t) (self->needle [0]) << 56) \
-           + ((int64_t) (self->needle [1]) << 48) \
-           + ((int64_t) (self->needle [2]) << 40) \
-           + ((int64_t) (self->needle [3]) << 32) \
-           + ((int64_t) (self->needle [4]) << 24) \
-           + ((int64_t) (self->needle [5]) << 16) \
-           + ((int64_t) (self->needle [6]) << 8) \
-           +  (int64_t) (self->needle [7]); \
+    (host) = ((uint64_t) (self->needle [0]) << 56) \
+           + ((uint64_t) (self->needle [1]) << 48) \
+           + ((uint64_t) (self->needle [2]) << 40) \
+           + ((uint64_t) (self->needle [3]) << 32) \
+           + ((uint64_t) (self->needle [4]) << 24) \
+           + ((uint64_t) (self->needle [5]) << 16) \
+           + ((uint64_t) (self->needle [6]) << 8) \
+           +  (uint64_t) (self->needle [7]); \
     self->needle += 8; \
     }
 
@@ -210,26 +210,44 @@ zre_msg_recv (void *input)
     assert (input);
     zre_msg_t *self = zre_msg_new (0);
     zframe_t *frame = NULL;
-
-    //  If we're reading from a ROUTER socket, get address
-    if (zsockopt_type (input) == ZMQ_ROUTER) {
-        self->address = zframe_recv (input);
-        if (!self->address)
-            goto empty;         //  Interrupted
-        if (!zsocket_rcvmore (input))
-            goto malformed;
-    }
-    //  Read and parse command in frame
-    frame = zframe_recv (input);
-    if (!frame)
-        goto empty;             //  Interrupted
-    self->needle = zframe_data (frame);
-    self->ceiling = self->needle + zframe_size (frame);
     size_t string_size;
     size_t list_size;
     size_t hash_size;
 
-    //  Get message id, which is first byte in frame
+    //  Read valid message frame from socket; we loop over any
+    //  garbage data we might receive from badly-connected peers
+    while (true) {
+        //  If we're reading from a ROUTER socket, get address
+        if (zsockopt_type (input) == ZMQ_ROUTER) {
+            zframe_destroy (&self->address);
+            self->address = zframe_recv (input);
+            if (!self->address)
+                goto empty;         //  Interrupted
+            if (!zsocket_rcvmore (input))
+                goto malformed;
+        }
+        //  Read and parse command in frame
+        frame = zframe_recv (input);
+        if (!frame)
+            goto empty;             //  Interrupted
+
+        //  Get and check protocol signature
+        self->needle = zframe_data (frame);
+        self->ceiling = self->needle + zframe_size (frame);
+        uint16_t signature;
+        GET_NUMBER2 (signature);
+        if (signature == (0xAAA0 | 1))
+            break;                  //  Valid signature
+
+        //  Protocol assertion, drop message
+        puts ("dropping bad frames...");
+        while (zsocket_rcvmore (input)) {
+            zframe_destroy (&frame);
+            frame = zframe_recv (input);
+        }
+        zframe_destroy (&frame);
+    }
+    //  Get message id and parse per message type
     GET_NUMBER1 (self->id);
 
     switch (self->id) {
@@ -311,11 +329,6 @@ zre_msg_recv (void *input)
     //  Error returns
     malformed:
         printf ("E: malformed message '%d'\n", self->id);
-        printf ("I: frame size=%td\n", zframe_size (frame));
-        byte *data = zframe_data (frame);
-        printf ("I: frame data=%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n",
-                data[0], data[1], data[2], data[3], data[4],
-                data[5], data[6], data[7], data[8], data[9]);
     empty:
         zframe_destroy (&frame);
         zre_msg_destroy (&self);
@@ -357,7 +370,7 @@ zre_msg_send (zre_msg_t **self_p, void *output)
 
     //  Calculate size of serialized data
     zre_msg_t *self = *self_p;
-    size_t frame_size = 1;
+    size_t frame_size = 2 + 1;          //  Signature and message ID
     switch (self->id) {
         case ZRE_MSG_HELLO:
             //  sequence is a 2-byte integer
@@ -442,10 +455,11 @@ zre_msg_send (zre_msg_t **self_p, void *output)
             assert (false);
     }
     //  Now serialize message into the frame
-    zframe_t *frame = zframe_new (NULL, frame_size + 1);
+    zframe_t *frame = zframe_new (NULL, frame_size);
     self->needle = zframe_data (frame);
     size_t string_size;
     int frame_flags = 0;
+    PUT_NUMBER2 (0xAAA0 | 1);
     PUT_NUMBER1 (self->id);
 
     switch (self->id) {
@@ -571,9 +585,9 @@ zre_msg_send (zre_msg_t **self_p, void *output)
 int
 zre_msg_send_hello (
     void *output,
-    int16_t sequence,
+    uint16_t sequence,
     char *from,
-    int16_t port,
+    uint16_t port,
     zlist_t *groups,
     byte status,
     zhash_t *headers)
@@ -595,7 +609,7 @@ zre_msg_send_hello (
 int
 zre_msg_send_whisper (
     void *output,
-    int16_t sequence,
+    uint16_t sequence,
     zframe_t *cookies)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_WHISPER);
@@ -611,7 +625,7 @@ zre_msg_send_whisper (
 int
 zre_msg_send_shout (
     void *output,
-    int16_t sequence,
+    uint16_t sequence,
     char *group,
     zframe_t *cookies)
 {
@@ -629,7 +643,7 @@ zre_msg_send_shout (
 int
 zre_msg_send_join (
     void *output,
-    int16_t sequence,
+    uint16_t sequence,
     char *group,
     byte status)
 {
@@ -647,7 +661,7 @@ zre_msg_send_join (
 int
 zre_msg_send_leave (
     void *output,
-    int16_t sequence,
+    uint16_t sequence,
     char *group,
     byte status)
 {
@@ -665,7 +679,7 @@ zre_msg_send_leave (
 int
 zre_msg_send_ping (
     void *output,
-    int16_t sequence)
+    uint16_t sequence)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_PING);
     zre_msg_sequence_set (self, sequence);
@@ -679,7 +693,7 @@ zre_msg_send_ping (
 int
 zre_msg_send_ping_ok (
     void *output,
-    int16_t sequence)
+    uint16_t sequence)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_PING_OK);
     zre_msg_sequence_set (self, sequence);
@@ -936,7 +950,7 @@ zre_msg_command (zre_msg_t *self)
 //  --------------------------------------------------------------------------
 //  Get/set the sequence field
 
-int16_t
+uint16_t
 zre_msg_sequence (zre_msg_t *self)
 {
     assert (self);
@@ -944,7 +958,7 @@ zre_msg_sequence (zre_msg_t *self)
 }
 
 void
-zre_msg_sequence_set (zre_msg_t *self, int16_t sequence)
+zre_msg_sequence_set (zre_msg_t *self, uint16_t sequence)
 {
     assert (self);
     self->sequence = sequence;
@@ -979,7 +993,7 @@ zre_msg_from_set (zre_msg_t *self, char *format, ...)
 //  --------------------------------------------------------------------------
 //  Get/set the port field
 
-int16_t
+uint16_t
 zre_msg_port (zre_msg_t *self)
 {
     assert (self);
@@ -987,7 +1001,7 @@ zre_msg_port (zre_msg_t *self)
 }
 
 void
-zre_msg_port_set (zre_msg_t *self, int16_t port)
+zre_msg_port_set (zre_msg_t *self, uint16_t port)
 {
     assert (self);
     self->port = port;
@@ -1004,7 +1018,7 @@ zre_msg_groups (zre_msg_t *self)
     return self->groups;
 }
 
-//  Greedy function, takes ownership of name; if you don't want that
+//  Greedy function, takes ownership of groups; if you don't want that
 //  then use zlist_dup() to pass a copy of groups
 
 void
@@ -1093,7 +1107,7 @@ zre_msg_headers (zre_msg_t *self)
     return self->headers;
 }
 
-//  Greedy function, takes ownership of name; if you don't want that
+//  Greedy function, takes ownership of headers; if you don't want that
 //  then use zhash_dup() to pass a copy of headers
 
 void
@@ -1120,11 +1134,11 @@ zre_msg_headers_string (zre_msg_t *self, char *key, char *default_value)
     return value;
 }
 
-int64_t
-zre_msg_headers_number (zre_msg_t *self, char *key, int64_t default_value)
+uint64_t
+zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value)
 {
     assert (self);
-    int64_t value = default_value;
+    uint64_t value = default_value;
     char *string;
     if (self->headers)
         string = (char *) (zhash_lookup (self->headers, key));
