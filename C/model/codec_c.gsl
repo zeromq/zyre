@@ -22,12 +22,16 @@
 .for message
 .   message.name = "$(message.name:c)"
 .   for field where item() = 1
-.       for class->header.field as hfield
-.           copy hfield before field
+.       for class.header
+.           for field as hfield
+.               copy hfield before field
+.           endfor
 .       endfor
 .   else
-.       for class->header.field as hfield
-.           copy hfield to message
+.       for class.header
+.           for field as hfield
+.               copy hfield to message
+.           endfor
 .       endfor
 .   endfor
 .

@@ -27,6 +27,50 @@
 #include <czmq.h>
 #include "../include/zre.h"
 
+static void
+s_print_log_msg (void *collector)
+{
+    zre_log_msg_t *msg = zre_log_msg_recv (collector);
+    if (!msg)
+        return;                 //  Interrupted
+
+    time_t curtime = zre_log_msg_time (msg);
+    char *event;
+    switch (zre_log_msg_event (msg)) {
+        case ZRE_LOG_MSG_EVENT_UP:
+            event = "Interface up";
+            break;
+        case ZRE_LOG_MSG_EVENT_DOWN:
+            event = "Interface down";
+            break;
+        case ZRE_LOG_MSG_EVENT_JOIN:
+            event = "Join group";
+            break;
+        case ZRE_LOG_MSG_EVENT_LEAVE:
+            event = "Leave group";
+            break;
+        case ZRE_LOG_MSG_EVENT_ENTER:
+            event = "Peer enters";
+            break;
+        case ZRE_LOG_MSG_EVENT_EXIT:
+            event = "Peer exits";
+            break;
+    }
+    struct tm *loctime = localtime (&curtime);
+    char timestr [20];
+    strftime (timestr, 20, "%y-%m-%d %H:%M:%S ", loctime);
+
+    printf ("%s I: [%04X] [%04X] - %s %s\n",
+        timestr, 
+        zre_log_msg_node (msg),
+        zre_log_msg_peer (msg),
+        event,
+        zre_log_msg_data (msg));
+    
+    zre_log_msg_destroy (&msg);
+}
+
+
 int main (int argc, char *argv [])
 {
     zctx_t *ctx = zctx_new ();
@@ -37,6 +81,7 @@ int main (int argc, char *argv [])
     char *host = zre_udp_host (udp);
     void *collector = zsocket_new (ctx, ZMQ_SUB);
     zsocket_bind (collector, "tcp://%s:%d", host, LOG_PORT_NUMBER);
+    //  Get all log messages (don't filter)
     zsocket_set_subscribe (collector, "");
 
     zre_interface_t *interface = zre_interface_new ();
@@ -52,11 +97,9 @@ int main (int argc, char *argv [])
             break;              //  Interrupted
 
         //  Handle input on collector
-        if (pollitems [0].revents & ZMQ_POLLIN) {
-            char *data = zstr_recv (collector);
-            puts (data);
-            free (data);
-        }
+        if (pollitems [0].revents & ZMQ_POLLIN)
+            s_print_log_msg (collector);
+        
         //  Handle event from interface
         if (pollitems [1].revents & ZMQ_POLLIN) {
             zmsg_t *msg = zre_interface_recv (interface);

@@ -240,7 +240,6 @@ zre_msg_recv (void *input)
             break;                  //  Valid signature
 
         //  Protocol assertion, drop message
-        puts ("dropping bad frames...");
         while (zsocket_rcvmore (input)) {
             zframe_destroy (&frame);
             frame = zframe_recv (input);
