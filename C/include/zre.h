@@ -58,6 +58,7 @@
 #include "zre_peer.h"
 #include "zre_group.h"
 #include "zre_log.h"
+#include "zre_log_msg.h"
 #include "zre_interface.h"
 
 #endif

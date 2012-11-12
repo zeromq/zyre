@@ -34,6 +34,7 @@
 struct _zre_log_t {
     zctx_t *ctx;                //  CZMQ context
     void *publisher;            //  Socket to send to
+    uint16_t nodeid;            //  Own correlation ID
 };
 
 
@@ -41,11 +42,15 @@ struct _zre_log_t {
 //  Construct new log object
 
 zre_log_t *
-zre_log_new (void)
+zre_log_new (char *endpoint)
 {
     zre_log_t *self = (zre_log_t *) zmalloc (sizeof (zre_log_t));
     self->ctx = zctx_new ();
     self->publisher = zsocket_new (self->ctx, ZMQ_PUB);
+    //  Modified Bernstein hashing function
+    while (*endpoint)
+        self->nodeid = 33 * self->nodeid ^ *endpoint++;
+    
     return self;
 }
 
@@ -81,22 +86,24 @@ zre_log_connect (zre_log_t *self, char *endpoint)
 //  Record one log event
 
 void
-zre_log_write (zre_log_t *self, int event, char *node, char *peer, char *data, ...)
+zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...)
 {
-    assert (self);
-    va_list argptr;
-    va_start (argptr, data);
-    char *body = (char *) malloc (LOGDATA_MAX + 1);
-    vsnprintf (body, LOGDATA_MAX, data, argptr);
-    
-    time_t curtime = time (NULL);
-    struct tm *loctime = localtime (&curtime);
-    char timenow [10];
-    strftime (timenow, 10, "%H:%M:%S", loctime);
+    uint16_t peerid = 0;
+    while (peer && *peer)
+        peerid = 33 * peerid ^ *peer++;
 
-    //  send to publisher
-    zstr_sendf (self->publisher, "%s %d %s %s %s", timenow, event, node, peer, body);
+    //  Format body if any
+    char body [256];
+    if (format) {
+        assert (self);
+        va_list argptr;
+        va_start (argptr, format);
+        vsnprintf (body, 255, format, argptr);
+        va_end (argptr);
+    }
+    else
+        *body = 0;
     
-    free (body);
-    va_end (argptr);
+    zre_log_msg_send_log (self->publisher, ZRE_LOG_MSG_LEVEL_INFO, 
+        event, self->nodeid, peerid, time (NULL), body);
 }
