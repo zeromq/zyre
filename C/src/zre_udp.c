@@ -88,7 +88,7 @@ s_handle_io_error (char *reason)
     ||  errno == ECONNRESET)
         return;             //  Ignore error and try again
     else {
-        zclock_log ("E: (udp) error '%s' on %s", strerror (errno), reason);
+        zclock_log ("E: (UDP) error '%s' on %s", strerror (errno), reason);
         assert (false);
     }
 }
@@ -100,24 +100,21 @@ s_wireless_nic (const char* name)
     int sock = 0;
     bool result = FALSE;
 
-    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
         return FALSE;
-    }
-#   ifdef SIOCGIFMEDIA
+    
+#   if defined (SIOCGIFMEDIA)
     struct ifmediareq ifmr;
-
     memset (&ifmr, 0, sizeof (struct ifmediareq));
     strlcpy(ifmr.ifm_name, name, sizeof(ifmr.ifm_name));
-    if (ioctl(sock, SIOCGIFMEDIA, (caddr_t) &ifmr) != -1) {
-        result = IFM_TYPE (ifmr.ifm_current) == IFM_IEEE80211;
-    }
-#   elif defined(SIOCGIWNAME)
+    if (ioctl (sock, SIOCGIFMEDIA, (caddr_t) &ifmr) != -1)
+        result = (IFM_TYPE (ifmr.ifm_current) == IFM_IEEE80211);
+    
+#   elif defined (SIOCGIWNAME)
     struct iwreq wrq;
-
     strncpy (wrq.ifr_name, name, IFNAMSIZ);
-    if (ioctl(sock, SIOCGIWNAME, (caddr_t) &wrq) != -1) {
+    if (ioctl (sock, SIOCGIWNAME, (caddr_t) &wrq) != -1)
         result = TRUE;
-    }
 #   endif
     close(sock);
     return result;

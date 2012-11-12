@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre.h - ZyRE framework in C
+    zre_log - record log data
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -24,40 +24,36 @@
     =========================================================================
 */
 
-#ifndef __ZRE_H_INCLUDED__
-#define __ZRE_H_INCLUDED__
+#ifndef __ZRE_LOG_H_INCLUDED__
+#define __ZRE_LOG_H_INCLUDED__
 
-#define ZRE_VERSION_MAJOR 0
-#define ZRE_VERSION_MINOR 2
-#define ZRE_VERSION_PATCH 0
-
-#define ZRE_MAKE_VERSION(major, minor, patch) \
-    ((major) * 10000 + (minor) * 100 + (patch))
-#define ZRE_VERSION \
-    ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
-
-#if CZMQ_VERSION < 10302
-#   error "ZyRE needs CZMQ/1.3.2 or later"
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-//  Defined port numbers, pending IANA submission
+//  Maximum size of log data part
+#define LOGDATA_MAX     255
 
-#define PING_PORT_NUMBER 9991
-#define LOG_PORT_NUMBER  9992
+typedef struct _zre_log_t zre_log_t;
 
-//  Constants, to be configured/reviewed
+//  Constructor
+zre_log_t *
+    zre_log_new (void);
 
-#define PING_INTERVAL    1000   //  Once per second
-#define PEER_EVASIVE     5000   //  Five seconds' silence is evasive
-#define PEER_EXPIRED    10000   //  Ten seconds' silence is expired
+//  Destructor
+void
+    zre_log_destroy (zre_log_t **self_p);
 
-//  Classes in this stack
+//  Connect log to remote endpoint
+void
+    zre_log_connect (zre_log_t *self, char *endpoint);
 
-#include "zre_udp.h"
-#include "zre_msg.h"
-#include "zre_peer.h"
-#include "zre_group.h"
-#include "zre_log.h"
-#include "zre_interface.h"
+//  Record one log event
+void
+    zre_log_write (zre_log_t *self, int event, char *node, char *peer, char *data, ...);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

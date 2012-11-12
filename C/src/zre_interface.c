@@ -49,14 +49,14 @@ static void
 //  Constructor
 
 zre_interface_t *
-zre_interface_new (bool verbose)
+zre_interface_new (void)
 {
     zre_interface_t
         *self;
 
     self = (zre_interface_t *) zmalloc (sizeof (zre_interface_t));
     self->ctx = zctx_new ();
-    self->pipe = zthread_fork (self->ctx, zre_interface_agent, (void *) verbose);
+    self->pipe = zthread_fork (self->ctx, zre_interface_agent, NULL);
     return self;
 }
 
@@ -154,6 +154,26 @@ zre_interface_handle (zre_interface_t *self)
 }
 
 
+//  ---------------------------------------------------------------------
+//  Set node header value
+
+void
+zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...)
+{
+    assert (self);
+    va_list argptr;
+    va_start (argptr, format);
+    char *value = (char *) malloc (255 + 1);
+    vsnprintf (value, 255, format, argptr);
+    va_end (argptr);
+    
+    zstr_sendm (self->pipe, "SET");
+    zstr_sendm (self->pipe, name);
+    zstr_send  (self->pipe, value);
+    free (value);
+}
+
+
 //  =====================================================================
 //  Asynchronous part, works in the background
 
@@ -197,6 +217,7 @@ typedef struct {
     zctx_t *ctx;                //  CZMQ context
     void *pipe;                 //  Pipe back to application
     zre_udp_t *udp;             //  UDP object
+    zre_log_t *log;             //  Log object
     uuid_t uuid;                //  Our UUID as binary blob
     char *identity;             //  Our UUID as hex string
     void *inbox;                //  Our inbox socket (ROUTER)
@@ -206,11 +227,11 @@ typedef struct {
     zhash_t *peers;             //  Hash of known peers, fast lookup
     zhash_t *peer_groups;       //  Groups that our peers are in
     zhash_t *own_groups;        //  Groups that we are in
-    bool verbose;               //  Trace activity?
+    zhash_t *headers;           //  Our header values
 } agent_t;
 
 static agent_t *
-agent_new (zctx_t *ctx, void *pipe, bool verbose)
+agent_new (zctx_t *ctx, void *pipe)
 {
     void *inbox = zsocket_new (ctx, ZMQ_ROUTER);
     if (!inbox) // interrupted
@@ -223,6 +244,7 @@ agent_new (zctx_t *ctx, void *pipe, bool verbose)
     self->inbox = inbox;
     self->host = zre_udp_host (self->udp);
     self->port = zsocket_bind (self->inbox, "tcp://%s:*", self->host);
+
     if (self->port < 0) { // interrupted
         zre_udp_destroy (&self->udp);
         free (self);
@@ -233,10 +255,10 @@ agent_new (zctx_t *ctx, void *pipe, bool verbose)
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
     self->own_groups = zhash_new ();
-    self->verbose = verbose;
-    if (self->verbose)
-        zclock_log ("I: [%s] +++ interface created on %s:%d",
-                    self->identity, self->host, self->port);
+    self->headers = zhash_new ();
+    self->log = zre_log_new ();
+    
+    zre_log_write (self->log, 0, self->identity, "-", "interface created on %s:%hu", self->host, self->port);
     return self;
 }
 
@@ -246,12 +268,13 @@ agent_destroy (agent_t **self_p)
     assert (self_p);
     if (*self_p) {
         agent_t *self = *self_p;
-        if (self->verbose)
-            zclock_log ("I: [%s] --- interface destroyed", self->identity);
+        zre_log_write (self->log, 0, self->identity, "-", "interface destroyed");
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
+        zhash_destroy (&self->headers);
         zre_udp_destroy (&self->udp);
+        zre_log_destroy (&self->log);
         free (self->identity);
         free (self);
         *self_p = NULL;
@@ -294,10 +317,6 @@ agent_recv_from_api (agent_t *self)
             zre_msg_cookies_set (msg, zmsg_pop (request));
             zre_peer_send (peer, &msg);
         }
-        else
-            zclock_log ("W: [%s] can't send to %s, not found",
-                        self->identity, identity);
-        
         free (identity);
     }
     else
@@ -326,8 +345,7 @@ agent_recv_from_api (agent_t *self)
             zre_msg_status_set (msg, ++(self->status));
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
-            if (self->verbose)
-                zclock_log ("I: [%s] join group (%d)", self->identity, self->status);
+            zre_log_write (self->log, 0, self->identity, "-", "join group (%d)", self->status);
         }
         free (name);
     }
@@ -344,9 +362,17 @@ agent_recv_from_api (agent_t *self)
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
             zhash_delete (self->own_groups, name);
-            if (self->verbose)
-                zclock_log ("I: [%s] leave group (%d)", self->identity, self->status);
+            zre_log_write (self->log, 0, self->identity, "-", "leave group (%d)", self->status);
         }
+        free (name);
+    }
+    else
+    if (streq (command, "SET")) {
+        char *name = zmsg_popstr (request);
+        char *value = zmsg_popstr (request);
+        zhash_update (self->headers, name, value);
+        zhash_freefn (self->headers, name, free);
+        //  Value is now owned by hash table
         free (name);
     }
     free (command);
@@ -361,10 +387,8 @@ agent_peer_purge (const char *key, void *item, void *argument)
 {
     zre_peer_t *peer = (zre_peer_t *) item;
     char *endpoint = (char *) argument;
-    if (streq (zre_peer_endpoint (peer), endpoint)) {
-        zclock_log ("W: disconnect %s", key);
+    if (streq (zre_peer_endpoint (peer), endpoint))
         zre_peer_disconnect (peer);
-    }
     return 0;
 }
 
@@ -382,9 +406,7 @@ s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
 
         peer = zre_peer_new (identity, self->peers, self->ctx);
         zre_peer_connect (peer, self->identity, endpoint);
-        if (self->verbose)
-            zclock_log ("I: [%s] connect to %s at %s", self->identity,
-                        identity, endpoint);
+        zre_log_write (self->log, 0, self->identity, identity, "connect to %s", endpoint);
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
@@ -392,15 +414,14 @@ s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
         zre_msg_port_set (msg, self->port);
         zre_msg_groups_set (msg, zhash_keys (self->own_groups));
         zre_msg_status_set (msg, self->status);
+        zre_msg_headers_set (msg, zhash_dup (self->headers));
+        
         zre_peer_send (peer, &msg);
-        if (self->verbose)
-            zclock_log ("I: [%s] send HELLO to %s", self->identity, identity);
+        zre_log_write (self->log, 0, self->identity, identity, "send HELLO");
 
         //  Now tell the caller about the peer
         zstr_sendm (self->pipe, "ENTER");
         zstr_send (self->pipe, identity);
-        if (self->verbose)
-            zclock_log ("I: [%s] peer %s enters (total: %d)", self->identity, identity, zhash_size (self->peers));
     }
     return peer;
 }
@@ -426,13 +447,10 @@ agent_recv_from_peer (agent_t *self)
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_recv (self->inbox);
     if (msg == NULL) {
-        zclock_log ("W: [%s] interrupted? %s", self->identity, strerror (errno));
+        zclock_log ("W: [%s] interrupted", self->identity);
         assert (false);
     }
     char *identity = zframe_strdup (zre_msg_address (msg));
-    if (self->verbose)
-        zclock_log ("I: [%s] recv %s from %s",
-            self->identity, zre_msg_command (msg), identity);
         
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist
@@ -443,8 +461,8 @@ agent_recv_from_peer (agent_t *self)
         assert (peer);
         zre_peer_ready_set (peer, true);
     }
+    //  Ignore command if peer isn't ready
     if (peer == NULL || !zre_peer_ready (peer)) {
-        zclock_log ("W: [%s] ignoring command from %s", self->identity, identity);
         zre_msg_destroy (&msg);
         return 0;
     }
@@ -465,6 +483,14 @@ agent_recv_from_peer (agent_t *self)
         }
         //  Hello command holds latest status of peer
         zre_peer_status_set (peer, zre_msg_status (msg));
+        
+        //  Store peer headers for future reference
+        zre_peer_headers_set (peer, zre_msg_headers (msg));
+
+        //  If peer is a log collector, connect to it
+        char *collector = zre_msg_headers_string (msg, "LOG_COLLECTOR", NULL);
+        if (collector)
+            zre_log_connect (self->log, collector);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
@@ -487,25 +513,19 @@ agent_recv_from_peer (agent_t *self)
     if (zre_msg_id (msg) == ZRE_MSG_PING) {
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING_OK);
         zre_peer_send (peer, &msg);
-        if (self->verbose)
-            zclock_log ("I: [%s] send PING_OK to %s", self->identity, identity);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_JOIN) {
         zre_group_t *group = s_require_peer_group (self, zre_msg_group (msg));
         zre_group_join (group, peer);
-        if (self->verbose)
-            zclock_log ("I: [%s] peer %s joins %s (%d==%d)", self->identity, identity,
-                    zre_msg_group (msg), zre_msg_status (msg), zre_peer_status (peer));
+        zre_log_write (self->log, 0, self->identity, identity, "joins %s", zre_msg_group (msg));
         assert (zre_msg_status (msg) == zre_peer_status (peer));
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_LEAVE) {
         zre_group_t *group = s_require_peer_group (self, zre_msg_group (msg));
         zre_group_leave (group, peer);
-        if (self->verbose)
-            zclock_log ("I: [%s] peer %s leaves %s (%d==%d)", self->identity, identity,
-                    zre_msg_group (msg), zre_msg_status (msg), zre_peer_status (peer));
+        zre_log_write (self->log, 0, self->identity, identity, "leaves %s", zre_msg_group (msg));
         assert (zre_msg_status (msg) == zre_peer_status (peer));
     }
     free (identity);
@@ -588,8 +608,7 @@ agent_ping_peer (const char *key, void *item, void *argument)
     zre_peer_t *peer = (zre_peer_t *) item;
     char *identity = zre_peer_identity (peer);
     if (zclock_time () >= zre_peer_expired_at (peer)) {
-        if (self->verbose)
-            zclock_log ("I: [%s] peer %s exit", self->identity, identity);
+        zre_log_write (self->log, 0, self->identity, identity, "peer exit");
         //  If peer has really vanished, expire it
         zstr_sendm (self->pipe, "EXIT");
         zstr_send (self->pipe, identity);
@@ -604,8 +623,6 @@ agent_ping_peer (const char *key, void *item, void *argument)
         //  for peer management.
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING);
         zre_peer_send (peer, &msg);
-        if (self->verbose)
-            zclock_log ("I: [%s] send PING to %s", self->identity, identity);
     }
     return 0;
 }
@@ -616,7 +633,7 @@ static void
 zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
 {
     //  Create agent instance to pass around
-    agent_t *self = agent_new (ctx, pipe, (bool) args);
+    agent_t *self = agent_new (ctx, pipe);
     if (!self) // interrupted
         return;
     
