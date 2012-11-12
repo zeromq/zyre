@@ -998,7 +998,7 @@ $(class.name)_$(name) ($(class.name)_t *self)
     return self->$(name);
 }
 
-//  Greedy function, takes ownership of name; if you don't want that
+//  Greedy function, takes ownership of $(name); if you don't want that
 //  then use zlist_dup() to pass a copy of $(name)
 
 void
@@ -1069,7 +1069,7 @@ $(class.name)_$(name) ($(class.name)_t *self)
     return self->$(name);
 }
 
-//  Greedy function, takes ownership of name; if you don't want that
+//  Greedy function, takes ownership of $(name); if you don't want that
 //  then use zhash_dup() to pass a copy of $(name)
 
 void

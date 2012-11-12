@@ -29,7 +29,7 @@
 
 int main (int argc, char *argv [])
 {
-    zre_interface_t *interface = zre_interface_new (false);
+    zre_interface_t *interface = zre_interface_new ();
     zre_interface_join (interface, "GLOBAL");
 
     while (true) {

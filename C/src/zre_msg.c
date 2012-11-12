@@ -311,6 +311,11 @@ zre_msg_recv (void *input)
     //  Error returns
     malformed:
         printf ("E: malformed message '%d'\n", self->id);
+        printf ("I: frame size=%td\n", zframe_size (frame));
+        byte *data = zframe_data (frame);
+        printf ("I: frame data=%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n",
+                data[0], data[1], data[2], data[3], data[4],
+                data[5], data[6], data[7], data[8], data[9]);
     empty:
         zframe_destroy (&frame);
         zre_msg_destroy (&self);
