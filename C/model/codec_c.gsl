@@ -40,11 +40,11 @@
 .           if size = 1
 .               field.ctype = "byte"
 .           elsif size = 2
-.               field.ctype = "int16_t"
+.               field.ctype = "uint16_t"
 .           elsif size = 4
-.               field.ctype = "int32_t"
+.               field.ctype = "uint32_t"
 .           elsif size = 8
-.               field.ctype = "int64_t"
+.               field.ctype = "uint64_t"
 .           else
 .               echo "E: bad size $(size) for $(name)"
 .           endif
@@ -192,8 +192,8 @@ void
 //  Get/set a value in the $(name) dictionary
 char *
     $(class.name)_$(name)_string ($(class.name)_t *self, char *key, char *default_value);
-int64_t
-    $(class.name)_$(name)_number ($(class.name)_t *self, char *key, int64_t default_value);
+uint64_t
+    $(class.name)_$(name)_number ($(class.name)_t *self, char *key, uint64_t default_value);
 void
     $(class.name)_$(name)_insert ($(class.name)_t *self, char *key, char *format, ...);
 size_t
@@ -326,8 +326,8 @@ struct _$(class.name)_t {
 #define GET_NUMBER2(host) { \\
     if (self->needle + 2 > self->ceiling) \\
         goto malformed; \\
-    (host) = ((int16_t) (self->needle [0]) << 8) \\
-           +  (int16_t) (self->needle [1]); \\
+    (host) = ((uint16_t) (self->needle [0]) << 8) \\
+           +  (uint16_t) (self->needle [1]); \\
     self->needle += 2; \\
     }
 
@@ -335,10 +335,10 @@ struct _$(class.name)_t {
 #define GET_NUMBER4(host) { \\
     if (self->needle + 4 > self->ceiling) \\
         goto malformed; \\
-    (host) = ((int32_t) (self->needle [0]) << 24) \\
-           + ((int32_t) (self->needle [1]) << 16) \\
-           + ((int32_t) (self->needle [2]) << 8) \\
-           +  (int32_t) (self->needle [3]); \\
+    (host) = ((uint32_t) (self->needle [0]) << 24) \\
+           + ((uint32_t) (self->needle [1]) << 16) \\
+           + ((uint32_t) (self->needle [2]) << 8) \\
+           +  (uint32_t) (self->needle [3]); \\
     self->needle += 4; \\
     }
 
@@ -346,14 +346,14 @@ struct _$(class.name)_t {
 #define GET_NUMBER8(host) { \\
     if (self->needle + 8 > self->ceiling) \\
         goto malformed; \\
-    (host) = ((int64_t) (self->needle [0]) << 56) \\
-           + ((int64_t) (self->needle [1]) << 48) \\
-           + ((int64_t) (self->needle [2]) << 40) \\
-           + ((int64_t) (self->needle [3]) << 32) \\
-           + ((int64_t) (self->needle [4]) << 24) \\
-           + ((int64_t) (self->needle [5]) << 16) \\
-           + ((int64_t) (self->needle [6]) << 8) \\
-           +  (int64_t) (self->needle [7]); \\
+    (host) = ((uint64_t) (self->needle [0]) << 56) \\
+           + ((uint64_t) (self->needle [1]) << 48) \\
+           + ((uint64_t) (self->needle [2]) << 40) \\
+           + ((uint64_t) (self->needle [3]) << 32) \\
+           + ((uint64_t) (self->needle [4]) << 24) \\
+           + ((uint64_t) (self->needle [5]) << 16) \\
+           + ((uint64_t) (self->needle [6]) << 8) \\
+           +  (uint64_t) (self->needle [7]); \\
     self->needle += 8; \\
     }
 
@@ -431,26 +431,43 @@ $(class.name)_recv (void *input)
     assert (input);
     $(class.name)_t *self = $(class.name)_new (0);
     zframe_t *frame = NULL;
-
-    //  If we're reading from a ROUTER socket, get address
-    if (zsockopt_type (input) == ZMQ_ROUTER) {
-        self->address = zframe_recv (input);
-        if (!self->address)
-            goto empty;         //  Interrupted
-        if (!zsocket_rcvmore (input))
-            goto malformed;
-    }
-    //  Read and parse command in frame
-    frame = zframe_recv (input);
-    if (!frame)
-        goto empty;             //  Interrupted
-    self->needle = zframe_data (frame);
-    self->ceiling = self->needle + zframe_size (frame);
     size_t string_size;
     size_t list_size;
     size_t hash_size;
 
-    //  Get message id, which is first byte in frame
+    //  Read valid message frame from socket; we loop over any
+    //  garbage data we might receive from badly-connected peers
+    while (true) {
+        //  If we're reading from a ROUTER socket, get address
+        if (zsockopt_type (input) == ZMQ_ROUTER) {
+            zframe_destroy (&self->address);
+            self->address = zframe_recv (input);
+            if (!self->address)
+                goto empty;         //  Interrupted
+            if (!zsocket_rcvmore (input))
+                goto malformed;
+        }
+        //  Read and parse command in frame
+        frame = zframe_recv (input);
+        if (!frame)
+            goto empty;             //  Interrupted
+
+        //  Get and check protocol signature
+        self->needle = zframe_data (frame);
+        self->ceiling = self->needle + zframe_size (frame);
+        uint16_t signature;
+        GET_NUMBER2 (signature);
+        if (signature == (0xAAA0 | $(class.signature)))
+            break;                  //  Valid signature
+
+        //  Protocol assertion, drop message
+        while (zsocket_rcvmore (input)) {
+            zframe_destroy (&frame);
+            frame = zframe_recv (input);
+        }
+        zframe_destroy (&frame);
+    }
+    //  Get message id and parse per message type
     GET_NUMBER1 (self->id);
 
     switch (self->id) {
@@ -557,7 +574,7 @@ $(class.name)_send ($(class.name)_t **self_p, void *output)
 
     //  Calculate size of serialized data
     $(class.name)_t *self = *self_p;
-    size_t frame_size = 1;
+    size_t frame_size = 2 + 1;          //  Signature and message ID
     switch (self->id) {
 .for class.message
         case $(CLASS.NAME)_$(MESSAGE.NAME):
@@ -608,10 +625,11 @@ $(class.name)_send ($(class.name)_t **self_p, void *output)
             assert (false);
     }
     //  Now serialize message into the frame
-    zframe_t *frame = zframe_new (NULL, frame_size + 1);
+    zframe_t *frame = zframe_new (NULL, frame_size);
     self->needle = zframe_data (frame);
     size_t string_size;
     int frame_flags = 0;
+    PUT_NUMBER2 (0xAAA0 | $(class.signature));
     PUT_NUMBER1 (self->id);
 
     switch (self->id) {
@@ -1096,11 +1114,11 @@ $(class.name)_$(name)_string ($(class.name)_t *self, char *key, char *default_va
     return value;
 }
 
-int64_t
-$(class.name)_$(name)_number ($(class.name)_t *self, char *key, int64_t default_value)
+uint64_t
+$(class.name)_$(name)_number ($(class.name)_t *self, char *key, uint64_t default_value)
 {
     assert (self);
-    int64_t value = default_value;
+    uint64_t value = default_value;
     char *string;
     if (self->$(name))
         string = (char *) (zhash_lookup (self->$(name), key));
