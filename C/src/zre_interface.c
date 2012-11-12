@@ -234,7 +234,7 @@ static agent_t *
 agent_new (zctx_t *ctx, void *pipe)
 {
     void *inbox = zsocket_new (ctx, ZMQ_ROUTER);
-    if (!inbox) // interrupted
+    if (!inbox)                 //  Interrupted
         return NULL;
 
     agent_t *self = (agent_t *) zmalloc (sizeof (agent_t));
@@ -245,7 +245,7 @@ agent_new (zctx_t *ctx, void *pipe)
     self->host = zre_udp_host (self->udp);
     self->port = zsocket_bind (self->inbox, "tcp://%s:*", self->host);
 
-    if (self->port < 0) { // interrupted
+    if (self->port < 0) {       //  Interrupted
         zre_udp_destroy (&self->udp);
         free (self);
         return NULL;
@@ -303,7 +303,7 @@ agent_recv_from_api (agent_t *self)
     zmsg_t *request = zmsg_recv (self->pipe);
     char *command = zmsg_popstr (request);
     if (!command)
-        return -1;      //  Interrupted
+        return -1;                  //  Interrupted
 
     if (streq (command, "WHISPER")) {
         //  Get peer to send message to
@@ -446,10 +446,9 @@ agent_recv_from_peer (agent_t *self)
 {
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_recv (self->inbox);
-    if (msg == NULL) {
-        zclock_log ("W: [%s] interrupted", self->identity);
-        assert (false);
-    }
+    if (msg == NULL)
+        return 0;               //  Interrupted
+
     char *identity = zframe_strdup (zre_msg_address (msg));
         
     //  On HELLO we may create the peer if it's unknown
@@ -634,7 +633,7 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
 {
     //  Create agent instance to pass around
     agent_t *self = agent_new (ctx, pipe);
-    if (!self) // interrupted
+    if (!self)                  //  Interrupted
         return;
     
     //  Send first beacon immediately
