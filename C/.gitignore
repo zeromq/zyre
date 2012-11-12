@@ -31,4 +31,4 @@ zre_ping
 zre_tester
 zre_perf_local
 zre_perf_remote
-
+zre_logger

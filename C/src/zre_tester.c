@@ -9,7 +9,7 @@ static zhash_t *interfaces;
 static void
 interface_task (void *args, zctx_t *ctx, void *pipe)
 {
-    zre_interface_t *interface = zre_interface_new (true);
+    zre_interface_t *interface = zre_interface_new ();
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message

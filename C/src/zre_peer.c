@@ -41,8 +41,9 @@ struct _zre_peer_t {
     bool connected;             //  Peer will send messages
     bool ready;                 //  Peer has said Hello to us
     byte status;                //  Our status counter
-    int16_t sent_sequence;     //  Outgoing message sequence
-    int16_t want_sequence;     //  Incoming message sequence
+    int16_t sent_sequence;      //  Outgoing message sequence
+    int16_t want_sequence;      //  Incoming message sequence
+    zhash_t *headers;           //  Peer headers
 };
 
 
@@ -158,9 +159,10 @@ zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
             zre_peer_disconnect (self);
             return -1;
         }
-    } else {
-        zre_msg_destroy (msg_p);
     }
+    else
+        zre_msg_destroy (msg_p);
+    
     return 0;
 }
 
@@ -280,6 +282,36 @@ zre_peer_ready_set (zre_peer_t *self, bool ready)
     self->ready = ready;
 }
 
+
+//  ---------------------------------------------------------------------
+//  Get peer header value
+
+char *
+zre_peer_header (zre_peer_t *self, char *key, char *default_value)
+{
+    assert (self);
+    char *value = NULL;
+    if (self->headers)
+        value = (char *) (zhash_lookup (self->headers, key));
+    if (!value)
+        value = default_value;
+
+    return value;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Set peer headers from provided dictionary
+
+void
+zre_peer_headers_set (zre_peer_t *self, zhash_t *headers)
+{
+    assert (self);
+    zhash_destroy (&self->headers);
+    self->headers = zhash_dup (headers);
+}
+
+
 //  ---------------------------------------------------------------------
 //  Check peer message sequence
 
@@ -292,7 +324,7 @@ zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg)
 
     bool valid = (++(self->want_sequence) == recd_sequence);
     if (!valid)
-        --(self->want_sequence);    // rollback
+        --(self->want_sequence);    //  Rollback
 
     return valid;
 }

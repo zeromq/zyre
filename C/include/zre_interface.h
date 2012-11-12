@@ -35,7 +35,7 @@ typedef struct _zre_interface_t zre_interface_t;
 
 //  Constructor
 zre_interface_t *
-    zre_interface_new (bool verbose);
+    zre_interface_new (void);
 
 //  Destructor
 void
@@ -68,6 +68,10 @@ int
 //  Return interface handle, for polling
 void *
     zre_interface_handle (zre_interface_t *self);
+
+//  Set node header value
+void
+    zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...);
 
 #ifdef __cplusplus
 }

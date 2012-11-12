@@ -205,22 +205,22 @@ zre_msg_destroy (zre_msg_t **self_p)
 //  NULL if error. Will block if there's no message waiting.
 
 zre_msg_t *
-zre_msg_recv (void *socket)
+zre_msg_recv (void *input)
 {
-    assert (socket);
+    assert (input);
     zre_msg_t *self = zre_msg_new (0);
     zframe_t *frame = NULL;
 
     //  If we're reading from a ROUTER socket, get address
-    if (zsockopt_type (socket) == ZMQ_ROUTER) {
-        self->address = zframe_recv (socket);
+    if (zsockopt_type (input) == ZMQ_ROUTER) {
+        self->address = zframe_recv (input);
         if (!self->address)
             goto empty;         //  Interrupted
-        if (!zsocket_rcvmore (socket))
+        if (!zsocket_rcvmore (input))
             goto malformed;
     }
     //  Read and parse command in frame
-    frame = zframe_recv (socket);
+    frame = zframe_recv (input);
     if (!frame)
         goto empty;             //  Interrupted
     self->needle = zframe_data (frame);
@@ -264,9 +264,9 @@ zre_msg_recv (void *socket)
         case ZRE_MSG_WHISPER:
             GET_NUMBER2 (self->sequence);
             //  Get next frame, leave current untouched
-            if (!zsocket_rcvmore (socket))
+            if (!zsocket_rcvmore (input))
                 goto malformed;
-            self->cookies = zframe_recv (socket);
+            self->cookies = zframe_recv (input);
             break;
 
         case ZRE_MSG_SHOUT:
@@ -274,9 +274,9 @@ zre_msg_recv (void *socket)
             free (self->group);
             GET_STRING (self->group);
             //  Get next frame, leave current untouched
-            if (!zsocket_rcvmore (socket))
+            if (!zsocket_rcvmore (input))
                 goto malformed;
-            self->cookies = zframe_recv (socket);
+            self->cookies = zframe_recv (input);
             break;
 
         case ZRE_MSG_JOIN:
@@ -311,6 +311,11 @@ zre_msg_recv (void *socket)
     //  Error returns
     malformed:
         printf ("E: malformed message '%d'\n", self->id);
+        printf ("I: frame size=%td\n", zframe_size (frame));
+        byte *data = zframe_data (frame);
+        printf ("I: frame data=%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n",
+                data[0], data[1], data[2], data[3], data[4],
+                data[5], data[6], data[7], data[8], data[9]);
     empty:
         zframe_destroy (&frame);
         zre_msg_destroy (&self);
@@ -344,9 +349,9 @@ s_headers_write (const char *key, void *item, void *argument)
 //  Returns 0 if OK, else -1
 
 int
-zre_msg_send (zre_msg_t **self_p, void *socket)
+zre_msg_send (zre_msg_t **self_p, void *output)
 {
-    assert (socket);
+    assert (output);
     assert (self_p);
     assert (*self_p);
 
@@ -516,16 +521,16 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             
     }
     //  If we're sending to a ROUTER, we send the address first
-    if (zsockopt_type (socket) == ZMQ_ROUTER) {
+    if (zsockopt_type (output) == ZMQ_ROUTER) {
         assert (self->address);
-        if (zframe_send (&self->address, socket, ZFRAME_MORE)) {
+        if (zframe_send (&self->address, output, ZFRAME_MORE)) {
             zframe_destroy (&frame);
             zre_msg_destroy (self_p);
             return -1;
         }
     }
     //  Now send the data frame
-    if (zframe_send (&frame, socket, frame_flags)) {
+    if (zframe_send (&frame, output, frame_flags)) {
         zframe_destroy (&frame);
         zre_msg_destroy (self_p);
         return -1;
@@ -537,7 +542,7 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             //  If cookies isn't set, send an empty frame
             if (!self->cookies)
                 self->cookies = zframe_new (NULL, 0);
-            if (zframe_send (&self->cookies, socket, 0)) {
+            if (zframe_send (&self->cookies, output, 0)) {
                 zframe_destroy (&frame);
                 zre_msg_destroy (self_p);
                 return -1;
@@ -547,7 +552,7 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
             //  If cookies isn't set, send an empty frame
             if (!self->cookies)
                 self->cookies = zframe_new (NULL, 0);
-            if (zframe_send (&self->cookies, socket, 0)) {
+            if (zframe_send (&self->cookies, output, 0)) {
                 zframe_destroy (&frame);
                 zre_msg_destroy (self_p);
                 return -1;
@@ -557,6 +562,128 @@ zre_msg_send (zre_msg_t **self_p, void *socket)
     //  Destroy zre_msg object
     zre_msg_destroy (self_p);
     return 0;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Send the HELLO to the socket in one step
+
+int
+zre_msg_send_hello (
+    void *output,
+    int16_t sequence,
+    char *from,
+    int16_t port,
+    zlist_t *groups,
+    byte status,
+    zhash_t *headers)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_HELLO);
+    zre_msg_sequence_set (self, sequence);
+    zre_msg_from_set (self, from);
+    zre_msg_port_set (self, port);
+    zre_msg_groups_set (self, zlist_dup (groups));
+    zre_msg_status_set (self, status);
+    zre_msg_headers_set (self, zhash_dup (headers));
+    return zre_msg_send (&self, output);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Send the WHISPER to the socket in one step
+
+int
+zre_msg_send_whisper (
+    void *output,
+    int16_t sequence,
+    zframe_t *cookies)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_WHISPER);
+    zre_msg_sequence_set (self, sequence);
+    zre_msg_cookies_set (self, zframe_dup (cookies));
+    return zre_msg_send (&self, output);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Send the SHOUT to the socket in one step
+
+int
+zre_msg_send_shout (
+    void *output,
+    int16_t sequence,
+    char *group,
+    zframe_t *cookies)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_SHOUT);
+    zre_msg_sequence_set (self, sequence);
+    zre_msg_group_set (self, group);
+    zre_msg_cookies_set (self, zframe_dup (cookies));
+    return zre_msg_send (&self, output);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Send the JOIN to the socket in one step
+
+int
+zre_msg_send_join (
+    void *output,
+    int16_t sequence,
+    char *group,
+    byte status)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_JOIN);
+    zre_msg_sequence_set (self, sequence);
+    zre_msg_group_set (self, group);
+    zre_msg_status_set (self, status);
+    return zre_msg_send (&self, output);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Send the LEAVE to the socket in one step
+
+int
+zre_msg_send_leave (
+    void *output,
+    int16_t sequence,
+    char *group,
+    byte status)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_LEAVE);
+    zre_msg_sequence_set (self, sequence);
+    zre_msg_group_set (self, group);
+    zre_msg_status_set (self, status);
+    return zre_msg_send (&self, output);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Send the PING to the socket in one step
+
+int
+zre_msg_send_ping (
+    void *output,
+    int16_t sequence)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_PING);
+    zre_msg_sequence_set (self, sequence);
+    return zre_msg_send (&self, output);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Send the PING_OK to the socket in one step
+
+int
+zre_msg_send_ping_ok (
+    void *output,
+    int16_t sequence)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_PING_OK);
+    zre_msg_sequence_set (self, sequence);
+    return zre_msg_send (&self, output);
 }
 
 

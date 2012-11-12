@@ -9,14 +9,16 @@ include_HEADERS = \
 libzre_la_SOURCES = \
     zre_interface.c \
     zre_group.c \
+    zre_log.c \
     zre_msg.c \
     zre_peer.c \
     zre_udp.c 
 
 INCLUDES = -I$(top_srcdir)/include
-bin_PROGRAMS = zre_ping zre_tester zre_perf_local zre_perf_remote
+bin_PROGRAMS = zre_ping zre_tester zre_logger zre_perf_local zre_perf_remote
 zre_ping_LDADD = libzre.la
 zre_tester_LDADD = libzre.la
+zre_logger_LDADD = libzre.la
 zre_perf_local_LDADD = libzre.la
 zre_perf_remote_LDADD = libzre.la
 

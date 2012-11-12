@@ -93,6 +93,14 @@ byte
 void
     zre_peer_ready_set (zre_peer_t *self, bool ready);
 
+//  Get peer header value
+char *
+    zre_peer_header (zre_peer_t *self, char *key, char *default_value);
+
+//  Set peer headers from provided dictionary
+void
+    zre_peer_headers_set (zre_peer_t *self, zhash_t *headers);
+
 //  Check peer message sequence
 bool
     zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg);
