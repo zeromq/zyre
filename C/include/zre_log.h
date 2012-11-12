@@ -31,14 +31,11 @@
 extern "C" {
 #endif
 
-//  Maximum size of log data part
-#define LOGDATA_MAX     255
-
 typedef struct _zre_log_t zre_log_t;
 
 //  Constructor
 zre_log_t *
-    zre_log_new (void);
+    zre_log_new (char *endpoint);
 
 //  Destructor
 void
@@ -50,7 +47,7 @@ void
 
 //  Record one log event
 void
-    zre_log_write (zre_log_t *self, int event, char *node, char *peer, char *data, ...);
+    zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...);
 
 #ifdef __cplusplus
 }

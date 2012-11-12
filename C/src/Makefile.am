@@ -10,6 +10,7 @@ libzre_la_SOURCES = \
     zre_interface.c \
     zre_group.c \
     zre_log.c \
+    zre_log_msg.c \
     zre_msg.c \
     zre_peer.c \
     zre_udp.c 
