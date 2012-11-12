@@ -1,0 +1,2 @@
+gsl -script:codec_java ../../C/model/zre_msg.xml
+
