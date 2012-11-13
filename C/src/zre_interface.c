@@ -257,6 +257,7 @@ agent_new (zctx_t *ctx, void *pipe)
     self->peer_groups = zhash_new ();
     self->own_groups = zhash_new ();
     self->headers = zhash_new ();
+    zhash_autofree (self->headers);
     self->log = zre_log_new (self->endpoint);
     return self;
 }
@@ -369,7 +370,6 @@ agent_recv_from_api (agent_t *self)
         char *name = zmsg_popstr (request);
         char *value = zmsg_popstr (request);
         zhash_update (self->headers, name, value);
-        zhash_freefn (self->headers, name, free);
         //  Value is now owned by hash table
         free (name);
     }

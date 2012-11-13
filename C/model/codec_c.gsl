@@ -505,6 +505,7 @@ $(class.name)_recv (void *input)
 .       elsif type = "dictionary"
             GET_NUMBER1 (hash_size);
             self->$(name) = zhash_new ();
+            zhash_autofree (self->$(name));
             while (hash_size--) {
                 char *string;
                 GET_STRING (string);
@@ -512,7 +513,6 @@ $(class.name)_recv (void *input)
                 if (value)
                     *value++ = 0;
                 zhash_insert (self->$(name), string, strdup (value));
-                zhash_freefn (self->$(name), string, free);
                 free (string);
             }
 .       elsif type = "frame"
@@ -753,7 +753,7 @@ $(class.name)_send_$(name) (
 )
 {
     $(class.name)_t *self = $(class.name)_new ($(class.NAME)_$(NAME));
-.for field
+.for field where !defined (value)
 .   if type = "number" | type = "octets" | type = "string"
     $(class.name)_$(name)_set (self, $(name));
 .   elsif type = "strings"
@@ -1145,10 +1145,11 @@ $(class.name)_$(name)_insert ($(class.name)_t *self, char *key, char *format, ..
     va_end (argptr);
 
     //  Store string in hash table
-    if (!self->$(name))
+    if (!self->$(name)) {
         self->$(name) = zhash_new ();
-    if (zhash_insert (self->$(name), key, string) == 0)
-        zhash_freefn (self->$(name), key, free);
+        zhash_autofree (self->$(name));
+    }
+    zhash_update (self->$(name), key, string);
 }
 
 size_t
