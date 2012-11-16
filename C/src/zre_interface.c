@@ -444,7 +444,7 @@ s_join_peer_group (agent_t *self, zre_peer_t *peer, char *name)
 
     //  Now tell the caller about the peer joined group
     zstr_sendm (self->pipe, "JOIN");
-    zstr_send (self->pipe, zre_peer_identity (peer));
+    zstr_sendm (self->pipe, zre_peer_identity (peer));
     zstr_send (self->pipe, name);
 
     return group;
@@ -458,7 +458,7 @@ s_leave_peer_group (agent_t *self, zre_peer_t *peer, char *name)
 
     //  Now tell the caller about the peer left group
     zstr_sendm (self->pipe, "LEAVE");
-    zstr_send (self->pipe, zre_peer_identity (peer));
+    zstr_sendm (self->pipe, zre_peer_identity (peer));
     zstr_send (self->pipe, name);
 
     return group;
