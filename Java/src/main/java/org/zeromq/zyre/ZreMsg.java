@@ -54,6 +54,7 @@
 
 package org.zeromq.zyre;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -352,7 +353,7 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Send the ZreMsg to the socket, and destroy it
 
-    public void
+    public boolean
     send (Socket socket)
     {
         assert (socket != null);
@@ -436,7 +437,7 @@ public class ZreMsg
             
         default:
             System.out.printf ("E: bad message type '%d', not sent\n", id);
-            return;
+            assert (false);
         }
         //  Now serialize message into the frame
         ZFrame frame = new ZFrame (new byte [frameSize]);
@@ -516,10 +517,17 @@ public class ZreMsg
         //  If we're sending to a ROUTER, we send the address first
         if (socket.getType () == ZMQ.ROUTER) {
             assert (address != null);
-            address.sendAndKeep (socket, ZMQ.SNDMORE);
+            if (!address.sendAndDestroy (socket, ZMQ.SNDMORE)) {
+                destroy ();
+                return false;
+            }
         }
         //  Now send the data frame
-        frame.sendAndKeep (socket, frameFlags);
+        if (!frame.sendAndDestroy (socket, frameFlags)) {
+            frame.destroy ();
+            destroy ();
+            return false;
+        }
         
         //  Now send any frame fields, in order
         switch (id) {
@@ -527,17 +535,26 @@ public class ZreMsg
             //  If cookies isn't set, send an empty frame
             if (cookies == null)
                 cookies = new ZFrame ((byte []) null);
-            cookies.sendAndKeep (socket, 0);
+            if (!cookies.sendAndDestroy (socket, 0)) {
+                frame.destroy ();
+                destroy ();
+                return false;
+            }
             break;
         case SHOUT:
             //  If cookies isn't set, send an empty frame
             if (cookies == null)
                 cookies = new ZFrame ((byte []) null);
-            cookies.sendAndKeep (socket, 0);
+            if (!cookies.sendAndDestroy (socket, 0)) {
+                frame.destroy ();
+                destroy ();
+                return false;
+            }
             break;
         }
         //  Destroy ZreMsg object
         destroy ();
+        return true;
     }
 
 
@@ -550,7 +567,7 @@ public class ZreMsg
         int sequence,
         String from,
         int port,
-        List <String> groups,
+        Collection <String> groups,
         int status,
         Map <String, String> headers) 
     {
@@ -928,9 +945,9 @@ public class ZreMsg
     }
 
     public void
-    setGroups (List <String> value)
+    setGroups (Collection <String> value)
     {
-        groups = value; 
+        groups = new ArrayList (value); 
     }
 
 
@@ -1000,7 +1017,7 @@ public class ZreMsg
     public void
     setHeaders (Map <String, String> value)
     {
-        headers = value; 
+        headers = new HashMap <String, String> (value); 
     }
 
 
