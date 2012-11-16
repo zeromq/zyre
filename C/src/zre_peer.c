@@ -41,8 +41,8 @@ struct _zre_peer_t {
     bool connected;             //  Peer will send messages
     bool ready;                 //  Peer has said Hello to us
     byte status;                //  Our status counter
-    int16_t sent_sequence;      //  Outgoing message sequence
-    int16_t want_sequence;      //  Incoming message sequence
+    uint16_t sent_sequence;     //  Outgoing message sequence
+    uint16_t want_sequence;     //  Incoming message sequence
     zhash_t *headers;           //  Peer headers
 };
 
@@ -140,6 +140,7 @@ zre_peer_disconnect (zre_peer_t *self)
     if (self->connected) {
         zsocket_destroy (self->ctx, self->mailbox);
         free (self->endpoint);
+        self->mailbox = NULL;
         self->endpoint = NULL;
         self->connected = false;
     }
@@ -320,7 +321,7 @@ zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg)
 {
     assert (self);
     assert (msg);
-    int16_t recd_sequence = (int16_t) zre_msg_sequence (msg);
+    uint16_t recd_sequence = zre_msg_sequence (msg);
 
     bool valid = (++(self->want_sequence) == recd_sequence);
     if (!valid)
