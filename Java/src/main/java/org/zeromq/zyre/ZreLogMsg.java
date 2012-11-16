@@ -35,6 +35,7 @@
 
 package org.zeromq.zyre;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -267,7 +268,7 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Send the ZreLogMsg to the socket, and destroy it
 
-    public void
+    public boolean
     send (Socket socket)
     {
         assert (socket != null);
@@ -294,7 +295,7 @@ public class ZreLogMsg
             
         default:
             System.out.printf ("E: bad message type '%d', not sent\n", id);
-            return;
+            assert (false);
         }
         //  Now serialize message into the frame
         ZFrame frame = new ZFrame (new byte [frameSize]);
@@ -320,16 +321,24 @@ public class ZreLogMsg
         //  If we're sending to a ROUTER, we send the address first
         if (socket.getType () == ZMQ.ROUTER) {
             assert (address != null);
-            address.sendAndKeep (socket, ZMQ.SNDMORE);
+            if (!address.sendAndDestroy (socket, ZMQ.SNDMORE)) {
+                destroy ();
+                return false;
+            }
         }
         //  Now send the data frame
-        frame.sendAndKeep (socket, frameFlags);
+        if (!frame.sendAndDestroy (socket, frameFlags)) {
+            frame.destroy ();
+            destroy ();
+            return false;
+        }
         
         //  Now send any frame fields, in order
         switch (id) {
         }
         //  Destroy ZreLogMsg object
         destroy ();
+        return true;
     }
 
 
