@@ -68,6 +68,26 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                     to_group = NULL;
                 }
             }
+            else
+            if (streq (event, "JOIN")) {
+                char *from_peer = zmsg_popstr (incoming);
+                char *group = zmsg_popstr (incoming);
+                if (randof (3) > 0) {
+                    zre_interface_join (interface, group);
+                }
+                free (from_peer);
+                free (group);
+            }
+            else
+            if (streq (event, "LEAVE")) {
+                char *from_peer = zmsg_popstr (incoming);
+                char *group = zmsg_popstr (incoming);
+                if (randof (3) > 0) {
+                    zre_interface_leave (interface, group);
+                }
+                free (from_peer);
+                free (group);
+            }
             free (event);
             zmsg_destroy (&incoming);
 
