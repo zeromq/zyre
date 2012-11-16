@@ -68,6 +68,7 @@
 
 package org.zeromq.zyre;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -367,7 +368,7 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Send the $(ClassName) to the socket, and destroy it
 
-    public void
+    public boolean
     send (Socket socket)
     {
         assert (socket != null);
@@ -417,7 +418,7 @@ public class $(ClassName)
 .endfor
         default:
             System.out.printf ("E: bad message type '%d', not sent\\n", id);
-            return;
+            assert (false);
         }
         //  Now serialize message into the frame
         ZFrame frame = new ZFrame (new byte [frameSize]);
@@ -476,10 +477,17 @@ public class $(ClassName)
         //  If we're sending to a ROUTER, we send the address first
         if (socket.getType () == ZMQ.ROUTER) {
             assert (address != null);
-            address.sendAndKeep (socket, ZMQ.SNDMORE);
+            if (!address.sendAndDestroy (socket, ZMQ.SNDMORE)) {
+                destroy ();
+                return false;
+            }
         }
         //  Now send the data frame
-        frame.sendAndKeep (socket, frameFlags);
+        if (!frame.sendAndDestroy (socket, frameFlags)) {
+            frame.destroy ();
+            destroy ();
+            return false;
+        }
         
         //  Now send any frame fields, in order
         switch (id) {
@@ -490,16 +498,21 @@ public class $(ClassName)
             if ($(field.name) == null)
                 $(field.name) = new ZFrame ((byte []) null);
 .       if last ()
-            $(field.name).sendAndKeep (socket, 0);
+            if (!$(field.name).sendAndDestroy (socket, 0)) {
 .       else
-            $(field.name).sendAndKeep (socket, ZMQ.SNDMORE);
+            if (!$(field.name).sendAndDestroy (socket, ZMQ.SNDMORE)) {
 .       endif
+                frame.destroy ();
+                destroy ();
+                return false;
+            }
 .   endfor
             break;
 .endfor
         }
         //  Destroy $(ClassName) object
         destroy ();
+        return true;
     }
 
 
@@ -519,7 +532,7 @@ public class $(ClassName)
 .   elsif type = "string"
         String $(name)\
 .   elsif type = "strings"
-        List <String> $(name)\
+        Collection <String> $(name)\
 .   elsif type = "dictionary"
         Map <String, String> $(name)\
 .   elsif type = "frame"
@@ -772,9 +785,9 @@ public class $(ClassName)
     }
 
     public void
-    set$(Name) (List <String> value)
+    set$(Name) (Collection <String> value)
     {
-        $(name) = value; 
+        $(name) = new ArrayList (value); 
     }
 
 .   elsif type = "dictionary"
@@ -828,7 +841,7 @@ public class $(ClassName)
     public void
     set$(Name) (Map <String, String> value)
     {
-        $(name) = value; 
+        $(name) = new HashMap <String, String> (value); 
     }
 
 .   elsif type = "frame"

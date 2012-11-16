@@ -1,3 +1,29 @@
+/*  =========================================================================
+    ZreUdp - UDP management class
+
+    -------------------------------------------------------------------------
+    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright other contributors as noted in the AUTHORS file.
+
+    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
+    http://zyre.org.
+
+    This is free software; you can redistribute it and/or modify it under
+    the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or (at
+    your option) any later version.
+
+    This software is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>.
+    =========================================================================
+*/
+
 package org.zeromq.zyre;
 
 import java.io.IOException;
@@ -23,7 +49,8 @@ public class ZreUdp
 
     //  -----------------------------------------------------------------
     //  Constructor
-    public ZreUdp (int port_nbr) 
+    public 
+    ZreUdp (int port_nbr) 
     {
         this.port_nbr = port_nbr;
         
@@ -95,32 +122,25 @@ public class ZreUdp
     //  -----------------------------------------------------------------
     //  Send message using UDP broadcast
     public void
-    send (ByteBuffer buffer) 
+    send (ByteBuffer buffer) throws IOException
     {
-        try {
-            broadcast = InetAddress.getByName ("255.255.255.255");
-            handle.send (
-                    buffer, new InetSocketAddress (broadcast, port_nbr));
-        } catch (IOException e) {
-            throw new RuntimeException (e);
-        }
+        broadcast = InetAddress.getByName ("255.255.255.255");
+        handle.send (
+                buffer, new InetSocketAddress (broadcast, port_nbr));
     }
     
     //  -----------------------------------------------------------------
     //  Receive message from UDP broadcast
     //  Returns size of received message, or -1
     public int
-    recv (ByteBuffer buffer)
+    recv (ByteBuffer buffer) throws IOException
     {
         int read = buffer.remaining ();
-        try {
-            sender = handle.receive (buffer);
-            if (sender == null)
-                return -1;
-            return read - buffer.remaining ();
-        } catch (IOException e) {
-            throw new RuntimeException (e);
-        }
+        sender = handle.receive (buffer);
+        if (sender == null)
+            return -1;
+        from = ((InetSocketAddress)sender).getAddress ().getHostAddress ();
+        return read - buffer.remaining ();
     }
 
 }
