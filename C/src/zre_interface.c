@@ -436,6 +436,33 @@ s_require_peer_group (agent_t *self, char *name)
     return group;
 }
 
+static zre_group_t *
+s_join_peer_group (agent_t *self, zre_peer_t *peer, char *name)
+{
+    zre_group_t *group = s_require_peer_group (self, name);
+    zre_group_join (group, peer);
+
+    //  Now tell the caller about the peer joined group
+    zstr_sendm (self->pipe, "JOIN");
+    zstr_send (self->pipe, zre_peer_identity (peer));
+    zstr_send (self->pipe, name);
+
+    return group;
+}
+
+static zre_group_t *
+s_leave_peer_group (agent_t *self, zre_peer_t *peer, char *name)
+{
+    zre_group_t *group = s_require_peer_group (self, name);
+    zre_group_leave (group, peer);
+
+    //  Now tell the caller about the peer left group
+    zstr_sendm (self->pipe, "LEAVE");
+    zstr_send (self->pipe, zre_peer_identity (peer));
+    zstr_send (self->pipe, name);
+
+    return group;
+}
 
 //  Here we handle messages coming from other peers
 
@@ -474,8 +501,7 @@ agent_recv_from_peer (agent_t *self)
         //  Join peer to listed groups
         char *name = zre_msg_groups_first (msg);
         while (name) {
-            zre_group_t *group = s_require_peer_group (self, name);
-            zre_group_join (group, peer);
+            s_join_peer_group (self, peer, name);
             name = zre_msg_groups_next (msg);
         }
         //  Hello command holds latest status of peer
@@ -513,14 +539,12 @@ agent_recv_from_peer (agent_t *self)
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_JOIN) {
-        zre_group_t *group = s_require_peer_group (self, zre_msg_group (msg));
-        zre_group_join (group, peer);
+        s_join_peer_group (self, peer, zre_msg_group (msg));
         assert (zre_msg_status (msg) == zre_peer_status (peer));
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_LEAVE) {
-        zre_group_t *group = s_require_peer_group (self, zre_msg_group (msg));
-        zre_group_leave (group, peer);
+        s_leave_peer_group (self, peer, zre_msg_group (msg));
         assert (zre_msg_status (msg) == zre_peer_status (peer));
     }
     free (identity);
@@ -655,7 +679,6 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
         if (pollitems [1].revents & ZMQ_POLLIN)
             agent_recv_from_peer (self);
 
-        else
         if (pollitems [2].revents & ZMQ_POLLIN)
             agent_recv_udp_beacon (self);
 
