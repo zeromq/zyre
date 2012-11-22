@@ -14,7 +14,7 @@ This is the ZRE protocol raw version.
     <field name = "sequence" type = "number" size = "2" />
 </header>
 
-<message name = "HELLO" id = "10">
+<message name = "HELLO" id = "1">
     <field name = "ipaddress" type = "string" />
     <field name = "mailbox" type = "number" size = "2" />
     <field name = "groups" type = "strings" />
@@ -23,34 +23,34 @@ This is the ZRE protocol raw version.
 Greet a peer so it can connect back to us
 </message>
 
-<message name = "WHISPER" id = "20">
+<message name = "WHISPER" id = "2">
     <field name = "content" type = "frame" />
 Send a message to a peer
 </message>
 
-<message name = "SHOUT" id = "21">
+<message name = "SHOUT" id = "3">
     <field name = "group" type = "string" />
     <field name = "content" type = "frame" />
 Send a message to a group
 </message>
 
-<message name = "JOIN" id = "22">
+<message name = "JOIN" id = "4">
     <field name = "group" type = "string" />
     <field name = "status" type = "number" size = "1" />
 Join a group
 </message>
 
-<message name = "LEAVE" id = "23">
+<message name = "LEAVE" id = "5">
     <field name = "group" type = "string" />
     <field name = "status" type = "number" size = "1" />
 Leave a group
 </message>
 
-<message name = "PING" id = "40">
+<message name = "PING" id = "6">
 Ping a peer that has gone silent
 </message>
 
-<message name = "PING-OK" id = "41">
+<message name = "PING-OK" id = "7">
 Reply to a peer's ping
 </message>
 
