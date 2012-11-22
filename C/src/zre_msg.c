@@ -34,8 +34,8 @@ struct _zre_msg_t {
     byte *needle;               //  Read/write pointer for serialization
     byte *ceiling;              //  Valid upper limit for read pointer
     uint16_t sequence;
-    char *from;
-    uint16_t port;
+    char *ipaddress;
+    uint16_t mailbox;
     zlist_t *groups;
     byte status;
     zhash_t *headers;
@@ -186,7 +186,7 @@ zre_msg_destroy (zre_msg_t **self_p)
 
         //  Free class properties
         zframe_destroy (&self->address);
-        free (self->from);
+        free (self->ipaddress);
         if (self->groups)
             zlist_destroy (&self->groups);
         zhash_destroy (&self->headers);
@@ -252,9 +252,9 @@ zre_msg_recv (void *input)
     switch (self->id) {
         case ZRE_MSG_HELLO:
             GET_NUMBER2 (self->sequence);
-            free (self->from);
-            GET_STRING (self->from);
-            GET_NUMBER2 (self->port);
+            free (self->ipaddress);
+            GET_STRING (self->ipaddress);
+            GET_NUMBER2 (self->mailbox);
             GET_NUMBER1 (list_size);
             self->groups = zlist_new ();
             zlist_autofree (self->groups);
@@ -266,6 +266,7 @@ zre_msg_recv (void *input)
             GET_NUMBER1 (self->status);
             GET_NUMBER1 (hash_size);
             self->headers = zhash_new ();
+            zhash_autofree (self->headers);
             while (hash_size--) {
                 char *string;
                 GET_STRING (string);
@@ -273,7 +274,6 @@ zre_msg_recv (void *input)
                 if (value)
                     *value++ = 0;
                 zhash_insert (self->headers, string, strdup (value));
-                zhash_freefn (self->headers, string, free);
                 free (string);
             }
             break;
@@ -374,11 +374,11 @@ zre_msg_send (zre_msg_t **self_p, void *output)
         case ZRE_MSG_HELLO:
             //  sequence is a 2-byte integer
             frame_size += 2;
-            //  from is a string with 1-byte length
+            //  ipaddress is a string with 1-byte length
             frame_size++;       //  Size is one octet
-            if (self->from)
-                frame_size += strlen (self->from);
-            //  port is a 2-byte integer
+            if (self->ipaddress)
+                frame_size += strlen (self->ipaddress);
+            //  mailbox is a 2-byte integer
             frame_size += 2;
             //  groups is an array of strings
             frame_size++;       //  Size is one octet
@@ -464,12 +464,12 @@ zre_msg_send (zre_msg_t **self_p, void *output)
     switch (self->id) {
         case ZRE_MSG_HELLO:
             PUT_NUMBER2 (self->sequence);
-            if (self->from) {
-                PUT_STRING (self->from);
+            if (self->ipaddress) {
+                PUT_STRING (self->ipaddress);
             }
             else
                 PUT_NUMBER1 (0);    //  Empty string
-            PUT_NUMBER2 (self->port);
+            PUT_NUMBER2 (self->mailbox);
             if (self->groups != NULL) {
                 PUT_NUMBER1 (zlist_size (self->groups));
                 char *groups = (char *) zlist_first (self->groups);
@@ -585,16 +585,16 @@ int
 zre_msg_send_hello (
     void *output,
     uint16_t sequence,
-    char *from,
-    uint16_t port,
+    char *ipaddress,
+    uint16_t mailbox,
     zlist_t *groups,
     byte status,
     zhash_t *headers)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_HELLO);
     zre_msg_sequence_set (self, sequence);
-    zre_msg_from_set (self, from);
-    zre_msg_port_set (self, port);
+    zre_msg_ipaddress_set (self, ipaddress);
+    zre_msg_mailbox_set (self, mailbox);
     zre_msg_groups_set (self, zlist_dup (groups));
     zre_msg_status_set (self, status);
     zre_msg_headers_set (self, zhash_dup (headers));
@@ -715,8 +715,8 @@ zre_msg_dup (zre_msg_t *self)
     switch (self->id) {
         case ZRE_MSG_HELLO:
             copy->sequence = self->sequence;
-            copy->from = strdup (self->from);
-            copy->port = self->port;
+            copy->ipaddress = strdup (self->ipaddress);
+            copy->mailbox = self->mailbox;
             copy->groups = zlist_copy (self->groups);
             copy->status = self->status;
             copy->headers = zhash_dup (self->headers);
@@ -779,11 +779,11 @@ zre_msg_dump (zre_msg_t *self)
         case ZRE_MSG_HELLO:
             puts ("HELLO:");
             printf ("    sequence=%ld\n", (long) self->sequence);
-            if (self->from)
-                printf ("    from='%s'\n", self->from);
+            if (self->ipaddress)
+                printf ("    ipaddress='%s'\n", self->ipaddress);
             else
-                printf ("    from=\n");
-            printf ("    port=%ld\n", (long) self->port);
+                printf ("    ipaddress=\n");
+            printf ("    mailbox=%ld\n", (long) self->mailbox);
             printf ("    groups={");
             if (self->groups) {
                 char *groups = (char *) zlist_first (self->groups);
@@ -965,45 +965,45 @@ zre_msg_sequence_set (zre_msg_t *self, uint16_t sequence)
 
 
 //  --------------------------------------------------------------------------
-//  Get/set the from field
+//  Get/set the ipaddress field
 
 char *
-zre_msg_from (zre_msg_t *self)
+zre_msg_ipaddress (zre_msg_t *self)
 {
     assert (self);
-    return self->from;
+    return self->ipaddress;
 }
 
 void
-zre_msg_from_set (zre_msg_t *self, char *format, ...)
+zre_msg_ipaddress_set (zre_msg_t *self, char *format, ...)
 {
     //  Format into newly allocated string
     assert (self);
     va_list argptr;
     va_start (argptr, format);
-    free (self->from);
-    self->from = (char *) malloc (STRING_MAX + 1);
-    assert (self->from);
-    vsnprintf (self->from, STRING_MAX, format, argptr);
+    free (self->ipaddress);
+    self->ipaddress = (char *) malloc (STRING_MAX + 1);
+    assert (self->ipaddress);
+    vsnprintf (self->ipaddress, STRING_MAX, format, argptr);
     va_end (argptr);
 }
 
 
 //  --------------------------------------------------------------------------
-//  Get/set the port field
+//  Get/set the mailbox field
 
 uint16_t
-zre_msg_port (zre_msg_t *self)
+zre_msg_mailbox (zre_msg_t *self)
 {
     assert (self);
-    return self->port;
+    return self->mailbox;
 }
 
 void
-zre_msg_port_set (zre_msg_t *self, uint16_t port)
+zre_msg_mailbox_set (zre_msg_t *self, uint16_t mailbox)
 {
     assert (self);
-    self->port = port;
+    self->mailbox = mailbox;
 }
 
 
@@ -1160,10 +1160,11 @@ zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...)
     va_end (argptr);
 
     //  Store string in hash table
-    if (!self->headers)
+    if (!self->headers) {
         self->headers = zhash_new ();
-    if (zhash_insert (self->headers, key, string) == 0)
-        zhash_freefn (self->headers, key, free);
+        zhash_autofree (self->headers);
+    }
+    zhash_update (self->headers, key, string);
 }
 
 size_t
@@ -1247,8 +1248,8 @@ zre_msg_test (bool verbose)
 
     self = zre_msg_new (ZRE_MSG_HELLO);
     zre_msg_sequence_set (self, 123);
-    zre_msg_from_set (self, "Life is short but Now lasts for ever");
-    zre_msg_port_set (self, 123);
+    zre_msg_ipaddress_set (self, "Life is short but Now lasts for ever");
+    zre_msg_mailbox_set (self, 123);
     zre_msg_groups_append (self, "Name: %s", "Brutus");
     zre_msg_groups_append (self, "Age: %d", 43);
     zre_msg_status_set (self, 123);
@@ -1259,8 +1260,8 @@ zre_msg_test (bool verbose)
     self = zre_msg_recv (input);
     assert (self);
     assert (zre_msg_sequence (self) == 123);
-    assert (streq (zre_msg_from (self), "Life is short but Now lasts for ever"));
-    assert (zre_msg_port (self) == 123);
+    assert (streq (zre_msg_ipaddress (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_mailbox (self) == 123);
     assert (zre_msg_groups_size (self) == 2);
     assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
     assert (streq (zre_msg_groups_next (self), "Age: 43"));

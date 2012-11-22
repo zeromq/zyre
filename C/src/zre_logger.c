@@ -37,12 +37,6 @@ s_print_log_msg (void *collector)
     time_t curtime = zre_log_msg_time (msg);
     char *event = NULL;
     switch (zre_log_msg_event (msg)) {
-        case ZRE_LOG_MSG_EVENT_UP:
-            event = "Interface up";
-            break;
-        case ZRE_LOG_MSG_EVENT_DOWN:
-            event = "Interface down";
-            break;
         case ZRE_LOG_MSG_EVENT_JOIN:
             event = "Join group";
             break;

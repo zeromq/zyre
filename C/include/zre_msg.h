@@ -29,8 +29,8 @@
 /*  These are the zre_msg messages
     HELLO - Greet a peer so it connect back to us.
         sequence      number 2
-        from          string
-        port          number 2
+        ipaddress     string
+        mailbox       number 2
         groups        strings
         status        number 1
         headers       dictionary
@@ -92,8 +92,8 @@ int
 int
     zre_msg_send_hello (void *output,
         uint16_t sequence,
-        char *from,
-        uint16_t port,
+        char *ipaddress,
+        uint16_t mailbox,
         zlist_t *groups,
         byte status,
         zhash_t *headers);
@@ -163,17 +163,17 @@ uint16_t
 void
     zre_msg_sequence_set (zre_msg_t *self, uint16_t sequence);
 
-//  Get/set the from field
+//  Get/set the ipaddress field
 char *
-    zre_msg_from (zre_msg_t *self);
+    zre_msg_ipaddress (zre_msg_t *self);
 void
-    zre_msg_from_set (zre_msg_t *self, char *format, ...);
+    zre_msg_ipaddress_set (zre_msg_t *self, char *format, ...);
 
-//  Get/set the port field
+//  Get/set the mailbox field
 uint16_t
-    zre_msg_port (zre_msg_t *self);
+    zre_msg_mailbox (zre_msg_t *self);
 void
-    zre_msg_port_set (zre_msg_t *self, uint16_t port);
+    zre_msg_mailbox_set (zre_msg_t *self, uint16_t mailbox);
 
 //  Get/set the groups field
 zlist_t *
