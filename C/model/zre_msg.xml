@@ -15,8 +15,8 @@ This is the ZRE protocol raw version.
 </header>
 
 <message name = "HELLO" id = "10">
-    <field name = "from" type = "string" />
-    <field name = "port" type = "number" size = "2" />
+    <field name = "ipaddress" type = "string" />
+    <field name = "mailbox" type = "number" size = "2" />
     <field name = "groups" type = "strings" />
     <field name = "status" type = "number" size = "1" />
     <field name = "headers" type = "dictionary" />
