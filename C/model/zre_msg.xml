@@ -20,38 +20,38 @@ This is the ZRE protocol raw version.
     <field name = "groups" type = "strings" />
     <field name = "status" type = "number" size = "1" />
     <field name = "headers" type = "dictionary" />
-Greet a peer so it connect back to us.
+Greet a peer so it can connect back to us
 </message>
 
 <message name = "WHISPER" id = "20">
-    <field name = "cookies" type = "frame" />
-Send a message to a peer.
+    <field name = "content" type = "frame" />
+Send a message to a peer
 </message>
 
 <message name = "SHOUT" id = "21">
     <field name = "group" type = "string" />
-    <field name = "cookies" type = "frame" />
-Send a message to a group.
+    <field name = "content" type = "frame" />
+Send a message to a group
 </message>
 
 <message name = "JOIN" id = "22">
     <field name = "group" type = "string" />
     <field name = "status" type = "number" size = "1" />
-Join a group.
+Join a group
 </message>
 
 <message name = "LEAVE" id = "23">
     <field name = "group" type = "string" />
     <field name = "status" type = "number" size = "1" />
-Leave a group.
+Leave a group
 </message>
 
 <message name = "PING" id = "40">
-Ping a peer that has gone silent.
+Ping a peer that has gone silent
 </message>
 
 <message name = "PING-OK" id = "41">
-Reply to a peer's ping.
+Reply to a peer's ping
 </message>
 
 </class>

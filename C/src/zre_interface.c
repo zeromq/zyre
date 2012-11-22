@@ -313,7 +313,7 @@ agent_recv_from_api (agent_t *self)
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
-            zre_msg_cookies_set (msg, zmsg_pop (request));
+            zre_msg_content_set (msg, zmsg_pop (request));
             zre_peer_send (peer, &msg);
         }
         free (identity);
@@ -326,7 +326,7 @@ agent_recv_from_api (agent_t *self)
         if (group) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
             zre_msg_group_set (msg, name);
-            zre_msg_cookies_set (msg, zmsg_pop (request));
+            zre_msg_content_set (msg, zmsg_pop (request));
             zre_group_send (group, &msg);
         }
         free (name);
@@ -518,7 +518,7 @@ agent_recv_from_peer (agent_t *self)
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as WHISPER event
-        zframe_t *cookie = zre_msg_cookies (msg);
+        zframe_t *cookie = zre_msg_content (msg);
         zstr_sendm (self->pipe, "WHISPER");
         zstr_sendm (self->pipe, identity);
         zframe_send (&cookie, self->pipe, ZFRAME_REUSE); // let msg free the frame
@@ -526,7 +526,7 @@ agent_recv_from_peer (agent_t *self)
     else
     if (zre_msg_id (msg) == ZRE_MSG_SHOUT) {
         //  Pass up to caller as SHOUT event
-        zframe_t *cookie = zre_msg_cookies (msg);
+        zframe_t *cookie = zre_msg_content (msg);
         zstr_sendm (self->pipe, "SHOUT");
         zstr_sendm (self->pipe, identity);
         zstr_sendm (self->pipe, zre_msg_group (msg));

@@ -40,7 +40,7 @@ struct _zre_msg_t {
     byte status;
     zhash_t *headers;
     size_t headers_bytes;       //  Size of dictionary content
-    zframe_t *cookies;
+    zframe_t *content;
     char *group;
 };
 
@@ -190,7 +190,7 @@ zre_msg_destroy (zre_msg_t **self_p)
         if (self->groups)
             zlist_destroy (&self->groups);
         zhash_destroy (&self->headers);
-        zframe_destroy (&self->cookies);
+        zframe_destroy (&self->content);
         free (self->group);
 
         //  Free object itself
@@ -283,7 +283,7 @@ zre_msg_recv (void *input)
             //  Get next frame, leave current untouched
             if (!zsocket_rcvmore (input))
                 goto malformed;
-            self->cookies = zframe_recv (input);
+            self->content = zframe_recv (input);
             break;
 
         case ZRE_MSG_SHOUT:
@@ -293,7 +293,7 @@ zre_msg_recv (void *input)
             //  Get next frame, leave current untouched
             if (!zsocket_rcvmore (input))
                 goto malformed;
-            self->cookies = zframe_recv (input);
+            self->content = zframe_recv (input);
             break;
 
         case ZRE_MSG_JOIN:
@@ -552,20 +552,20 @@ zre_msg_send (zre_msg_t **self_p, void *output)
     //  Now send any frame fields, in order
     switch (self->id) {
         case ZRE_MSG_WHISPER:
-            //  If cookies isn't set, send an empty frame
-            if (!self->cookies)
-                self->cookies = zframe_new (NULL, 0);
-            if (zframe_send (&self->cookies, output, 0)) {
+            //  If content isn't set, send an empty frame
+            if (!self->content)
+                self->content = zframe_new (NULL, 0);
+            if (zframe_send (&self->content, output, 0)) {
                 zframe_destroy (&frame);
                 zre_msg_destroy (self_p);
                 return -1;
             }
             break;
         case ZRE_MSG_SHOUT:
-            //  If cookies isn't set, send an empty frame
-            if (!self->cookies)
-                self->cookies = zframe_new (NULL, 0);
-            if (zframe_send (&self->cookies, output, 0)) {
+            //  If content isn't set, send an empty frame
+            if (!self->content)
+                self->content = zframe_new (NULL, 0);
+            if (zframe_send (&self->content, output, 0)) {
                 zframe_destroy (&frame);
                 zre_msg_destroy (self_p);
                 return -1;
@@ -609,11 +609,11 @@ int
 zre_msg_send_whisper (
     void *output,
     uint16_t sequence,
-    zframe_t *cookies)
+    zframe_t *content)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_WHISPER);
     zre_msg_sequence_set (self, sequence);
-    zre_msg_cookies_set (self, zframe_dup (cookies));
+    zre_msg_content_set (self, zframe_dup (content));
     return zre_msg_send (&self, output);
 }
 
@@ -626,12 +626,12 @@ zre_msg_send_shout (
     void *output,
     uint16_t sequence,
     char *group,
-    zframe_t *cookies)
+    zframe_t *content)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_SHOUT);
     zre_msg_sequence_set (self, sequence);
     zre_msg_group_set (self, group);
-    zre_msg_cookies_set (self, zframe_dup (cookies));
+    zre_msg_content_set (self, zframe_dup (content));
     return zre_msg_send (&self, output);
 }
 
@@ -724,13 +724,13 @@ zre_msg_dup (zre_msg_t *self)
 
         case ZRE_MSG_WHISPER:
             copy->sequence = self->sequence;
-            copy->cookies = zframe_dup (self->cookies);
+            copy->content = zframe_dup (self->content);
             break;
 
         case ZRE_MSG_SHOUT:
             copy->sequence = self->sequence;
             copy->group = strdup (self->group);
-            copy->cookies = zframe_dup (self->cookies);
+            copy->content = zframe_dup (self->content);
             break;
 
         case ZRE_MSG_JOIN:
@@ -803,18 +803,18 @@ zre_msg_dump (zre_msg_t *self)
         case ZRE_MSG_WHISPER:
             puts ("WHISPER:");
             printf ("    sequence=%ld\n", (long) self->sequence);
-            printf ("    cookies={\n");
-            if (self->cookies) {
-                size_t size = zframe_size (self->cookies);
-                byte *data = zframe_data (self->cookies);
-                printf ("        size=%td\n", zframe_size (self->cookies));
+            printf ("    content={\n");
+            if (self->content) {
+                size_t size = zframe_size (self->content);
+                byte *data = zframe_data (self->content);
+                printf ("        size=%td\n", zframe_size (self->content));
                 if (size > 32)
                     size = 32;
-                int cookies_index;
-                for (cookies_index = 0; cookies_index < size; cookies_index++) {
-                    if (cookies_index && (cookies_index % 4 == 0))
+                int content_index;
+                for (content_index = 0; content_index < size; content_index++) {
+                    if (content_index && (content_index % 4 == 0))
                         printf ("-");
-                    printf ("%02X", data [cookies_index]);
+                    printf ("%02X", data [content_index]);
                 }
             }
             printf ("    }\n");
@@ -827,18 +827,18 @@ zre_msg_dump (zre_msg_t *self)
                 printf ("    group='%s'\n", self->group);
             else
                 printf ("    group=\n");
-            printf ("    cookies={\n");
-            if (self->cookies) {
-                size_t size = zframe_size (self->cookies);
-                byte *data = zframe_data (self->cookies);
-                printf ("        size=%td\n", zframe_size (self->cookies));
+            printf ("    content={\n");
+            if (self->content) {
+                size_t size = zframe_size (self->content);
+                byte *data = zframe_data (self->content);
+                printf ("        size=%td\n", zframe_size (self->content));
                 if (size > 32)
                     size = 32;
-                int cookies_index;
-                for (cookies_index = 0; cookies_index < size; cookies_index++) {
-                    if (cookies_index && (cookies_index % 4 == 0))
+                int content_index;
+                for (content_index = 0; content_index < size; content_index++) {
+                    if (content_index && (content_index % 4 == 0))
                         printf ("-");
-                    printf ("%02X", data [cookies_index]);
+                    printf ("%02X", data [content_index]);
                 }
             }
             printf ("    }\n");
@@ -1175,23 +1175,23 @@ zre_msg_headers_size (zre_msg_t *self)
 
 
 //  --------------------------------------------------------------------------
-//  Get/set the cookies field
+//  Get/set the content field
 
 zframe_t *
-zre_msg_cookies (zre_msg_t *self)
+zre_msg_content (zre_msg_t *self)
 {
     assert (self);
-    return self->cookies;
+    return self->content;
 }
 
 //  Takes ownership of supplied frame
 void
-zre_msg_cookies_set (zre_msg_t *self, zframe_t *frame)
+zre_msg_content_set (zre_msg_t *self, zframe_t *frame)
 {
     assert (self);
-    if (self->cookies)
-        zframe_destroy (&self->cookies);
-    self->cookies = frame;
+    if (self->content)
+        zframe_destroy (&self->content);
+    self->content = frame;
 }
 
 //  --------------------------------------------------------------------------
@@ -1273,26 +1273,26 @@ zre_msg_test (bool verbose)
 
     self = zre_msg_new (ZRE_MSG_WHISPER);
     zre_msg_sequence_set (self, 123);
-    zre_msg_cookies_set (self, zframe_new ("Captcha Diem", 12));
+    zre_msg_content_set (self, zframe_new ("Captcha Diem", 12));
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
     assert (self);
     assert (zre_msg_sequence (self) == 123);
-    assert (zframe_streq (zre_msg_cookies (self), "Captcha Diem"));
+    assert (zframe_streq (zre_msg_content (self), "Captcha Diem"));
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_SHOUT);
     zre_msg_sequence_set (self, 123);
     zre_msg_group_set (self, "Life is short but Now lasts for ever");
-    zre_msg_cookies_set (self, zframe_new ("Captcha Diem", 12));
+    zre_msg_content_set (self, zframe_new ("Captcha Diem", 12));
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
     assert (self);
     assert (zre_msg_sequence (self) == 123);
     assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
-    assert (zframe_streq (zre_msg_cookies (self), "Captcha Diem"));
+    assert (zframe_streq (zre_msg_content (self), "Captcha Diem"));
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_JOIN);

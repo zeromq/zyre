@@ -33,11 +33,11 @@
         headers       dictionary
     WHISPER - Send a message to a peer.
         sequence      number 2
-        cookies       frame
+        content       frame
     SHOUT - Send a message to a group.
         sequence      number 2
         group         string
-        cookies       frame
+        content       frame
     JOIN - Join a group.
         sequence      number 2
         group         string
@@ -89,7 +89,7 @@ public class ZreMsg
     private int status;
     private Map <String, String> headers;
     private int headersBytes;
-    private ZFrame cookies;
+    private ZFrame content;
     private String group;
 
 
@@ -284,7 +284,7 @@ public class ZreMsg
                 //  Get next frame, leave current untouched
                 if (!input.hasReceiveMore ())
                     throw new IllegalArgumentException ();
-                self.cookies = ZFrame.recvFrame (input);
+                self.content = ZFrame.recvFrame (input);
                 break;
 
             case SHOUT:
@@ -293,7 +293,7 @@ public class ZreMsg
                 //  Get next frame, leave current untouched
                 if (!input.hasReceiveMore ())
                     throw new IllegalArgumentException ();
-                self.cookies = ZFrame.recvFrame (input);
+                self.content = ZFrame.recvFrame (input);
                 break;
 
             case JOIN:
@@ -588,11 +588,11 @@ public class ZreMsg
     void sendWhisper (
         Socket output,
         int sequence,
-        ZFrame cookies) 
+        ZFrame content)
     {
         ZreMsg self = new ZreMsg (ZreMsg.WHISPER);
         self.setSequence (sequence);
-        self.setCookies (cookies.duplicate ());
+        self.setCookies (content.duplicate ());
         self.send (output); 
     }
 
@@ -604,12 +604,12 @@ public class ZreMsg
         Socket output,
         int sequence,
         String group,
-        ZFrame cookies) 
+        ZFrame content)
     {
         ZreMsg self = new ZreMsg (ZreMsg.SHOUT);
         self.setSequence (sequence);
         self.setGroup (group);
-        self.setCookies (cookies.duplicate ());
+        self.setCookies (content.duplicate ());
         self.send (output); 
     }
 
@@ -697,12 +697,12 @@ public class ZreMsg
         break;
         case WHISPER:
             copy.sequence = self.sequence;
-            copy.cookies = self.cookies.duplicate ();
+            copy.content = self.content.duplicate ();
         break;
         case SHOUT:
             copy.sequence = self.sequence;
             copy.group = self.group;
-            copy.cookies = self.cookies.duplicate ();
+            copy.content = self.content.duplicate ();
         break;
         case JOIN:
             copy.sequence = self.sequence;
@@ -766,18 +766,18 @@ public class ZreMsg
         case WHISPER:
             System.out.println ("WHISPER:");
             System.out.printf ("    sequence=%ld\n", (long)sequence);
-            System.out.printf ("    cookies={\n");
-            if (cookies != null) {
-                int size = cookies.size ();
-                byte [] data = cookies.getData ();
-                System.out.printf ("        size=%td\n", cookies.size ());
+            System.out.printf ("    content={\n");
+            if (content != null) {
+                int size = content.size ();
+                byte [] data = content.getData ();
+                System.out.printf ("        size=%td\n", content.size ());
                 if (size > 32)
                     size = 32;
-                int cookiesIndex;
-                for (cookiesIndex = 0; cookiesIndex < size; cookiesIndex++) {
-                    if (cookiesIndex != 0 && (cookiesIndex % 4 == 0))
+                int contentIndex;
+                for (contentIndex = 0; contentIndex < size; contentIndex++) {
+                    if (contentIndex != 0 && (contentIndex % 4 == 0))
                         System.out.printf ("-");
-                    System.out.printf ("%02X", data [cookiesIndex]);
+                    System.out.printf ("%02X", data [contentIndex]);
                 }
             }
             System.out.printf ("    }\n");
@@ -790,18 +790,18 @@ public class ZreMsg
                 System.out.printf ("    group='%s'\n", group);
             else
                 System.out.printf ("    group=\n");
-            System.out.printf ("    cookies={\n");
-            if (cookies != null) {
-                int size = cookies.size ();
-                byte [] data = cookies.getData ();
-                System.out.printf ("        size=%td\n", cookies.size ());
+            System.out.printf ("    content={\n");
+            if (content != null) {
+                int size = content.size ();
+                byte [] data = content.getData ();
+                System.out.printf ("        size=%td\n", content.size ());
                 if (size > 32)
                     size = 32;
-                int cookiesIndex;
-                for (cookiesIndex = 0; cookiesIndex < size; cookiesIndex++) {
-                    if (cookiesIndex != 0 && (cookiesIndex % 4 == 0))
+                int contentIndex;
+                for (contentIndex = 0; contentIndex < size; contentIndex++) {
+                    if (contentIndex != 0 && (contentIndex % 4 == 0))
                         System.out.printf ("-");
-                    System.out.printf ("%02X", data [cookiesIndex]);
+                    System.out.printf ("%02X", data [contentIndex]);
                 }
             }
             System.out.printf ("    }\n");
@@ -1022,21 +1022,21 @@ public class ZreMsg
 
 
     //  --------------------------------------------------------------------------
-    //  Get/set the cookies field
+    //  Get/set the content field
 
     public ZFrame 
-    cookies ()
+    content ()
     {
-        return cookies;
+        return content;
     }
 
     //  Takes ownership of supplied frame
     public void
     setCookies (ZFrame frame)
     {
-        if (cookies != null)
-            cookies.destroy ();
-        cookies = frame;
+        if (content != null)
+            content.destroy ();
+        content = frame;
     }
 
     //  --------------------------------------------------------------------------
