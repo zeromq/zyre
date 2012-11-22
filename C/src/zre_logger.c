@@ -35,7 +35,7 @@ s_print_log_msg (void *collector)
         return;                 //  Interrupted
 
     time_t curtime = zre_log_msg_time (msg);
-    char *event;
+    char *event = NULL;
     switch (zre_log_msg_event (msg)) {
         case ZRE_LOG_MSG_EVENT_UP:
             event = "Interface up";
@@ -61,12 +61,12 @@ s_print_log_msg (void *collector)
     strftime (timestr, 20, "%y-%m-%d %H:%M:%S ", loctime);
 
     printf ("%s I: [%04X] [%04X] - %s %s\n",
-        timestr, 
+        timestr,
         zre_log_msg_node (msg),
         zre_log_msg_peer (msg),
         event,
         zre_log_msg_data (msg));
-    
+
     zre_log_msg_destroy (&msg);
 }
 
@@ -86,12 +86,12 @@ int main (int argc, char *argv [])
 
     zre_interface_t *interface = zre_interface_new ();
     zre_interface_header_set (interface, "LOG_COLLECTOR", "tcp://%s:%d", host, LOG_PORT_NUMBER);
-    
+
     zmq_pollitem_t pollitems [] = {
         { collector, 0, ZMQ_POLLIN, 0 },
         { zre_interface_handle (interface), 0, ZMQ_POLLIN, 0 }
     };
-    
+
     while (!zctx_interrupted) {
         if (zmq_poll (pollitems, 2, 1000 * ZMQ_POLL_MSEC) == -1)
             break;              //  Interrupted
@@ -99,7 +99,7 @@ int main (int argc, char *argv [])
         //  Handle input on collector
         if (pollitems [0].revents & ZMQ_POLLIN)
             s_print_log_msg (collector);
-        
+
         //  Handle event from interface
         if (pollitems [1].revents & ZMQ_POLLIN) {
             zmsg_t *msg = zre_interface_recv (interface);
