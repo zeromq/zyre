@@ -313,7 +313,7 @@ agent_recv_from_api (agent_t *self)
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
-            zre_msg_cookies_set (msg, zmsg_pop (request));
+            zre_msg_content_set (msg, zmsg_pop (request));
             zre_peer_send (peer, &msg);
         }
         free (identity);
@@ -326,7 +326,7 @@ agent_recv_from_api (agent_t *self)
         if (group) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
             zre_msg_group_set (msg, name);
-            zre_msg_cookies_set (msg, zmsg_pop (request));
+            zre_msg_content_set (msg, zmsg_pop (request));
             zre_group_send (group, &msg);
         }
         free (name);
@@ -407,8 +407,8 @@ s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
-        zre_msg_from_set (msg, zre_udp_host (self->udp));
-        zre_msg_port_set (msg, self->port);
+        zre_msg_ipaddress_set (msg, zre_udp_host (self->udp));
+        zre_msg_mailbox_set (msg, self->port);
         zre_msg_groups_set (msg, zhash_keys (self->own_groups));
         zre_msg_status_set (msg, self->status);
         zre_msg_headers_set (msg, zhash_dup (self->headers));
@@ -481,7 +481,7 @@ agent_recv_from_peer (agent_t *self)
     zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         peer = s_require_peer (
-            self, identity, zre_msg_from (msg), zre_msg_port (msg));
+            self, identity, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
         zre_peer_ready_set (peer, true);
     }
@@ -518,7 +518,7 @@ agent_recv_from_peer (agent_t *self)
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as WHISPER event
-        zframe_t *cookie = zre_msg_cookies (msg);
+        zframe_t *cookie = zre_msg_content (msg);
         zstr_sendm (self->pipe, "WHISPER");
         zstr_sendm (self->pipe, identity);
         zframe_send (&cookie, self->pipe, ZFRAME_REUSE); // let msg free the frame
@@ -526,7 +526,7 @@ agent_recv_from_peer (agent_t *self)
     else
     if (zre_msg_id (msg) == ZRE_MSG_SHOUT) {
         //  Pass up to caller as SHOUT event
-        zframe_t *cookie = zre_msg_cookies (msg);
+        zframe_t *cookie = zre_msg_content (msg);
         zstr_sendm (self->pipe, "SHOUT");
         zstr_sendm (self->pipe, identity);
         zstr_sendm (self->pipe, zre_msg_group (msg));
