@@ -27,31 +27,31 @@
 #define __ZRE_MSG_H_INCLUDED__
 
 /*  These are the zre_msg messages
-    HELLO - Greet a peer so it connect back to us.
+    HELLO - Greet a peer so it can connect back to us
         sequence      number 2
-        from          string
-        port          number 2
+        ipaddress     string
+        mailbox       number 2
         groups        strings
         status        number 1
         headers       dictionary
-    WHISPER - Send a message to a peer.
+    WHISPER - Send a message to a peer
         sequence      number 2
-        cookies       frame
-    SHOUT - Send a message to a group.
-        sequence      number 2
-        group         string
-        cookies       frame
-    JOIN - Join a group.
+        content       frame
+    SHOUT - Send a message to a group
         sequence      number 2
         group         string
-        status        number 1
-    LEAVE - Leave a group.
+        content       frame
+    JOIN - Join a group
         sequence      number 2
         group         string
         status        number 1
-    PING - Ping a peer that has gone silent.
+    LEAVE - Leave a group
         sequence      number 2
-    PING_OK - Reply to a peer's ping.
+        group         string
+        status        number 1
+    PING - Ping a peer that has gone silent
+        sequence      number 2
+    PING_OK - Reply to a peer's ping
         sequence      number 2
 */
 
@@ -92,8 +92,8 @@ int
 int
     zre_msg_send_hello (void *output,
         uint16_t sequence,
-        char *from,
-        uint16_t port,
+        char *ipaddress,
+        uint16_t mailbox,
         zlist_t *groups,
         byte status,
         zhash_t *headers);
@@ -102,14 +102,14 @@ int
 int
     zre_msg_send_whisper (void *output,
         uint16_t sequence,
-        zframe_t *cookies);
+        zframe_t *content);
     
 //  Send the SHOUT to the output in one step
 int
     zre_msg_send_shout (void *output,
         uint16_t sequence,
         char *group,
-        zframe_t *cookies);
+        zframe_t *content);
     
 //  Send the JOIN to the output in one step
 int
@@ -163,17 +163,17 @@ uint16_t
 void
     zre_msg_sequence_set (zre_msg_t *self, uint16_t sequence);
 
-//  Get/set the from field
+//  Get/set the ipaddress field
 char *
-    zre_msg_from (zre_msg_t *self);
+    zre_msg_ipaddress (zre_msg_t *self);
 void
-    zre_msg_from_set (zre_msg_t *self, char *format, ...);
+    zre_msg_ipaddress_set (zre_msg_t *self, char *format, ...);
 
-//  Get/set the port field
+//  Get/set the mailbox field
 uint16_t
-    zre_msg_port (zre_msg_t *self);
+    zre_msg_mailbox (zre_msg_t *self);
 void
-    zre_msg_port_set (zre_msg_t *self, uint16_t port);
+    zre_msg_mailbox_set (zre_msg_t *self, uint16_t mailbox);
 
 //  Get/set the groups field
 zlist_t *
@@ -213,11 +213,11 @@ void
 size_t
     zre_msg_headers_size (zre_msg_t *self);
 
-//  Get/set the cookies field
+//  Get/set the content field
 zframe_t *
-    zre_msg_cookies (zre_msg_t *self);
+    zre_msg_content (zre_msg_t *self);
 void
-    zre_msg_cookies_set (zre_msg_t *self, zframe_t *frame);
+    zre_msg_content_set (zre_msg_t *self, zframe_t *frame);
 
 //  Get/set the group field
 char *

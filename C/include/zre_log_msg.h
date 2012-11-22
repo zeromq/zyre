@@ -40,12 +40,10 @@
 #define ZRE_LOG_MSG_LEVEL_ERROR             1
 #define ZRE_LOG_MSG_LEVEL_WARNING           2
 #define ZRE_LOG_MSG_LEVEL_INFO              3
-#define ZRE_LOG_MSG_EVENT_UP                1
-#define ZRE_LOG_MSG_EVENT_DOWN              2
-#define ZRE_LOG_MSG_EVENT_JOIN              3
-#define ZRE_LOG_MSG_EVENT_LEAVE             4
-#define ZRE_LOG_MSG_EVENT_ENTER             5
-#define ZRE_LOG_MSG_EVENT_EXIT              6
+#define ZRE_LOG_MSG_EVENT_JOIN              1
+#define ZRE_LOG_MSG_EVENT_LEAVE             2
+#define ZRE_LOG_MSG_EVENT_ENTER             3
+#define ZRE_LOG_MSG_EVENT_EXIT              4
 
 #define ZRE_LOG_MSG_LOG                     1
 
