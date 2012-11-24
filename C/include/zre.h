@@ -27,6 +27,9 @@
 #ifndef __ZRE_H_INCLUDED__
 #define __ZRE_H_INCLUDED__
 
+#include <czmq.h>
+
+
 #define ZRE_VERSION_MAJOR 0
 #define ZRE_VERSION_MINOR 2
 #define ZRE_VERSION_PATCH 0

@@ -3,8 +3,17 @@ lib_LTLIBRARIES = libzre.la
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libzre.pc
 
-include_HEADERS = \
-    ../include/zre.h
+libzre_la_includedir = $(includedir)/zre
+libzre_la_include_HEADERS = \
+    ../include/zre.h \
+		../include/zre_udp.h \
+		../include/zre_msg.h \
+		../include/zre_peer.h \
+		../include/zre_group.h \
+		../include/zre_log.h \
+		../include/zre_log_msg.h \
+		../include/zre_interface.h
+
 
 libzre_la_SOURCES = \
     zre_interface.c \

@@ -78,7 +78,9 @@ if test "x$czmq_search_libzmq" = "xyes"; then
     fi
 fi
 
-AC_CHECK_LIB(zmq, zmq_init, ,[AC_MSG_ERROR([cannot link with -lzmq, install libzmq.])])
+AC_CHECK_LIB(zmq, zmq_init,
+							LIBS="-lzmq $LIBS",
+						 [AC_MSG_ERROR([cannot link with -lzmq, install libzmq.])])
 
 AC_MSG_CHECKING([whether libzmq installation works])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <zmq.h>],
@@ -89,7 +91,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <zmq.h>],
 
 # libczmq integration
 AC_ARG_WITH([libczmq],
-            [AS_HELP_STRING([--with-czmq],
+            [AS_HELP_STRING([--with-libczmq],
                             [Specify libczmq prefix])],
             [zre_search_libczmq="yes"],
             [])
@@ -103,7 +105,9 @@ if test "x$zre_search_libczmq" = "xyes"; then
     fi
 fi
 
-AC_CHECK_LIB(czmq, zctx_test, ,[AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
+AC_CHECK_LIB(czmq, zctx_test, 
+							LIBS="-lczmq $LIBS",
+						 [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
 
 AC_MSG_CHECKING([whether libczmq installation works])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <czmq.h>],
