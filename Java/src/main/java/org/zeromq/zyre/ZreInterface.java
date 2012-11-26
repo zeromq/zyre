@@ -243,7 +243,7 @@ public class ZreInterface
                 return null;
 
             ZreUdp udp = new ZreUdp (PING_PORT_NUMBER);
-            int port = inbox.bindToRandomPort (String.format ("tcp://%s", udp.host ()), 0xc000, 0xffff);
+            int port = inbox.bindToRandomPort ("tcp://*", 0xc000, 0xffff);
             if (port < 0) {          //  Interrupted
                 System.err.println ("Failed to bind a random port");
                 udp.destroy ();
