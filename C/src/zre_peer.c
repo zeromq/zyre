@@ -90,6 +90,9 @@ zre_peer_destroy (zre_peer_t **self_p)
     if (*self_p) {
         zre_peer_t *self = *self_p;
         zre_peer_disconnect (self);
+				if(self->headers) {
+					zhash_destroy(&self->headers);
+				}
         free (self->identity);
         free (self);
         *self_p = NULL;
