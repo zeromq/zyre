@@ -244,7 +244,7 @@ agent_new (zctx_t *ctx, void *pipe)
     self->udp = zre_udp_new (PING_PORT_NUMBER);
     self->inbox = inbox;
     self->host = zre_udp_host (self->udp);
-    self->port = zsocket_bind (self->inbox, "tcp://%s:*", self->host);
+    self->port = zsocket_bind (self->inbox, "tcp://*:*");
     sprintf (self->endpoint, "%s:%d", self->host, self->port);
     if (self->port < 0) {       //  Interrupted
         zre_udp_destroy (&self->udp);
