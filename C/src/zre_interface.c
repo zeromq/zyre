@@ -487,6 +487,7 @@ agent_recv_from_peer (agent_t *self)
     }
     //  Ignore command if peer isn't ready
     if (peer == NULL || !zre_peer_ready (peer)) {
+				free(identity);
         zre_msg_destroy (&msg);
         return 0;
     }
