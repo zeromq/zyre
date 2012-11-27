@@ -13,8 +13,7 @@ import org.zeromq.ZContext;
 public class TestZreLogMsg
 {
     @Test
-    public void
-    testZreLogMsg ()
+    public void testZreLogMsg ()
     {
         System.out.printf (" * zre_log_msg: ");
 
