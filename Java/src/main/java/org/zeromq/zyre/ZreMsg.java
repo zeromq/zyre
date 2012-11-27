@@ -24,31 +24,31 @@
 */
 
 /*  These are the zre_msg messages
-    HELLO - Greet a peer so it connect back to us.
+    HELLO - Greet a peer so it can connect back to us
         sequence      number 2
-        from          string
-        port          number 2
+        ipaddress     string
+        mailbox       number 2
         groups        strings
         status        number 1
         headers       dictionary
-    WHISPER - Send a message to a peer.
+    WHISPER - Send a message to a peer
         sequence      number 2
         content       frame
-    SHOUT - Send a message to a group.
+    SHOUT - Send a message to a group
         sequence      number 2
         group         string
         content       frame
-    JOIN - Join a group.
+    JOIN - Join a group
         sequence      number 2
         group         string
         status        number 1
-    LEAVE - Leave a group.
+    LEAVE - Leave a group
         sequence      number 2
         group         string
         status        number 1
-    PING - Ping a peer that has gone silent.
+    PING - Ping a peer that has gone silent
         sequence      number 2
-    PING_OK - Reply to a peer's ping.
+    PING_OK - Reply to a peer's ping
         sequence      number 2
 */
 
@@ -70,21 +70,21 @@ public class ZreMsg
 {
     public static final int ZRE_MSG_VERSION                 = 1;
 
-    public static final int HELLO                 = 10;
-    public static final int WHISPER               = 20;
-    public static final int SHOUT                 = 21;
-    public static final int JOIN                  = 22;
-    public static final int LEAVE                 = 23;
-    public static final int PING                  = 40;
-    public static final int PING_OK               = 41;
+    public static final int HELLO                 = 1;
+    public static final int WHISPER               = 2;
+    public static final int SHOUT                 = 3;
+    public static final int JOIN                  = 4;
+    public static final int LEAVE                 = 5;
+    public static final int PING                  = 6;
+    public static final int PING_OK               = 7;
 
     //  Structure of our class
     private ZFrame address;             //  Address of peer if any
     private int id;                     //  ZreMsg message ID
     private ByteBuffer needle;          //  Read/write pointer for serialization
     private int sequence;
-    private String from;
-    private int port;
+    private String ipaddress;
+    private int mailbox;
     private List <String> groups;
     private int status;
     private Map <String, String> headers;
@@ -105,8 +105,7 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Destroy the zre_msg
 
-    public void
-    destroy ()
+    public void destroy ()
     {
         //  Free class properties
         if (address != null)
@@ -214,8 +213,7 @@ public class ZreMsg
     //  Receive and parse a ZreMsg from the socket. Returns new object or
     //  null if error. Will block if there's no message waiting.
 
-    public static ZreMsg
-    recv (Socket input)
+    public static ZreMsg recv (Socket input)
     {
         assert (input != null);
         ZreMsg self = new ZreMsg (0);
@@ -260,8 +258,8 @@ public class ZreMsg
             switch (self.id) {
             case HELLO:
                 self.sequence = self.getNumber2 ();
-                self.from = self.getString ();
-                self.port = self.getNumber2 ();
+                self.ipaddress = self.getString ();
+                self.mailbox = self.getNumber2 ();
                 listSize = self.getNumber1 ();
                 self.groups = new ArrayList<String> ();
                 while (listSize-- > 0) {
@@ -353,8 +351,7 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Send the ZreMsg to the socket, and destroy it
 
-    public boolean
-    send (Socket socket)
+    public boolean send (Socket socket)
     {
         assert (socket != null);
 
@@ -364,11 +361,11 @@ public class ZreMsg
         case HELLO:
             //  sequence is a 2-byte integer
             frameSize += 2;
-            //  from is a string with 1-byte length
+            //  ipaddress is a string with 1-byte length
             frameSize++;       //  Size is one octet
-            if (from != null)
-                frameSize += from.length ();
-            //  port is a 2-byte integer
+            if (ipaddress != null)
+                frameSize += ipaddress.length ();
+            //  mailbox is a 2-byte integer
             frameSize += 2;
             //  groups is an array of strings
             frameSize++;       //  Size is one octet
@@ -449,11 +446,11 @@ public class ZreMsg
         switch (id) {
         case HELLO:
             putNumber2 (sequence);
-            if (from != null)
-                putString (from);
+            if (ipaddress != null)
+                putString (ipaddress);
             else
                 putNumber1 ((byte) 0);      //  Empty string
-            putNumber2 (port);
+            putNumber2 (mailbox);
             if (groups != null) {
                 putNumber1 ((byte) groups.size ());
                 for (String value : groups) {
@@ -532,20 +529,20 @@ public class ZreMsg
         //  Now send any frame fields, in order
         switch (id) {
         case WHISPER:
-            //  If cookies isn't set, send an empty frame
-            if (cookies == null)
-                cookies = new ZFrame ((byte []) null);
-            if (!cookies.sendAndDestroy (socket, 0)) {
+            //  If content isn't set, send an empty frame
+            if (content == null)
+                content = new ZFrame ((byte []) null);
+            if (!content.sendAndDestroy (socket, 0)) {
                 frame.destroy ();
                 destroy ();
                 return false;
             }
             break;
         case SHOUT:
-            //  If cookies isn't set, send an empty frame
-            if (cookies == null)
-                cookies = new ZFrame ((byte []) null);
-            if (!cookies.sendAndDestroy (socket, 0)) {
+            //  If content isn't set, send an empty frame
+            if (content == null)
+                content = new ZFrame ((byte []) null);
+            if (!content.sendAndDestroy (socket, 0)) {
                 frame.destroy ();
                 destroy ();
                 return false;
@@ -561,20 +558,19 @@ public class ZreMsg
 //  --------------------------------------------------------------------------
 //  Send the HELLO to the socket in one step
 
-    public static
-    void sendHello (
+    public static void sendHello (
         Socket output,
         int sequence,
-        String from,
-        int port,
+        String ipaddress,
+        int mailbox,
         Collection <String> groups,
         int status,
         Map <String, String> headers) 
     {
         ZreMsg self = new ZreMsg (ZreMsg.HELLO);
         self.setSequence (sequence);
-        self.setFrom (from);
-        self.setPort (port);
+        self.setIpaddress (ipaddress);
+        self.setMailbox (mailbox);
         self.setGroups (new ArrayList <String> (groups));
         self.setStatus (status);
         self.setHeaders (new HashMap <String, String> (headers));
@@ -584,40 +580,37 @@ public class ZreMsg
 //  --------------------------------------------------------------------------
 //  Send the WHISPER to the socket in one step
 
-    public static
-    void sendWhisper (
+    public static void sendWhisper (
         Socket output,
         int sequence,
-        ZFrame content)
+        ZFrame content) 
     {
         ZreMsg self = new ZreMsg (ZreMsg.WHISPER);
         self.setSequence (sequence);
-        self.setCookies (content.duplicate ());
+        self.setContent (content.duplicate ());
         self.send (output); 
     }
 
 //  --------------------------------------------------------------------------
 //  Send the SHOUT to the socket in one step
 
-    public static
-    void sendShout (
+    public static void sendShout (
         Socket output,
         int sequence,
         String group,
-        ZFrame content)
+        ZFrame content) 
     {
         ZreMsg self = new ZreMsg (ZreMsg.SHOUT);
         self.setSequence (sequence);
         self.setGroup (group);
-        self.setCookies (content.duplicate ());
+        self.setContent (content.duplicate ());
         self.send (output); 
     }
 
 //  --------------------------------------------------------------------------
 //  Send the JOIN to the socket in one step
 
-    public static
-    void sendJoin (
+    public static void sendJoin (
         Socket output,
         int sequence,
         String group,
@@ -633,8 +626,7 @@ public class ZreMsg
 //  --------------------------------------------------------------------------
 //  Send the LEAVE to the socket in one step
 
-    public static
-    void sendLeave (
+    public static void sendLeave (
         Socket output,
         int sequence,
         String group,
@@ -650,8 +642,7 @@ public class ZreMsg
 //  --------------------------------------------------------------------------
 //  Send the PING to the socket in one step
 
-    public static
-    void sendPing (
+    public static void sendPing (
         Socket output,
         int sequence) 
     {
@@ -663,8 +654,7 @@ public class ZreMsg
 //  --------------------------------------------------------------------------
 //  Send the PING_OK to the socket in one step
 
-    public static
-    void sendPing_Ok (
+    public static void sendPing_Ok (
         Socket output,
         int sequence) 
     {
@@ -677,8 +667,7 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Duplicate the ZreMsg message
 
-    public ZreMsg
-    dup (ZreMsg self)
+    public ZreMsg dup (ZreMsg self)
     {
         if (self == null)
             return null;
@@ -689,8 +678,8 @@ public class ZreMsg
         switch (self.id) {
         case HELLO:
             copy.sequence = self.sequence;
-            copy.from = self.from;
-            copy.port = self.port;
+            copy.ipaddress = self.ipaddress;
+            copy.mailbox = self.mailbox;
             copy.groups = new ArrayList <String> (self.groups);
             copy.status = self.status;
             copy.headers = new HashMap <String, String> (self.headers);
@@ -725,8 +714,7 @@ public class ZreMsg
     }
 
     //  Dump headers key=value pair to stdout
-    public static void
-    headersDump (Map.Entry <String, String> entry, ZreMsg self)
+    public static void headersDump (Map.Entry <String, String> entry, ZreMsg self)
     {
         System.out.printf ("        %s=%s\n", entry.getKey (), entry.getValue ());
     }
@@ -735,18 +723,17 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Print contents of message to stdout
 
-    public void
-    dump ()
+    public void dump ()
     {
         switch (id) {
         case HELLO:
             System.out.println ("HELLO:");
-            System.out.printf ("    sequence=%ld\n", (long)sequence);
-            if (from != null)
-                System.out.printf ("    from='%s'\n", from);
+            System.out.printf ("    sequence=%d\n", (long)sequence);
+            if (ipaddress != null)
+                System.out.printf ("    ipaddress='%s'\n", ipaddress);
             else
-                System.out.printf ("    from=\n");
-            System.out.printf ("    port=%ld\n", (long)port);
+                System.out.printf ("    ipaddress=\n");
+            System.out.printf ("    mailbox=%d\n", (long)mailbox);
             System.out.printf ("    groups={");
             if (groups != null) {
                 for (String value : groups) {
@@ -754,7 +741,7 @@ public class ZreMsg
                 }
             }
             System.out.printf (" }\n");
-            System.out.printf ("    status=%ld\n", (long)status);
+            System.out.printf ("    status=%d\n", (long)status);
             System.out.printf ("    headers={\n");
             if (headers != null) {
                 for (Map.Entry <String, String> entry : headers.entrySet ())
@@ -765,12 +752,12 @@ public class ZreMsg
             
         case WHISPER:
             System.out.println ("WHISPER:");
-            System.out.printf ("    sequence=%ld\n", (long)sequence);
+            System.out.printf ("    sequence=%d\n", (long)sequence);
             System.out.printf ("    content={\n");
             if (content != null) {
                 int size = content.size ();
                 byte [] data = content.getData ();
-                System.out.printf ("        size=%td\n", content.size ());
+                System.out.printf ("        size=%d\n", content.size ());
                 if (size > 32)
                     size = 32;
                 int contentIndex;
@@ -785,7 +772,7 @@ public class ZreMsg
             
         case SHOUT:
             System.out.println ("SHOUT:");
-            System.out.printf ("    sequence=%ld\n", (long)sequence);
+            System.out.printf ("    sequence=%d\n", (long)sequence);
             if (group != null)
                 System.out.printf ("    group='%s'\n", group);
             else
@@ -794,7 +781,7 @@ public class ZreMsg
             if (content != null) {
                 int size = content.size ();
                 byte [] data = content.getData ();
-                System.out.printf ("        size=%td\n", content.size ());
+                System.out.printf ("        size=%d\n", content.size ());
                 if (size > 32)
                     size = 32;
                 int contentIndex;
@@ -809,32 +796,32 @@ public class ZreMsg
             
         case JOIN:
             System.out.println ("JOIN:");
-            System.out.printf ("    sequence=%ld\n", (long)sequence);
+            System.out.printf ("    sequence=%d\n", (long)sequence);
             if (group != null)
                 System.out.printf ("    group='%s'\n", group);
             else
                 System.out.printf ("    group=\n");
-            System.out.printf ("    status=%ld\n", (long)status);
+            System.out.printf ("    status=%d\n", (long)status);
             break;
             
         case LEAVE:
             System.out.println ("LEAVE:");
-            System.out.printf ("    sequence=%ld\n", (long)sequence);
+            System.out.printf ("    sequence=%d\n", (long)sequence);
             if (group != null)
                 System.out.printf ("    group='%s'\n", group);
             else
                 System.out.printf ("    group=\n");
-            System.out.printf ("    status=%ld\n", (long)status);
+            System.out.printf ("    status=%d\n", (long)status);
             break;
             
         case PING:
             System.out.println ("PING:");
-            System.out.printf ("    sequence=%ld\n", (long)sequence);
+            System.out.printf ("    sequence=%d\n", (long)sequence);
             break;
             
         case PING_OK:
             System.out.println ("PING_OK:");
-            System.out.printf ("    sequence=%ld\n", (long)sequence);
+            System.out.printf ("    sequence=%d\n", (long)sequence);
             break;
             
         }
@@ -844,14 +831,12 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Get/set the message address
 
-    public ZFrame
-    address ()
+    public ZFrame address ()
     {
         return address;
     }
 
-    public void
-    setAddress (ZFrame address)
+    public void setAddress (ZFrame address)
     {
         if (this.address != null)
             this.address.destroy ();
@@ -862,14 +847,12 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Get/set the zre_msg id
 
-    public int
-    id ()
+    public int id ()
     {
         return id;
     }
 
-    public void
-    setId (int id)
+    public void setId (int id)
     {
         this.id = id;
     }
@@ -877,63 +860,55 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Get/set the sequence field
 
-    public int
-    sequence ()
+    public int sequence ()
     {
         return sequence;
     }
 
-    public void
-    setSequence (int sequence)
+    public void setSequence (int sequence)
     {
         this.sequence = sequence;
     }
 
 
     //  --------------------------------------------------------------------------
-    //  Get/set the from field
+    //  Get/set the ipaddress field
 
-    public String
-    from ()
+    public String ipaddress ()
     {
-        return from;
+        return ipaddress;
     }
 
-    public void
-    setFrom (String format, Object ... args)
+    public void setIpaddress (String format, Object ... args)
     {
         //  Format into newly allocated string
-        from = String.format (format, args);
+        ipaddress = String.format (format, args);
     }
 
 
     //  --------------------------------------------------------------------------
-    //  Get/set the port field
+    //  Get/set the mailbox field
 
-    public int
-    port ()
+    public int mailbox ()
     {
-        return port;
+        return mailbox;
     }
 
-    public void
-    setPort (int port)
+    public void setMailbox (int mailbox)
     {
-        this.port = port;
+        this.mailbox = mailbox;
     }
 
 
     //  --------------------------------------------------------------------------
     //  Iterate through the groups field, and append a groups value
 
-    public List <String>
-    groups ()
+    public List <String> groups ()
     {
         return groups;
     }
 
-    public void
-    appendGroups (String format, Object ... args)
+    public void appendGroups (String format, Object ... args)
     {
         //  Format into newly allocated string
         
@@ -944,8 +919,7 @@ public class ZreMsg
         groups.add (string);
     }
 
-    public void
-    setGroups (Collection <String> value)
+    public void setGroups (Collection <String> value)
     {
         groups = new ArrayList (value); 
     }
@@ -954,14 +928,12 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Get/set the status field
 
-    public int
-    status ()
+    public int status ()
     {
         return status;
     }
 
-    public void
-    setStatus (int status)
+    public void setStatus (int status)
     {
         this.status = status;
     }
@@ -970,14 +942,12 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Get/set a value in the headers dictionary
 
-    public Map <String, String>
-    headers ()
+    public Map <String, String> headers ()
     {
         return headers;
     }
 
-    public String
-    headersString (String key, String defaultValue)
+    public String headersString (String key, String defaultValue)
     {
         String value = null;
         if (headers != null)
@@ -988,8 +958,7 @@ public class ZreMsg
         return value;
     }
 
-    public long
-    headersNumber (String key, long defaultValue)
+    public long headersNumber (String key, long defaultValue)
     {
         long value = defaultValue;
         String string = null;
@@ -1001,8 +970,7 @@ public class ZreMsg
         return value;
     }
 
-    public void
-    insertHeaders (String key, String format, Object ... args)
+    public void insertHeaders (String key, String format, Object ... args)
     {
         //  Format string into buffer
         String string = String.format (format, args);
@@ -1014,8 +982,7 @@ public class ZreMsg
         headersBytes += key.length () + 1 + string.length ();
     }
 
-    public void
-    setHeaders (Map <String, String> value)
+    public void setHeaders (Map <String, String> value)
     {
         headers = new HashMap <String, String> (value); 
     }
@@ -1024,15 +991,13 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Get/set the content field
 
-    public ZFrame 
-    content ()
+    public ZFrame content ()
     {
         return content;
     }
 
     //  Takes ownership of supplied frame
-    public void
-    setCookies (ZFrame frame)
+    public void setContent (ZFrame frame)
     {
         if (content != null)
             content.destroy ();
@@ -1042,14 +1007,12 @@ public class ZreMsg
     //  --------------------------------------------------------------------------
     //  Get/set the group field
 
-    public String
-    group ()
+    public String group ()
     {
         return group;
     }
 
-    public void
-    setGroup (String format, Object ... args)
+    public void setGroup (String format, Object ... args)
     {
         //  Format into newly allocated string
         group = String.format (format, args);

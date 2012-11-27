@@ -13,8 +13,7 @@ import org.zeromq.ZContext;
 public class TestZreMsg
 {
     @Test
-    public void
-    testZreMsg ()
+    public void testZreMsg ()
     {
         System.out.printf (" * zre_msg: ");
 
@@ -38,8 +37,8 @@ public class TestZreMsg
 
         self = new ZreMsg (ZreMsg.HELLO);
         self.setSequence ((byte) 123);
-        self.setFrom ("Life is short but Now lasts for ever");
-        self.setPort ((byte) 123);
+        self.setIpaddress ("Life is short but Now lasts for ever");
+        self.setMailbox ((byte) 123);
         self.appendGroups ("Name: %s", "Brutus");
         self.appendGroups ("Age: %d", 43);
         self.setStatus ((byte) 123);
@@ -50,8 +49,8 @@ public class TestZreMsg
         self = ZreMsg.recv (input);
         assert (self != null);
         assertEquals (self.sequence (), 123);
-        assertEquals (self.from (), "Life is short but Now lasts for ever");
-        assertEquals (self.port (), 123);
+        assertEquals (self.ipaddress (), "Life is short but Now lasts for ever");
+        assertEquals (self.mailbox (), 123);
         assertEquals (self.groups ().size (), 2);
         assertEquals (self.groups ().get (0), "Name: Brutus");
         assertEquals (self.groups ().get (1), "Age: 43");
@@ -63,26 +62,26 @@ public class TestZreMsg
 
         self = new ZreMsg (ZreMsg.WHISPER);
         self.setSequence ((byte) 123);
-        self.setCookies (new ZFrame ("Captcha Diem"));
+        self.setContent (new ZFrame ("Captcha Diem"));
         self.send (output);
     
         self = ZreMsg.recv (input);
         assert (self != null);
         assertEquals (self.sequence (), 123);
-        assertTrue (self.cookies ().streq ("Captcha Diem"));
+        assertTrue (self.content ().streq ("Captcha Diem"));
         self.destroy ();
 
         self = new ZreMsg (ZreMsg.SHOUT);
         self.setSequence ((byte) 123);
         self.setGroup ("Life is short but Now lasts for ever");
-        self.setCookies (new ZFrame ("Captcha Diem"));
+        self.setContent (new ZFrame ("Captcha Diem"));
         self.send (output);
     
         self = ZreMsg.recv (input);
         assert (self != null);
         assertEquals (self.sequence (), 123);
         assertEquals (self.group (), "Life is short but Now lasts for ever");
-        assertTrue (self.cookies ().streq ("Captcha Diem"));
+        assertTrue (self.content ().streq ("Captcha Diem"));
         self.destroy ();
 
         self = new ZreMsg (ZreMsg.JOIN);
