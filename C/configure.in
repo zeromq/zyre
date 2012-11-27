@@ -144,7 +144,7 @@ AC_MSG_CHECKING([whether to install manpages])
 AC_MSG_RESULT([$zre_install_man])
 
 # Set some default features required by libzre code.
-CPPFLAGS="-D_REENTRANT -D_THREAD_SAFE $CPPFLAGS"
+CPPFLAGS="-D_REENTRANT -D_THREAD_SAFE -fPIC $CPPFLAGS"
 
 # OS-specific tests
 case "${host_os}" in
