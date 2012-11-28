@@ -5,8 +5,8 @@
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
-    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
-    http://zyre.org.
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.
 
     This is free software; you can redistribute it and/or modify it under
     the terms of the GNU Lesser General Public License as published by
@@ -78,7 +78,7 @@ void
 zre_log_connect (zre_log_t *self, char *endpoint)
 {
     assert (self);
-    zmq_connect (self->publisher, endpoint);
+    zsocket_connect (self->publisher, endpoint);
 }
 
 
