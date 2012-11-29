@@ -26,12 +26,12 @@ Zyre lets you build exciting apps that work across groups of PCs and mobile devi
 
 ## Vision
 
-ZyRE will run on everything that speaks TCP/IP and has space for code. This means smartphones, tablets, laptops, servers, TVs, toasters, ebooks, smart lightbulbs, cameras, and dongles and devices of every denomination.
+Zyre will run on everything that speaks TCP/IP and has space for code. This means smartphones, tablets, laptops, servers, TVs, toasters, ebooks, smart lightbulbs, cameras, and dongles and devices of every denomination.
 
 ## Project Organization
 
-ZyRE is a protocol (ZRE) plus a set of implementations. We've structured the project as a collection of interoperable implementations in different languages, starting with C and Java. All protocols are on the [0MQ protocol site](http://rfc.zeromq.org).
+Zyre is a protocol (ZRE) plus a set of implementations. We've structured the project as a collection of interoperable implementations in different languages, starting with C and Java. All protocols are on the [0MQ protocol site](http://rfc.zeromq.org).
 
-## Who owns ZyRE?
+## Who owns Zyre?
 
-ZyRE is owned by all its authors and contributors. This is an open source project licensed under the LGPLv3. To contribute to ZyRE please read the [C4 process](http://rfc.zeromq.org/spec:16) that we use.
+Zyre is owned by all its authors and contributors. This is an open source project licensed under the LGPLv3. To contribute to Zyre please read the [C4 process](http://rfc.zeromq.org/spec:16) that we use.
