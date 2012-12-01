@@ -760,7 +760,7 @@ zre_msg_dup (zre_msg_t *self)
 
 
 //  Dump headers key=value pair to stdout
-int
+static int
 s_headers_dump (const char *key, void *item, void *argument)
 {
     zre_msg_t *self = (zre_msg_t *) argument;
@@ -1139,7 +1139,7 @@ zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value)
 {
     assert (self);
     uint64_t value = default_value;
-    char *string;
+    char *string = NULL;
     if (self->headers)
         string = (char *) (zhash_lookup (self->headers, key));
     if (string)
