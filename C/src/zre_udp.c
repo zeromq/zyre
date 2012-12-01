@@ -161,6 +161,8 @@ zre_udp_new (int port_nbr)
         s_handle_io_error ("bind");
 
 #   if defined (__UNIX__)
+
+#   if defined(HAVE_GETIFADDRS) && defined(HAVE_FREEIFADDRS)
     struct ifaddrs *interfaces;
     if (getifaddrs (&interfaces) == 0) {
         struct ifaddrs *interface = interfaces;
@@ -178,6 +180,32 @@ zre_udp_new (int port_nbr)
         }
     }
     freeifaddrs (interfaces);
+#   else 
+    struct ifreq ifr;
+		memset(&ifr, 0, sizeof(ifr));
+		/*  CAUTION this is not yet very portable */
+		if (!s_wireless_nic ("wlan0"))
+			s_handle_io_error ("wlan0_not_exist");
+
+		int sock = 0;
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+			s_handle_io_error ("foo_socket_not_opened");
+    
+		ifr.ifr_addr.sa_family = AF_INET;
+    strncpy (ifr.ifr_name, "wlan0", sizeof (ifr.ifr_name));
+    int rc = ioctl (sock, SIOCGIFADDR, (caddr_t) &ifr, sizeof (struct ifreq));
+		if(rc == -1) {
+			s_handle_io_error ("siocgifaddr");
+		}
+		memcpy (&self->address, ((struct sockaddr_in*) &ifr.ifr_addr),sizeof (struct sockaddr_in));
+    rc = ioctl (sock, SIOCGIFBRDADDR, (caddr_t) &ifr, sizeof (struct ifreq));
+		if(rc == -1) {
+			s_handle_io_error ("siocgifbrdaddr");
+		}
+		memcpy (&self->broadcast, ((struct sockaddr_in*) &ifr.ifr_broadaddr),sizeof (struct sockaddr_in));
+		self->broadcast.sin_port = htons (self->port_nbr);
+    close(sock);
+#   endif
     if (self->host)
         free (self->host);
     self->host = zmalloc (INET_ADDRSTRLEN);
