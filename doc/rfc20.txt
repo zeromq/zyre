@@ -1,0 +1,265 @@
+The ZeroMQ Realtime Exchange Protocol (ZRE) governs how a group of peers on a network discover each other, organize into groups, and send each other events. ZRE runs over the ZeroMQ [http://rfc.zeromq.org/spec:15/ZMTP ZMTP protocol].
+
+* Name: rfc.zeromq.org/spec:20/ZRE
+* Editor: Pieter Hintjens <ph@imatix.com>
+* State: draft
+
+++ License
+
+Copyright (c) 2009-2012 iMatix Corporation
+
+This Specification is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
+
+This Specification is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program; if not, see <http://www.gnu.org/licenses>.
+
+++ Change Process
+
+This Specification is a free and open standard[((bibcite fandos))] and is governed by the Digital Standards Organization's Consensus-Oriented Specification System (COSS)[((bibcite coss))].
+
+++ Language
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119[((bibcite rfc2119))].
+
+++ Goals
+
+The ZRE protocol provides a way for a set of nodes on a local network to discover each other, track when peers come and go, send messages to individual peers (unicast), and send messages to groups of peers (multicast). Its goals are:
+
+* To work with no centralized services or mediation except those available by default on a network.
+* To be robust on poor-quality networks, especially wireless networks.
+* To minimize the time taken to detect a new peer's arrival on the network.
+* To recover from transient failures in connectivity.
+* To be neutral with respect to operating system, programming language, and hardware.
+* To allow any number of nodes to run in one process, to allow large-scale simulation and testing.
+* To provide mechanisms for collecting logging information across the network.
+* To be compatible with related protocols like FILEMQ [((bibcite filemq))]
+
+++ Implementation
+
++++ Node Identification and Life-cycle
+
+A ZRE //node// represents a source or a target for messaging. Nodes usually map to applications. A ZRE node is identified by a 16-octet universally unique identifier (UUID). ZRE does not define how a node is created or destroyed but does assume that nodes have a certain durability.
+
++++ Node Discovery
+
+ZRE uses UDP IPv4 //beacon// broadcasts to discover nodes. This works as follows:
+
+* A ZRE node SHALL listen to the ZRE discovery service which is UDP port XXXX (to be assigned by IANA).
+* Each ZRE node SHALL broadcast, at regular intervals, a UDP beacon that identifies itself to any listening nodes on the network.
+* When a ZRE node receives a beacon from a node that it does not already know about, it SHALL consider this to be a new peer.
+
+The ZRE beacon consists of one 22-octet UDP message with this format:
+
+[[code]]
++---+---+---+------+  +------+------+
+| Z | R | E | %x01 |  | UUID | port |
++---+---+---+------+  +------+------+
+
+       Header               Body
+[[/code]]
+
+Notes for implementors:
+
+* The header SHALL consist of the letters 'Z', 'R', and 'E', followed by the beacon version number, which SHALL be %x01.
+* The body SHALL consist of the sender's 16-octet UUID, followed by a two-byte mailbox port number in network order.
+* A valid beacon SHALL: use a recognized header; use a body of the right size; and provide a non-zero mailbox port number.
+* A node that receives an invalid beacon SHALL discard it silently. A node MAY log the sender IP address for the purposes of debugging.
+* A node SHALL discard beacons that it receives from itself.
+
++++ Interconnection Model
+
+Each node SHALL create a ZeroMQ ROUTER socket and //bind// this to an ephemeral TCP port (in the range %C000x - %FFFFx). The node SHALL broadcast this mailbox port number in all beacons that it sends. Note that a node does not broadcast its IP address as this is provided by the UDP recvfrom function.
+
+This ROUTER socket SHALL be used for all incoming ZeroMQ messages from other nodes. A node SHALL NOT send messages to peers via this socket.
+
+When a node discovers a new peer, it SHALL create a ZeroMQ DEALER socket, set its identity (UUID) on that socket, and //connect// this to the peer's mailbox port. A node may immediately, after connection, start to send messages to a peer via this DEALER socket.
+
+A node SHALL connect each DEALER sockets to at most one peer. A node may disconnect its DEALER socket if the peer has failed to respond within some time (see Heartbeating).
+
+This DEALER socket SHALL be used for all outgoing ZeroMQ messages to a specific peer. A node SHALL not receive messages on this socket. The sender MAY set a high-water mark (HWM) of, for example, 100 messages per second (if the timeout period is 30 second, this means a HWM of 3,000 messages). The sender SHOULD set the send timeout on the socket to zero so that a full send buffer can be detected and treated as "peer not responding".
+
+Note that the ROUTER socket provides the caller with the UUID of the sender for any message received on the socket, as an identity frame that precedes other frames in the message. A peer can thus use the identity on received messages to look up the appropriate DEALER socket for messages back to that peer.
+
+When a node receives, on its ROUTER socket, a valid message from an unknown node, it SHALL treat this as a new peer in the identical fashion as if a UDP beacon was received from an unknown node.
+
+NOTE: the ROUTER-to-DEALER pattern that ZRE uses is designed to ensure that messages are never lost due to synchronization issues. Sending to a ROUTER socket that does not (yet) have a connection to a peer causes the message to be dropped.
+
++++ Protocol Signature
+
+Every ZRE message sent by TCP SHALL start with the ZRE protocol signature, %xAA %xA1. A node SHALL silently discard any message received that does not start with these two octets.
+
+This mechanism is designed particularly for applications that bind to ephemeral ports which may have been previously used by other protocols, and to which there are still nodes attempting to connect. It is also a general fail-fast mechanism to detect ill-formed messages.
+
++++ TCP Protocol Grammar
+
+The following ABNF grammar defines the ZRE protocol, where all commands are sent by one node (the sender, "S:") to another peer (the recipient, "R:"):
+
+[[code]]
+zre-protocol    = greeting *traffic
+
+greeting        = S:HELLO
+traffic         = S:WHISPER
+                / S:SHOUT
+                / S:JOIN
+                / S:LEAVE
+                / S:PING R:PING-OK
+
+;   Greet a peer so it can connect back to us
+S:HELLO         = header %x01 ipaddress mailbox groups status headers
+header          = signature sequence
+signature       = %xAA %xA1     
+sequence        = 2OCTET        ; Incremental sequence number
+ipaddress       = string        ; Sender IP address
+string          = size *VCHAR   
+size            = OCTET         
+mailbox         = 2OCTET        ; Sender mailbox port number
+groups          = strings       ; List of groups sender is in
+strings         = size *string
+status          = OCTET         ; Sender group status sequence
+headers         = dictionary    ; Sender header properties
+dictionary      = size *key-value
+key-value       = string        ; Formatted as name=value
+
+; Send a message to a peer
+S:WHISPER       = header %x02 content
+content         = FRAME         ; Message content as 0MQ frame
+
+; Send a message to a group
+S:SHOUT         = header %x03 group content
+group           = string        ; Name of group
+content         = FRAME         ; Message content as 0MQ frame
+
+; Join a group
+S:JOIN          = header %x04 group status
+status          = OCTET         ; Sender group status sequence
+
+; Leave a group
+S:LEAVE         = header %x05 group status
+
+; Ping a peer that has gone silent
+S:PING          = header %06
+
+; Reply to a peer's ping
+R:PING-OK       = header %07
+[[/code]]
+
++++ ZRE Commands
+
+++++ The HELLO Command
+
+Each node SHALL start a dialog by sending HELLO as the first command on an connection to a peer.
+
+When a node receives messages from a new peer it SHALL silently ignore any commands that precede a HELLO command.
+
+The HELLO command contains these fields:
+
+* {{ipaddress}} - IP address that the sender will accept connections on.
+* {{mailbox}} - port number of the sender's mailbox.
+* {{groups}} - the list of groups that the sender is present in, as a list of strings.
+* {{status}} - the sender's group status sequence.
+* {{headers}} - zero or more properties set by the sender.
+
+If the recipient has not already connected to this peer it SHALL create a ZeroMQ DEALER socket and connect it to the endpoint specified as "tcp://ipaddress:mailbox".
+
+The "group status sequence" is a one-octet number that is incremented each time the peer joins or leaves a group. Each peer MAY use this to assert the accuracy of its own group management information.
+
+++++ The WHISPER Command
+
+When a node wishes to send a message to a single peer it SHALL use the WHISPER command. The WHISPER command contains a single field, which is the message content defined as one 0MQ frame. ZRE does not support multi-frame message contents.
+
+++++ The SHOUT Command
+
+When a node wishes to send a message to a set of nodes participating in a group it SHALL use the SHOUT command. The SHOUT command contains two fields: the name of the group, and the the message content defined as one 0MQ frame.
+
+Note that messages are sent via ZeroMQ over TCP, so the SHOUT command is unicast to each peer that should receive it. ZRE does not provide any UDP multicast functionality.
+
+++++ The JOIN Command
+
+When a node joins a group it SHALL broadcast a JOIN command to all its peers. The JOIN command has two fields: the name of the group to join, and the group status sequence number //after// joining the group. Group names are case sensitive.
+
+++++ The LEAVE Command
+
+When a node leaves a group it SHALL broadcast a LEAVE command to all its peers. The LEAVE command has two fields: the name of the group to join, and the group status sequence number //after// leaving the group.
+
+++++ The PING Command
+
+A node SHOULD send a PING command to any peer that it has not received a UDP beacon from within a certain time (typically five seconds). Note that UDP traffic may be dropped on a network that is heavily saturated. If a node receives no reply to a PING command, and no other traffic from a peer within a somewhat longer time (typically 30 seconds), it SHOULD treat that peer as dead.
+
+Note that PING commands SHOULD be used only in targeted cases where a peer is otherwise silent. Otherwise, the cost of PING commands will rise exponentially with the number of peers connected, and can degrade network performance.
+
+++++ The PING-OK Command
+
+When a node receives a PING command it SHALL reply with a PING-OK command.
+
+++ ZRE Extension Protocols
+
+ZRE allows the addition of extension protocols that share the ZRE discovery mechanisms. These protocols have the following common properties:
+
+* They use ZeroMQ messaging over TCP;
+* They are based on a service model where each node may offer zero or more services;
+* Each service binds to an ephemeral port and announces itself to other nodes;
+* Nodes that wish to use a service may then connect to it.
+
+Each extension protocol uses a specific ZeroMQ socket pattern and message format. Currently ZRE supports two extension protocols:
+
+To announce an extension protocol a node adds a headers field to the HELLO command, in the form:
+
+[[code]]
+service-name=tcp://ipaddress:port
+[[/code]]
+
+* The ZRE log collection protocol (ZRE/LOG), which provides a subsystem for collecting log data from a distributed network. The service name is "X-ZRELOG".
+* The file message queuing protocol (FILEMQ), which provides a way to distribute content between nodes. The service name is "X-FILEMQ".
+
+FILEMQ is documented in its own RFC. We describe ZRE/LOG here.
+
++++ The ZRE/LOG Extension Protocol
+
+The log service SHALL create a ZeroMQ SUB socket and //bind// this to an ephemeral TCP port (in the range %C000x - %FFFFx). The log service SHALL broadcast its connection endpoint in the HELLO command as explained above. Any node wishing to send log data SHALL create a PUB socket and connect it to this endpoint.
+
+Every ZRE/LOG message SHALL start with the protocol signature %xAA %xA2. The log service SHALL silently discard any message received that does not start with these two octets.
+
+The following ABNF grammar defines the ZRE/LOG protocol:
+
+[[code]]
+zrelog-protocol = *LOG
+
+;   Send a log message to the log service
+LOG             = header %x01 level event node peer time data
+header          = signature
+signature       = %xAA %xA2
+
+level           = ERROR / WARNING / INFO
+ERROR           = %x01
+WARNING         = %x02
+INFO            = %x03
+
+event           = JOIN / LEAVE / ENTER / EXIT
+JOIN            = %x01
+LEAVE           = %x02
+ENTER           = %x03
+EXIT            = %x04
+
+node            = 2OCTET        ;  Hash of node UUID
+peer            = 2OCTET        ;  Hash of peer UUID
+time            = 8OCTET        ;  Time in msecs
+data            = string        ;  Printable error text
+string          = size *VCHAR
+size            = OCTET
+[[/code]]
+
+++ Security Aspects
+
+ZRE does not have any security at this stage.
+
+++ References
+
+[[bibliography]]
+: rfc2119 : "Key words for use in RFCs to Indicate Requirement Levels" - [http://tools.ietf.org/html/rfc2119 ietf.org]
+: rfc4422 : "Simple Authentication and Security Layer" - [http://tools.ietf.org/html/rfc4422 ietf.org]
+: fandos : "Definition of a Free and Open Standard" - [http://www.digistan.org/open-standard:definition digistan.org]
+: coss : "Consensus Oriented Specification System" - [http://www.digistan.org/spec:1/COSS digistan.org]
+: zmtp : "15/ZMTP - ZeroMQ Message Transport Protocol" - [http://rfc.zeromq.org/spec:15 rfc.zeromq.org]
+: filemq : "19/FILEMQ - The FileMQ Protocol" - [http://rfc.zeromq.org/spec:19 rfc.zeromq.org]
+[[/bibliography]]

@@ -1,3 +1,29 @@
+/*  =========================================================================
+    zre_tester - bulk test tool
+
+    -------------------------------------------------------------------------
+    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright other contributors as noted in the AUTHORS file.
+
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.
+
+    This is free software; you can redistribute it and/or modify it under
+    the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 3 of the License, or (at
+    your option) any later version.
+
+    This software is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this program. If not, see
+    <http://www.gnu.org/licenses/>.
+    =========================================================================
+*/
+
 #include <czmq.h>
 #include "../include/zre.h"
 
@@ -24,7 +50,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
     while (!zctx_interrupted) {
         if (zmq_poll (pollitems, 2, randof (1000) * ZMQ_POLL_MSEC) == -1)
             break;              //  Interrupted
-
+        
         if (pollitems [0].revents & ZMQ_POLLIN)
             break;              //  Any command from parent means EXIT
 
@@ -88,6 +114,14 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                 free (from_peer);
                 free (group);
             }
+            else
+            if (streq (event, "DELIVER")) {
+                char *filename = zmsg_popstr (incoming);
+                char *fullname = zmsg_popstr (incoming);
+                printf ("I: received file %s\n", fullname);
+                free (fullname);
+                free (filename);
+            }
             free (event);
             zmsg_destroy (&incoming);
 
@@ -137,12 +171,12 @@ int main (int argc, char *argv [])
     //  Get number of interfaces to simulate, default 100
     int max_interface = 100;
     int nbr_interfaces = 0;
-    int max_tries = -1;
-    int nbr_tries = 0;
+    int max_iterations = -1;
+    int nbr_iterations = 0;
     if (argc > 1)
         max_interface = atoi (argv [1]);
     if (argc > 2)
-        max_tries = atoi (argv [2]);
+        max_iterations = atoi (argv [2]);
 
     //  We address interfaces as an array of pipes
     void **pipes = zmalloc (sizeof (void *) * max_interface);
@@ -161,12 +195,13 @@ int main (int argc, char *argv [])
             pipes [index] = zthread_fork (ctx, interface_task, NULL);
             zclock_log ("I: Started interface (%d running)", ++nbr_interfaces);
         }
-        if (max_tries > 0 && ++nbr_tries >= max_tries)
+        nbr_iterations++;
+        if (max_iterations > 0 && nbr_iterations >= max_iterations)
             break;
         //  Sleep ~750 msecs randomly so we smooth out activity
         zclock_sleep (randof (500) + 500);
     }
-    zclock_log ("I: Stopped tester (%d tries)", nbr_tries);
+    zclock_log ("I: Stopped tester (%d iterations)", nbr_iterations);
     zctx_destroy (&ctx);
     free (pipes);
     return 0;
