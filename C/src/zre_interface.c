@@ -1,12 +1,12 @@
 /*  =========================================================================
-    zre_interface - interface to a ZyRE network
+    zre_interface - interface to a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
-    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
-    http://zyre.org.
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.
 
     This is free software; you can redistribute it and/or modify it under
     the terms of the GNU Lesser General Public License as published by
@@ -174,6 +174,18 @@ zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...)
 }
 
 
+//  ---------------------------------------------------------------------
+//  Publish file into virtual space
+
+void
+zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual)
+{
+    zstr_sendm (self->pipe, "PUBLISH");
+    zstr_sendm (self->pipe, pathname);
+    zstr_send  (self->pipe, virtual);
+}
+
+
 //  =====================================================================
 //  Asynchronous part, works in the background
 
@@ -229,6 +241,13 @@ typedef struct {
     zhash_t *peer_groups;       //  Groups that our peers are in
     zhash_t *own_groups;        //  Groups that we are in
     zhash_t *headers;           //  Our header values
+    
+    fmq_server_t *fmq_server;   //  FileMQ server object
+    int fmq_service;            //  FileMQ server port
+    char fmq_outbox [255];      //  FileMQ server outbox
+    
+    fmq_client_t *fmq_client;   //  FileMQ client object
+    char fmq_inbox [255];       //  FileMQ client inbox
 } agent_t;
 
 static agent_t *
@@ -259,6 +278,35 @@ agent_new (zctx_t *ctx, void *pipe)
     self->headers = zhash_new ();
     zhash_autofree (self->headers);
     self->log = zre_log_new (self->endpoint);
+
+    //  Set up content distribution network: Each server binds to an
+    //  ephemeral port and publishes a temporary directory that acts
+    //  as the outbox for this node.
+    //
+#   define OUTBOX   ".outbox"
+    sprintf (self->fmq_outbox, "%s/%s", OUTBOX, self->identity);
+    mkdir (OUTBOX, 0775);
+    mkdir (self->fmq_outbox, 0775);
+    
+#   define INBOX    ".inbox"
+    sprintf (self->fmq_inbox, "%s/%s", INBOX, self->identity);
+    mkdir (INBOX, 0775);
+    mkdir (self->fmq_inbox, 0775);
+    
+    self->fmq_server = fmq_server_new ();
+    self->fmq_service = fmq_server_bind (self->fmq_server, "tcp://*:*");
+    fmq_server_publish (self->fmq_server, self->fmq_outbox, "/");
+    fmq_server_set_anonymous (self->fmq_server, true);
+    char *publisher = malloc (32);
+    sprintf (publisher, "tcp://%s:%d", self->host, self->fmq_service);
+    zhash_update (self->headers, "X-FILEMQ", publisher);
+
+    //  Client will connect as it discovers new nodes
+    self->fmq_client = fmq_client_new ();
+    fmq_client_set_inbox (self->fmq_client, self->fmq_inbox);
+    fmq_client_set_resync (self->fmq_client, true);
+    fmq_client_subscribe (self->fmq_client, "/");
+    
     return self;
 }
 
@@ -268,12 +316,23 @@ agent_destroy (agent_t **self_p)
     assert (self_p);
     if (*self_p) {
         agent_t *self = *self_p;
+
+        fmq_dir_t *inbox = fmq_dir_new (self->fmq_inbox, NULL);
+        fmq_dir_remove (inbox, true);
+        fmq_dir_destroy (&inbox);
+
+        fmq_dir_t *outbox = fmq_dir_new (self->fmq_outbox, NULL);
+        fmq_dir_remove (outbox, true);
+        fmq_dir_destroy (&outbox);
+
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
         zre_udp_destroy (&self->udp);
         zre_log_destroy (&self->log);
+        fmq_server_destroy (&self->fmq_server);
+        fmq_client_destroy (&self->fmq_client);
         free (self->identity);
         free (self);
         *self_p = NULL;
@@ -372,6 +431,23 @@ agent_recv_from_api (agent_t *self)
         zhash_update (self->headers, name, value);
         //  Value is now owned by hash table
         free (name);
+    }
+    else
+    if (streq (command, "PUBLISH")) {
+        char *filename = zmsg_popstr (request);
+        char *virtual = zmsg_popstr (request);
+        //  Virtual filename must start with slash
+        assert (virtual [0] == '/');
+        //  We create symbolic link pointing to real file
+        char *symlink = malloc (strlen (virtual) + 3);
+        sprintf (symlink, "%s.ln", virtual + 1);
+        fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
+        int rc = fmq_file_output (file);
+        assert (rc == 0);
+        fprintf (fmq_file_handle (file), "%s\n", filename);
+        fmq_file_destroy (&file);
+        free (filename);
+        free (virtual);
     }
     free (command);
     zmsg_destroy (&request);
@@ -511,10 +587,15 @@ agent_recv_from_peer (agent_t *self)
         //  Store peer headers for future reference
         zre_peer_headers_set (peer, zre_msg_headers (msg));
 
-        //  If peer is a log collector, connect to it
-        char *collector = zre_msg_headers_string (msg, "LOG_COLLECTOR", NULL);
+        //  If peer is a ZRE/LOG collector, connect to it
+        char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
         if (collector)
             zre_log_connect (self->log, collector);
+        
+        //  If peer is a FileMQ publisher, connect to it
+        char *publisher = zre_msg_headers_string (msg, "X-FILEMQ", NULL);
+        if (publisher)
+            fmq_client_connect (self->fmq_client, publisher);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
@@ -606,6 +687,18 @@ agent_recv_udp_beacon (agent_t *self)
     return 0;
 }
 
+
+//  Forward event from fmq_client to caller
+
+static int
+agent_recv_fmq_event (agent_t *self)
+{
+    zmsg_t *msg = fmq_client_recv (fmq_client_handle (self->fmq_client));
+    zmsg_send (&msg, self->pipe);
+    return 0;
+}
+
+
 //  Remove peer from group, if it's a member
 
 static int
@@ -664,14 +757,15 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
     zmq_pollitem_t pollitems [] = {
         { self->pipe, 0, ZMQ_POLLIN, 0 },
         { self->inbox, 0, ZMQ_POLLIN, 0 },
-        { 0, zre_udp_handle (self->udp), ZMQ_POLLIN, 0 }
+        { 0, zre_udp_handle (self->udp), ZMQ_POLLIN, 0 },
+        { fmq_client_handle (self->fmq_client), 0, ZMQ_POLLIN, 0 }
     };
     while (!zctx_interrupted) {
         long timeout = (long) (ping_at - zclock_time ());
         assert (timeout <= PING_INTERVAL);
         if (timeout < 0)
             timeout = 0;
-        if (zmq_poll (pollitems, 3, timeout * ZMQ_POLL_MSEC) == -1)
+        if (zmq_poll (pollitems, 4, timeout * ZMQ_POLL_MSEC) == -1)
             break;              //  Interrupted
 
         if (pollitems [0].revents & ZMQ_POLLIN)
@@ -682,6 +776,9 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
 
         if (pollitems [2].revents & ZMQ_POLLIN)
             agent_recv_udp_beacon (self);
+
+        if (pollitems [3].revents & ZMQ_POLLIN)
+            agent_recv_fmq_event (self);
 
         if (zclock_time () >= ping_at) {
             agent_beacon_send (self);

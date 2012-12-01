@@ -1,12 +1,12 @@
 /*  =========================================================================
-    zre.h - ZyRE framework in C
+    zre.h - Zyre library header
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
-    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
-    http://zyre.org.
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.
 
     This is free software; you can redistribute it and/or modify it under
     the terms of the GNU Lesser General Public License as published by
@@ -39,14 +39,19 @@
 #define ZRE_VERSION \
     ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
 
+#include <czmq.h>
 #if CZMQ_VERSION < 10302
-#   error "ZyRE needs CZMQ/1.3.2 or later"
+#   error "Zyre needs CZMQ/1.3.2 or later"
+#endif
+
+#include <fmq.h>
+#if FMQ_VERSION < 10000
+#   error "Zyre needs FMQ/1.0.0 or later"
 #endif
 
 //  Defined port numbers, pending IANA submission
 
-#define PING_PORT_NUMBER 9991
-#define LOG_PORT_NUMBER  9992
+#define PING_PORT_NUMBER 5670   //  UDP port for ZRE discovery
 
 //  Constants, to be configured/reviewed
 

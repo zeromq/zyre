@@ -4,8 +4,8 @@
 .#
 .include "library.gsl"
 .resolve_includes ()
-.echo "Generating ../include/$(class.name).h..."
-.output "../include/$(class.name).h"
+.echo "Generating ../C/include/$(class.name).h..."
+.output "../C/include/$(class.name).h"
 /*  =========================================================================
     $(class.name).h
     
@@ -224,8 +224,8 @@ int
 #endif
 
 #endif
-.echo "Generating ../src/$(class.name).c..."
-.output "../src/$(class.name).c"
+.echo "Generating ../C/src/$(class.name).c..."
+.output "../C/src/$(class.name).c"
 /*  =========================================================================
     $(class.name).c
 

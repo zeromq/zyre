@@ -5,8 +5,8 @@
 .include "library.gsl"
 .resolve_includes ()
 .global.ClassName = java_class_name($(class.name)) 
-.echo "Generating ../src/main/java/org/zeromq/zyre/$(ClassName).java..."
-.output "../src/main/java/org/zeromq/zyre/$(ClassName).java"
+.echo "Generating ../Java/src/main/java/org/zeromq/zyre/$(ClassName).java..."
+.output "../Java/src/main/java/org/zeromq/zyre/$(ClassName).java"
 /*  =========================================================================
     $(ClassName).java
     
@@ -840,8 +840,8 @@ public class $(ClassName)
 .endfor
 }
 
-.echo "Generating ../src/test/java/org/zeromq/zyre/Test$(ClassName).java..."
-.output "../src/test/java/org/zeromq/zyre/Test$(ClassName).java"
+.echo "Generating ../Java/src/test/java/org/zeromq/zyre/Test$(ClassName).java..."
+.output "../Java/src/test/java/org/zeromq/zyre/Test$(ClassName).java"
 //  --------------------------------------------------------------------------
 //  Selftest
 

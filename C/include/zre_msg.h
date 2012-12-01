@@ -6,7 +6,8 @@
     Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
     Copyright other contributors as noted in the AUTHORS file.              
                                                                             
-    This file is part of FILEMQ, see http://filemq.org.                     
+    This file is part of Zyre, an open-source framework for proximity-based 
+    peer-to-peer applications -- See http://zyre.org.                       
                                                                             
     This is free software; you can redistribute it and/or modify it under   
     the terms of the GNU Lesser General Public License as published by the  
@@ -57,13 +58,13 @@
 
 #define ZRE_MSG_VERSION                     1
 
-#define ZRE_MSG_HELLO                       10
-#define ZRE_MSG_WHISPER                     20
-#define ZRE_MSG_SHOUT                       21
-#define ZRE_MSG_JOIN                        22
-#define ZRE_MSG_LEAVE                       23
-#define ZRE_MSG_PING                        40
-#define ZRE_MSG_PING_OK                     41
+#define ZRE_MSG_HELLO                       1
+#define ZRE_MSG_WHISPER                     2
+#define ZRE_MSG_SHOUT                       3
+#define ZRE_MSG_JOIN                        4
+#define ZRE_MSG_LEAVE                       5
+#define ZRE_MSG_PING                        6
+#define ZRE_MSG_PING_OK                     7
 
 #ifdef __cplusplus
 extern "C" {

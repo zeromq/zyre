@@ -1,12 +1,12 @@
 /*  =========================================================================
-    zre_logger - ZyRE log collector
+    zre_logger - ZRE/LOG collector
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
-    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
-    http://zyre.org.
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.
 
     This is free software; you can redistribute it and/or modify it under
     the terms of the GNU Lesser General Public License as published by
@@ -69,17 +69,21 @@ int main (int argc, char *argv [])
 {
     zctx_t *ctx = zctx_new ();
 
-    //  Use the ZyRE UDP class to make sure we listen on the same
+    //  Use the Zyre UDP class to make sure we listen on the same
     //  network interface as our peers
     zre_udp_t *udp = zre_udp_new (PING_PORT_NUMBER);
     char *host = zre_udp_host (udp);
     void *collector = zsocket_new (ctx, ZMQ_SUB);
-    zsocket_bind (collector, "tcp://%s:%d", host, LOG_PORT_NUMBER);
+
+    //  Bind to an ephemeral port
+    int port = zsocket_bind (collector, "tcp://%s:*", host);
+
+    //  Announce this to all peers we connect to
+    zre_interface_t *interface = zre_interface_new ();
+    zre_interface_header_set (interface, "X-ZRELOG", "tcp://%s:%d", host, port);
+
     //  Get all log messages (don't filter)
     zsocket_set_subscribe (collector, "");
-
-    zre_interface_t *interface = zre_interface_new ();
-    zre_interface_header_set (interface, "LOG_COLLECTOR", "tcp://%s:%d", host, LOG_PORT_NUMBER);
 
     zmq_pollitem_t pollitems [] = {
         { collector, 0, ZMQ_POLLIN, 0 },
@@ -94,7 +98,7 @@ int main (int argc, char *argv [])
         if (pollitems [0].revents & ZMQ_POLLIN)
             s_print_log_msg (collector);
 
-        //  Handle event from interface
+        //  Handle event from interface (ignore it)
         if (pollitems [1].revents & ZMQ_POLLIN) {
             zmsg_t *msg = zre_interface_recv (interface);
             if (!msg)

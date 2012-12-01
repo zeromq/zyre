@@ -1,12 +1,12 @@
 /*  =========================================================================
-    zre_peer - one of our peers in a ZyRE network
+    zre_peer - one of our peers in a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
-    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
-    http://zyre.org.
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.
 
     This is free software; you can redistribute it and/or modify it under
     the terms of the GNU Lesser General Public License as published by
@@ -90,9 +90,7 @@ zre_peer_destroy (zre_peer_t **self_p)
     if (*self_p) {
         zre_peer_t *self = *self_p;
         zre_peer_disconnect (self);
-				if(self->headers) {
-					zhash_destroy(&self->headers);
-				}
+        zhash_destroy (&self->headers);
         free (self->identity);
         free (self);
         *self_p = NULL;
@@ -112,22 +110,24 @@ zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
 
     //  Create new outgoing socket (drop any messages in transit)
     self->mailbox = zsocket_new (self->ctx, ZMQ_DEALER);
-    
-    //  Set our caller 'From' identity so that receiving node knows
-    //  who each message came from.
-    zsocket_set_identity (self->mailbox, reply_to);
+    //  Null if shutting down
+    if (self->mailbox) {
+        //  Set our caller 'From' identity so that receiving node knows
+        //  who each message came from.
+        zsocket_set_identity (self->mailbox, reply_to);
 
-    //  Set a high-water mark that allows for reasonable activity
-    zsocket_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
-    
-    //  Send messages immediately or return EAGAIN
-    zsocket_set_sndtimeo (self->mailbox, 0);
-    
-    //  Connect through to peer node
-    zsocket_connect (self->mailbox, "tcp://%s", endpoint);
-    self->endpoint = strdup (endpoint);
-    self->connected = true;
-    self->ready = false;
+        //  Set a high-water mark that allows for reasonable activity
+        zsocket_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
+
+        //  Send messages immediately or return EAGAIN
+        zsocket_set_sndtimeo (self->mailbox, 0);
+
+        //  Connect through to peer node
+        zsocket_connect (self->mailbox, "tcp://%s", endpoint);
+        self->endpoint = strdup (endpoint);
+        self->connected = true;
+        self->ready = false;
+    }
 }
 
 
