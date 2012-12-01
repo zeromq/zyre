@@ -1138,7 +1138,7 @@ zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value)
 {
     assert (self);
     uint64_t value = default_value;
-    char *string;
+    char *string = NULL;
     if (self->headers)
         string = (char *) (zhash_lookup (self->headers, key));
     if (string)
