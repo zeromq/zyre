@@ -118,7 +118,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <czmq.h>],
 
 # libfmq integration
 AC_ARG_WITH([libfmq],
-            [AS_HELP_STRING([--with-fmq],
+            [AS_HELP_STRING([--with-libfmq],
                             [Specify libfmq prefix])],
             [search_libfmq="yes"],
             [])
