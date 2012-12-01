@@ -5,8 +5,8 @@
 .include "library.gsl"
 .resolve_includes ()
 .global.ClassName = java_class_name($(class.name)) 
-.echo "Generating ../src/main/java/org/zeromq/zyre/$(ClassName).java..."
-.output "../src/main/java/org/zeromq/zyre/$(ClassName).java"
+.echo "Generating ../Java/src/main/java/org/zeromq/zyre/$(ClassName).java..."
+.output "../Java/src/main/java/org/zeromq/zyre/$(ClassName).java"
 /*  =========================================================================
     $(ClassName).java
     
@@ -129,8 +129,7 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Destroy the $(class.name)
 
-    public void
-    destroy ()
+    public void destroy ()
     {
         //  Free class properties
         if (address != null)
@@ -238,8 +237,7 @@ public class $(ClassName)
     //  Receive and parse a $(ClassName) from the socket. Returns new object or
     //  null if error. Will block if there's no message waiting.
 
-    public static $(ClassName)
-    recv (Socket input)
+    public static $(ClassName) recv (Socket input)
     {
         assert (input != null);
         $(ClassName) self = new $(ClassName) (0);
@@ -368,8 +366,7 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Send the $(ClassName) to the socket, and destroy it
 
-    public boolean
-    send (Socket socket)
+    public boolean send (Socket socket)
     {
         assert (socket != null);
 
@@ -520,8 +517,7 @@ public class $(ClassName)
 //  --------------------------------------------------------------------------
 //  Send the $(message.NAME) to the socket in one step
 
-    public static
-    void send$(Name) (
+    public static void send$(Name) (
         Socket output\
 .for field
 ,
@@ -561,8 +557,7 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Duplicate the $(ClassName) message
 
-    public $(ClassName)
-    dup ($(ClassName) self)
+    public $(ClassName) dup ($(ClassName) self)
     {
         if (self == null)
             return null;
@@ -596,8 +591,7 @@ public class $(ClassName)
 
 .for class.field where type = "dictionary"
     //  Dump $(name) key=value pair to stdout
-    public static void
-    $(name)Dump (Map.Entry <String, String> entry, $(ClassName) self)
+    public static void $(name)Dump (Map.Entry <String, String> entry, $(ClassName) self)
     {
         System.out.printf ("        %s=%s\\n", entry.getKey (), entry.getValue ());
     }
@@ -607,8 +601,7 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Print contents of message to stdout
 
-    public void
-    dump ()
+    public void dump ()
     {
         switch (id) {
 .for class.message
@@ -619,7 +612,7 @@ public class $(ClassName)
 .           if defined (field.value)
             System.out.printf ("    $(name)=$(field.value)\\n");
 .           else
-            System.out.printf ("    $(name)=%ld\\n", (long)$(name));
+            System.out.printf ("    $(name)=%d\\n", (long)$(name));
 .           endif
 .       elsif type = "octets"
             System.out.printf ("    $(name)=");
@@ -659,7 +652,7 @@ public class $(ClassName)
             if ($(name) != null) {
                 int size = $(name).size ();
                 byte [] data = $(name).getData ();
-                System.out.printf ("        size=%td\\n", $(name).size ());
+                System.out.printf ("        size=%d\\n", $(name).size ());
                 if (size > 32)
                     size = 32;
                 int $(name)Index;
@@ -682,14 +675,12 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Get/set the message address
 
-    public ZFrame
-    address ()
+    public ZFrame address ()
     {
         return address;
     }
 
-    public void
-    setAddress (ZFrame address)
+    public void setAddress (ZFrame address)
     {
         if (this.address != null)
             this.address.destroy ();
@@ -700,14 +691,12 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Get/set the $(class.name) id
 
-    public int
-    id ()
+    public int id ()
     {
         return id;
     }
 
-    public void
-    setId (int id)
+    public void setId (int id)
     {
         this.id = id;
     }
@@ -717,14 +706,12 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Get/set the $(name) field
 
-    public $(ctype)
-    $(name) ()
+    public $(ctype) $(name) ()
     {
         return $(name);
     }
 
-    public void
-    set$(Name) ($(ctype) $(name))
+    public void set$(Name) ($(ctype) $(name))
     {
         this.$(name) = $(name);
     }
@@ -733,14 +720,12 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Get/set the $(name) field
 
-    public byte []
-    $(name) ()
+    public byte [] $(name) ()
     {
         return $(name);
     }
 
-    public void
-    set$(Name) (byte [] $(name))
+    public void set$(Name) (byte [] $(name))
     {
         System.arraycopy ($(name), 0, this.$(name), 0, $(size));
     }
@@ -749,14 +734,12 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Get/set the $(name) field
 
-    public String
-    $(name) ()
+    public String $(name) ()
     {
         return $(name);
     }
 
-    public void
-    set$(Name) (String format, Object ... args)
+    public void set$(Name) (String format, Object ... args)
     {
         //  Format into newly allocated string
         $(name) = String.format (format, args);
@@ -766,14 +749,12 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Iterate through the $(name) field, and append a $(name) value
 
-    public List <String>
-    $(name) ()
+    public List <String> $(name) ()
     {
         return $(name);
     }
 
-    public void
-    append$(Name) (String format, Object ... args)
+    public void append$(Name) (String format, Object ... args)
     {
         //  Format into newly allocated string
         
@@ -784,8 +765,7 @@ public class $(ClassName)
         $(name).add (string);
     }
 
-    public void
-    set$(Name) (Collection <String> value)
+    public void set$(Name) (Collection <String> value)
     {
         $(name) = new ArrayList (value); 
     }
@@ -794,14 +774,12 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Get/set a value in the $(name) dictionary
 
-    public Map <String, String>
-    $(name) ()
+    public Map <String, String> $(name) ()
     {
         return $(name);
     }
 
-    public String
-    $(name)String (String key, String defaultValue)
+    public String $(name)String (String key, String defaultValue)
     {
         String value = null;
         if ($(name) != null)
@@ -812,8 +790,7 @@ public class $(ClassName)
         return value;
     }
 
-    public long
-    $(name)Number (String key, long defaultValue)
+    public long $(name)Number (String key, long defaultValue)
     {
         long value = defaultValue;
         String string = null;
@@ -825,8 +802,7 @@ public class $(ClassName)
         return value;
     }
 
-    public void
-    insert$(Name) (String key, String format, Object ... args)
+    public void insert$(Name) (String key, String format, Object ... args)
     {
         //  Format string into buffer
         String string = String.format (format, args);
@@ -838,8 +814,7 @@ public class $(ClassName)
         $(name)Bytes += key.length () + 1 + string.length ();
     }
 
-    public void
-    set$(Name) (Map <String, String> value)
+    public void set$(Name) (Map <String, String> value)
     {
         $(name) = new HashMap <String, String> (value); 
     }
@@ -848,15 +823,13 @@ public class $(ClassName)
     //  --------------------------------------------------------------------------
     //  Get/set the $(name) field
 
-    public ZFrame 
-    $(name) ()
+    public ZFrame $(name) ()
     {
         return $(name);
     }
 
     //  Takes ownership of supplied frame
-    public void
-    set$(Name) (ZFrame frame)
+    public void set$(Name) (ZFrame frame)
     {
         if ($(name) != null)
             $(name).destroy ();
@@ -867,8 +840,8 @@ public class $(ClassName)
 .endfor
 }
 
-.echo "Generating ../src/test/java/org/zeromq/zyre/Test$(ClassName).java..."
-.output "../src/test/java/org/zeromq/zyre/Test$(ClassName).java"
+.echo "Generating ../Java/src/test/java/org/zeromq/zyre/Test$(ClassName).java..."
+.output "../Java/src/test/java/org/zeromq/zyre/Test$(ClassName).java"
 //  --------------------------------------------------------------------------
 //  Selftest
 
@@ -884,8 +857,7 @@ import org.zeromq.ZContext;
 public class Test$(ClassName)
 {
     @Test
-    public void
-    test$(ClassName) ()
+    public void test$(ClassName) ()
     {
         System.out.printf (" * $(class.name): ");
 

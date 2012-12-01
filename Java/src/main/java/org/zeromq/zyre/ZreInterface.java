@@ -59,8 +59,7 @@ public class ZreInterface
     //  ---------------------------------------------------------------------
     //  Constructor
     
-    public 
-    ZreInterface () 
+    public ZreInterface () 
     {
         ctx = new ZContext ();
         pipe = ZThread.fork (ctx, new ZreInterfaceAgent ());
@@ -68,8 +67,7 @@ public class ZreInterface
     
     //  ---------------------------------------------------------------------
     //  Destructor
-    public void
-    destroy ()
+    public void destroy ()
     {
         ctx.destroy ();
     }
@@ -77,16 +75,14 @@ public class ZreInterface
     //  ---------------------------------------------------------------------
     //  Receive next message from interface
     //  Returns ZMsg object, or NULL if interrupted
-    public ZMsg
-    recv ()
+    public ZMsg recv ()
     {
         return ZMsg.recvMsg (pipe);
     }
     
     //  ---------------------------------------------------------------------
     //  Join a group
-    public void
-    join (String group) 
+    public void join (String group) 
     {
         pipe.sendMore ("JOIN");
         pipe.send (group);
@@ -94,8 +90,7 @@ public class ZreInterface
     
     //  ---------------------------------------------------------------------
     //  Leave a group
-    public void
-    leave (String group) 
+    public void leave (String group) 
     {
         pipe.sendMore ("LEAVE");
         pipe.send (group);
@@ -104,8 +99,7 @@ public class ZreInterface
     //  ---------------------------------------------------------------------
     //  Send message to single peer; peer ID is first frame in message
     //  Destroys message after sending
-    public void
-    whisper (ZMsg msg) 
+    public void whisper (ZMsg msg) 
     {
         pipe.sendMore ("WHISPER");
         msg.send (pipe);
@@ -113,8 +107,7 @@ public class ZreInterface
 
     //  ---------------------------------------------------------------------
     //  Send message to a group of peers
-    public void
-    shout (ZMsg msg) 
+    public void shout (ZMsg msg) 
     {
         pipe.sendMore ("SHOUT");
         msg.send (pipe);
@@ -122,16 +115,14 @@ public class ZreInterface
     
     //  ---------------------------------------------------------------------
     //  Return interface handle, for polling
-    public Socket
-    handle ()
+    public Socket handle ()
     {
         return pipe;
     }
     
     //  ---------------------------------------------------------------------
     //  Set node header value
-    public void 
-    setHeader (String name, String format, Object ... args)
+    public void setHeader (String name, String format, Object ... args)
     {
         pipe.sendMore ("SET");
         pipe.sendMore (name);
@@ -148,7 +139,8 @@ public class ZreInterface
     //  UUID        16 bytes
     //  port        2 bytes in network order
 
-    protected static class Beacon {
+    protected static class Beacon 
+    {
         public static final int BEACON_SIZE = 22;
 
         public static final String BEACON_PROTOCOL = "ZRE";
@@ -175,8 +167,7 @@ public class ZreInterface
             this.port = port;
         }
         
-        public ByteBuffer
-        getBuffer ()
+        public ByteBuffer getBuffer ()
         {
             ByteBuffer buffer = ByteBuffer.allocate (BEACON_SIZE);
             buffer.put (protocol);
@@ -190,13 +181,13 @@ public class ZreInterface
 
     }
     
-    private static String
-    uuidStr (UUID uuid)
+    private static String uuidStr (UUID uuid)
     {
         return uuid.toString ().replace ("-","").toUpperCase ();
     }
     
-    protected static class Agent {
+    protected static class Agent 
+    {
         private final ZContext ctx;             //  CZMQ context
         private final Socket pipe;              //  Pipe back to application
         private final ZreUdp udp;               //  UDP object
@@ -213,9 +204,8 @@ public class ZreInterface
         private final Map <String, ZreGroup> own_groups;      //  Groups that we are in
         private final Map <String, String> headers;           //  Our header values
         
-        private 
-        Agent (ZContext ctx, Socket pipe, Socket inbox, 
-                ZreUdp udp, int port)
+        private Agent (ZContext ctx, Socket pipe, Socket inbox, 
+                                     ZreUdp udp, int port)
         {
             this.ctx = ctx;
             this.pipe = pipe;
@@ -235,8 +225,7 @@ public class ZreInterface
             log = new ZreLog (endpoint);
         }
         
-        protected static Agent
-        newAgent (ZContext ctx, Socket pipe) 
+        protected static Agent newAgent (ZContext ctx, Socket pipe) 
         {
             Socket inbox = ctx.createSocket (ZMQ.ROUTER);
             if (inbox == null)      //  Interrupted
@@ -253,15 +242,13 @@ public class ZreInterface
             return new Agent (ctx, pipe, inbox, udp, port);
         }
         
-        protected void
-        destory () 
+        protected void destory () 
         {
             udp.destroy ();
             log.destory ();
         }
         
-        private int 
-        incStatus ()
+        private int incStatus ()
         {
             if (++status > UBYTE_MAX)
                 status = 0;
@@ -269,8 +256,7 @@ public class ZreInterface
         }
         
         //  Delete peer for a given endpoint
-        private void
-        purgePeer ()
+        private void purgePeer ()
         {
             for (Map.Entry <String, ZrePeer> entry : peers.entrySet ()) {
                 ZrePeer peer = entry.getValue ();
@@ -280,8 +266,7 @@ public class ZreInterface
         }
         
         //  Find or create peer via its UUID string
-        private ZrePeer
-        requirePeer (String identity, String address, int port)
+        private ZrePeer requirePeer (String identity, String address, int port)
         {
             ZrePeer peer = peers.get (identity);
             if (peer == null) {
@@ -295,8 +280,8 @@ public class ZreInterface
 
                 //  Handshake discovery by sending HELLO as first message
                 ZreMsg msg = new ZreMsg (ZreMsg.HELLO);
-                msg.setFrom (this.host); 
-                msg.setPort (this.port);
+                msg.setIpaddress (this.udp.host ()); 
+                msg.setMailbox (this.port);
                 msg.setGroups (own_groups.keySet ());
                 msg.setStatus (status);
                 msg.setHeaders (new HashMap <String, String> (headers));
@@ -313,8 +298,7 @@ public class ZreInterface
         }
         
         //  Find or create group via its name
-        private ZreGroup
-        requirePeerGroup (String name)
+        private ZreGroup requirePeerGroup (String name)
         {
             ZreGroup group = peer_groups.get (name);
             if (group == null)
@@ -323,8 +307,7 @@ public class ZreInterface
 
         }
         
-        private ZreGroup
-        joinPeerGroup (ZrePeer peer, String name)
+        private ZreGroup joinPeerGroup (ZrePeer peer, String name)
         {
             ZreGroup group = requirePeerGroup (name);
             group.join (peer);
@@ -337,8 +320,7 @@ public class ZreInterface
             return group;
         }
         
-        private ZreGroup
-        leavePeerGroup (ZrePeer peer, String name)
+        private ZreGroup leavePeerGroup (ZrePeer peer, String name)
         {
             ZreGroup group = requirePeerGroup (name);
             group.leave (peer);
@@ -352,8 +334,7 @@ public class ZreInterface
         }
 
         //  Here we handle the different control messages from the front-end
-        protected boolean
-        recvFromApi ()
+        protected boolean recvFromApi ()
         {
             //  Get the whole message off the pipe in one go
             ZMsg request = ZMsg.recvMsg (pipe);
@@ -370,7 +351,7 @@ public class ZreInterface
                 //  if peer doesn't exist (may have been destroyed)
                 if (peer != null) {
                     ZreMsg msg = new ZreMsg (ZreMsg.WHISPER);
-                    msg.setCookies (request.pop ());
+                    msg.setContent (request.pop ());
                     peer.send (msg);
                 }
             }
@@ -382,7 +363,7 @@ public class ZreInterface
                 if (group != null) {
                     ZreMsg msg = new ZreMsg (ZreMsg.SHOUT);
                     msg.setGroup (name);
-                    msg.setCookies (request.pop ());
+                    msg.setContent (request.pop ());
                     group.send (msg);
                 }
             }
@@ -428,8 +409,7 @@ public class ZreInterface
         }
         
         //  Here we handle messages coming from other peers
-        protected boolean
-        recvFromPeer ()
+        protected boolean recvFromPeer ()
         {
             //  Router socket tells us the identity of this peer
             ZreMsg msg = ZreMsg.recv (inbox);
@@ -443,7 +423,7 @@ public class ZreInterface
             ZrePeer peer = peers.get (identity);
             if (msg.id () == ZreMsg.HELLO) {
                 peer = requirePeer (
-                    identity, msg.from (), msg.port ());
+                    identity, msg.ipaddress (), msg.mailbox ());
                 assert (peer != null);
                 peer.setReady (true);
             }
@@ -478,7 +458,7 @@ public class ZreInterface
             else
             if (msg.id () == ZreMsg.WHISPER) {
                 //  Pass up to caller API as WHISPER event
-                ZFrame cookie = msg.cookies ();
+                ZFrame cookie = msg.content ();
                 pipe.sendMore ("WHISPER");
                 pipe.sendMore (identity);
                 cookie.sendAndKeep (pipe); // let msg free the frame
@@ -486,7 +466,7 @@ public class ZreInterface
             else
             if (msg.id () == ZreMsg.SHOUT) {
                 //  Pass up to caller as SHOUT event
-                ZFrame cookie = msg.cookies ();
+                ZFrame cookie = msg.content ();
                 pipe.sendMore ("SHOUT");
                 pipe.sendMore (identity);
                 pipe.sendMore (msg.group ());
@@ -515,8 +495,7 @@ public class ZreInterface
         }
 
         //  Handle beacon
-        protected boolean
-        recvUdpBeacon ()
+        protected boolean recvUdpBeacon ()
         {
             ByteBuffer buffer = ByteBuffer.allocate (Beacon.BEACON_SIZE);
             
@@ -549,8 +528,7 @@ public class ZreInterface
         }
 
         //  Send moar beacon
-        public void 
-        sendBeacon ()
+        public void sendBeacon ()
         {
             Beacon beacon = new Beacon (uuid, port);
             try {
@@ -563,8 +541,7 @@ public class ZreInterface
         //  We do this once a second:
         //  - if peer has gone quiet, send TCP ping
         //  - if peer has disappeared, expire it
-        public void 
-        pingAllPeers ()
+        public void pingAllPeers ()
         {
             Iterator <Map.Entry <String, ZrePeer>> it = peers.entrySet ().iterator ();
             while (it.hasNext ()) {
@@ -596,22 +573,22 @@ public class ZreInterface
     }
     
     //  Send message to all peers
-    private static void
-    sendPeers (Map <String, ZrePeer> peers, ZreMsg msg)
+    private static void sendPeers (Map <String, ZrePeer> peers, ZreMsg msg)
     {
         for (ZrePeer peer : peers.values ())
             peer.send (msg);
     }
     
     //  Remove peer from group, if it's a member
-    private static void
-    deletePeerFromGroups (Map <String, ZreGroup> groups, ZrePeer peer)
+    private static void deletePeerFromGroups (Map <String, ZreGroup> groups, ZrePeer peer)
     {
         for (ZreGroup group : groups.values ())
             group.leave (peer);
     }
     
-    private static class ZreInterfaceAgent implements ZThread.IAttachedRunnable {
+    private static class ZreInterfaceAgent 
+                            implements ZThread.IAttachedRunnable 
+    {
 
         @Override
         public void run (Object[] args, ZContext ctx, Socket pipe)

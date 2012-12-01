@@ -1,8 +1,4 @@
-<class
-    name = "zre_msg"
-    script = "codec_c.gsl"
-    signature = "1"
->
+<class name = "zre_msg" signature = "1" >
 This is the ZRE protocol raw version.
 <include filename = "license.xml" />
 

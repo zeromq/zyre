@@ -1,12 +1,12 @@
 /*  =========================================================================
-    zre_interface - interface to a ZyRE network
+    zre_interface - interface to a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
-    This file is part of ZyRE, the ZeroMQ Realtime Experience framework:
-    http://zyre.org.
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.
 
     This is free software; you can redistribute it and/or modify it under
     the terms of the GNU Lesser General Public License as published by
@@ -72,6 +72,10 @@ void *
 //  Set node header value
 void
     zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...);
+
+//  Publish file into virtual space
+void
+    zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual);
 
 #ifdef __cplusplus
 }

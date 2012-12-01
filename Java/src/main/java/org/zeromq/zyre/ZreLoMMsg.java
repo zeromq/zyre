@@ -1,12 +1,13 @@
 /*  =========================================================================
-    ZreLogMsg.java
+    ZreLoMMsg.java
     
-    Generated codec class for ZreLogMsg
+    Generated codec class for ZreLoMMsg
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
     Copyright other contributors as noted in the AUTHORS file.              
                                                                             
-    This file is part of FILEMQ, see http://filemq.org.                     
+    This file is part of Zyre, an open-source framework for proximity-based 
+    peer-to-peer applications -- See http://zyre.org.                       
                                                                             
     This is free software; you can redistribute it and/or modify it under   
     the terms of the GNU Lesser General Public License as published by the  
@@ -47,7 +48,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Socket;
 
 //  Opaque class structure
-public class ZreLogMsg 
+public class ZreLoMMsg 
 {
     public static final int ZRE_LOG_MSG_VERSION             = 1;
     public static final int ZRE_LOG_MSG_LEVEL_ERROR         = 1;
@@ -62,7 +63,7 @@ public class ZreLogMsg
 
     //  Structure of our class
     private ZFrame address;             //  Address of peer if any
-    private int id;                     //  ZreLogMsg message ID
+    private int id;                     //  ZreLoMMsg message ID
     private ByteBuffer needle;          //  Read/write pointer for serialization
     private int level;
     private int event;
@@ -73,9 +74,9 @@ public class ZreLogMsg
 
 
     //  --------------------------------------------------------------------------
-    //  Create a new ZreLogMsg
+    //  Create a new ZreLoMMsg
 
-    public ZreLogMsg (int id)
+    public ZreLoMMsg (int id)
     {
         this.id = id;
     }
@@ -84,7 +85,8 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Destroy the zre_log_msg
 
-    public void destroy ()
+    public void
+    destroy ()
     {
         //  Free class properties
         if (address != null)
@@ -189,13 +191,14 @@ public class ZreLogMsg
     }
 
     //  --------------------------------------------------------------------------
-    //  Receive and parse a ZreLogMsg from the socket. Returns new object or
+    //  Receive and parse a ZreLoMMsg from the socket. Returns new object or
     //  null if error. Will block if there's no message waiting.
 
-    public static ZreLogMsg recv (Socket input)
+    public static ZreLoMMsg
+    recv (Socket input)
     {
         assert (input != null);
-        ZreLogMsg self = new ZreLogMsg (0);
+        ZreLoMMsg self = new ZreLoMMsg (0);
         ZFrame frame = null;
 
         try {
@@ -264,9 +267,10 @@ public class ZreLogMsg
 
 
     //  --------------------------------------------------------------------------
-    //  Send the ZreLogMsg to the socket, and destroy it
+    //  Send the ZreLoMMsg to the socket, and destroy it
 
-    public boolean send (Socket socket)
+    public boolean
+    send (Socket socket)
     {
         assert (socket != null);
 
@@ -333,7 +337,7 @@ public class ZreLogMsg
         //  Now send any frame fields, in order
         switch (id) {
         }
-        //  Destroy ZreLogMsg object
+        //  Destroy ZreLoMMsg object
         destroy ();
         return true;
     }
@@ -342,7 +346,8 @@ public class ZreLogMsg
 //  --------------------------------------------------------------------------
 //  Send the LOG to the socket in one step
 
-    public static void sendLog (
+    public static
+    void sendLog (
         Socket output,
         int level,
         int event,
@@ -351,7 +356,7 @@ public class ZreLogMsg
         long time,
         String data) 
     {
-        ZreLogMsg self = new ZreLogMsg (ZreLogMsg.LOG);
+        ZreLoMMsg self = new ZreLoMMsg (ZreLoMMsg.LOG);
         self.setLevel (level);
         self.setEvent (event);
         self.setNode (node);
@@ -363,14 +368,15 @@ public class ZreLogMsg
 
 
     //  --------------------------------------------------------------------------
-    //  Duplicate the ZreLogMsg message
+    //  Duplicate the ZreLoMMsg message
 
-    public ZreLogMsg dup (ZreLogMsg self)
+    public ZreLoMMsg
+    dup (ZreLoMMsg self)
     {
         if (self == null)
             return null;
 
-        ZreLogMsg copy = new ZreLogMsg (self.id);
+        ZreLoMMsg copy = new ZreLoMMsg (self.id);
         if (self.address != null)
             copy.address = self.address.duplicate ();
         switch (self.id) {
@@ -390,16 +396,17 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Print contents of message to stdout
 
-    public void dump ()
+    public void
+    dump ()
     {
         switch (id) {
         case LOG:
             System.out.println ("LOG:");
-            System.out.printf ("    level=%d\n", (long)level);
-            System.out.printf ("    event=%d\n", (long)event);
-            System.out.printf ("    node=%d\n", (long)node);
-            System.out.printf ("    peer=%d\n", (long)peer);
-            System.out.printf ("    time=%d\n", (long)time);
+            System.out.printf ("    level=%ld\n", (long)level);
+            System.out.printf ("    event=%ld\n", (long)event);
+            System.out.printf ("    node=%ld\n", (long)node);
+            System.out.printf ("    peer=%ld\n", (long)peer);
+            System.out.printf ("    time=%ld\n", (long)time);
             if (data != null)
                 System.out.printf ("    data='%s'\n", data);
             else
@@ -413,12 +420,14 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Get/set the message address
 
-    public ZFrame address ()
+    public ZFrame
+    address ()
     {
         return address;
     }
 
-    public void setAddress (ZFrame address)
+    public void
+    setAddress (ZFrame address)
     {
         if (this.address != null)
             this.address.destroy ();
@@ -429,12 +438,14 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Get/set the zre_log_msg id
 
-    public int id ()
+    public int
+    id ()
     {
         return id;
     }
 
-    public void setId (int id)
+    public void
+    setId (int id)
     {
         this.id = id;
     }
@@ -442,12 +453,14 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Get/set the level field
 
-    public int level ()
+    public int
+    level ()
     {
         return level;
     }
 
-    public void setLevel (int level)
+    public void
+    setLevel (int level)
     {
         this.level = level;
     }
@@ -456,12 +469,14 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Get/set the event field
 
-    public int event ()
+    public int
+    event ()
     {
         return event;
     }
 
-    public void setEvent (int event)
+    public void
+    setEvent (int event)
     {
         this.event = event;
     }
@@ -470,12 +485,14 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Get/set the node field
 
-    public int node ()
+    public int
+    node ()
     {
         return node;
     }
 
-    public void setNode (int node)
+    public void
+    setNode (int node)
     {
         this.node = node;
     }
@@ -484,12 +501,14 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Get/set the peer field
 
-    public int peer ()
+    public int
+    peer ()
     {
         return peer;
     }
 
-    public void setPeer (int peer)
+    public void
+    setPeer (int peer)
     {
         this.peer = peer;
     }
@@ -498,12 +517,14 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Get/set the time field
 
-    public long time ()
+    public long
+    time ()
     {
         return time;
     }
 
-    public void setTime (long time)
+    public void
+    setTime (long time)
     {
         this.time = time;
     }
@@ -512,12 +533,14 @@ public class ZreLogMsg
     //  --------------------------------------------------------------------------
     //  Get/set the data field
 
-    public String data ()
+    public String
+    data ()
     {
         return data;
     }
 
-    public void setData (String format, Object ... args)
+    public void
+    setData (String format, Object ... args)
     {
         //  Format into newly allocated string
         data = String.format (format, args);
