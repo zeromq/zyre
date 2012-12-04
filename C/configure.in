@@ -177,6 +177,12 @@ case "${host_os}" in
         # Define on Linux to enable all library features
         CPPFLAGS="-D_GNU_SOURCE -DLINUX $CPPFLAGS"
         AC_DEFINE(LIBZRE_HAVE_LINUX, 1, [Have Linux OS])
+        case "${host_os}" in
+            *android*)
+                AC_DEFINE(LIBZRE_HAVE_ANDROID, 1, [Have Android OS])
+                libzmq_on_android="yes"
+            ;;
+        esac
         ;;
     *solaris*)
         # Define on Solaris to enable all library features
