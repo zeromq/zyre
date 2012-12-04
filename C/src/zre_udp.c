@@ -106,15 +106,21 @@ s_wireless_nic (const char* name)
 #   if defined (SIOCGIFMEDIA)
     struct ifmediareq ifmr;
     memset (&ifmr, 0, sizeof (struct ifmediareq));
-    strlcpy(ifmr.ifm_name, name, sizeof(ifmr.ifm_name));
-    if (ioctl (sock, SIOCGIFMEDIA, (caddr_t) &ifmr) != -1)
-        result = (IFM_TYPE (ifmr.ifm_current) == IFM_IEEE80211);
-    
+    strncpy(ifmr.ifm_name, name, sizeof(ifmr.ifm_name));
+    int res = ioctl (sock, SIOCGIFMEDIA, (caddr_t) &ifmr);
+		if(res != -1) {
+      result = (IFM_TYPE (ifmr.ifm_current) == IFM_IEEE80211);
+		} 
 #   elif defined (SIOCGIWNAME)
     struct iwreq wrq;
-    strncpy (wrq.ifr_name, name, IFNAMSIZ);
-    if (ioctl (sock, SIOCGIWNAME, (caddr_t) &wrq) != -1)
-        result = TRUE;
+		memset(&wrq, 0, sizeof (struct iwreq));
+    strncpy (wrq.ifr_name, name, sizeof(wrq.ifr_name));
+    int res = ioctl (sock, SIOCGIWNAME, (caddr_t) &wrq);
+    if (res != -1) {
+      result = TRUE;
+		} else {
+			zclock_log ("E: (UDP) SIOCGIWNAME on %s returns %d, error = '%s'", &wrq.ifr_name, res, strerror (errno));
+		}
 #   endif
     close(sock);
     return result;
@@ -183,9 +189,12 @@ zre_udp_new (int port_nbr)
 #   else 
     struct ifreq ifr;
 		memset(&ifr, 0, sizeof(ifr));
-		/*  CAUTION this is not yet very portable */
+		/*  TODO: Using hardcoded wlan0 is ugly */ 
+
+#   if !defined ( LIBZRE_HAVE_ANDROID )
 		if (!s_wireless_nic ("wlan0"))
 			s_handle_io_error ("wlan0_not_exist");
+#   endif
 
 		int sock = 0;
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
