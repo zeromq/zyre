@@ -439,13 +439,14 @@ agent_recv_from_api (agent_t *self)
         //  Virtual filename must start with slash
         assert (virtual [0] == '/');
         //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (virtual) + 3);
-        sprintf (symlink, "%s.ln", virtual + 1);
+        char *symlink = malloc (strlen (filename) + 4);
+        sprintf (symlink, "%s.ln", filename);
         fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
         int rc = fmq_file_output (file);
         assert (rc == 0);
-        fprintf (fmq_file_handle (file), "%s\n", filename);
+        fprintf (fmq_file_handle (file), "%s\n", virtual);
         fmq_file_destroy (&file);
+				free (symlink);
         free (filename);
         free (virtual);
     }
