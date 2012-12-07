@@ -446,6 +446,7 @@ agent_recv_from_api (agent_t *self)
         assert (rc == 0);
         fprintf (fmq_file_handle (file), "%s\n", filename);
         fmq_file_destroy (&file);
+        free (symlink);
         free (filename);
         free (virtual);
     }
