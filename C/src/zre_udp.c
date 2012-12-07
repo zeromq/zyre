@@ -108,19 +108,17 @@ s_wireless_nic (const char* name)
     memset (&ifmr, 0, sizeof (struct ifmediareq));
     strncpy(ifmr.ifm_name, name, sizeof(ifmr.ifm_name));
     int res = ioctl (sock, SIOCGIFMEDIA, (caddr_t) &ifmr);
-		if(res != -1) {
-      result = (IFM_TYPE (ifmr.ifm_current) == IFM_IEEE80211);
-		} 
+    if (res != -1)
+        result = (IFM_TYPE (ifmr.ifm_current) == IFM_IEEE80211);
+    
 #   elif defined (SIOCGIWNAME)
     struct iwreq wrq;
-		memset(&wrq, 0, sizeof (struct iwreq));
+    memset (&wrq, 0, sizeof (struct iwreq));
     strncpy (wrq.ifr_name, name, sizeof(wrq.ifr_name));
     int res = ioctl (sock, SIOCGIWNAME, (caddr_t) &wrq);
-    if (res != -1) {
-      result = TRUE;
-		} else {
-			zclock_log ("E: (UDP) SIOCGIWNAME on %s returns %d, error = '%s'", &wrq.ifr_name, res, strerror (errno));
-		}
+    if (res != -1)
+        result = TRUE;
+    
 #   endif
     close(sock);
     return result;
@@ -188,35 +186,36 @@ zre_udp_new (int port_nbr)
     freeifaddrs (interfaces);
 #   else 
     struct ifreq ifr;
-		memset(&ifr, 0, sizeof(ifr));
-		/*  TODO: Using hardcoded wlan0 is ugly */ 
+    memset(&ifr, 0, sizeof(ifr));
+    /*  TODO: Using hardcoded wlan0 is ugly */ 
 
 #   if !defined ( LIBZRE_HAVE_ANDROID )
-		if (!s_wireless_nic ("wlan0"))
-			s_handle_io_error ("wlan0_not_exist");
+    if (!s_wireless_nic ("wlan0"))
+        s_handle_io_error ("wlan0_not_exist");
 #   endif
 
-		int sock = 0;
+    int sock = 0;
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-			s_handle_io_error ("foo_socket_not_opened");
+        s_handle_io_error ("foo_socket_not_opened");
     
-		ifr.ifr_addr.sa_family = AF_INET;
+    ifr.ifr_addr.sa_family = AF_INET;
     strncpy (ifr.ifr_name, "wlan0", sizeof (ifr.ifr_name));
     int rc = ioctl (sock, SIOCGIFADDR, (caddr_t) &ifr, sizeof (struct ifreq));
-		if(rc == -1) {
-			s_handle_io_error ("siocgifaddr");
-		}
-		memcpy (&self->address, ((struct sockaddr_in*) &ifr.ifr_addr),sizeof (struct sockaddr_in));
+    if (rc == -1)
+        s_handle_io_error ("siocgifaddr");
+    
+    memcpy (&self->address, ((struct sockaddr_in*) &ifr.ifr_addr), sizeof (struct sockaddr_in));
     rc = ioctl (sock, SIOCGIFBRDADDR, (caddr_t) &ifr, sizeof (struct ifreq));
-		if(rc == -1) {
-			s_handle_io_error ("siocgifbrdaddr");
-		}
-		memcpy (&self->broadcast, ((struct sockaddr_in*) &ifr.ifr_broadaddr),sizeof (struct sockaddr_in));
-		self->broadcast.sin_port = htons (self->port_nbr);
-    close(sock);
+    if (rc == -1)
+        s_handle_io_error ("siocgifbrdaddr");
+    
+    memcpy (&self->broadcast, ((struct sockaddr_in*) &ifr.ifr_broadaddr), sizeof (struct sockaddr_in));
+    self->broadcast.sin_port = htons (self->port_nbr);
+    close (sock);
 #   endif
     if (self->host)
         free (self->host);
+    
     self->host = zmalloc (INET_ADDRSTRLEN);
     inet_ntop (AF_INET, &self->address.sin_addr, self->host, sizeof (sockaddr));
 
