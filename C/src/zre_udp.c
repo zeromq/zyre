@@ -118,8 +118,6 @@ s_wireless_nic (const char* name)
     int res = ioctl (sock, SIOCGIWNAME, (caddr_t) &wrq);
     if (res != -1) {
       result = TRUE;
-		} else {
-			zclock_log ("E: (UDP) SIOCGIWNAME on %s returns %d, error = '%s'", &wrq.ifr_name, res, strerror (errno));
 		}
 #   endif
     close(sock);
