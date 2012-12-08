@@ -501,6 +501,7 @@ $(class.name)_recv (void *input)
                 char *string;
                 GET_STRING (string);
                 zlist_append (self->$(name), string);
+                free (string);
             }
 .       elsif type = "dictionary"
             GET_NUMBER1 (hash_size);
@@ -512,7 +513,7 @@ $(class.name)_recv (void *input)
                 char *value = strchr (string, '=');
                 if (value)
                     *value++ = 0;
-                zhash_insert (self->$(name), string, strdup (value));
+                zhash_insert (self->$(name), string, value);
                 free (string);
             }
 .       elsif type = "frame"
@@ -1072,6 +1073,7 @@ $(class.name)_$(name)_append ($(class.name)_t *self, char *format, ...)
         zlist_autofree (self->$(name));
     }
     zlist_append (self->$(name), string);
+    free (string);
 }
 
 size_t
@@ -1123,7 +1125,7 @@ $(class.name)_$(name)_number ($(class.name)_t *self, char *key, uint64_t default
 {
     assert (self);
     uint64_t value = default_value;
-    char *string = NULL;
+    char *string;
     if (self->$(name))
         string = (char *) (zhash_lookup (self->$(name), key));
     if (string)
@@ -1150,6 +1152,7 @@ $(class.name)_$(name)_insert ($(class.name)_t *self, char *key, char *format, ..
         zhash_autofree (self->$(name));
     }
     zhash_update (self->$(name), key, string);
+    free (string);
 }
 
 size_t

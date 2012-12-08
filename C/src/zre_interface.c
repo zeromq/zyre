@@ -292,12 +292,12 @@ agent_new (zctx_t *ctx, void *pipe)
     sprintf (self->fmq_inbox, "%s/%s", INBOX, self->identity);
     mkdir (INBOX, 0775);
     mkdir (self->fmq_inbox, 0775);
-    
+
     self->fmq_server = fmq_server_new ();
     self->fmq_service = fmq_server_bind (self->fmq_server, "tcp://*:*");
     fmq_server_publish (self->fmq_server, self->fmq_outbox, "/");
     fmq_server_set_anonymous (self->fmq_server, true);
-    char *publisher = malloc (32);
+    char publisher [32];
     sprintf (publisher, "tcp://%s:%d", self->host, self->fmq_service);
     zhash_update (self->headers, "X-FILEMQ", publisher);
 
@@ -429,8 +429,8 @@ agent_recv_from_api (agent_t *self)
         char *name = zmsg_popstr (request);
         char *value = zmsg_popstr (request);
         zhash_update (self->headers, name, value);
-        //  Value is now owned by hash table
         free (name);
+        free (value);
     }
     else
     if (streq (command, "PUBLISH")) {
@@ -694,7 +694,9 @@ agent_recv_udp_beacon (agent_t *self)
 static int
 agent_recv_fmq_event (agent_t *self)
 {
-    zmsg_t *msg = fmq_client_recv (fmq_client_handle (self->fmq_client));
+    zmsg_t *msg = fmq_client_recv (self->fmq_client);
+    if (!msg)
+        return 0;
     zmsg_send (&msg, self->pipe);
     return 0;
 }
