@@ -6,7 +6,8 @@
     Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
     Copyright other contributors as noted in the AUTHORS file.              
                                                                             
-    This file is part of FILEMQ, see http://filemq.org.                     
+    This file is part of Zyre, an open-source framework for proximity-based 
+    peer-to-peer applications -- See http://zyre.org.                       
                                                                             
     This is free software; you can redistribute it and/or modify it under   
     the terms of the GNU Lesser General Public License as published by the  

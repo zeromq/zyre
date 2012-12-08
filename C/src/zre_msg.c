@@ -263,6 +263,7 @@ zre_msg_recv (void *input)
                 char *string;
                 GET_STRING (string);
                 zlist_append (self->groups, string);
+                free (string);
             }
             GET_NUMBER1 (self->status);
             GET_NUMBER1 (hash_size);
@@ -274,7 +275,7 @@ zre_msg_recv (void *input)
                 char *value = strchr (string, '=');
                 if (value)
                     *value++ = 0;
-                zhash_insert (self->headers, string, strdup (value));
+                zhash_insert (self->headers, string, value);
                 free (string);
             }
             break;
@@ -760,7 +761,7 @@ zre_msg_dup (zre_msg_t *self)
 
 
 //  Dump headers key=value pair to stdout
-static int
+int
 s_headers_dump (const char *key, void *item, void *argument)
 {
     zre_msg_t *self = (zre_msg_t *) argument;
@@ -1070,6 +1071,7 @@ zre_msg_groups_append (zre_msg_t *self, char *format, ...)
         zlist_autofree (self->groups);
     }
     zlist_append (self->groups, string);
+    free (string);
 }
 
 size_t
@@ -1139,7 +1141,7 @@ zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value)
 {
     assert (self);
     uint64_t value = default_value;
-    char *string = NULL;
+    char *string;
     if (self->headers)
         string = (char *) (zhash_lookup (self->headers, key));
     if (string)
@@ -1166,6 +1168,7 @@ zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...)
         zhash_autofree (self->headers);
     }
     zhash_update (self->headers, key, string);
+    free (string);
 }
 
 size_t
