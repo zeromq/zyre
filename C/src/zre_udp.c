@@ -93,7 +93,7 @@ s_handle_io_error (char *reason)
     }
 }
 
-//  check if given NIC name is wireless
+//  Check if given NIC name is wireless
 static bool
 s_wireless_nic (const char* name)
 {
@@ -166,7 +166,7 @@ zre_udp_new (int port_nbr)
 
 #   if defined (__UNIX__)
 
-#   if defined(HAVE_GETIFADDRS) && defined(HAVE_FREEIFADDRS)
+#   if defined (HAVE_GETIFADDRS) && defined (HAVE_FREEIFADDRS)
     struct ifaddrs *interfaces;
     if (getifaddrs (&interfaces) == 0) {
         struct ifaddrs *interface = interfaces;
@@ -176,7 +176,6 @@ zre_udp_new (int port_nbr)
                 self->address = *(struct sockaddr_in *) interface->ifa_addr;
                 self->broadcast = *(struct sockaddr_in *) interface->ifa_broadaddr;
                 self->broadcast.sin_port = htons (self->port_nbr);
-
                 if (s_wireless_nic (interface->ifa_name))
                     break;
             }
@@ -186,7 +185,7 @@ zre_udp_new (int port_nbr)
     freeifaddrs (interfaces);
 #   else 
     struct ifreq ifr;
-    memset(&ifr, 0, sizeof(ifr));
+    memset (&ifr, 0, sizeof (ifr));
     /*  TODO: Using hardcoded wlan0 is ugly */ 
 
 #   if !defined ( LIBZRE_HAVE_ANDROID )
@@ -218,7 +217,7 @@ zre_udp_new (int port_nbr)
     
     self->host = zmalloc (INET_ADDRSTRLEN);
     inet_ntop (AF_INET, &self->address.sin_addr, self->host, sizeof (sockaddr));
-
+    
 #   else
 #       error "Interface detection TBD on this operating system"
 #   endif
