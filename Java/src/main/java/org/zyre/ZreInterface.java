@@ -24,7 +24,7 @@
     =========================================================================
 */
 
-package org.zeromq.zyre;
+package org.zyre;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

@@ -23,7 +23,7 @@
     <http://www.gnu.org/licenses/>. 
     =========================================================================
 */ 
-package org.zeromq.zyre;
+package org.zyre;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,8 +34,7 @@ public class ZreGroup
     private final String name;
     private final Map <String, ZrePeer> peers;
     
-    private 
-    ZreGroup (String name)
+    private ZreGroup (String name)
     {
         this.name = name;
         peers = new HashMap <String, ZrePeer> ();
@@ -43,15 +42,13 @@ public class ZreGroup
     
     //  ---------------------------------------------------------------------
     //  Destroy group object
-    public void
-    destory ()
+    public void destory ()
     {
     }
     
     //  ---------------------------------------------------------------------
     //  Construct new group object
-    public static ZreGroup 
-    newGroup (String name, Map<String, ZreGroup> container)
+    public static ZreGroup newGroup (String name, Map<String, ZreGroup> container)
     {
         ZreGroup group = new ZreGroup (name);
         container.put (name, group);
@@ -86,6 +83,5 @@ public class ZreGroup
         
         msg.destroy ();
     }
-
 
 }

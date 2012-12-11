@@ -1,4 +1,4 @@
-package org.zeromq.zyre;
+package org.zyre;
 
 import java.util.Random;
 

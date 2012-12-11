@@ -24,7 +24,7 @@
     =========================================================================
 */
 
-package org.zeromq.zyre;
+package org.zyre;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -49,8 +49,7 @@ public class ZreUdp
 
     //  -----------------------------------------------------------------
     //  Constructor
-    public 
-    ZreUdp (int port_nbr) 
+    public ZreUdp (int port_nbr) 
     {
         this.port_nbr = port_nbr;
         
@@ -86,8 +85,7 @@ public class ZreUdp
     
     //  -----------------------------------------------------------------
     //  Destructor
-    public void 
-    destroy () 
+    public void destroy () 
     {
         try {
             handle.close ();
@@ -97,32 +95,28 @@ public class ZreUdp
     
     //  -----------------------------------------------------------------
     //  Returns UDP socket handle
-    public DatagramChannel
-    handle ()
+    public DatagramChannel handle ()
     {
         return handle;
     }
     
     //  -----------------------------------------------------------------
     //  Return our own IP address as printable string
-    public String 
-    host ()
+    public String host ()
     {
         return host;
     }
     
     //  -----------------------------------------------------------------
     //  Return IP address of peer that sent last message
-    public String
-    from ()
+    public String from ()
     {
         return from;
     }
     
     //  -----------------------------------------------------------------
     //  Send message using UDP broadcast
-    public void
-    send (ByteBuffer buffer) throws IOException
+    public void send (ByteBuffer buffer) throws IOException
     {
         broadcast = InetAddress.getByName ("255.255.255.255");
         handle.send (
@@ -132,8 +126,7 @@ public class ZreUdp
     //  -----------------------------------------------------------------
     //  Receive message from UDP broadcast
     //  Returns size of received message, or -1
-    public int
-    recv (ByteBuffer buffer) throws IOException
+    public int recv (ByteBuffer buffer) throws IOException
     {
         int read = buffer.remaining ();
         sender = handle.receive (buffer);

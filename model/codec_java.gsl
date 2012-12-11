@@ -5,8 +5,8 @@
 .include "library.gsl"
 .resolve_includes ()
 .global.ClassName = java_class_name($(class.name)) 
-.echo "Generating ../Java/src/main/java/org/zeromq/zyre/$(ClassName).java..."
-.output "../Java/src/main/java/org/zeromq/zyre/$(ClassName).java"
+.echo "Generating ../Java/src/main/java/org/zyre/$(ClassName).java..."
+.output "../Java/src/main/java/org/zyre/$(ClassName).java"
 /*  =========================================================================
     $(ClassName).java
     
@@ -66,7 +66,7 @@
 .endfor
 */
 
-package org.zeromq.zyre;
+package org.zyre;
 
 import java.util.Collection;
 import java.util.List;
@@ -840,12 +840,12 @@ public class $(ClassName)
 .endfor
 }
 
-.echo "Generating ../Java/src/test/java/org/zeromq/zyre/Test$(ClassName).java..."
-.output "../Java/src/test/java/org/zeromq/zyre/Test$(ClassName).java"
+.echo "Generating ../Java/src/test/java/org/zyre/Test$(ClassName).java..."
+.output "../Java/src/test/java/org/zyre/Test$(ClassName).java"
 //  --------------------------------------------------------------------------
 //  Selftest
 
-package org.zeromq.zyre;
+package org.zyre;
 
 import static org.junit.Assert.*;
 import org.junit.Test;

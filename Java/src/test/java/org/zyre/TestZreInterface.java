@@ -24,7 +24,7 @@
     =========================================================================
 */
 
-package org.zeromq.zyre;
+package org.zyre;
 
 import static org.junit.Assert.*;
 
@@ -37,8 +37,7 @@ public class TestZreInterface
     private static class ZrePing extends Thread
     {
         @Override
-        public void
-        run ()
+        public void run ()
         {
             ZreInterface inf = new ZreInterface ();
             
