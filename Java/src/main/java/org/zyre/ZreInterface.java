@@ -24,8 +24,9 @@
     =========================================================================
 */
 
-package org.zeromq.zyre;
+package org.zyre;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -33,6 +34,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+import org.filemq.FmqClient;
+import org.filemq.FmqDir;
+import org.filemq.FmqFile;
+import org.filemq.FmqServer;
 import org.zeromq.ZContext;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
@@ -129,6 +134,15 @@ public class ZreInterface
         pipe.send (String.format (format, args));
     }
     
+    //  ---------------------------------------------------------------------
+    //  Publish file into virtual space
+    public void publish (String pathname, String virtual)
+    {
+        pipe.sendMore ("PUBLISH");
+        pipe.sendMore (pathname);
+        pipe.send (virtual);
+    }
+    
     //  =====================================================================
     //  Asynchronous part, works in the background
     
@@ -186,6 +200,9 @@ public class ZreInterface
         return uuid.toString ().replace ("-","").toUpperCase ();
     }
     
+    private static final String OUTBOX = ".outbox";
+    private static final String INBOX = ".inbox";
+    
     protected static class Agent 
     {
         private final ZContext ctx;             //  CZMQ context
@@ -203,6 +220,13 @@ public class ZreInterface
         private final Map <String, ZreGroup> peer_groups;     //  Groups that our peers are in
         private final Map <String, ZreGroup> own_groups;      //  Groups that we are in
         private final Map <String, String> headers;           //  Our header values
+        
+        private final FmqServer fmq_server;           //  FileMQ server object
+        private final int fmq_service;                //  FileMQ server port
+        private final String fmq_outbox;              //  FileMQ server outbox
+
+        private final FmqClient fmq_client;           //  FileMQ client object
+        private final String fmq_inbox;               //  FileMQ client inbox
         
         private Agent (ZContext ctx, Socket pipe, Socket inbox, 
                                      ZreUdp udp, int port)
@@ -223,6 +247,29 @@ public class ZreInterface
             headers = new HashMap <String, String> ();
             
             log = new ZreLog (endpoint);
+            
+            //  Set up content distribution network: Each server binds to an
+            //  ephemeral port and publishes a temporary directory that acts
+            //  as the outbox for this node.
+            //
+            fmq_outbox = String.format ("%s/%s", OUTBOX, identity);
+            new File (fmq_outbox).mkdir ();
+            
+            fmq_inbox = String.format ("%s/%s", INBOX, identity);
+            new File (fmq_inbox).mkdir ();
+            
+            fmq_server = new FmqServer ();
+            fmq_service = fmq_server.bind ("tcp://*:*");
+            fmq_server.publish (fmq_outbox, "/");
+            fmq_server.setAnonymous (1);
+            String publisher = String.format ("tcp://%s:%d", host, fmq_service);
+            headers.put ("X-FILEMQ", publisher);
+            
+            //  Client will connect as it discovers new nodes
+            fmq_client = new FmqClient ();
+            fmq_client.setInbox (fmq_inbox);
+            fmq_client.setResync (1);
+            fmq_client.subscribe ("/");
         }
         
         protected static Agent newAgent (ZContext ctx, Socket pipe) 
@@ -244,8 +291,30 @@ public class ZreInterface
         
         protected void destory () 
         {
+            FmqDir inbox = FmqDir.newFmqDir (fmq_inbox, null);
+            if (inbox != null) {
+                inbox.remove (true);
+                inbox.destroy ();
+            }
+            
+            FmqDir outbox = FmqDir.newFmqDir (fmq_outbox, null);
+            if (outbox != null) {
+                outbox.remove (true);
+                outbox.destroy ();
+            }
+            
+            for (ZrePeer peer : peers.values ())
+                peer.destory ();
+            for (ZreGroup group : peer_groups.values ())
+                group.destory ();
+            for (ZreGroup group : own_groups.values ())
+                group.destory ();
+            
+            fmq_server.destroy ();
+            fmq_client.destroy ();
             udp.destroy ();
             log.destory ();
+            
         }
         
         private int incStatus ()
@@ -354,9 +423,7 @@ public class ZreInterface
                     msg.setContent (request.pop ());
                     peer.send (msg);
                 }
-            }
-            else
-            if (command.equals ("SHOUT")) {
+            } else if (command.equals ("SHOUT")) {
                 //  Get group to send message to
                 String name = request.popString ();
                 ZreGroup group = peer_groups.get (name);
@@ -366,9 +433,7 @@ public class ZreInterface
                     msg.setContent (request.pop ());
                     group.send (msg);
                 }
-            }
-            else
-            if (command.equals ("JOIN")) {
+            } else if (command.equals ("JOIN")) {
                 String name = request.popString ();
                 ZreGroup group = own_groups.get (name);
                 if (group == null) {
@@ -382,9 +447,7 @@ public class ZreInterface
                     msg.destroy ();
                     log.info (ZreLogMsg.ZRE_LOG_MSG_EVENT_JOIN, null, name);
                 }
-            }
-            else
-            if (command.equals ("LEAVE")) {
+            } else if (command.equals ("LEAVE")) {
                 String name = request.popString ();
                 ZreGroup group = own_groups.get (name);
                 if (group != null) {
@@ -397,13 +460,24 @@ public class ZreInterface
                     own_groups.remove (name);
                     log.info (ZreLogMsg.ZRE_LOG_MSG_EVENT_LEAVE, null, name);
                 }
-            }
-            else
-            if (command.equals ("SET")) {
+            } else if (command.equals ("SET")) {
                 String name = request.popString ();
                 String value = request.popString ();
                 headers.put (name, value);
+            } else if (command.equals ("PUBLISH")) {
+                String filename = request.popString ();
+                String virtual = request.popString ();
+                //  Virtual filename must start with slash
+                assert (virtual.startsWith ("/"));
+                //  We create symbolic link pointing to real file
+                String symlink = String.format ("%s.ln", virtual.substring (1));
+                FmqFile file = new FmqFile (fmq_outbox, symlink);
+                boolean rc = file.output ();
+                assert (rc);
+                file.write (filename, 0);
+                file.destroy ();
             }
+            
             request.destroy ();
             return true;
         }
@@ -451,9 +525,14 @@ public class ZreInterface
                 peer.setHeaders (msg.headers ());
 
                 //  If peer is a log collector, connect to it
-                String collector = msg.headersString ("LOG_COLLECTOR", null);
+                String collector = msg.headersString ("X-ZRELOG", null);
                 if (collector != null)
                     log.connect (collector);
+                
+                //  If peer is a log collector, connect to it
+                String publisher = msg.headersString ("X-FILEMQ", null);
+                if (publisher != null)
+                    fmq_client.connect (publisher);
             }
             else
             if (msg.id () == ZreMsg.WHISPER) {
@@ -570,6 +649,14 @@ public class ZreInterface
                 }
             }
         }
+        
+        public void recvFmqEvent ()
+        {
+            ZMsg msg = fmq_client.recv ();
+            if (msg == null)
+                return;
+            msg.send (pipe);
+        }
     }
     
     //  Send message to all peers
@@ -603,6 +690,7 @@ public class ZreInterface
             items.register (agent.pipe, Poller.POLLIN);
             items.register (agent.inbox, Poller.POLLIN);
             items.register (agent.udp.handle (), Poller.POLLIN);
+            items.register (agent.fmq_client.handle (), Poller.POLLIN);
             
             while (!Thread.currentThread ().isInterrupted ()) {
                 long timeout = pingAt - System.currentTimeMillis ();
@@ -622,6 +710,9 @@ public class ZreInterface
                 
                 if (items.pollin (2))
                     agent.recvUdpBeacon ();
+                
+                if (items.pollin (3))
+                    agent.recvFmqEvent ();
                 
                 if (System.currentTimeMillis () >= pingAt) {
                     agent.sendBeacon ();

@@ -23,7 +23,7 @@
     <http://www.gnu.org/licenses/>.
     =========================================================================
 */ 
-package org.zeromq.zyre;
+package org.zyre;
 
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
@@ -38,8 +38,7 @@ public class ZreLog
     
     //  ---------------------------------------------------------------------
     //  Construct new log object
-    public 
-    ZreLog (String endpoint)
+    public ZreLog (String endpoint)
     {
         ctx = new ZContext ();
         publisher = ctx.createSocket (ZMQ.PUB);
@@ -49,8 +48,7 @@ public class ZreLog
 
     //  ---------------------------------------------------------------------
     //  Destroy log object
-    public void 
-    destory ()
+    public void destory ()
     {
         ctx.destroy ();
     }
@@ -58,16 +56,14 @@ public class ZreLog
 
     //  ---------------------------------------------------------------------
     //  Connect log to remote endpoint
-    public void 
-    connect (String endpoint)
+    public void connect (String endpoint)
     {
         publisher.connect (endpoint);
     }
     
     //  ---------------------------------------------------------------------
     //  Record one log event
-    public void 
-    info (int event, String peer, String format, Object ... args)
+    public void info (int event, String peer, String format, Object ... args)
     {
         int peerid = peer != null ? peer.hashCode () : 0;
         String body = format != null ? String.format (format, args) : "";
@@ -79,14 +75,13 @@ public class ZreLog
 
     //  --------------------------------------------------------------------------
     //  Send the LOG to the socket in one step
-    public static boolean
-    sendLog (Socket output, 
-            int level, 
-            int event, 
-            int node, 
-            int peer, 
-            long time, 
-            String data)
+    public static boolean sendLog (Socket output, 
+                                    int level, 
+                                    int event, 
+                                    int node, 
+                                    int peer, 
+                                    long time, 
+                                    String data)
     {
         ZreLogMsg msg = new ZreLogMsg (ZreLogMsg.LOG);
         msg.setLevel (level);

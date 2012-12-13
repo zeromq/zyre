@@ -1,7 +1,7 @@
 //  --------------------------------------------------------------------------
 //  Selftest
 
-package org.zeromq.zyre;
+package org.zyre;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
