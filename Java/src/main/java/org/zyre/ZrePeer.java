@@ -23,7 +23,7 @@
     <http://www.gnu.org/licenses/>.
     =========================================================================
 */
-package org.zeromq.zyre;
+package org.zyre;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,8 +50,7 @@ public class ZrePeer
     private int want_sequence;           //  Incoming message sequence
     private Map <String, String> headers;           //  Peer headers
     
-    private
-    ZrePeer (ZContext ctx, String identity)
+    private ZrePeer (ZContext ctx, String identity)
     {
         this.ctx = ctx;
         this.identity = identity;
@@ -64,8 +63,7 @@ public class ZrePeer
     
     //  ---------------------------------------------------------------------
     //  Construct new peer object
-    public static ZrePeer 
-    newPeer (String identity, Map<String, ZrePeer> container, ZContext ctx)
+    public static ZrePeer newPeer (String identity, Map<String, ZrePeer> container, ZContext ctx)
     {
         ZrePeer peer = new ZrePeer (ctx, identity);
         container.put (identity, peer);
@@ -75,8 +73,7 @@ public class ZrePeer
     
     //  ---------------------------------------------------------------------
     //  Destroy peer object
-    public void 
-    destory ()
+    public void destory ()
     {
         disconnect ();
     }
@@ -84,34 +81,35 @@ public class ZrePeer
     //  ---------------------------------------------------------------------
     //  Connect peer mailbox
     //  Configures mailbox and connects to peer's router endpoint
-    public void 
-    connect (String replyTo, String endpoint)
+    public void connect (String replyTo, String endpoint)
     {
         //  Create new outgoing socket (drop any messages in transit)
         mailbox = ctx.createSocket (ZMQ.DEALER);
 
-        //  Set our caller 'From' identity so that receiving node knows
-        //  who each message came from.
-        mailbox.setIdentity (replyTo.getBytes ());
-
-        //  Set a high-water mark that allows for reasonable activity
-        mailbox.setSndHWM (ZreInterface.PEER_EXPIRED * 100);
-       
-        //  Send messages immediately or return EAGAIN
-        mailbox.setSendTimeOut (0);
-
-        //  Connect through to peer node
-        mailbox.connect (String.format ("tcp://%s", endpoint));
-        this.endpoint = endpoint;
-        connected = true;
-        ready = false;        
+        //  Null if shutting down
+        if (mailbox != null) {
+            //  Set our caller 'From' identity so that receiving node knows
+            //  who each message came from.
+            mailbox.setIdentity (replyTo.getBytes ());
+    
+            //  Set a high-water mark that allows for reasonable activity
+            mailbox.setSndHWM (ZreInterface.PEER_EXPIRED * 100);
+           
+            //  Send messages immediately or return EAGAIN
+            mailbox.setSendTimeOut (0);
+    
+            //  Connect through to peer node
+            mailbox.connect (String.format ("tcp://%s", endpoint));
+            this.endpoint = endpoint;
+            connected = true;
+            ready = false;        
+        }
     }
 
     //  ---------------------------------------------------------------------
     //  Disconnect peer mailbox
     //  No more messages will be sent to peer until connected again
-    public void 
-    disconnect ()
+    public void disconnect ()
     {
         ctx.destroySocket (mailbox);
         mailbox = null;
@@ -119,8 +117,7 @@ public class ZrePeer
         connected = false;
     }
 
-    public boolean 
-    send (ZreMsg msg)
+    public boolean send (ZreMsg msg)
     {
         if (connected) {
             if (++sent_sequence > USHORT_MAX)
@@ -139,8 +136,7 @@ public class ZrePeer
 
     //  ---------------------------------------------------------------------
     //  Return peer connection endpoint
-    public String 
-    endpoint ()
+    public String endpoint ()
     {
         if (connected)
             return endpoint;
@@ -151,8 +147,7 @@ public class ZrePeer
 
     //  ---------------------------------------------------------------------
     //  Register activity at peer
-    public void 
-    refresh ()
+    public void refresh ()
     {
         evasive_at = System.currentTimeMillis () + ZreInterface.PEER_EVASIVE;
         expired_at = System.currentTimeMillis () + ZreInterface.PEER_EXPIRED;
@@ -160,60 +155,51 @@ public class ZrePeer
 
     //  ---------------------------------------------------------------------
     //  Return peer future expired time
-    public long 
-    expiredAt ()
+    public long expiredAt ()
     {
         return expired_at;
     }
 
     //  ---------------------------------------------------------------------
     //  Return peer future evasive time
-    public long 
-    evasiveAt ()
+    public long evasiveAt ()
     {
         return evasive_at;
     }
 
     
-    public void 
-    setReady (boolean ready)
+    public void setReady (boolean ready)
     {
         this.ready = ready;
     }
 
-    public boolean 
-    ready ()
+    public boolean ready ()
     {
         return ready;
     }
 
-    public void 
-    setStatus (int status)
+    public void setStatus (int status)
     {
         this.status = status;
     }
     
-    public int 
-    status ()
+    public int status ()
     {
         return status;
     }
 
-    public void 
-    incStatus ()
+    public void incStatus ()
     {
         if (++status > UBYTE_MAX)
             status = 0;
     }
     
-    public String 
-    identity ()
+    public String identity ()
     {
         return identity;
     }
 
-    public String 
-    header (String key, String defaultValue)
+    public String header (String key, String defaultValue)
     {
         if (headers.containsKey (key))
             return headers.get (key);
@@ -221,8 +207,7 @@ public class ZrePeer
         return defaultValue;
     }
     
-    public void 
-    setHeaders (Map<String, String> headers)
+    public void setHeaders (Map<String, String> headers)
     {
         this.headers = new HashMap <String, String> (headers);
     }
@@ -240,7 +225,5 @@ public class ZrePeer
         }
         return valid;
     }
-
-
 
 }

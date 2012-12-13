@@ -53,7 +53,7 @@
         sequence      number 2
 */
 
-package org.zeromq.zyre;
+package org.zyre;
 
 import java.util.Collection;
 import java.util.List;

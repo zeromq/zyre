@@ -1,4 +1,4 @@
-package org.zeromq.zyre;
+package org.zyre;
 
 import java.util.Random;
 
@@ -93,6 +93,12 @@ public class ZreTester
                         if (random.nextInt (3) == 0) {
                             inf.leave (group);
                         }
+                    }
+                    else
+                    if (event.equals ("DELIVER")) {
+                        String filename = incoming.popString ();
+                        String fullname = incoming.popString ();
+                        System.out.printf ("I: received file %s\n", fullname);
                     }
                     incoming.destroy ();
 

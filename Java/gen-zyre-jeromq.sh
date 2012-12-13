@@ -4,7 +4,7 @@ echo "Generate ZYRE codes use JeroMQ"
 
 TARGET="jeromq"
 JZMQ_VERSION="1.1.0-SNAPSHOT"
-JEROMQ_VERSION="0.2.0-SNAPSHOT"
+JEROMQ_VERSION="0.3.0-SNAPSHOT"
 
 if [ ! -d $TARGET ]; then
     mkdir $TARGET
@@ -13,6 +13,7 @@ fi
 sed -e '
 s/<artifactId>zyre<\/artifactId>/<artifactId>zyre-jeromq<\/artifactId>/
 s/<name>zyre<\/name>/<name>zyre-jeromq<\/name>/
+s/<artifactId>filemq<\/artifactId>/<artifactId>filemq-jeromq<\/artifactId>/
 /<dependency>/,/<\/depencency>/ {
     /<groupId>org.zeromq<\/groupId>/,/<version>${JZMQ_VERSION}<\/version>/ { 
         s/zeromq/jeromq/
