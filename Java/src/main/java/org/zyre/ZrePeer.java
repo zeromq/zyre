@@ -86,21 +86,24 @@ public class ZrePeer
         //  Create new outgoing socket (drop any messages in transit)
         mailbox = ctx.createSocket (ZMQ.DEALER);
 
-        //  Set our caller 'From' identity so that receiving node knows
-        //  who each message came from.
-        mailbox.setIdentity (replyTo.getBytes ());
-
-        //  Set a high-water mark that allows for reasonable activity
-        mailbox.setSndHWM (ZreInterface.PEER_EXPIRED * 100);
-       
-        //  Send messages immediately or return EAGAIN
-        mailbox.setSendTimeOut (0);
-
-        //  Connect through to peer node
-        mailbox.connect (String.format ("tcp://%s", endpoint));
-        this.endpoint = endpoint;
-        connected = true;
-        ready = false;        
+        //  Null if shutting down
+        if (mailbox != null) {
+            //  Set our caller 'From' identity so that receiving node knows
+            //  who each message came from.
+            mailbox.setIdentity (replyTo.getBytes ());
+    
+            //  Set a high-water mark that allows for reasonable activity
+            mailbox.setSndHWM (ZreInterface.PEER_EXPIRED * 100);
+           
+            //  Send messages immediately or return EAGAIN
+            mailbox.setSendTimeOut (0);
+    
+            //  Connect through to peer node
+            mailbox.connect (String.format ("tcp://%s", endpoint));
+            this.endpoint = endpoint;
+            connected = true;
+            ready = false;        
+        }
     }
 
     //  ---------------------------------------------------------------------

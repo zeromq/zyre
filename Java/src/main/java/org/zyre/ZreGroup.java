@@ -31,6 +31,7 @@ import java.util.Map;
 public class ZreGroup
 {
 
+    @SuppressWarnings ("unused")
     private final String name;
     private final Map <String, ZrePeer> peers;
     
