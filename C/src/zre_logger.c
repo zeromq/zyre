@@ -71,9 +71,9 @@ int main (int argc, char *argv [])
 
     //  Use the Zyre UDP class to make sure we listen on the same
     //  network interface as our peers
+    void *collector = zsocket_new (ctx, ZMQ_SUB);
     zre_udp_t *udp = zre_udp_new (PING_PORT_NUMBER);
     char *host = zre_udp_host (udp);
-    void *collector = zsocket_new (ctx, ZMQ_SUB);
 
     //  Bind to an ephemeral port
     int port = zsocket_bind (collector, "tcp://%s:*", host);
