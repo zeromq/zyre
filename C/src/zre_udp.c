@@ -127,6 +127,51 @@ s_wireless_nic (const char* name)
 //  -----------------------------------------------------------------
 //  Constructor
 
+#if (defined(__WINDOWS__))
+static void
+s_win_get_interface(zre_udp_t *self)
+{
+    // currently does not filter for wireless nic
+
+    ULONG outBufLen = 0;
+    PIP_ADAPTER_ADDRESSES pAddresses = NULL;
+    DWORD dwRetVal;
+    ULONG Flags = GAA_FLAG_INCLUDE_PREFIX;
+
+    PIP_ADAPTER_ADDRESSES pCurrAddresses;
+    PIP_ADAPTER_UNICAST_ADDRESS pUnicast;
+    PIP_ADAPTER_PREFIX pPrefix;
+
+    dwRetVal = GetAdaptersAddresses (AF_INET, Flags, NULL, pAddresses, &outBufLen);
+    assert( dwRetVal==ERROR_BUFFER_OVERFLOW );
+
+    pAddresses = malloc (outBufLen);
+
+    dwRetVal = GetAdaptersAddresses (AF_INET, Flags, NULL, pAddresses, &outBufLen);
+    assert( dwRetVal==NO_ERROR );
+
+    pCurrAddresses = pAddresses;
+    while (pCurrAddresses) {
+        pUnicast = pCurrAddresses->FirstUnicastAddress;
+        pPrefix = pCurrAddresses->FirstPrefix;
+
+        if (pUnicast && pPrefix) {
+            self->address = *(struct sockaddr_in *)(pUnicast->Address.lpSockaddr);
+
+            // actually self->broadcast.sin_addr is replaced with 255.255.255.255 in zre_udp_send()
+            self->broadcast = *(struct sockaddr_in *)(pPrefix->Address.lpSockaddr);
+            self->broadcast.sin_addr.s_addr |= htonl ((1 << (32 - pPrefix->PrefixLength)) - 1);
+        }
+
+        self->broadcast.sin_port = htons (self->port_nbr);
+
+        pCurrAddresses = pCurrAddresses->Next;
+    }
+
+    free (pAddresses);
+}
+#endif
+
 zre_udp_t *
 zre_udp_new (int port_nbr)
 {
@@ -141,13 +186,13 @@ zre_udp_new (int port_nbr)
     //  Ask operating system to let us do broadcasts from socket
     int on = 1;
     if (setsockopt (self->handle, SOL_SOCKET,
-                    SO_BROADCAST, &on, sizeof (on)) == -1)
+                    SO_BROADCAST, (char *)&on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_BROADCAST)");
 
     //  Allow multiple processes to bind to socket; incoming
     //  messages will come to each process
     if (setsockopt (self->handle, SOL_SOCKET,
-                    SO_REUSEADDR, &on, sizeof (on)) == -1)
+                    SO_REUSEADDR, (char *)&on, sizeof (on)) == -1)
         s_handle_io_error ("setsockopt (SO_REUSEADDR)");
 
 #if defined (SO_REUSEPORT)
@@ -217,7 +262,13 @@ zre_udp_new (int port_nbr)
     
     self->host = zmalloc (INET_ADDRSTRLEN);
     inet_ntop (AF_INET, &self->address.sin_addr, self->host, sizeof (sockaddr));
+#   elif defined (__WINDOWS__)
+    s_win_get_interface(self);
+    if (self->host)
+        free (self->host);
     
+    self->host = zmalloc (INET_ADDRSTRLEN);
+    getnameinfo ((struct sockaddr *)&self->address, sizeof (self->address), self->host, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
 #   else
 #       error "Interface detection TBD on this operating system"
 #   endif
@@ -261,8 +312,12 @@ void
 zre_udp_send (zre_udp_t *self, byte *buffer, size_t length)
 {
     assert (self);
+#if (defined (__WINDOWS__))
+    self->broadcast.sin_addr.s_addr = INADDR_BROADCAST;
+#else
     inet_aton ("255.255.255.255", &self->broadcast.sin_addr);
-    if (sendto (self->handle, buffer, length, 0,
+#endif
+    if (sendto (self->handle, (char *)buffer, length, 0,
                 (struct sockaddr *) &self->broadcast, 
                 sizeof (struct sockaddr_in)) == -1)
         s_handle_io_error ("sendto");
@@ -280,7 +335,7 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
     
     socklen_t si_len = sizeof (struct sockaddr_in);
     ssize_t size = recvfrom (self->handle,
-        buffer, length, 0, (struct sockaddr *) &self->sender, &si_len);
+        (char *)buffer, length, 0, (struct sockaddr *) &self->sender, &si_len);
     if (size == -1)
         s_handle_io_error ("recvfrom");
 
@@ -288,7 +343,11 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
     if (self->from)
         free (self->from);
     self->from = zmalloc (INET_ADDRSTRLEN);
+#if (defined (__WINDOWS__))
+    getnameinfo ((struct sockaddr *)&self->sender, si_len, self->from, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
+#else
     inet_ntop (AF_INET, &self->sender.sin_addr, self->from, si_len);
+#endif
     
     return size;
 }
