@@ -810,7 +810,7 @@ $(class.name)_dup ($(class.name)_t *self)
 
 .for class.field where type = "dictionary"
 //  Dump $(name) key=value pair to stdout
-int
+static int
 s_$(name)_dump (const char *key, void *item, void *argument)
 {
     $(class.name)_t *self = ($(class.name)_t *) argument;
