@@ -761,7 +761,7 @@ zre_msg_dup (zre_msg_t *self)
 
 
 //  Dump headers key=value pair to stdout
-int
+static int
 s_headers_dump (const char *key, void *item, void *argument)
 {
     zre_msg_t *self = (zre_msg_t *) argument;
