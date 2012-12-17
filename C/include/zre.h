@@ -44,6 +44,10 @@
 #   error "Zyre needs CZMQ/1.3.2 or later"
 #endif
 
+#ifdef interface
+#undef interface
+#endif
+
 #include <fmq.h>
 #if FMQ_VERSION < 10000
 #   error "Zyre needs FMQ/1.0.0 or later"
