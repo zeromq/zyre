@@ -33,6 +33,7 @@
 
 struct _zre_log_t {
     zctx_t *ctx;                //  CZMQ context
+    bool own_ctx;
     void *publisher;            //  Socket to send to
     uint16_t nodeid;            //  Own correlation ID
 };
@@ -42,10 +43,14 @@ struct _zre_log_t {
 //  Construct new log object
 
 zre_log_t *
-zre_log_new (char *endpoint)
+zre_log_new (zctx_t *ctx, char *endpoint)
 {
     zre_log_t *self = (zre_log_t *) zmalloc (sizeof (zre_log_t));
-    self->ctx = zctx_new ();
+    if (!ctx) {
+        ctx = zctx_new ();
+        self->own_ctx = true;
+    }
+    self->ctx = ctx;
     self->publisher = zsocket_new (self->ctx, ZMQ_PUB);
     //  Modified Bernstein hashing function
     while (*endpoint)
@@ -64,7 +69,9 @@ zre_log_destroy (zre_log_t **self_p)
     assert (self_p);
     if (*self_p) {
         zre_log_t *self = *self_p;
-        zctx_destroy (&self->ctx);
+        zsocket_destroy (self->ctx, self->publisher);
+        if (self->own_ctx)
+            zctx_destroy (&self->ctx);
         free (self);
         *self_p = NULL;
     }

@@ -35,7 +35,7 @@ typedef struct _zre_log_t zre_log_t;
 
 //  Constructor
 zre_log_t *
-    zre_log_new (char *endpoint);
+    zre_log_new (zctx_t *ctx, char *endpoint);
 
 //  Destructor
 void

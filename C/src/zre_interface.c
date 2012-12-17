@@ -36,6 +36,7 @@
 
 struct _zre_interface_t {
     zctx_t *ctx;                //  Our context wrapper
+    bool own_ctx;
     void *pipe;                 //  Pipe through to agent
 };
 
@@ -51,13 +52,17 @@ static void
 //  Constructor
 
 zre_interface_t *
-zre_interface_new (void)
+zre_interface_new (zctx_t *ctx)
 {
     zre_interface_t
         *self;
 
     self = (zre_interface_t *) zmalloc (sizeof (zre_interface_t));
-    self->ctx = zctx_new ();
+    if (!ctx) {
+        ctx = zctx_new ();
+        self->own_ctx = true;
+    }
+    self->ctx = ctx;
     self->pipe = zthread_fork (self->ctx, zre_interface_agent, NULL);
     return self;
 }
@@ -72,7 +77,13 @@ zre_interface_destroy (zre_interface_t **self_p)
     assert (self_p);
     if (*self_p) {
         zre_interface_t *self = *self_p;
-        zctx_destroy (&self->ctx);
+        zstr_send (self->pipe, "STOP");
+        char *string = zstr_recv (self->pipe);
+        assert (streq (string, "OK"));
+        free (string);
+        zsocket_destroy (self->ctx, self->pipe);
+        if (self->own_ctx)
+            zctx_destroy (&self->ctx);
         free (self);
         *self_p = NULL;
     }
@@ -301,7 +312,7 @@ agent_new (zctx_t *ctx, void *pipe)
     self->own_groups = zhash_new ();
     self->headers = zhash_new ();
     zhash_autofree (self->headers);
-    self->log = zre_log_new (self->endpoint);
+    self->log = zre_log_new (ctx, self->endpoint);
 
     //  Set up content distribution network: Each server binds to an
     //  ephemeral port and publishes a temporary directory that acts
@@ -396,6 +407,13 @@ agent_recv_from_api (agent_t *self)
     char *command = zmsg_popstr (request);
     if (!command)
         return -1;                  //  Interrupted
+
+    if (streq (command, "STOP")) {
+        free (command);
+        zmsg_destroy (&request);
+        zstr_send (self->pipe, "OK");
+        return -1;
+    }
 
     if (streq (command, "WHISPER")) {
         //  Get peer to send message to
@@ -814,8 +832,11 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
         if (zmq_poll (pollitems, 4, timeout * ZMQ_POLL_MSEC) == -1)
             break;              //  Interrupted
 
-        if (pollitems [0].revents & ZMQ_POLLIN)
-            agent_recv_from_api (self);
+        if (pollitems [0].revents & ZMQ_POLLIN) {
+            int rc = agent_recv_from_api (self);
+            if (rc < 0)
+                break;
+        }
         
         if (pollitems [1].revents & ZMQ_POLLIN)
             agent_recv_from_peer (self);
