@@ -79,7 +79,7 @@ int main (int argc, char *argv [])
     int port = zsocket_bind (collector, "tcp://%s:*", host);
 
     //  Announce this to all peers we connect to
-    zre_interface_t *interface = zre_interface_new ();
+    zre_interface_t *interface = zre_interface_new (ctx);
     zre_interface_header_set (interface, "X-ZRELOG", "tcp://%s:%d", host, port);
 
     //  Get all log messages (don't filter)
