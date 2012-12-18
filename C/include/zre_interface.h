@@ -35,7 +35,7 @@ typedef struct _zre_interface_t zre_interface_t;
 
 //  Constructor
 zre_interface_t *
-    zre_interface_new (zctx_t *ctx);
+    zre_interface_new (void);
 
 //  Destructor
 void
