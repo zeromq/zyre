@@ -46,7 +46,10 @@ struct _zre_interface_t {
 static void
     zre_interface_agent (void *args, zctx_t *ctx, void *pipe);
 
-    
+//  ---------------------------------------------------------------------
+//  Temporary directory of INBOX and OUTOBX
+static char tmp_dir [255] = {0};
+
 //  ---------------------------------------------------------------------
 //  Constructor
 
@@ -77,7 +80,6 @@ zre_interface_destroy (zre_interface_t **self_p)
         *self_p = NULL;
     }
 }
-
 
 //  ---------------------------------------------------------------------
 //  Receive next message from interface
@@ -185,6 +187,95 @@ zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual)
     zstr_sendm (self->pipe, "PUBLISH");
     zstr_sendm (self->pipe, pathname);
     zstr_send  (self->pipe, virtual);
+}
+
+//  ---------------------------------------------------------------------
+//  Create directory and its parent directory if it doesn't exist
+
+#if (defined (__WINDOWS__))
+static int
+mkdirs (const char *path, mode_t mode)
+{
+    char *slash ;
+    BOOL rc = CreateDirectory (path, NULL);
+    if (!rc) {
+        switch (GetLastError ()) 
+        {
+            case ERROR_PATH_NOT_FOUND:
+                // parent doesn't exist
+                slash = strrchr (path, '/');
+                if (!slash)
+                    return -1;
+                char parent [255];
+                snprintf (parent, slash - path + 1, "%s", path);
+
+                if (mkdirs (parent, mode) < 0)
+                    return -1;
+                return CreateDirectory (path, NULL) == TRUE ? 0 : -1;
+            case ERROR_ALREADY_EXISTS:
+                return 0;
+            default:
+                return -1;
+        }
+    }
+    return rc == TRUE ? 0 : -1;
+}
+#else
+static int
+mkdirs (const char *path, mode_t mode)
+{
+    char *slash ;
+    int rc = mkdir (path, mode);
+    if (rc < 0) {
+        switch (errno) 
+        {
+            case ENOENT:
+                // parent doesn't exist
+                slash = strrchr (path, '/');
+                if (!slash)
+                    return -1;
+                char parent [255];
+
+                snprintf (parent, slash - path + 1, "%s", path);
+                if (mkdirs (parent, mode) < 0)
+                    return -1;
+                return mkdir (path, mode);
+            case EEXIST:
+                return 0;
+            default:
+                return rc;
+        }
+    }
+    return rc;
+}
+#endif
+
+//  ---------------------------------------------------------------------
+//  Set temporary directory of INBOX and OUTOBX
+
+void
+zre_interface_tmpdir_set (const char *value)
+{
+    if (value) {
+        sprintf (tmp_dir, "%s", value);
+    }
+}
+
+//  ---------------------------------------------------------------------
+//  Get temporary directory of INBOX and OUTOBX
+const char *
+zre_interface_tmpdir ()
+{
+    if (!*tmp_dir) {
+        char *tmp_env = getenv ("TMPDIR");
+        if (!tmp_env)
+            tmp_env = "/tmp";
+        strcat (tmp_dir, tmp_env);
+        if (tmp_dir [strlen (tmp_dir) -1] != '/')
+            strcat (tmp_dir, "/");
+        strcat (tmp_dir, "zyre");
+    }
+    return tmp_dir;
 }
 
 
@@ -308,24 +399,12 @@ agent_new (zctx_t *ctx, void *pipe)
     //  as the outbox for this node.
     //
 #   define OUTBOX   ".outbox"
-    sprintf (self->fmq_outbox, "%s/%s", OUTBOX, self->identity);
-#if (defined (__WINDOWS__))
-    CreateDirectory (OUTBOX, NULL);
-    CreateDirectory (self->fmq_outbox, NULL);
-#else
-    mkdir (OUTBOX, 0775);
-    mkdir (self->fmq_outbox, 0775);
-#endif
+    sprintf (self->fmq_outbox, "%s/%s/%s", zre_interface_tmpdir (), OUTBOX, self->identity);
+    mkdirs (self->fmq_outbox, 0755);
     
 #   define INBOX    ".inbox"
-    sprintf (self->fmq_inbox, "%s/%s", INBOX, self->identity);
-#if (defined (__WINDOWS__))
-    CreateDirectory (INBOX, NULL);
-    CreateDirectory (self->fmq_inbox, NULL);
-#else
-    mkdir (INBOX, 0775);
-    mkdir (self->fmq_inbox, 0775);
-#endif
+    sprintf (self->fmq_inbox, "%s/%s/%s", zre_interface_tmpdir (), INBOX, self->identity);
+    mkdirs (self->fmq_inbox, 0755);
 
     self->fmq_server = fmq_server_new ();
     self->fmq_service = fmq_server_bind (self->fmq_server, "tcp://*:*");
