@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre.h - Zyre library header
+    zre_internal.h - Zyre internal library header
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -24,32 +24,39 @@
     =========================================================================
 */
 
-#ifndef __ZRE_H_INCLUDED__
-#define __ZRE_H_INCLUDED__
+#ifndef __ZRE_INTERNAL_H_INCLUDED__
+#define __ZRE_INTERNAL_H_INCLUDED__
 
-#define ZRE_VERSION_MAJOR 0
-#define ZRE_VERSION_MINOR 2
-#define ZRE_VERSION_PATCH 0
+#include "zre.h"
+#include "platform.h"
 
-#define ZRE_MAKE_VERSION(major, minor, patch) \
-    ((major) * 10000 + (minor) * 100 + (patch))
-#define ZRE_VERSION \
-    ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
-
-#include <czmq.h>
-#if CZMQ_VERSION < 10302
-#   error "Zyre needs CZMQ/1.3.2 or later"
+#if (!defined (__WINDOWS__))
+#include <uuid/uuid.h>
+#endif
+#ifdef HAVE_LINUX_WIRELESS_H
+# include <linux/wireless.h>
+#else
+#  ifdef HAVE_NET_IF_H
+#   include <net/if.h>
+#  endif
+#  ifdef HAVE_NET_IF_MEDIA_H
+#   include <net/if_media.h>
+#  endif
 #endif
 
-#include <fmq.h>
-#if FMQ_VERSION < 10000
-#   error "Zyre needs FMQ/1.0.0 or later"
-#endif
+//  Constants, to be configured/reviewed
 
-//  Defined port numbers, pending IANA submission
-#define ZRE_DISCOVERY_PORT  5670
+#define PING_INTERVAL    1000   //  Once per second
+#define PEER_EVASIVE     5000   //  Five seconds' silence is evasive
+#define PEER_EXPIRED    10000   //  Ten seconds' silence is expired
 
-//  This is the only class that applications should use
-#include "zre_interface.h"
+//  Classes in this stack
+
+#include "zre_udp.h"
+#include "zre_msg.h"
+#include "zre_peer.h"
+#include "zre_group.h"
+#include "zre_log.h"
+#include "zre_log_msg.h"
 
 #endif

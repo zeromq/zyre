@@ -33,6 +33,13 @@ extern "C" {
 
 typedef struct _zre_interface_t zre_interface_t;
 
+//  Optional global context for zre_interface instances
+//  Used for large-scale testing simulation only
+CZMQ_EXPORT extern zctx_t *zre_global_ctx;
+
+//  Optional temp directory; set by caller if needed
+CZMQ_EXPORT extern char *zre_global_tmpdir;
+
 //  Constructor
 CZMQ_EXPORT zre_interface_t *
     zre_interface_new (void);
