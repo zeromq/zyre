@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zre_internal.h"
 
 static void
 s_print_log_msg (void *collector)
@@ -72,7 +72,7 @@ int main (int argc, char *argv [])
     //  Use the Zyre UDP class to make sure we listen on the same
     //  network interface as our peers
     void *collector = zsocket_new (ctx, ZMQ_SUB);
-    zre_udp_t *udp = zre_udp_new (PING_PORT_NUMBER);
+    zre_udp_t *udp = zre_udp_new (ZRE_DISCOVERY_PORT);
     char *host = zre_udp_host (udp);
 
     //  Bind to an ephemeral port
