@@ -35,7 +35,7 @@ static zhash_t *interfaces;
 static void
 interface_task (void *args, zctx_t *ctx, void *pipe)
 {
-    zre_interface_t *interface = zre_interface_new (ctx);
+    zre_interface_t *interface = zre_interface_new ();
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
@@ -51,13 +51,8 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
         if (zmq_poll (pollitems, 2, randof (1000) * ZMQ_POLL_MSEC) == -1)
             break;              //  Interrupted
         
-        if (pollitems [0].revents & ZMQ_POLLIN) {
-            char *event = zstr_recv (pipe);
-            assert (streq (event, "STOP"));
-            free (event);
-            zstr_send (pipe, "OK");
-            break;
-        }
+        if (pollitems [0].revents & ZMQ_POLLIN)
+            break;              //  Any command from parent means EXIT
 
         //  Process an event from interface
         if (pollitems [1].revents & ZMQ_POLLIN) {
@@ -192,7 +187,6 @@ int main (int argc, char *argv [])
         //  Toggle interface thread
         if (pipes [index]) {
             zstr_send (pipes [index], "STOP");
-            free( zstr_recv (pipes [index]) );
             zsocket_destroy (ctx, pipes [index]);
             pipes [index] = NULL;
             zclock_log ("I: Stopped interface (%d running)", --nbr_interfaces);

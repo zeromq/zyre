@@ -77,7 +77,7 @@ main (int argc, char *argv [])
     if (argc > 2)
         max_message = atoi (argv [2]);
 
-    zre_interface_t *interface = zre_interface_new (NULL);
+    zre_interface_t *interface = zre_interface_new ();
     zre_interface_join (interface, "GLOBAL");
 
     int64_t start = zclock_time ();
