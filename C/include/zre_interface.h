@@ -77,6 +77,10 @@ CZMQ_EXPORT void
 CZMQ_EXPORT void
     zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual);
 
+//  Retract file publish
+CZMQ_EXPORT void
+    zre_interface_retract (zre_interface_t *self, char *virtual);
+
 #ifdef __cplusplus
 }
 #endif

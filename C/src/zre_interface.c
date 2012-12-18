@@ -190,6 +190,17 @@ zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual)
 }
 
 //  ---------------------------------------------------------------------
+//  Retract published file
+
+void
+zre_interface_retract (zre_interface_t *self, char *virtual)
+{
+    zstr_sendm (self->pipe, "RETRACT");
+    zstr_send  (self->pipe, virtual);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Create directory and its parent directory if it doesn't exist
 
 #if (defined (__WINDOWS__))
@@ -561,6 +572,19 @@ agent_recv_from_api (agent_t *self)
         fmq_file_destroy (&file);
         free (symlink);
         free (filename);
+        free (virtual);
+    }
+    else
+    if (streq (command, "RETRACT")) {
+        char *virtual = zmsg_popstr (request);
+        //  Virtual filename must start with slash
+        assert (virtual [0] == '/');
+        //  We create symbolic link pointing to real file
+        char *symlink = malloc (strlen (virtual) + 3);
+        sprintf (symlink, "%s.ln", virtual + 1);
+        fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
+        fmq_file_remove (file);
+        free (symlink);
         free (virtual);
     }
     free (command);
