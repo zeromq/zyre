@@ -25,11 +25,12 @@
 */
 
 #include <czmq.h>
-#if (!defined (__WINDOWS__))
-#include <uuid/uuid.h>
-#endif
-#include "../include/zre.h"
+#include "../include/zre_internal.h"
 
+//  Optional global context for zre_interface instances
+zctx_t *zre_global_ctx = NULL;
+//  Optional temp directory; set by caller if needed
+char *zre_global_tmpdir = NULL;
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
@@ -46,9 +47,6 @@ struct _zre_interface_t {
 static void
     zre_interface_agent (void *args, zctx_t *ctx, void *pipe);
 
-//  ---------------------------------------------------------------------
-//  Temporary directory of INBOX and OUTOBX
-static char tmp_dir [255] = {0};
 
 //  ---------------------------------------------------------------------
 //  Constructor
@@ -60,7 +58,8 @@ zre_interface_new (void)
         *self;
 
     self = (zre_interface_t *) zmalloc (sizeof (zre_interface_t));
-    self->ctx = zctx_new ();
+    //  If caller set a default ctx use that, else create our own
+    self->ctx = zre_global_ctx? zre_global_ctx: zctx_new ();
     self->pipe = zthread_fork (self->ctx, zre_interface_agent, NULL);
     return self;
 }
@@ -190,6 +189,17 @@ zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual)
 }
 
 //  ---------------------------------------------------------------------
+//  Retract published file
+
+void
+zre_interface_retract (zre_interface_t *self, char *virtual)
+{
+    zstr_sendm (self->pipe, "RETRACT");
+    zstr_send  (self->pipe, virtual);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Create directory and its parent directory if it doesn't exist
 
 #if (defined (__WINDOWS__))
@@ -199,10 +209,9 @@ mkdirs (const char *path, mode_t mode)
     char *slash ;
     BOOL rc = CreateDirectory (path, NULL);
     if (!rc) {
-        switch (GetLastError ()) 
-        {
+        switch (GetLastError ()) {
             case ERROR_PATH_NOT_FOUND:
-                // parent doesn't exist
+                //  Parent doesn't exist
                 slash = strrchr (path, '/');
                 if (!slash)
                     return -1;
@@ -211,24 +220,23 @@ mkdirs (const char *path, mode_t mode)
 
                 if (mkdirs (parent, mode) < 0)
                     return -1;
-                return CreateDirectory (path, NULL) == TRUE ? 0 : -1;
+                return CreateDirectory (path, NULL) == TRUE ? 0: -1;
             case ERROR_ALREADY_EXISTS:
                 return 0;
             default:
                 return -1;
         }
     }
-    return rc == TRUE ? 0 : -1;
+    return rc == TRUE ? 0: -1;
 }
 #else
 static int
 mkdirs (const char *path, mode_t mode)
 {
-    char *slash ;
+    char *slash;
     int rc = mkdir (path, mode);
     if (rc < 0) {
-        switch (errno) 
-        {
+        switch (errno) {
             case ENOENT:
                 // parent doesn't exist
                 slash = strrchr (path, '/');
@@ -250,32 +258,26 @@ mkdirs (const char *path, mode_t mode)
 }
 #endif
 
-//  ---------------------------------------------------------------------
-//  Set temporary directory of INBOX and OUTOBX
-
-void
-zre_interface_tmpdir_set (const char *value)
-{
-    if (value) {
-        sprintf (tmp_dir, "%s", value);
-    }
-}
 
 //  ---------------------------------------------------------------------
 //  Get temporary directory of INBOX and OUTOBX
-const char *
-zre_interface_tmpdir ()
+
+static char *
+s_tmpdir (void)
 {
-    if (!*tmp_dir) {
+    static char our_tmpdir [255] = { 0 };
+    if (!zre_global_tmpdir) {
+        zre_global_tmpdir = our_tmpdir;
         char *tmp_env = getenv ("TMPDIR");
         if (!tmp_env)
             tmp_env = "/tmp";
-        strcat (tmp_dir, tmp_env);
-        if (tmp_dir [strlen (tmp_dir) -1] != '/')
-            strcat (tmp_dir, "/");
-        strcat (tmp_dir, "zyre");
+        strcat (zre_global_tmpdir, tmp_env);
+
+        if (zre_global_tmpdir [strlen (zre_global_tmpdir) -1] != '/')
+            strcat (zre_global_tmpdir, "/");
+        strcat (zre_global_tmpdir, "zyre");
     }
-    return tmp_dir;
+    return zre_global_tmpdir;
 }
 
 
@@ -301,23 +303,9 @@ typedef struct {
 } beacon_t;
 #pragma pack()
 
+
 //  Convert binary UUID to freshly allocated string
 
-#if (defined (__WINDOWS__))
-static char *
-s_uuid_str (uuid_t *uuid)
-{
-    char hex_char [] = "0123456789ABCDEF";
-    char *string = zmalloc (sizeof (uuid_t) * 2 + 1);
-    int byte_nbr;
-    for (byte_nbr = 0; byte_nbr < sizeof (uuid_t); byte_nbr++) {
-	int val = ((unsigned char *) uuid) [byte_nbr];
-        string [byte_nbr * 2 + 0] = hex_char [val >> 4];
-        string [byte_nbr * 2 + 1] = hex_char [val & 15];
-    }
-    return string;
-}
-#else
 static char *
 s_uuid_str (uuid_t uuid)
 {
@@ -325,12 +313,13 @@ s_uuid_str (uuid_t uuid)
     char *string = zmalloc (sizeof (uuid_t) * 2 + 1);
     int byte_nbr;
     for (byte_nbr = 0; byte_nbr < sizeof (uuid_t); byte_nbr++) {
-        string [byte_nbr * 2 + 0] = hex_char [uuid [byte_nbr] >> 4];
-        string [byte_nbr * 2 + 1] = hex_char [uuid [byte_nbr] & 15];
+        uint val = ((byte *) uuid) [byte_nbr];
+        string [byte_nbr * 2 + 0] = hex_char [val >> 4];
+        string [byte_nbr * 2 + 1] = hex_char [val & 15];
     }
     return string;
 }
-#endif
+
 
 //  This structure holds the context for our agent, so we can
 //  pass that around cleanly to methods which need it
@@ -370,7 +359,7 @@ agent_new (zctx_t *ctx, void *pipe)
     agent_t *self = (agent_t *) zmalloc (sizeof (agent_t));
     self->ctx = ctx;
     self->pipe = pipe;
-    self->udp = zre_udp_new (PING_PORT_NUMBER);
+    self->udp = zre_udp_new (ZRE_DISCOVERY_PORT);
     self->inbox = inbox;
     self->host = zre_udp_host (self->udp);
     self->port = zsocket_bind (self->inbox, "tcp://*:*");
@@ -399,11 +388,11 @@ agent_new (zctx_t *ctx, void *pipe)
     //  as the outbox for this node.
     //
 #   define OUTBOX   ".outbox"
-    sprintf (self->fmq_outbox, "%s/%s/%s", zre_interface_tmpdir (), OUTBOX, self->identity);
+    sprintf (self->fmq_outbox, "%s/%s/%s", s_tmpdir (), OUTBOX, self->identity);
     mkdirs (self->fmq_outbox, 0755);
     
 #   define INBOX    ".inbox"
-    sprintf (self->fmq_inbox, "%s/%s/%s", zre_interface_tmpdir (), INBOX, self->identity);
+    sprintf (self->fmq_inbox, "%s/%s/%s", s_tmpdir (), INBOX, self->identity);
     mkdirs (self->fmq_inbox, 0755);
 
     self->fmq_server = fmq_server_new ();
@@ -444,6 +433,7 @@ agent_destroy (agent_t **self_p)
         zhash_destroy (&self->headers);
         zre_udp_destroy (&self->udp);
         zre_log_destroy (&self->log);
+        
         fmq_server_destroy (&self->fmq_server);
         fmq_client_destroy (&self->fmq_client);
         free (self->identity);
@@ -561,6 +551,19 @@ agent_recv_from_api (agent_t *self)
         fmq_file_destroy (&file);
         free (symlink);
         free (filename);
+        free (virtual);
+    }
+    else
+    if (streq (command, "RETRACT")) {
+        char *virtual = zmsg_popstr (request);
+        //  Virtual filename must start with slash
+        assert (virtual [0] == '/');
+        //  We create symbolic link pointing to real file
+        char *symlink = malloc (strlen (virtual) + 3);
+        sprintf (symlink, "%s.ln", virtual + 1);
+        fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
+        fmq_file_remove (file);
+        free (symlink);
         free (virtual);
     }
     free (command);
@@ -681,7 +684,6 @@ agent_recv_from_peer (agent_t *self)
         zre_msg_destroy (&msg);
         return 0;
     }
-    
     if (!zre_peer_check_message (peer, msg)) {
         zclock_log ("W: [%s] lost messages from %s", self->identity, identity);
         assert (false);
@@ -880,9 +882,9 @@ zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
     //  Send first beacon immediately
     uint64_t ping_at = zclock_time ();
     zmq_pollitem_t pollitems [] = {
-        { self->pipe, 0, ZMQ_POLLIN, 0 },
-        { self->inbox, 0, ZMQ_POLLIN, 0 },
-        { 0, zre_udp_handle (self->udp), ZMQ_POLLIN, 0 },
+        { self->pipe,                           0, ZMQ_POLLIN, 0 },
+        { self->inbox,                          0, ZMQ_POLLIN, 0 },
+        { 0,           zre_udp_handle (self->udp), ZMQ_POLLIN, 0 },
         { fmq_client_handle (self->fmq_client), 0, ZMQ_POLLIN, 0 }
     };
     while (!zctx_interrupted) {

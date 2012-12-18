@@ -25,19 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
-#include "platform.h"
-
-#ifdef HAVE_LINUX_WIRELESS_H
-# include <linux/wireless.h>
-#else
-#  ifdef HAVE_NET_IF_H
-#   include <net/if.h>
-#  endif
-#  ifdef HAVE_NET_IF_MEDIA_H
-#   include <net/if_media.h>
-#  endif
-#endif
+#include "../include/zre_internal.h"
 
 //  -----------------------------------------------------------------
 //  UDP instance
@@ -127,48 +115,37 @@ s_wireless_nic (const char* name)
 //  -----------------------------------------------------------------
 //  Constructor
 
-#if (defined(__WINDOWS__))
+#if (defined (__WINDOWS__))
 static void
-s_win_get_interface(zre_udp_t *self)
+s_win_get_interface (zre_udp_t *self)
 {
-    // currently does not filter for wireless nic
+    //  Currently does not filter for wireless NIC
+    ULONG addr_size = 0;
+    DWORD rc = GetAdaptersAddresses (AF_INET, GAA_FLAG_INCLUDE_PREFIX,
+                                     NULL, NULL, &addr_size);
+    assert (rc == ERROR_BUFFER_OVERFLOW);
+    
+    PIP_ADAPTER_ADDRESSES pip_addresses = malloc (addr_size);
+    rc = GetAdaptersAddresses (AF_INET, GAA_FLAG_INCLUDE_PREFIX,
+                               NULL, pip_addresses, &addr_size);
+    assert (rc == NO_ERROR);
 
-    ULONG outBufLen = 0;
-    PIP_ADAPTER_ADDRESSES pAddresses = NULL;
-    DWORD dwRetVal;
-    ULONG Flags = GAA_FLAG_INCLUDE_PREFIX;
-
-    PIP_ADAPTER_ADDRESSES pCurrAddresses;
-    PIP_ADAPTER_UNICAST_ADDRESS pUnicast;
-    PIP_ADAPTER_PREFIX pPrefix;
-
-    dwRetVal = GetAdaptersAddresses (AF_INET, Flags, NULL, pAddresses, &outBufLen);
-    assert( dwRetVal==ERROR_BUFFER_OVERFLOW );
-
-    pAddresses = malloc (outBufLen);
-
-    dwRetVal = GetAdaptersAddresses (AF_INET, Flags, NULL, pAddresses, &outBufLen);
-    assert( dwRetVal==NO_ERROR );
-
-    pCurrAddresses = pAddresses;
-    while (pCurrAddresses) {
-        pUnicast = pCurrAddresses->FirstUnicastAddress;
-        pPrefix = pCurrAddresses->FirstPrefix;
+    PIP_ADAPTER_ADDRESSES cur_address = pip_addresses;
+    while (cur_address) {
+        PIP_ADAPTER_UNICAST_ADDRESS pUnicast = cur_address->FirstUnicastAddress;
+        PIP_ADAPTER_PREFIX pPrefix = cur_address->FirstPrefix;
 
         if (pUnicast && pPrefix) {
             self->address = *(struct sockaddr_in *)(pUnicast->Address.lpSockaddr);
 
-            // actually self->broadcast.sin_addr is replaced with 255.255.255.255 in zre_udp_send()
+            //  self->broadcast.sin_addr is replaced with 255.255.255.255 in zre_udp_send()
             self->broadcast = *(struct sockaddr_in *)(pPrefix->Address.lpSockaddr);
             self->broadcast.sin_addr.s_addr |= htonl ((1 << (32 - pPrefix->PrefixLength)) - 1);
         }
-
         self->broadcast.sin_port = htons (self->port_nbr);
-
-        pCurrAddresses = pCurrAddresses->Next;
+        cur_address = cur_address->Next;
     }
-
-    free (pAddresses);
+    free (pip_addresses);
 }
 #endif
 
@@ -344,11 +321,11 @@ zre_udp_recv (zre_udp_t *self, byte *buffer, size_t length)
         free (self->from);
     self->from = zmalloc (INET_ADDRSTRLEN);
 #if (defined (__WINDOWS__))
-    getnameinfo ((struct sockaddr *)&self->sender, si_len, self->from, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
+    getnameinfo ((struct sockaddr *) &self->sender, si_len,
+                 self->from, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
 #else
     inet_ntop (AF_INET, &self->sender.sin_addr, self->from, si_len);
 #endif
-    
     return size;
 }
 
