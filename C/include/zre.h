@@ -29,7 +29,6 @@
 
 #include <czmq.h>
 
-
 #define ZRE_VERSION_MAJOR 0
 #define ZRE_VERSION_MINOR 2
 #define ZRE_VERSION_PATCH 0
@@ -67,6 +66,9 @@
 #include "zre_group.h"
 #include "zre_log.h"
 #include "zre_log_msg.h"
+
+//  This is the only class that applications should use
+//  We should not export the others...
 #include "zre_interface.h"
 
 #endif

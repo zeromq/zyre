@@ -34,47 +34,47 @@ extern "C" {
 typedef struct _zre_interface_t zre_interface_t;
 
 //  Constructor
-zre_interface_t *
+CZMQ_EXPORT zre_interface_t *
     zre_interface_new (void);
 
 //  Destructor
-void
+CZMQ_EXPORT void
     zre_interface_destroy (zre_interface_t **self_p);
 
 //  Set interface tracing on or off
-void
+CZMQ_EXPORT void
     zre_interface_verbose_set (zre_interface_t *self, bool verbose);
 
 //  Join a group
-int
+CZMQ_EXPORT int
     zre_interface_join (zre_interface_t *self, const char *group);
     
 //  Leave a group
-int
+CZMQ_EXPORT int
     zre_interface_leave (zre_interface_t *self, const char *group);
 
 //  Receive next message from interface
-zmsg_t *
+CZMQ_EXPORT zmsg_t *
     zre_interface_recv (zre_interface_t *self);
 
 //  Send message to single peer; peer ID is first frame in message
-int
+CZMQ_EXPORT int
     zre_interface_whisper (zre_interface_t *self, zmsg_t **msg_p);
     
 //  Send message to a group of peers
-int
+CZMQ_EXPORT int
     zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p);
     
 //  Return interface handle, for polling
-void *
+CZMQ_EXPORT void *
     zre_interface_handle (zre_interface_t *self);
 
 //  Set node header value
-void
+CZMQ_EXPORT void
     zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...);
 
 //  Publish file into virtual space
-void
+CZMQ_EXPORT void
     zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual);
 
 #ifdef __cplusplus
