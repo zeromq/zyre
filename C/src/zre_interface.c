@@ -217,6 +217,8 @@ mkdirs (const char *path, mode_t mode)
                     return -1;
                 char parent [255];
                 snprintf (parent, slash - path + 1, "%s", path);
+                // MSVCRT sprintf does not guarantee nul termination
+                parent [slash - path] = '\0';
 
                 if (mkdirs (parent, mode) < 0)
                     return -1;
@@ -294,25 +296,47 @@ s_tmpdir (void)
 #define BEACON_PROTOCOL     "ZRE"
 #define BEACON_VERSION      0x01
 
+#if (defined (__WINDOWS__))
 #pragma pack(1)
+typedef struct {
+    UUID uuid;      // UUID is itself a struct
+} uuid_blob_t;
+#pragma pack()
+
+static void
+s_uuid_blob_generate (uuid_blob_t *uuid)
+{
+    UuidCreate (&uuid->uuid);
+}
+#else
+typedef struct {
+    uuid_t uuid;    // typedef unsigned char uuid_t[16];
+} uuid_blob_t;
+
+static void
+s_uuid_blob_generate (uuid_blob_t *uuid)
+{
+    uuid_generate (uuid->uuid);
+}
+#endif
+
 typedef struct {
     byte protocol [3];
     byte version;
-    uuid_t uuid;
+    uuid_blob_t uuid;
     uint16_t port;
 } beacon_t;
-#pragma pack()
 
 
 //  Convert binary UUID to freshly allocated string
 
 static char *
-s_uuid_str (uuid_t uuid)
+s_uuid_str (uuid_blob_t *uuid)
 {
     char hex_char [] = "0123456789ABCDEF";
-    char *string = zmalloc (sizeof (uuid_t) * 2 + 1);
+    char *string = zmalloc (sizeof (uuid_blob_t) * 2 + 1);
     int byte_nbr;
-    for (byte_nbr = 0; byte_nbr < sizeof (uuid_t); byte_nbr++) {
+    for (byte_nbr = 0; byte_nbr < sizeof (uuid_blob_t); byte_nbr++) {
         uint val = ((byte *) uuid) [byte_nbr];
         string [byte_nbr * 2 + 0] = hex_char [val >> 4];
         string [byte_nbr * 2 + 1] = hex_char [val & 15];
@@ -329,7 +353,7 @@ typedef struct {
     void *pipe;                 //  Pipe back to application
     zre_udp_t *udp;             //  UDP object
     zre_log_t *log;             //  Log object
-    uuid_t uuid;                //  Our UUID as binary blob
+    uuid_blob_t uuid;           //  Our UUID as binary blob
     char *identity;             //  Our UUID as hex string
     void *inbox;                //  Our inbox socket (ROUTER)
     char *host;                 //  Our host IP address
@@ -369,13 +393,8 @@ agent_new (zctx_t *ctx, void *pipe)
         free (self);
         return NULL;
     }
-#if (defined (__WINDOWS__))
-    UuidCreate (&self->uuid);
+    s_uuid_blob_generate (&self->uuid);
     self->identity = s_uuid_str (&self->uuid);
-#else
-    uuid_generate (self->uuid);
-    self->identity = s_uuid_str (self->uuid);
-#endif
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
     self->own_groups = zhash_new ();
@@ -767,11 +786,7 @@ agent_beacon_send (agent_t *self)
     beacon.protocol [1] = 'R';
     beacon.protocol [2] = 'E';
     beacon.version = BEACON_VERSION;
-#if (defined (__WINDOWS__))
-    memcpy (&beacon.uuid, &self->uuid, sizeof (uuid_t));
-#else
-    memcpy (beacon.uuid, self->uuid, sizeof (uuid_t));
-#endif
+    memcpy (&beacon.uuid, &self->uuid, sizeof (uuid_blob_t));
     beacon.port = htons (self->port);
     
     //  Broadcast the beacon to anyone who is listening
@@ -797,13 +812,8 @@ agent_recv_udp_beacon (agent_t *self)
         return 0;               //  Ignore invalid beacons
 
     //  If we got a UUID and it's not our own beacon, we have a peer
-#if (defined (__WINDOWS__))
-    if (memcmp (&beacon.uuid, &self->uuid, sizeof (uuid_t))) {
+    if (memcmp (&beacon.uuid, &self->uuid, sizeof (uuid_blob_t))) {
         char *identity = s_uuid_str (&beacon.uuid);
-#else
-    if (memcmp (beacon.uuid, self->uuid, sizeof (uuid_t))) {
-        char *identity = s_uuid_str (beacon.uuid);
-#endif
         zre_peer_t *peer = s_require_peer (
             self, identity, zre_udp_from (self->udp), ntohs (beacon.port));
         zre_peer_refresh (peer);
