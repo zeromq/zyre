@@ -37,6 +37,7 @@ char *zre_global_tmpdir = NULL;
 
 struct _zre_interface_t {
     zctx_t *ctx;                //  Our context wrapper
+    bool ctx_owned;             //  True if we created the context
     void *pipe;                 //  Pipe through to agent
 };
 
@@ -59,7 +60,12 @@ zre_interface_new (void)
 
     self = (zre_interface_t *) zmalloc (sizeof (zre_interface_t));
     //  If caller set a default ctx use that, else create our own
-    self->ctx = zre_global_ctx? zre_global_ctx: zctx_new ();
+    if (zre_global_ctx)
+        self->ctx = zre_global_ctx;
+    else {
+        self->ctx = zctx_new ();
+        self->ctx_owned = true;
+    }
     self->pipe = zthread_fork (self->ctx, zre_interface_agent, NULL);
     return self;
 }
@@ -74,7 +80,8 @@ zre_interface_destroy (zre_interface_t **self_p)
     assert (self_p);
     if (*self_p) {
         zre_interface_t *self = *self_p;
-        zctx_destroy (&self->ctx);
+        if (self->ctx_owned)
+            zctx_destroy (&self->ctx);
         free (self);
         *self_p = NULL;
     }
