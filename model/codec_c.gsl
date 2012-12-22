@@ -1125,7 +1125,7 @@ $(class.name)_$(name)_number ($(class.name)_t *self, char *key, uint64_t default
 {
     assert (self);
     uint64_t value = default_value;
-    char *string;
+    char *string = NULL;
     if (self->$(name))
         string = (char *) (zhash_lookup (self->$(name), key));
     if (string)
