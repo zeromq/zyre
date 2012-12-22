@@ -61,14 +61,16 @@ s_handle_io_error (char *reason)
 #   endif
     if (errno == EAGAIN
     ||  errno == ENETDOWN
+#   ifndef __WINDOWS__
     ||  errno == EPROTO
     ||  errno == ENOPROTOOPT
     ||  errno == EHOSTDOWN
     ||  errno == ENONET
-    ||  errno == EHOSTUNREACH
     ||  errno == EOPNOTSUPP
-    ||  errno == ENETUNREACH
     ||  errno == EWOULDBLOCK
+#   endif
+    ||  errno == EHOSTUNREACH
+    ||  errno == ENETUNREACH
     ||  errno == EINTR)
         return;             //  Ignore error and try again
     else

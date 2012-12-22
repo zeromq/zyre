@@ -44,6 +44,17 @@
 #  endif
 #endif
 
+#if defined (__WINDOWS__)
+#   if (_WIN32_WINNT >= 0x0501)
+#   else
+#       undef _WIN32_WINNT
+#       define _WIN32_WINNT 0x0501
+#   endif
+#include <ws2tcpip.h>           // getnameinfo()
+#include <iphlpapi.h>           // GetAdaptersAddresses()
+#endif
+
+
 //  Constants, to be configured/reviewed
 
 #define PING_INTERVAL    1000   //  Once per second
