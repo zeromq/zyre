@@ -12,11 +12,11 @@ libzre_la_include_HEADERS = \
     ../include/zre_group.h \
     ../include/zre_log.h \
     ../include/zre_log_msg.h \
-    ../include/zre_interface.h
+    ../include/zre_node.h
 
 
 libzre_la_SOURCES = \
-    zre_interface.c \
+    zre_node.c \
     zre_group.c \
     zre_log.c \
     zre_log_msg.c \

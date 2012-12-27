@@ -27,14 +27,14 @@
 #include <czmq.h>
 #include "../include/zre.h"
 
-// to test performances, run zre_perf_remote [interface_count] first then zre_perf_local
+// to test performances, run zre_perf_remote [node_count] first then zre_perf_local
 
 #define MAX_GROUP 10
 
 static void
-interface_task (void *args, zctx_t *ctx, void *pipe)
+node_task (void *args, zctx_t *ctx, void *pipe)
 {
-    zre_interface_t *interface = zre_interface_new ();
+    zre_node_t *node = zre_node_new ();
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
@@ -43,11 +43,11 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
     
     zmq_pollitem_t pollitems [] = {
         { pipe,                             0, ZMQ_POLLIN, 0 },
-        { zre_interface_handle (interface), 0, ZMQ_POLLIN, 0 }
+        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
     };
 
-    // all interface joins GLOBAL
-    zre_interface_join (interface, "GLOBAL");
+    // all node joins GLOBAL
+    zre_node_join (node, "GLOBAL");
 
     while (!zctx_interrupted) {
         if (zmq_poll (pollitems, 2, randof (1000) * ZMQ_POLL_MSEC) == -1)
@@ -56,9 +56,9 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
         if (pollitems [0].revents & ZMQ_POLLIN)
             break;              //  Any command from parent means EXIT
 
-        //  Process an event from interface
+        //  Process an event from node
         if (pollitems [1].revents & ZMQ_POLLIN) {
-            zmsg_t *incoming = zre_interface_recv (interface);
+            zmsg_t *incoming = zre_node_recv (node);
             if (!incoming)
                 break;              //  Interrupted
 
@@ -115,7 +115,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                 zmsg_t *outgoing = zmsg_new ();
                 zmsg_addstr (outgoing, to_peer);
                 zmsg_addstr (outgoing, sending_cookie);
-                zre_interface_whisper (interface, &outgoing);
+                zre_node_whisper (node, &outgoing);
                 free (to_peer);
                 to_peer = NULL;
             }
@@ -123,7 +123,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                 zmsg_t *outgoing = zmsg_new ();
                 zmsg_addstr (outgoing, to_group);
                 zmsg_addstr (outgoing, sending_cookie);
-                zre_interface_shout (interface, &outgoing);
+                zre_node_shout (node, &outgoing);
                 free (to_group);
                 to_group = NULL;
             }
@@ -133,7 +133,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
             }
         }
     }
-    zre_interface_destroy (&interface);
+    zre_node_destroy (&node);
 }
 
 
@@ -143,20 +143,20 @@ int main (int argc, char *argv [])
     zctx_t *ctx = zctx_new ();
     zctx_set_linger (ctx, 100);
     
-    //  Get number of interfaces to simulate, default 100
-    int max_interface = 100;
-    int nbr_interface = 0;
+    //  Get number of nodes to simulate, default 100
+    int max_node = 100;
+    int nbr_node = 0;
     if (argc > 1)
-        max_interface = atoi (argv [1]);
+        max_node = atoi (argv [1]);
 
-    //  We address interfaces as an array of pipes
-    void **pipes = zmalloc (sizeof (void *) * max_interface);
+    //  We address nodes as an array of pipes
+    void **pipes = zmalloc (sizeof (void *) * max_node);
 
-    for (nbr_interface = 0; nbr_interface < max_interface; nbr_interface++) {
-        pipes [nbr_interface] = zthread_fork (ctx, interface_task, NULL);
-        zclock_log ("I: Started interface (%d running)", nbr_interface + 1);
+    for (nbr_node = 0; nbr_node < max_node; nbr_node++) {
+        pipes [nbr_node] = zthread_fork (ctx, node_task, NULL);
+        zclock_log ("I: Started node (%d running)", nbr_node + 1);
     }
-    //  We will randomly start and stop interface threads
+    //  We will randomly start and stop node threads
     while (!zctx_interrupted) {
         zclock_sleep (1000);
     }

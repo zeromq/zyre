@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_interface - interface to a ZRE network
+    zre_node - node on a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -27,7 +27,7 @@
 #include <czmq.h>
 #include "../include/zre_internal.h"
 
-//  Optional global context for zre_interface instances
+//  Optional global context for zre_node instances
 zctx_t *zre_global_ctx = NULL;
 //  Optional temp directory; set by caller if needed
 char *zre_global_tmpdir = NULL;
@@ -35,7 +35,7 @@ char *zre_global_tmpdir = NULL;
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_interface_t {
+struct _zre_node_t {
     zctx_t *ctx;                //  Our context wrapper
     bool ctx_owned;             //  True if we created the context
     void *pipe;                 //  Pipe through to agent
@@ -44,21 +44,21 @@ struct _zre_interface_t {
 //  =====================================================================
 //  Synchronous part, works in our application thread
 
-//  This is the thread that handles our real interface class
+//  This is the thread that handles our real node class
 static void
-    zre_interface_agent (void *args, zctx_t *ctx, void *pipe);
+    zre_node_agent (void *args, zctx_t *ctx, void *pipe);
 
 
 //  ---------------------------------------------------------------------
 //  Constructor
 
-zre_interface_t *
-zre_interface_new (void)
+zre_node_t *
+zre_node_new (void)
 {
-    zre_interface_t
+    zre_node_t
         *self;
 
-    self = (zre_interface_t *) zmalloc (sizeof (zre_interface_t));
+    self = (zre_node_t *) zmalloc (sizeof (zre_node_t));
     //  If caller set a default ctx use that, else create our own
     if (zre_global_ctx)
         self->ctx = zre_global_ctx;
@@ -66,7 +66,7 @@ zre_interface_new (void)
         self->ctx = zctx_new ();
         self->ctx_owned = true;
     }
-    self->pipe = zthread_fork (self->ctx, zre_interface_agent, NULL);
+    self->pipe = zthread_fork (self->ctx, zre_node_agent, NULL);
     return self;
 }
 
@@ -75,11 +75,11 @@ zre_interface_new (void)
 //  Destructor
 
 void
-zre_interface_destroy (zre_interface_t **self_p)
+zre_node_destroy (zre_node_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
-        zre_interface_t *self = *self_p;
+        zre_node_t *self = *self_p;
         if (self->ctx_owned)
             zctx_destroy (&self->ctx);
         free (self);
@@ -88,11 +88,11 @@ zre_interface_destroy (zre_interface_t **self_p)
 }
 
 //  ---------------------------------------------------------------------
-//  Receive next message from interface
+//  Receive next message from node
 //  Returns zmsg_t object, or NULL if interrupted
 
 zmsg_t *
-zre_interface_recv (zre_interface_t *self)
+zre_node_recv (zre_node_t *self)
 {
     assert (self);
     zmsg_t *msg = zmsg_recv (self->pipe);
@@ -104,7 +104,7 @@ zre_interface_recv (zre_interface_t *self)
 //  Join a group
 
 int
-zre_interface_join (zre_interface_t *self, const char *group)
+zre_node_join (zre_node_t *self, const char *group)
 {
     assert (self);
     zstr_sendm (self->pipe, "JOIN");
@@ -117,7 +117,7 @@ zre_interface_join (zre_interface_t *self, const char *group)
 //  Leave a group
 
 int
-zre_interface_leave (zre_interface_t *self, const char *group)
+zre_node_leave (zre_node_t *self, const char *group)
 {
     assert (self);
     zstr_sendm (self->pipe, "LEAVE");
@@ -131,7 +131,7 @@ zre_interface_leave (zre_interface_t *self, const char *group)
 //  Destroys message after sending
 
 int
-zre_interface_whisper (zre_interface_t *self, zmsg_t **msg_p)
+zre_node_whisper (zre_node_t *self, zmsg_t **msg_p)
 {
     assert (self);
     zstr_sendm (self->pipe, "WHISPER");
@@ -144,7 +144,7 @@ zre_interface_whisper (zre_interface_t *self, zmsg_t **msg_p)
 //  Send message to a group of peers
 
 int
-zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p)
+zre_node_shout (zre_node_t *self, zmsg_t **msg_p)
 {
     assert (self);
     zstr_sendm (self->pipe, "SHOUT");
@@ -154,10 +154,10 @@ zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p)
 
 
 //  ---------------------------------------------------------------------
-//  Return interface handle, for polling
+//  Return node handle, for polling
 
 void *
-zre_interface_handle (zre_interface_t *self)
+zre_node_handle (zre_node_t *self)
 {
     assert (self);    
     return self->pipe;
@@ -168,7 +168,7 @@ zre_interface_handle (zre_interface_t *self)
 //  Set node header value
 
 void
-zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...)
+zre_node_header_set (zre_node_t *self, char *name, char *format, ...)
 {
     assert (self);
     va_list argptr;
@@ -188,7 +188,7 @@ zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...)
 //  Publish file into virtual space
 
 void
-zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual)
+zre_node_publish (zre_node_t *self, char *pathname, char *virtual)
 {
     zstr_sendm (self->pipe, "PUBLISH");
     zstr_sendm (self->pipe, pathname);
@@ -199,7 +199,7 @@ zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual)
 //  Retract published file
 
 void
-zre_interface_retract (zre_interface_t *self, char *virtual)
+zre_node_retract (zre_node_t *self, char *virtual)
 {
     zstr_sendm (self->pipe, "RETRACT");
     zstr_send  (self->pipe, virtual);
@@ -889,7 +889,7 @@ agent_ping_peer (const char *key, void *item, void *argument)
 //  The agent handles API commands
 
 static void
-zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
+zre_node_agent (void *args, zctx_t *ctx, void *pipe)
 {
     //  Create agent instance to pass around
     agent_t *self = agent_new (ctx, pipe);
