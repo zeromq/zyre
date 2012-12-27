@@ -1,2 +1,2 @@
-gsl -q -script:codec_c    zre_msg.xml zre_log_msg.xml
-gsl -q -script:codec_java zre_msg.xml zre_log_msg.xml
+gsl -q -script:codec_c zre_msg.xml zre_log_msg.xml
+gsl -q -script:codec_java -package:zyre zre_msg.xml zre_log_msg.xml
