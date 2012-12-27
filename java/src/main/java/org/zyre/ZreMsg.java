@@ -532,7 +532,7 @@ public class ZreMsg
         case WHISPER:
             //  If content isn't set, send an empty frame
             if (content == null)
-                content = new ZFrame ((byte []) null);
+                content = new ZFrame ("".getBytes ());
             if (!content.sendAndDestroy (socket, 0)) {
                 frame.destroy ();
                 destroy ();
@@ -542,7 +542,7 @@ public class ZreMsg
         case SHOUT:
             //  If content isn't set, send an empty frame
             if (content == null)
-                content = new ZFrame ((byte []) null);
+                content = new ZFrame ("".getBytes ());
             if (!content.sendAndDestroy (socket, 0)) {
                 frame.destroy ();
                 destroy ();
@@ -985,7 +985,10 @@ public class ZreMsg
 
     public void setHeaders (Map <String, String> value)
     {
-        headers = new HashMap <String, String> (value); 
+        if (value != null)
+            headers = new HashMap <String, String> (value); 
+        else
+            headers = value;
     }
 
 
