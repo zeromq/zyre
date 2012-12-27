@@ -185,24 +185,25 @@ zre_node_header_set (zre_node_t *self, char *name, char *format, ...)
 
 
 //  ---------------------------------------------------------------------
-//  Publish file into virtual space
+//  Publish file under some logical name
+//  Physical name is the actual file location
 
 void
-zre_node_publish (zre_node_t *self, char *pathname, char *virtual)
+zre_node_publish (zre_node_t *self, char *logical, char *physical)
 {
     zstr_sendm (self->pipe, "PUBLISH");
-    zstr_sendm (self->pipe, pathname);
-    zstr_send  (self->pipe, virtual);
+    zstr_sendm (self->pipe, logical);
+    zstr_send  (self->pipe, physical);
 }
 
 //  ---------------------------------------------------------------------
 //  Retract published file
 
 void
-zre_node_retract (zre_node_t *self, char *virtual)
+zre_node_retract (zre_node_t *self, char *logical)
 {
     zstr_sendm (self->pipe, "RETRACT");
-    zstr_send  (self->pipe, virtual);
+    zstr_send  (self->pipe, logical);
 }
 
 
@@ -563,34 +564,34 @@ agent_recv_from_api (agent_t *self)
     }
     else
     if (streq (command, "PUBLISH")) {
-        char *filename = zmsg_popstr (request);
-        char *virtual = zmsg_popstr (request);
+        char *logical = zmsg_popstr (request);
+        char *physical = zmsg_popstr (request);
         //  Virtual filename must start with slash
-        assert (virtual [0] == '/');
+        assert (logical [0] == '/');
         //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (virtual) + 3);
-        sprintf (symlink, "%s.ln", virtual + 1);
+        char *symlink = malloc (strlen (logical) + 3);
+        sprintf (symlink, "%s.ln", logical + 1);
         fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
         int rc = fmq_file_output (file);
         assert (rc == 0);
-        fprintf (fmq_file_handle (file), "%s\n", filename);
+        fprintf (fmq_file_handle (file), "%s\n", physical);
         fmq_file_destroy (&file);
         free (symlink);
-        free (filename);
-        free (virtual);
+        free (logical);
+        free (physical);
     }
     else
     if (streq (command, "RETRACT")) {
-        char *virtual = zmsg_popstr (request);
-        //  Virtual filename must start with slash
-        assert (virtual [0] == '/');
+        char *logical = zmsg_popstr (request);
+        //  Logical filename must start with slash
+        assert (logical [0] == '/');
         //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (virtual) + 3);
-        sprintf (symlink, "%s.ln", virtual + 1);
+        char *symlink = malloc (strlen (logical) + 3);
+        sprintf (symlink, "%s.ln", logical + 1);
         fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
         fmq_file_remove (file);
         free (symlink);
-        free (virtual);
+        free (logical);
     }
     free (command);
     zmsg_destroy (&request);

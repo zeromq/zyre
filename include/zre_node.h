@@ -80,13 +80,14 @@ CZMQ_EXPORT void *
 CZMQ_EXPORT void
     zre_node_header_set (zre_node_t *self, char *name, char *format, ...);
 
-//  Publish file into virtual space
+//  Publish file under some logical name
+//  Physical name is the actual file location
 CZMQ_EXPORT void
-    zre_node_publish (zre_node_t *self, char *pathname, char *virtual);
+    zre_node_publish (zre_node_t *self, char *logical, char *physical);
 
-//  Retract file publish
+//  Retract published file 
 CZMQ_EXPORT void
-    zre_node_retract (zre_node_t *self, char *virtual);
+    zre_node_retract (zre_node_t *self, char *logical);
 
 #ifdef __cplusplus
 }
