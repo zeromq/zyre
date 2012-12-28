@@ -15,7 +15,6 @@ libzre_la_include_HEADERS = \
     ../include/zre_uuid.h \
     ../include/zre_node.h
 
-
 libzre_la_SOURCES = \
     zre_node.c \
     zre_group.c \
