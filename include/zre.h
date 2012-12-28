@@ -42,8 +42,8 @@
 #endif
 
 #include <fmq.h>
-#if FMQ_VERSION < 10000
-#   error "Zyre needs FMQ/1.0.0 or later"
+#if FMQ_VERSION < 10100
+#   error "Zyre needs FileMQ/1.1.0 or later"
 #endif
 
 //  Defined port numbers, pending IANA submission

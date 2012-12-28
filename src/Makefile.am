@@ -12,6 +12,7 @@ libzre_la_include_HEADERS = \
     ../include/zre_group.h \
     ../include/zre_log.h \
     ../include/zre_log_msg.h \
+    ../include/zre_uuid.h \
     ../include/zre_node.h
 
 
@@ -22,10 +23,12 @@ libzre_la_SOURCES = \
     zre_log_msg.c \
     zre_msg.c \
     zre_peer.c \
+    zre_uuid.c \
     zre_udp.c 
 
 INCLUDES = -I$(top_srcdir)/include
-bin_PROGRAMS = zre_ping zre_tester zre_logger zre_perf_local zre_perf_remote
+bin_PROGRAMS = zre_selftest zre_ping zre_tester zre_logger zre_perf_local zre_perf_remote
+zre_selftest_LDADD = libzre.la
 zre_ping_LDADD = libzre.la
 zre_tester_LDADD = libzre.la
 zre_logger_LDADD = libzre.la
@@ -38,4 +41,4 @@ else
 libzre_la_LDFLAGS = -version-info @LTVER@
 endif
 
-TESTS = zyre_selftest
+TESTS = zre_selftest

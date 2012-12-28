@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_internal.h - Zyre internal library header
+    zre_uuid - UUID support class
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -24,37 +24,47 @@
     =========================================================================
 */
 
-#ifndef __ZRE_INTERNAL_H_INCLUDED__
-#define __ZRE_INTERNAL_H_INCLUDED__
+#ifndef __ZRE_UUID_H_INCLUDED__
+#define __ZRE_UUID_H_INCLUDED__
 
-#include "zre.h"
-// #include "platform.h"
+#define ZRE_UUID_LEN    16
 
-#if defined (__WINDOWS__)
-#   if (_WIN32_WINNT >= 0x0501)
-#   else
-#       undef _WIN32_WINNT
-#       define _WIN32_WINNT 0x0501
-#   endif
-#   include <ws2tcpip.h>           // getnameinfo()
-#   include <iphlpapi.h>           // GetAdaptersAddresses()
+#ifdef __cplusplus
+extern "C" {
 #endif
 
+typedef struct _zre_uuid_t zre_uuid_t;
 
-//  Constants, to be configured/reviewed
+//  Constructor
+zre_uuid_t *
+    zre_uuid_new (void);
 
-#define PING_INTERVAL    1000   //  Once per second
-#define PEER_EVASIVE     5000   //  Five seconds' silence is evasive
-#define PEER_EXPIRED    10000   //  Ten seconds' silence is expired
+//  Destructor
+void
+    zre_uuid_destroy (zre_uuid_t **self_p);
 
-//  Classes in this stack
+//  Returns UUID as string
+char *
+    zre_uuid_str (zre_uuid_t *self);
 
-#include "zre_udp.h"
-#include "zre_msg.h"
-#include "zre_peer.h"
-#include "zre_group.h"
-#include "zre_log.h"
-#include "zre_log_msg.h"
-#include "zre_uuid.h"
+//  Set UUID to new supplied value 
+void
+    zre_uuid_set (zre_uuid_t *self, byte *source);
+    
+//  Store UUID blob in target array
+void
+    zre_uuid_cpy (zre_uuid_t *self, byte *target);
+
+//  Check if UUID is same as supplied value
+bool
+    zre_uuid_eq (zre_uuid_t *self, byte *compare);
+
+//  Self test of this class
+int
+    zre_uuid_test (bool verbose);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

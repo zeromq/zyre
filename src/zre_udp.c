@@ -27,6 +27,19 @@
 #include <czmq.h>
 #include "../include/zre_internal.h"
 
+#include "platform.h"
+#if defined (HAVE_LINUX_WIRELESS_H)
+#   include <linux/wireless.h>
+#else
+#   if defined (HAVE_NET_IF_H)
+#       include <net/if.h>
+#   endif
+#   if defined (HAVE_NET_IF_MEDIA_H)
+#       include <net/if_media.h>
+#   endif
+#endif
+
+
 //  -----------------------------------------------------------------
 //  UDP instance
 
