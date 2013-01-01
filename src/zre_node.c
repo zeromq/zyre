@@ -779,7 +779,7 @@ agent_recv_udp_beacon (agent_t *self)
         return 0;               //  Ignore invalid beacons
 
     //  If we got a UUID and it's not our own beacon, we have a peer
-    if (zre_uuid_eq (self->uuid, beacon.uuid)) {
+    if (zre_uuid_neq (self->uuid, beacon.uuid)) {
         zre_uuid_t *uuid = zre_uuid_new ();
         zre_uuid_set (uuid, beacon.uuid);
         zre_peer_t *peer = s_require_peer (

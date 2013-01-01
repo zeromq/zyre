@@ -127,6 +127,17 @@ zre_uuid_eq (zre_uuid_t *self, byte *compare)
 }
 
 
+//  -----------------------------------------------------------------
+//  Check if UUID is different from supplied value
+
+bool
+zre_uuid_neq (zre_uuid_t *self, byte *compare)
+{
+    assert (self);
+    return (memcmp (self->uuid, compare, ZRE_UUID_LEN) != 0);
+}
+
+
 //  --------------------------------------------------------------------------
 //  Selftest
 

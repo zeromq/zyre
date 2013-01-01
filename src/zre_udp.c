@@ -304,7 +304,7 @@ s_get_interface (zre_udp_t *self)
     if (getifaddrs (&interfaces) == 0) {
         struct ifaddrs *interface = interfaces;
         while (interface) {
-            //  Hopefully the last interface will be WiFi
+            //  Hopefully the last interface will be WiFi or Ethernet
             if (interface->ifa_addr->sa_family == AF_INET) {
                 self->address = *(struct sockaddr_in *) interface->ifa_addr;
                 self->broadcast = *(struct sockaddr_in *) interface->ifa_broadaddr;

@@ -59,6 +59,10 @@ void
 bool
     zre_uuid_eq (zre_uuid_t *self, byte *compare);
 
+//  Check if UUID is different from supplied value
+bool
+    zre_uuid_neq (zre_uuid_t *self, byte *compare);
+
 //  Self test of this class
 int
     zre_uuid_test (bool verbose);
