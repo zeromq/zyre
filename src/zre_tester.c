@@ -29,13 +29,13 @@
 
 #define MAX_GROUP 10
 
-//  List of active interfaces
-static zhash_t *interfaces;
+//  List of active nodes
+static zhash_t *nodes;
 
 static void
-interface_task (void *args, zctx_t *ctx, void *pipe)
+node_task (void *args, zctx_t *ctx, void *pipe)
 {
-    zre_interface_t *interface = zre_interface_new ();
+    zre_node_t *node = zre_node_new ();
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
@@ -43,7 +43,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
     
     zmq_pollitem_t pollitems [] = {
         { pipe,                             0, ZMQ_POLLIN, 0 },
-        { zre_interface_handle (interface), 0, ZMQ_POLLIN, 0 }
+        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
     };
     //  Do something once a second
     int64_t trigger = zclock_time () + 1000;
@@ -54,9 +54,9 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
         if (pollitems [0].revents & ZMQ_POLLIN)
             break;              //  Any command from parent means EXIT
 
-        //  Process an event from interface
+        //  Process an event from node
         if (pollitems [1].revents & ZMQ_POLLIN) {
-            zmsg_t *incoming = zre_interface_recv (interface);
+            zmsg_t *incoming = zre_node_recv (node);
             if (!incoming)
                 break;              //  Interrupted
 
@@ -99,7 +99,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                 char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
                 if (randof (3) > 0) {
-                    zre_interface_join (interface, group);
+                    zre_node_join (node, group);
                 }
                 free (from_peer);
                 free (group);
@@ -109,7 +109,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                 char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
                 if (randof (3) > 0) {
-                    zre_interface_leave (interface, group);
+                    zre_node_leave (node, group);
                 }
                 free (from_peer);
                 free (group);
@@ -130,7 +130,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                 zmsg_t *outgoing = zmsg_new ();
                 zmsg_addstr (outgoing, to_peer);
                 zmsg_addstr (outgoing, "%lu", counter++);
-                zre_interface_whisper (interface, &outgoing);
+                zre_node_whisper (node, &outgoing);
                 free (to_peer);
                 to_peer = NULL;
             }
@@ -138,7 +138,7 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
                 zmsg_t *outgoing = zmsg_new ();
                 zmsg_addstr (outgoing, to_group);
                 zmsg_addstr (outgoing, "%lu", counter++);
-                zre_interface_shout (interface, &outgoing);
+                zre_node_shout (node, &outgoing);
                 free (to_group);
                 to_group = NULL;
             }
@@ -152,13 +152,13 @@ interface_task (void *args, zctx_t *ctx, void *pipe)
             char group [10];
             sprintf (group, "GROUP%03d", randof (MAX_GROUP));
             if (randof (4) == 0)
-                zre_interface_join (interface, group);
+                zre_node_join (node, group);
             else
             if (randof (3) == 0)
-                zre_interface_leave (interface, group);
+                zre_node_leave (node, group);
         }
     }
-    zre_interface_destroy (&interface);
+    zre_node_destroy (&node);
 }
 
 
@@ -168,32 +168,32 @@ int main (int argc, char *argv [])
     zctx_t *ctx = zctx_new ();
     zctx_set_linger (ctx, 100);
     
-    //  Get number of interfaces to simulate, default 100
-    int max_interface = 100;
-    int nbr_interfaces = 0;
+    //  Get number of nodes to simulate, default 100
+    int max_node = 100;
+    int nbr_nodes = 0;
     int max_iterations = -1;
     int nbr_iterations = 0;
     if (argc > 1)
-        max_interface = atoi (argv [1]);
+        max_node = atoi (argv [1]);
     if (argc > 2)
         max_iterations = atoi (argv [2]);
 
-    //  We address interfaces as an array of pipes
-    void **pipes = zmalloc (sizeof (void *) * max_interface);
+    //  We address nodes as an array of pipes
+    void **pipes = zmalloc (sizeof (void *) * max_node);
 
-    //  We will randomly start and stop interface threads
+    //  We will randomly start and stop node threads
     while (!zctx_interrupted) {
-        uint index = randof (max_interface);
-        //  Toggle interface thread
+        uint index = randof (max_node);
+        //  Toggle node thread
         if (pipes [index]) {
             zstr_send (pipes [index], "STOP");
             zsocket_destroy (ctx, pipes [index]);
             pipes [index] = NULL;
-            zclock_log ("I: Stopped interface (%d running)", --nbr_interfaces);
+            zclock_log ("I: Stopped node (%d running)", --nbr_nodes);
         }
         else {
-            pipes [index] = zthread_fork (ctx, interface_task, NULL);
-            zclock_log ("I: Started interface (%d running)", ++nbr_interfaces);
+            pipes [index] = zthread_fork (ctx, node_task, NULL);
+            zclock_log ("I: Started node (%d running)", ++nbr_nodes);
         }
         nbr_iterations++;
         if (max_iterations > 0 && nbr_iterations >= max_iterations)

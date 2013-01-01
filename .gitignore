@@ -32,4 +32,5 @@ zre_logger
 zre_tester
 zre_perf_local
 zre_perf_remote
+zre_selftest
 doit

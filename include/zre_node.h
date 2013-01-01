@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_interface - interface to a ZRE network
+    zre_node - node on a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -24,16 +24,16 @@
     =========================================================================
 */
 
-#ifndef __ZRE_INTERFACE_H_INCLUDED__
-#define __ZRE_INTERFACE_H_INCLUDED__
+#ifndef __ZRE_NODE_H_INCLUDED__
+#define __ZRE_NODE_H_INCLUDED__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _zre_interface_t zre_interface_t;
+typedef struct _zre_node_t zre_node_t;
 
-//  Optional global context for zre_interface instances
+//  Optional global context for zre_node instances
 //  Used for large-scale testing simulation only
 CZMQ_EXPORT extern zctx_t *zre_global_ctx;
 
@@ -41,52 +41,53 @@ CZMQ_EXPORT extern zctx_t *zre_global_ctx;
 CZMQ_EXPORT extern char *zre_global_tmpdir;
 
 //  Constructor
-CZMQ_EXPORT zre_interface_t *
-    zre_interface_new (void);
+CZMQ_EXPORT zre_node_t *
+    zre_node_new (void);
 
 //  Destructor
 CZMQ_EXPORT void
-    zre_interface_destroy (zre_interface_t **self_p);
+    zre_node_destroy (zre_node_t **self_p);
 
-//  Set interface tracing on or off
+//  Set node tracing on or off
 CZMQ_EXPORT void
-    zre_interface_verbose_set (zre_interface_t *self, bool verbose);
+    zre_node_verbose_set (zre_node_t *self, bool verbose);
 
 //  Join a group
 CZMQ_EXPORT int
-    zre_interface_join (zre_interface_t *self, const char *group);
+    zre_node_join (zre_node_t *self, const char *group);
     
 //  Leave a group
 CZMQ_EXPORT int
-    zre_interface_leave (zre_interface_t *self, const char *group);
+    zre_node_leave (zre_node_t *self, const char *group);
 
-//  Receive next message from interface
+//  Receive next message from node
 CZMQ_EXPORT zmsg_t *
-    zre_interface_recv (zre_interface_t *self);
+    zre_node_recv (zre_node_t *self);
 
 //  Send message to single peer; peer ID is first frame in message
 CZMQ_EXPORT int
-    zre_interface_whisper (zre_interface_t *self, zmsg_t **msg_p);
+    zre_node_whisper (zre_node_t *self, zmsg_t **msg_p);
     
 //  Send message to a group of peers
 CZMQ_EXPORT int
-    zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p);
+    zre_node_shout (zre_node_t *self, zmsg_t **msg_p);
     
-//  Return interface handle, for polling
+//  Return node handle, for polling
 CZMQ_EXPORT void *
-    zre_interface_handle (zre_interface_t *self);
+    zre_node_handle (zre_node_t *self);
 
 //  Set node header value
 CZMQ_EXPORT void
-    zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...);
+    zre_node_header_set (zre_node_t *self, char *name, char *format, ...);
 
-//  Publish file into virtual space
+//  Publish file under some logical name
+//  Physical name is the actual file location
 CZMQ_EXPORT void
-    zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual);
+    zre_node_publish (zre_node_t *self, char *logical, char *physical);
 
-//  Retract file publish
+//  Retract published file 
 CZMQ_EXPORT void
-    zre_interface_retract (zre_interface_t *self, char *virtual);
+    zre_node_retract (zre_node_t *self, char *logical);
 
 #ifdef __cplusplus
 }
