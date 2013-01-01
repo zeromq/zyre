@@ -29,11 +29,11 @@
 
 int main (int argc, char *argv [])
 {
-    zre_interface_t *interface = zre_interface_new ();
-    zre_interface_join (interface, "GLOBAL");
+    zre_node_t *node = zre_node_new ();
+    zre_node_join (node, "GLOBAL");
 
     while (true) {
-        zmsg_t *incoming = zre_interface_recv (interface);
+        zmsg_t *incoming = zre_node_recv (node);
         if (!incoming)
             break;              //  Interrupted
 
@@ -45,7 +45,7 @@ int main (int argc, char *argv [])
             zmsg_t *outgoing = zmsg_new ();
             zmsg_addstr (outgoing, peer);
             zmsg_addstr (outgoing, "Hello");
-            zre_interface_whisper (interface, &outgoing);
+            zre_node_whisper (node, &outgoing);
             free (peer);
         }
         else
@@ -62,7 +62,7 @@ int main (int argc, char *argv [])
             zmsg_t *outgoing = zmsg_new ();
             zmsg_addstr (outgoing, "GLOBAL");
             zmsg_addstr (outgoing, "Hello");
-            zre_interface_shout (interface, &outgoing);
+            zre_node_shout (node, &outgoing);
         }
         else
         if (streq (event, "SHOUT")) {
@@ -75,6 +75,6 @@ int main (int argc, char *argv [])
         free (event);
         zmsg_destroy (&incoming);
     }
-    zre_interface_destroy (&interface);
+    zre_node_destroy (&node);
     return 0;
 }

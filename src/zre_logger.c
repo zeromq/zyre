@@ -79,15 +79,15 @@ int main (int argc, char *argv [])
     int port = zsocket_bind (collector, "tcp://%s:*", host);
 
     //  Announce this to all peers we connect to
-    zre_interface_t *interface = zre_interface_new ();
-    zre_interface_header_set (interface, "X-ZRELOG", "tcp://%s:%d", host, port);
+    zre_node_t *node = zre_node_new ();
+    zre_node_header_set (node, "X-ZRELOG", "tcp://%s:%d", host, port);
 
     //  Get all log messages (don't filter)
     zsocket_set_subscribe (collector, "");
 
     zmq_pollitem_t pollitems [] = {
         { collector, 0, ZMQ_POLLIN, 0 },
-        { zre_interface_handle (interface), 0, ZMQ_POLLIN, 0 }
+        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
     };
 
     while (!zctx_interrupted) {
@@ -98,15 +98,15 @@ int main (int argc, char *argv [])
         if (pollitems [0].revents & ZMQ_POLLIN)
             s_print_log_msg (collector);
 
-        //  Handle event from interface (ignore it)
+        //  Handle event from node (ignore it)
         if (pollitems [1].revents & ZMQ_POLLIN) {
-            zmsg_t *msg = zre_interface_recv (interface);
+            zmsg_t *msg = zre_node_recv (node);
             if (!msg)
                 break;              //  Interrupted
             zmsg_destroy (&msg);
         }
     }
-    zre_interface_destroy (&interface);
+    zre_node_destroy (&node);
     zre_udp_destroy (&udp);
     zctx_destroy (&ctx);
     return 0;

@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_interface - interface to a ZRE network
+    zre_node - node on a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -27,7 +27,7 @@
 #include <czmq.h>
 #include "../include/zre_internal.h"
 
-//  Optional global context for zre_interface instances
+//  Optional global context for zre_node instances
 zctx_t *zre_global_ctx = NULL;
 //  Optional temp directory; set by caller if needed
 char *zre_global_tmpdir = NULL;
@@ -35,7 +35,7 @@ char *zre_global_tmpdir = NULL;
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_interface_t {
+struct _zre_node_t {
     zctx_t *ctx;                //  Our context wrapper
     bool ctx_owned;             //  True if we created the context
     void *pipe;                 //  Pipe through to agent
@@ -44,21 +44,21 @@ struct _zre_interface_t {
 //  =====================================================================
 //  Synchronous part, works in our application thread
 
-//  This is the thread that handles our real interface class
+//  This is the thread that handles our real node class
 static void
-    zre_interface_agent (void *args, zctx_t *ctx, void *pipe);
+    zre_node_agent (void *args, zctx_t *ctx, void *pipe);
 
 
 //  ---------------------------------------------------------------------
 //  Constructor
 
-zre_interface_t *
-zre_interface_new (void)
+zre_node_t *
+zre_node_new (void)
 {
-    zre_interface_t
+    zre_node_t
         *self;
 
-    self = (zre_interface_t *) zmalloc (sizeof (zre_interface_t));
+    self = (zre_node_t *) zmalloc (sizeof (zre_node_t));
     //  If caller set a default ctx use that, else create our own
     if (zre_global_ctx)
         self->ctx = zre_global_ctx;
@@ -66,7 +66,7 @@ zre_interface_new (void)
         self->ctx = zctx_new ();
         self->ctx_owned = true;
     }
-    self->pipe = zthread_fork (self->ctx, zre_interface_agent, NULL);
+    self->pipe = zthread_fork (self->ctx, zre_node_agent, NULL);
     return self;
 }
 
@@ -75,11 +75,11 @@ zre_interface_new (void)
 //  Destructor
 
 void
-zre_interface_destroy (zre_interface_t **self_p)
+zre_node_destroy (zre_node_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
-        zre_interface_t *self = *self_p;
+        zre_node_t *self = *self_p;
         if (self->ctx_owned)
             zctx_destroy (&self->ctx);
         free (self);
@@ -88,11 +88,11 @@ zre_interface_destroy (zre_interface_t **self_p)
 }
 
 //  ---------------------------------------------------------------------
-//  Receive next message from interface
+//  Receive next message from node
 //  Returns zmsg_t object, or NULL if interrupted
 
 zmsg_t *
-zre_interface_recv (zre_interface_t *self)
+zre_node_recv (zre_node_t *self)
 {
     assert (self);
     zmsg_t *msg = zmsg_recv (self->pipe);
@@ -104,7 +104,7 @@ zre_interface_recv (zre_interface_t *self)
 //  Join a group
 
 int
-zre_interface_join (zre_interface_t *self, const char *group)
+zre_node_join (zre_node_t *self, const char *group)
 {
     assert (self);
     zstr_sendm (self->pipe, "JOIN");
@@ -117,7 +117,7 @@ zre_interface_join (zre_interface_t *self, const char *group)
 //  Leave a group
 
 int
-zre_interface_leave (zre_interface_t *self, const char *group)
+zre_node_leave (zre_node_t *self, const char *group)
 {
     assert (self);
     zstr_sendm (self->pipe, "LEAVE");
@@ -131,7 +131,7 @@ zre_interface_leave (zre_interface_t *self, const char *group)
 //  Destroys message after sending
 
 int
-zre_interface_whisper (zre_interface_t *self, zmsg_t **msg_p)
+zre_node_whisper (zre_node_t *self, zmsg_t **msg_p)
 {
     assert (self);
     zstr_sendm (self->pipe, "WHISPER");
@@ -144,7 +144,7 @@ zre_interface_whisper (zre_interface_t *self, zmsg_t **msg_p)
 //  Send message to a group of peers
 
 int
-zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p)
+zre_node_shout (zre_node_t *self, zmsg_t **msg_p)
 {
     assert (self);
     zstr_sendm (self->pipe, "SHOUT");
@@ -154,10 +154,10 @@ zre_interface_shout (zre_interface_t *self, zmsg_t **msg_p)
 
 
 //  ---------------------------------------------------------------------
-//  Return interface handle, for polling
+//  Return node handle, for polling
 
 void *
-zre_interface_handle (zre_interface_t *self)
+zre_node_handle (zre_node_t *self)
 {
     assert (self);    
     return self->pipe;
@@ -168,7 +168,7 @@ zre_interface_handle (zre_interface_t *self)
 //  Set node header value
 
 void
-zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...)
+zre_node_header_set (zre_node_t *self, char *name, char *format, ...)
 {
     assert (self);
     va_list argptr;
@@ -185,24 +185,25 @@ zre_interface_header_set (zre_interface_t *self, char *name, char *format, ...)
 
 
 //  ---------------------------------------------------------------------
-//  Publish file into virtual space
+//  Publish file under some logical name
+//  Physical name is the actual file location
 
 void
-zre_interface_publish (zre_interface_t *self, char *pathname, char *virtual)
+zre_node_publish (zre_node_t *self, char *logical, char *physical)
 {
     zstr_sendm (self->pipe, "PUBLISH");
-    zstr_sendm (self->pipe, pathname);
-    zstr_send  (self->pipe, virtual);
+    zstr_sendm (self->pipe, logical);
+    zstr_send  (self->pipe, physical);
 }
 
 //  ---------------------------------------------------------------------
 //  Retract published file
 
 void
-zre_interface_retract (zre_interface_t *self, char *virtual)
+zre_node_retract (zre_node_t *self, char *logical)
 {
     zstr_sendm (self->pipe, "RETRACT");
-    zstr_send  (self->pipe, virtual);
+    zstr_send  (self->pipe, logical);
 }
 
 
@@ -303,53 +304,12 @@ s_tmpdir (void)
 #define BEACON_PROTOCOL     "ZRE"
 #define BEACON_VERSION      0x01
 
-#if (defined (__WINDOWS__))
-#pragma pack(1)
-typedef struct {
-    UUID uuid;      // UUID is itself a struct
-} uuid_blob_t;
-#pragma pack()
-
-static void
-s_uuid_blob_generate (uuid_blob_t *uuid)
-{
-    UuidCreate (&uuid->uuid);
-}
-#else
-typedef struct {
-    uuid_t uuid;    // typedef unsigned char uuid_t[16];
-} uuid_blob_t;
-
-static void
-s_uuid_blob_generate (uuid_blob_t *uuid)
-{
-    uuid_generate (uuid->uuid);
-}
-#endif
-
 typedef struct {
     byte protocol [3];
     byte version;
-    uuid_blob_t uuid;
+    byte uuid [ZRE_UUID_LEN];
     uint16_t port;
 } beacon_t;
-
-
-//  Convert binary UUID to freshly allocated string
-
-static char *
-s_uuid_str (uuid_blob_t *uuid)
-{
-    char hex_char [] = "0123456789ABCDEF";
-    char *string = zmalloc (sizeof (uuid_blob_t) * 2 + 1);
-    int byte_nbr;
-    for (byte_nbr = 0; byte_nbr < sizeof (uuid_blob_t); byte_nbr++) {
-        uint val = ((byte *) uuid) [byte_nbr];
-        string [byte_nbr * 2 + 0] = hex_char [val >> 4];
-        string [byte_nbr * 2 + 1] = hex_char [val & 15];
-    }
-    return string;
-}
 
 
 //  This structure holds the context for our agent, so we can
@@ -360,7 +320,7 @@ typedef struct {
     void *pipe;                 //  Pipe back to application
     zre_udp_t *udp;             //  UDP object
     zre_log_t *log;             //  Log object
-    uuid_blob_t uuid;           //  Our UUID as binary blob
+    zre_uuid_t *uuid;           //  Our UUID as object
     char *identity;             //  Our UUID as hex string
     void *inbox;                //  Our inbox socket (ROUTER)
     char *host;                 //  Our host IP address
@@ -400,8 +360,8 @@ agent_new (zctx_t *ctx, void *pipe)
         free (self);
         return NULL;
     }
-    s_uuid_blob_generate (&self->uuid);
-    self->identity = s_uuid_str (&self->uuid);
+    self->uuid = zre_uuid_new ();
+    self->identity = strdup (zre_uuid_str (self->uuid));
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
     self->own_groups = zhash_new ();
@@ -563,34 +523,34 @@ agent_recv_from_api (agent_t *self)
     }
     else
     if (streq (command, "PUBLISH")) {
-        char *filename = zmsg_popstr (request);
-        char *virtual = zmsg_popstr (request);
+        char *logical = zmsg_popstr (request);
+        char *physical = zmsg_popstr (request);
         //  Virtual filename must start with slash
-        assert (virtual [0] == '/');
+        assert (logical [0] == '/');
         //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (virtual) + 3);
-        sprintf (symlink, "%s.ln", virtual + 1);
+        char *symlink = malloc (strlen (logical) + 3);
+        sprintf (symlink, "%s.ln", logical + 1);
         fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
         int rc = fmq_file_output (file);
         assert (rc == 0);
-        fprintf (fmq_file_handle (file), "%s\n", filename);
+        fprintf (fmq_file_handle (file), "%s\n", physical);
         fmq_file_destroy (&file);
         free (symlink);
-        free (filename);
-        free (virtual);
+        free (logical);
+        free (physical);
     }
     else
     if (streq (command, "RETRACT")) {
-        char *virtual = zmsg_popstr (request);
-        //  Virtual filename must start with slash
-        assert (virtual [0] == '/');
+        char *logical = zmsg_popstr (request);
+        //  Logical filename must start with slash
+        assert (logical [0] == '/');
         //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (virtual) + 3);
-        sprintf (symlink, "%s.ln", virtual + 1);
+        char *symlink = malloc (strlen (logical) + 3);
+        sprintf (symlink, "%s.ln", logical + 1);
         fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
         fmq_file_remove (file);
         free (symlink);
-        free (virtual);
+        free (logical);
     }
     free (command);
     zmsg_destroy (&request);
@@ -793,8 +753,8 @@ agent_beacon_send (agent_t *self)
     beacon.protocol [1] = 'R';
     beacon.protocol [2] = 'E';
     beacon.version = BEACON_VERSION;
-    memcpy (&beacon.uuid, &self->uuid, sizeof (uuid_blob_t));
     beacon.port = htons (self->port);
+    zre_uuid_cpy (self->uuid, beacon.uuid);
     
     //  Broadcast the beacon to anyone who is listening
     zre_udp_send (self->udp, (byte *) &beacon, sizeof (beacon_t));
@@ -819,12 +779,13 @@ agent_recv_udp_beacon (agent_t *self)
         return 0;               //  Ignore invalid beacons
 
     //  If we got a UUID and it's not our own beacon, we have a peer
-    if (memcmp (&beacon.uuid, &self->uuid, sizeof (uuid_blob_t))) {
-        char *identity = s_uuid_str (&beacon.uuid);
+    if (zre_uuid_neq (self->uuid, beacon.uuid)) {
+        zre_uuid_t *uuid = zre_uuid_new ();
+        zre_uuid_set (uuid, beacon.uuid);
         zre_peer_t *peer = s_require_peer (
-            self, identity, zre_udp_from (self->udp), ntohs (beacon.port));
+            self, zre_uuid_str (uuid), zre_udp_from (self->udp), ntohs (beacon.port));
         zre_peer_refresh (peer);
-        free (identity);
+        zre_uuid_destroy (&uuid);
     }
     return 0;
 }
@@ -889,7 +850,7 @@ agent_ping_peer (const char *key, void *item, void *argument)
 //  The agent handles API commands
 
 static void
-zre_interface_agent (void *args, zctx_t *ctx, void *pipe)
+zre_node_agent (void *args, zctx_t *ctx, void *pipe)
 {
     //  Create agent instance to pass around
     agent_t *self = agent_new (ctx, pipe);

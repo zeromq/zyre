@@ -41,19 +41,15 @@
 #   error "Zyre needs CZMQ/1.3.2 or later"
 #endif
 
-#ifdef interface
-#undef interface
-#endif
-
 #include <fmq.h>
-#if FMQ_VERSION < 10000
-#   error "Zyre needs FMQ/1.0.0 or later"
+#if FMQ_VERSION < 10100
+#   error "Zyre needs FileMQ/1.1.0 or later"
 #endif
 
 //  Defined port numbers, pending IANA submission
 #define ZRE_DISCOVERY_PORT  5670
 
 //  This is the only class that applications should use
-#include "zre_interface.h"
+#include "zre_node.h"
 
 #endif

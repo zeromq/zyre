@@ -28,10 +28,10 @@
 #include "../include/zre.h"
 
 static bool
-s_interface_recv (zre_interface_t *interface, char* command, char* expected)
+s_node_recv (zre_node_t *node, char* command, char* expected)
 {
     bool result = false;
-    zmsg_t *incoming = zre_interface_recv (interface);
+    zmsg_t *incoming = zre_node_recv (node);
 
     assert (incoming);
 
@@ -62,31 +62,31 @@ s_interface_recv (zre_interface_t *interface, char* command, char* expected)
 int
 main (int argc, char *argv [])
 {
-    //  Get number of remote interfaces to simulate, default 100
+    //  Get number of remote nodes to simulate, default 100
     //  If we run multiple zre_perf_remote on multiple machines,
-    //  max_interface must be sum of all the remote interface counts.
-    int max_interface = 100;
+    //  max_node must be sum of all the remote node counts.
+    int max_node = 100;
     int max_message = 10000;
-    int nbr_interface = 0;
+    int nbr_node = 0;
     int nbr_hello_response = 0;
     int nbr_message = 0;
     int nbr_message_response = 0;
 
     if (argc > 1)
-        max_interface = atoi (argv [1]);
+        max_node = atoi (argv [1]);
     if (argc > 2)
         max_message = atoi (argv [2]);
 
-    zre_interface_t *interface = zre_interface_new ();
-    zre_interface_join (interface, "GLOBAL");
+    zre_node_t *node = zre_node_new ();
+    zre_node_join (node, "GLOBAL");
 
     int64_t start = zclock_time ();
     int64_t elapse;
 
-    char **peers = zmalloc (sizeof (char *) * max_interface);
+    char **peers = zmalloc (sizeof (char *) * max_node);
 
     while (true) {
-        zmsg_t *incoming = zre_interface_recv (interface);
+        zmsg_t *incoming = zre_node_recv (node);
         if (!incoming)
             break;              //  Interrupted
 
@@ -94,10 +94,10 @@ main (int argc, char *argv [])
         char *event = zmsg_popstr (incoming);
         if (streq (event, "ENTER")) {
             char *peer = zmsg_popstr (incoming);
-            peers[nbr_interface++] = peer;
+            peers[nbr_node++] = peer;
 
-            if (nbr_interface == max_interface) {
-                // got HELLO from the all remote interfaces
+            if (nbr_node == max_node) {
+                // got HELLO from the all remote nodes
                 elapse = zclock_time () - start;
                 printf ("Took %ld ms to coordinate with all remote\n", (long)elapse);
             }
@@ -108,8 +108,8 @@ main (int argc, char *argv [])
             char *cookie = zmsg_popstr (incoming);
 
             if (streq (cookie, "R:HELLO")) {
-                if (++nbr_hello_response == max_interface) {
-                    // got HELLO from the all remote interfaces
+                if (++nbr_hello_response == max_node) {
+                    // got HELLO from the all remote nodes
                     elapse = zclock_time () - start;
                     printf ("Took %ld ms to get greeting from all remote\n", (long)elapse);
                 }
@@ -120,33 +120,33 @@ main (int argc, char *argv [])
         free (event);
         zmsg_destroy (&incoming);
 
-        if (nbr_interface == max_interface && nbr_hello_response == max_interface)
+        if (nbr_node == max_node && nbr_hello_response == max_node)
             break;
     }
 
     zmq_pollitem_t pollitems [] = {
-        { zre_interface_handle (interface), 0, ZMQ_POLLIN, 0 }
+        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
     };
 
     //  send WHISPER message
     start = zclock_time ();
     for (nbr_message = 0; nbr_message < max_message; nbr_message++) {
         zmsg_t *outgoing = zmsg_new ();
-        zmsg_addstr (outgoing, peers [nbr_message % max_interface]);
+        zmsg_addstr (outgoing, peers [nbr_message % max_node]);
         zmsg_addstr (outgoing, "S:WHISPER");
-        zre_interface_whisper (interface, &outgoing);
+        zre_node_whisper (node, &outgoing);
 
         while (zmq_poll (pollitems, 1, 0) > 0) {
-            if (s_interface_recv (interface, "WHISPER", "R:WHISPER"))
+            if (s_node_recv (node, "WHISPER", "R:WHISPER"))
                 nbr_message_response++;
         }
     }
 
     while (nbr_message_response < max_message)
-        if (s_interface_recv (interface, "WHISPER", "R:WHISPER"))
+        if (s_node_recv (node, "WHISPER", "R:WHISPER"))
             nbr_message_response++;
 
-    // got WHISPER response from the all remote interfaces
+    // got WHISPER response from the all remote nodes
     elapse = zclock_time () - start;
     printf ("Took %ld ms to send/receive %d message. %.2f msg/s \n", (long)elapse, max_message, (float) max_message * 1000 / elapse);
 
@@ -155,34 +155,34 @@ main (int argc, char *argv [])
     nbr_message = 0;
     nbr_message_response = 0;
 
-    max_message = max_message / max_interface;
+    max_message = max_message / max_node;
 
     for (nbr_message = 0; nbr_message < max_message; nbr_message++) {
         zmsg_t *outgoing = zmsg_new ();
         zmsg_addstr (outgoing, "GLOBAL");
         zmsg_addstr (outgoing, "S:SHOUT");
-        zre_interface_shout (interface, &outgoing);
+        zre_node_shout (node, &outgoing);
 
         while (zmq_poll (pollitems, 1, 0) > 0) {
-            if (s_interface_recv (interface, "SHOUT", "R:SHOUT"))
+            if (s_node_recv (node, "SHOUT", "R:SHOUT"))
                 nbr_message_response++;
         }
     }
 
-    while (nbr_message_response < max_message * max_interface)
-        if (s_interface_recv (interface, "SHOUT", "R:SHOUT"))
+    while (nbr_message_response < max_message * max_node)
+        if (s_node_recv (node, "SHOUT", "R:SHOUT"))
             nbr_message_response++;
 
-    // got SHOUT response from the all remote interfaces
+    // got SHOUT response from the all remote nodes
     elapse = zclock_time () - start;
     printf ("Took %ld ms to send %d, recv %d GROUP message. %.2f msg/s \n",
-            (long) elapse, max_message, max_interface * max_message,
-            (float) max_interface * max_message * 1000 / elapse);
+            (long) elapse, max_message, max_node * max_message,
+            (float) max_node * max_message * 1000 / elapse);
 
 
-    zre_interface_destroy (&interface);
-    for (nbr_interface = 0; nbr_interface < max_interface; nbr_interface++) {
-        free (peers[nbr_interface]);
+    zre_node_destroy (&node);
+    for (nbr_node = 0; nbr_node < max_node; nbr_node++) {
+        free (peers[nbr_node]);
     }
     free (peers);
     return 0;
