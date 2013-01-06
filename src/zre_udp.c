@@ -47,6 +47,9 @@
 #   include <ws2tcpip.h>           // getnameinfo()
 #   include <iphlpapi.h>           // GetAdaptersAddresses()
 #endif
+#if defined (__APPLE__)
+#		define ENONET	EHOSTDOWN
+#endif
 
 //  Local functions
 
@@ -381,3 +384,4 @@ s_get_interface (zre_udp_t *self)
 #       error "Interface detection TBD on this operating system"
 #   endif
 }
+
