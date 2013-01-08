@@ -208,69 +208,7 @@ zre_node_retract (zre_node_t *self, char *logical)
 
 
 //  ---------------------------------------------------------------------
-//  Create directory and its parent directory if it doesn't exist
-
-#if (defined (__WINDOWS__))
-static int
-mkdirs (const char *path, mode_t mode)
-{
-    char *slash ;
-    BOOL rc = CreateDirectory (path, NULL);
-    if (!rc) {
-        switch (GetLastError ()) {
-            case ERROR_PATH_NOT_FOUND:
-                //  Parent doesn't exist
-                slash = strrchr (path, '/');
-                if (!slash)
-                    return -1;
-                char parent [255];
-                snprintf (parent, slash - path + 1, "%s", path);
-                // MSVCRT sprintf does not guarantee nul termination
-                parent [slash - path] = '\0';
-
-                if (mkdirs (parent, mode) < 0)
-                    return -1;
-                return CreateDirectory (path, NULL) == TRUE ? 0: -1;
-            case ERROR_ALREADY_EXISTS:
-                return 0;
-            default:
-                return -1;
-        }
-    }
-    return rc == TRUE ? 0: -1;
-}
-#else
-static int
-mkdirs (const char *path, mode_t mode)
-{
-    char *slash;
-    int rc = mkdir (path, mode);
-    if (rc < 0) {
-        switch (errno) {
-            case ENOENT:
-                // parent doesn't exist
-                slash = strrchr (path, '/');
-                if (!slash)
-                    return -1;
-                char parent [255];
-
-                snprintf (parent, slash - path + 1, "%s", path);
-                if (mkdirs (parent, mode) < 0)
-                    return -1;
-                return mkdir (path, mode);
-            case EEXIST:
-                return 0;
-            default:
-                return rc;
-        }
-    }
-    return rc;
-}
-#endif
-
-
-//  ---------------------------------------------------------------------
-//  Get temporary directory of INBOX and OUTOBX
+//  Get temporary directory of INBOX and OUTBOX
 
 static char *
 s_tmpdir (void)
@@ -373,13 +311,10 @@ agent_new (zctx_t *ctx, void *pipe)
     //  ephemeral port and publishes a temporary directory that acts
     //  as the outbox for this node.
     //
-#   define OUTBOX   ".outbox"
-    sprintf (self->fmq_outbox, "%s/%s/%s", s_tmpdir (), OUTBOX, self->identity);
-    mkdirs (self->fmq_outbox, 0755);
-    
-#   define INBOX    ".inbox"
-    sprintf (self->fmq_inbox, "%s/%s/%s", s_tmpdir (), INBOX, self->identity);
-    mkdirs (self->fmq_inbox, 0755);
+    sprintf (self->fmq_outbox, "%s/send/%s", s_tmpdir (), self->identity);
+    zfile_mkdir (self->fmq_outbox);
+    sprintf (self->fmq_inbox, "%s/recv/%s", s_tmpdir (), self->identity);
+    zfile_mkdir (self->fmq_inbox);
 
     self->fmq_server = fmq_server_new ();
     self->fmq_service = fmq_server_bind (self->fmq_server, "tcp://*:*");
