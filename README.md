@@ -1,4 +1,4 @@
-# Zyre - an open-source framework for proximity-based peer-to-peer applications.
+# Zyre - an open-source framework for proximity-based peer-to-peer applications
 
 Zyre lets you build exciting apps that work across groups of PCs and mobile devices. Zyre works across all operating systems and languages. It uses standard WiFi to connect devices to each other in real-time. Zyre gives you simple group messaging, file transfer, and real-time events.
 
