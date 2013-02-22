@@ -141,10 +141,11 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <fmq.h>],
                [AC_MSG_RESULT([yes])],
                [AC_MSG_ERROR([no. Please specify libfmq installation prefix using --with-fmq])])
 
-#Whether we are on mingw or not.
+# Platform specific checks
 zre_on_mingw32="no"
+zre_on_android="no"
 
-# Host speciffic checks
+# Host specific checks
 AC_CANONICAL_HOST
 
 # Determine whether or not documentation should be built and installed.
@@ -177,10 +178,11 @@ case "${host_os}" in
         # Define on Linux to enable all library features
         CPPFLAGS="-D_GNU_SOURCE -DLINUX $CPPFLAGS"
         AC_DEFINE(LIBZRE_HAVE_LINUX, 1, [Have Linux OS])
+        
         case "${host_os}" in
             *android*)
                 AC_DEFINE(LIBZRE_HAVE_ANDROID, 1, [Have Android OS])
-                libzmq_on_android="yes"
+                zre_on_android="yes"
             ;;
         esac
         ;;
@@ -288,11 +290,12 @@ if test "x$GCC" = "xyes"; then
 fi
 
 AM_CONDITIONAL(ON_MINGW, test "x$zre_on_mingw32" = "xyes")
+AM_CONDITIONAL(ON_ANDROID, test "x$zre_on_android" = "xyes")
 AM_CONDITIONAL(INSTALL_MAN, test "x$zre_install_man" = "xyes")
 AM_CONDITIONAL(BUILD_DOC, test "x$zre_build_doc" = "xyes")
 
 # Checks for library functions.
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(perror gettimeofday memset getifaddrs freeifaddrs)
+AC_CHECK_FUNCS(perror gettimeofday memset)
 
 AC_OUTPUT(Makefile src/Makefile doc/Makefile src/libzre.pc)

@@ -69,11 +69,11 @@ int main (int argc, char *argv [])
 {
     zctx_t *ctx = zctx_new ();
 
-    //  Use the Zyre UDP class to make sure we listen on the same
-    //  network interface as our peers
+    //  Use the CZMQ zbeacon class to make sure we listen on the 
+    //  same network interface as our peers
     void *collector = zsocket_new (ctx, ZMQ_SUB);
-    zre_udp_t *udp = zre_udp_new (ZRE_DISCOVERY_PORT);
-    char *host = zre_udp_host (udp);
+    zbeacon_t *beacon = zbeacon_new (ZRE_DISCOVERY_PORT);
+    char *host = zbeacon_hostname (beacon);
 
     //  Bind to an ephemeral port
     int port = zsocket_bind (collector, "tcp://%s:*", host);
@@ -107,7 +107,7 @@ int main (int argc, char *argv [])
         }
     }
     zre_node_destroy (&node);
-    zre_udp_destroy (&udp);
+    zbeacon_destroy (&beacon);
     zctx_destroy (&ctx);
     return 0;
 }
