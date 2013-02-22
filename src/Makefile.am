@@ -6,7 +6,6 @@ pkgconfig_DATA = libzre.pc
 libzre_la_includedir = $(includedir)
 libzre_la_include_HEADERS = \
     ../include/zre.h \
-    ../include/zre_udp.h \
     ../include/zre_msg.h \
     ../include/zre_peer.h \
     ../include/zre_group.h \
@@ -22,8 +21,7 @@ libzre_la_SOURCES = \
     zre_log_msg.c \
     zre_msg.c \
     zre_peer.c \
-    zre_uuid.c \
-    zre_udp.c 
+    zre_uuid.c 
 
 INCLUDES = -I$(top_srcdir)/include
 bin_PROGRAMS = zre_selftest zre_ping zre_tester zre_logger zre_perf_local zre_perf_remote
