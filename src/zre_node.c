@@ -256,7 +256,7 @@ typedef struct {
 typedef struct {
     zctx_t *ctx;                //  CZMQ context
     void *pipe;                 //  Pipe back to application
-    zre_udp_t *udp;             //  UDP object
+    zbeacon_t *beacon;          //  Beacon object
     zre_log_t *log;             //  Log object
     zre_uuid_t *uuid;           //  Our UUID as object
     char *identity;             //  Our UUID as hex string
@@ -281,24 +281,36 @@ typedef struct {
 static agent_t *
 agent_new (zctx_t *ctx, void *pipe)
 {
-    void *inbox = zsocket_new (ctx, ZMQ_ROUTER);
-    if (!inbox)                 //  Interrupted
-        return NULL;
-
     agent_t *self = (agent_t *) zmalloc (sizeof (agent_t));
     self->ctx = ctx;
     self->pipe = pipe;
-    self->udp = zre_udp_new (ZRE_DISCOVERY_PORT);
-    self->inbox = inbox;
-    self->host = zre_udp_host (self->udp);
-    self->port = zsocket_bind (self->inbox, "tcp://*:*");
-    sprintf (self->endpoint, "%s:%d", self->host, self->port);
-    if (self->port < 0) {       //  Interrupted
-        zre_udp_destroy (&self->udp);
+    self->inbox = zsocket_new (ctx, ZMQ_ROUTER);
+    if (self->inbox == NULL) {
         free (self);
-        return NULL;
+        return NULL;            //  Interrupted 0MQ call
     }
+    self->port = zsocket_bind (self->inbox, "tcp://*:*");
+    if (self->port < 0) {
+        free (self);
+        return NULL;            //  Interrupted 0MQ call
+    }
+    //  Set broadcast/listen beacon
     self->uuid = zre_uuid_new ();
+    self->beacon = zbeacon_new (ZRE_DISCOVERY_PORT);
+    beacon_t beacon;
+    beacon.protocol [0] = 'Z';
+    beacon.protocol [1] = 'R';
+    beacon.protocol [2] = 'E';
+    beacon.version = BEACON_VERSION;
+    beacon.port = htons (self->port);
+    zre_uuid_cpy (self->uuid, beacon.uuid);
+    zbeacon_noecho (self->beacon);
+    zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
+    zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
+
+    self->host = zbeacon_hostname (self->beacon);
+    sprintf (self->endpoint, "%s:%d", self->host, self->port);
+
     self->identity = strdup (zre_uuid_str (self->uuid));
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
@@ -340,19 +352,22 @@ agent_destroy (agent_t **self_p)
     if (*self_p) {
         agent_t *self = *self_p;
 
+        //  Destroy inbox and outbox directories if they exist
         fmq_dir_t *inbox = fmq_dir_new (self->fmq_inbox, NULL);
-        fmq_dir_remove (inbox, true);
-        fmq_dir_destroy (&inbox);
-
+        if (inbox) {
+            fmq_dir_remove (inbox, true);
+            fmq_dir_destroy (&inbox);
+        }
         fmq_dir_t *outbox = fmq_dir_new (self->fmq_outbox, NULL);
-        fmq_dir_remove (outbox, true);
-        fmq_dir_destroy (&outbox);
-
+        if (outbox) {
+            fmq_dir_remove (outbox, true);
+            fmq_dir_destroy (&outbox);
+        }
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
-        zre_udp_destroy (&self->udp);
+        zbeacon_destroy (&self->beacon);
         zre_log_destroy (&self->log);
         
         fmq_server_destroy (&self->fmq_server);
@@ -521,7 +536,7 @@ s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
-        zre_msg_ipaddress_set (msg, zre_udp_host (self->udp));
+        zre_msg_ipaddress_set (msg, self->host);
         zre_msg_mailbox_set (msg, self->port);
         zre_msg_groups_set (msg, zhash_keys (self->own_groups));
         zre_msg_status_set (msg, self->status);
@@ -674,54 +689,34 @@ agent_recv_from_peer (agent_t *self)
     return 0;
 }
 
-//  Send moar beacon
-
-static void
-agent_beacon_send (agent_t *self)
-{
-    //  Beacon object
-    beacon_t beacon;
-    assert (sizeof (beacon) == 22);
-
-    //  Format beacon fields
-    beacon.protocol [0] = 'Z';
-    beacon.protocol [1] = 'R';
-    beacon.protocol [2] = 'E';
-    beacon.version = BEACON_VERSION;
-    beacon.port = htons (self->port);
-    zre_uuid_cpy (self->uuid, beacon.uuid);
-    
-    //  Broadcast the beacon to anyone who is listening
-    zre_udp_send (self->udp, (byte *) &beacon, sizeof (beacon_t));
-}
-
-
 //  Handle beacon
 
 static int
-agent_recv_udp_beacon (agent_t *self)
+agent_recv_beacon (agent_t *self)
 {
-    //  Get beacon frame from network
+    char *ipaddress = zstr_recv (zbeacon_pipe (self->beacon));
+    zframe_t *frame = zframe_recv (zbeacon_pipe (self->beacon));
+
+    bool is_valid = true;
     beacon_t beacon;
-    ssize_t size = zre_udp_recv (self->udp, (byte *) &beacon, sizeof (beacon_t));
+    if (zframe_size (frame) == sizeof (beacon_t)) {
+        memcpy (&beacon, zframe_data (frame), zframe_size (frame));
+        if (beacon.version != BEACON_VERSION)
+            is_valid = false;
+    }
+    else
+        is_valid = false;
 
-    //  Basic validation on the frame
-    if (size != sizeof (beacon_t)
-    ||  beacon.protocol [0] != 'Z'
-    ||  beacon.protocol [1] != 'R'
-    ||  beacon.protocol [2] != 'E'
-    ||  beacon.version != BEACON_VERSION)
-        return 0;               //  Ignore invalid beacons
-
-    //  If we got a UUID and it's not our own beacon, we have a peer
-    if (zre_uuid_neq (self->uuid, beacon.uuid)) {
+    if (is_valid) {
         zre_uuid_t *uuid = zre_uuid_new ();
         zre_uuid_set (uuid, beacon.uuid);
         zre_peer_t *peer = s_require_peer (
-            self, zre_uuid_str (uuid), zre_udp_from (self->udp), ntohs (beacon.port));
+            self, zre_uuid_str (uuid), ipaddress, ntohs (beacon.port));
         zre_peer_refresh (peer);
         zre_uuid_destroy (&uuid);
     }
+    free (ipaddress);
+    zframe_destroy (&frame);
     return 0;
 }
 
@@ -791,18 +786,18 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
     agent_t *self = agent_new (ctx, pipe);
     if (!self)                  //  Interrupted
         return;
-    
-    //  Send first beacon immediately
-    uint64_t ping_at = zclock_time ();
+
     zmq_pollitem_t pollitems [] = {
-        { self->pipe,                           0, ZMQ_POLLIN, 0 },
-        { self->inbox,                          0, ZMQ_POLLIN, 0 },
-        { 0,           zre_udp_handle (self->udp), ZMQ_POLLIN, 0 },
+        { self->pipe, 0, ZMQ_POLLIN, 0 },
+        { self->inbox, 0, ZMQ_POLLIN, 0 },
+        { zbeacon_pipe (self->beacon), 0, ZMQ_POLLIN, 0 },
         { fmq_client_handle (self->fmq_client), 0, ZMQ_POLLIN, 0 }
     };
+    
+    uint64_t reap_at = zclock_time () + REAP_INTERVAL;
     while (!zctx_interrupted) {
-        long timeout = (long) (ping_at - zclock_time ());
-        assert (timeout <= PING_INTERVAL);
+        long timeout = (long) (reap_at - zclock_time ());
+        assert (timeout <= REAP_INTERVAL);
         if (timeout < 0)
             timeout = 0;
         if (zmq_poll (pollitems, 4, timeout * ZMQ_POLL_MSEC) == -1)
@@ -815,18 +810,16 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
             agent_recv_from_peer (self);
 
         if (pollitems [2].revents & ZMQ_POLLIN)
-            agent_recv_udp_beacon (self);
+            agent_recv_beacon (self);
 
         if (pollitems [3].revents & ZMQ_POLLIN)
             agent_recv_fmq_event (self);
 
-        if (zclock_time () >= ping_at) {
-            agent_beacon_send (self);
-            ping_at = zclock_time () + PING_INTERVAL;
+        if (zclock_time () >= reap_at) {
+            reap_at = zclock_time () + REAP_INTERVAL;
             //  Ping all peers and reap any expired ones
             zhash_foreach (self->peers, agent_ping_peer, self);
         }
-
     }
     agent_destroy (&self);
 }

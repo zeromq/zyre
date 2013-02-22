@@ -27,8 +27,8 @@
 #ifndef __ZRE_H_INCLUDED__
 #define __ZRE_H_INCLUDED__
 
-#define ZRE_VERSION_MAJOR 0
-#define ZRE_VERSION_MINOR 2
+#define ZRE_VERSION_MAJOR 1
+#define ZRE_VERSION_MINOR 0
 #define ZRE_VERSION_PATCH 0
 
 #define ZRE_MAKE_VERSION(major, minor, patch) \
@@ -38,7 +38,7 @@
 
 #include <czmq.h>
 #if CZMQ_VERSION < 10304
-#   error "Zyre needs CZMQ/1.3.4 or later"
+#   error "Zyre needs CZMQ/1.4.0 or later"
 #endif
 
 #include <fmq.h>
@@ -46,7 +46,7 @@
 #   error "Zyre needs FileMQ/1.2.0 or later"
 #endif
 
-//  Defined port numbers, pending IANA submission
+//  IANA-assigned port for ZRE discovery protocol
 #define ZRE_DISCOVERY_PORT  5670
 
 //  This is the only class that applications should use
