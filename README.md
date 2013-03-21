@@ -34,4 +34,4 @@ Zyre is a protocol (ZRE) plus a set of implementations. We've structured the pro
 
 ## Who owns Zyre?
 
-Zyre is owned by all its authors and contributors. This is an open source project licensed under the LGPLv3. To contribute to Zyre please read the [C4 process](http://rfc.zeromq.org/spec:16) that we use.
+Zyre is owned by all its authors and contributors. This is an open source project licensed under the LGPLv3. To contribute to Zyre please read the [C4.1 process](http://rfc.zeromq.org/spec:22) that we use.
