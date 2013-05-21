@@ -239,8 +239,7 @@ s_tmpdir (void)
 //  UUID        16 bytes
 //  port        2 bytes in network order
 
-#define BEACON_PROTOCOL     "ZRE"
-#define BEACON_VERSION      0x01
+#define BEACON_VERSION 0x01
 
 typedef struct {
     byte protocol [3];
@@ -263,7 +262,6 @@ typedef struct {
     void *inbox;                //  Our inbox socket (ROUTER)
     char *host;                 //  Our host IP address
     int port;                   //  Our inbox port number
-    char endpoint [30];         //  ipaddress:port endpoint
     byte status;                //  Our own change counter
     zhash_t *peers;             //  Hash of known peers, fast lookup
     zhash_t *peer_groups;       //  Groups that our peers are in
@@ -309,15 +307,17 @@ agent_new (zctx_t *ctx, void *pipe)
     zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
 
     self->host = zbeacon_hostname (self->beacon);
-    sprintf (self->endpoint, "%s:%d", self->host, self->port);
-
     self->identity = strdup (zre_uuid_str (self->uuid));
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
     self->own_groups = zhash_new ();
     self->headers = zhash_new ();
     zhash_autofree (self->headers);
-    self->log = zre_log_new (self->endpoint);
+
+    //  Set up log instance
+    char endpoint [30];         //  ipaddress:port endpoint
+    sprintf (endpoint, "%s:%d", self->host, self->port);
+    self->log = zre_log_new (endpoint);
 
     //  Set up content distribution network: Each server binds to an
     //  ephemeral port and publishes a temporary directory that acts
@@ -694,9 +694,11 @@ agent_recv_from_peer (agent_t *self)
 static int
 agent_recv_beacon (agent_t *self)
 {
+    //  Get IP address and beacon of peer
     char *ipaddress = zstr_recv (zbeacon_pipe (self->beacon));
     zframe_t *frame = zframe_recv (zbeacon_pipe (self->beacon));
 
+    //  Ignore anything that isn't a valid beacon
     bool is_valid = true;
     beacon_t beacon;
     if (zframe_size (frame) == sizeof (beacon_t)) {
@@ -707,6 +709,7 @@ agent_recv_beacon (agent_t *self)
     else
         is_valid = false;
 
+    //  Check that the peer, identified by its UUID, exists
     if (is_valid) {
         zre_uuid_t *uuid = zre_uuid_new ();
         zre_uuid_set (uuid, beacon.uuid);
