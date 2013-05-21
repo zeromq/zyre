@@ -1,0 +1,31 @@
+language: c
+
+#   Build required ZeroMQ projects first
+before_script:
+#
+#   libzmq
+- git clone git://github.com/zeromq/libzmq.git
+- cd libzmq
+- ./autogen.sh
+- ./configure && make check
+- sudo make install
+- cd ..
+#
+#   CZMQ
+- git clone git://github.com/zeromq/czmq.git
+- cd czmq
+- ./autogen.sh
+- ./configure && make check
+- sudo make install
+- cd ..
+#
+#   FileMQ
+- git clone git://github.com/zeromq/filemq.git
+- cd filemq
+- ./autogen.sh
+- ./configure && make check
+- sudo make install
+- cd ..
+
+#   Build and check libzre
+script: ./autogen.sh && ./configure && make && make check
