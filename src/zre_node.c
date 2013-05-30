@@ -168,7 +168,7 @@ zre_node_handle (zre_node_t *self)
 //  Set node header value
 
 void
-zre_node_header_set (zre_node_t *self, char *name, char *format, ...)
+zre_node_set_header (zre_node_t *self, char *name, char *format, ...)
 {
     assert (self);
     va_list argptr;
@@ -411,7 +411,7 @@ agent_recv_from_api (agent_t *self)
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
-            zre_msg_content_set (msg, zmsg_pop (request));
+            zre_msg_set_content (msg, zmsg_pop (request));
             zre_peer_send (peer, &msg);
         }
         free (identity);
@@ -423,8 +423,8 @@ agent_recv_from_api (agent_t *self)
         zre_group_t *group = (zre_group_t *) zhash_lookup (self->peer_groups, name);
         if (group) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
-            zre_msg_group_set (msg, name);
-            zre_msg_content_set (msg, zmsg_pop (request));
+            zre_msg_set_group (msg, name);
+            zre_msg_set_content (msg, zmsg_pop (request));
             zre_group_send (group, &msg);
         }
         free (name);
@@ -437,9 +437,9 @@ agent_recv_from_api (agent_t *self)
             //  Only send if we're not already in group
             group = zre_group_new (name, self->own_groups);
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_JOIN);
-            zre_msg_group_set (msg, name);
+            zre_msg_set_group (msg, name);
             //  Update status before sending command
-            zre_msg_status_set (msg, ++(self->status));
+            zre_msg_set_status (msg, ++(self->status));
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
             zre_log_info (self->log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
@@ -453,9 +453,9 @@ agent_recv_from_api (agent_t *self)
         if (group) {
             //  Only send if we are actually in group
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_LEAVE);
-            zre_msg_group_set (msg, name);
+            zre_msg_set_group (msg, name);
             //  Update status before sending command
-            zre_msg_status_set (msg, ++(self->status));
+            zre_msg_set_status (msg, ++(self->status));
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
             zhash_delete (self->own_groups, name);
@@ -536,11 +536,11 @@ s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
-        zre_msg_ipaddress_set (msg, self->host);
-        zre_msg_mailbox_set (msg, self->port);
-        zre_msg_groups_set (msg, zhash_keys (self->own_groups));
-        zre_msg_status_set (msg, self->status);
-        zre_msg_headers_set (msg, zhash_dup (self->headers));
+        zre_msg_set_ipaddress (msg, self->host);
+        zre_msg_set_mailbox (msg, self->port);
+        zre_msg_set_groups (msg, zhash_keys (self->own_groups));
+        zre_msg_set_status (msg, self->status);
+        zre_msg_set_headers (msg, zhash_dup (self->headers));
         zre_peer_send (peer, &msg);
         
         zre_log_info (self->log, ZRE_LOG_MSG_EVENT_ENTER,
@@ -612,7 +612,7 @@ agent_recv_from_peer (agent_t *self)
         peer = s_require_peer (
             self, identity, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
-        zre_peer_ready_set (peer, true);
+        zre_peer_set_ready (peer, true);
     }
     //  Ignore command if peer isn't ready
     if (peer == NULL || !zre_peer_ready (peer)) {
@@ -634,10 +634,10 @@ agent_recv_from_peer (agent_t *self)
             name = zre_msg_groups_next (msg);
         }
         //  Hello command holds latest status of peer
-        zre_peer_status_set (peer, zre_msg_status (msg));
+        zre_peer_set_status (peer, zre_msg_status (msg));
         
         //  Store peer headers for future reference
-        zre_peer_headers_set (peer, zre_msg_headers (msg));
+        zre_peer_set_headers (peer, zre_msg_headers (msg));
 
         //  If peer is a ZRE/LOG collector, connect to it
         char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);

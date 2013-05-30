@@ -1,4 +1,4 @@
-<class name = "zre_log_msg" signature = "2" >
+<class name = "zre_log_msg" signature = "2" title = "work with ZRE logging messages">
 This is the ZRE logging protocol raw version.
 <include filename = "license.xml" />
 

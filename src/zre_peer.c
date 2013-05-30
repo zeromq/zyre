@@ -158,7 +158,7 @@ zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
 {
     assert (self);
     if (self->connected) {
-        zre_msg_sequence_set (*msg_p, ++(self->sent_sequence));
+        zre_msg_set_sequence (*msg_p, ++(self->sent_sequence));
         if (zre_msg_send (msg_p, self->mailbox) && errno == EAGAIN) {
             zre_peer_disconnect (self);
             return -1;
@@ -258,7 +258,7 @@ zre_peer_status (zre_peer_t *self)
 //  Set peer status
 
 void
-zre_peer_status_set (zre_peer_t *self, byte status)
+zre_peer_set_status (zre_peer_t *self, byte status)
 {
     assert (self);
     self->status = status;
@@ -280,7 +280,7 @@ zre_peer_ready (zre_peer_t *self)
 //  Set peer ready
 
 void
-zre_peer_ready_set (zre_peer_t *self, bool ready)
+zre_peer_set_ready (zre_peer_t *self, bool ready)
 {
     assert (self);
     self->ready = ready;
@@ -308,7 +308,7 @@ zre_peer_header (zre_peer_t *self, char *key, char *default_value)
 //  Set peer headers from provided dictionary
 
 void
-zre_peer_headers_set (zre_peer_t *self, zhash_t *headers)
+zre_peer_set_headers (zre_peer_t *self, zhash_t *headers)
 {
     assert (self);
     zhash_destroy (&self->headers);
