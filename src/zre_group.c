@@ -93,7 +93,7 @@ zre_group_join (zre_group_t *self, zre_peer_t *peer)
     assert (self);
     assert (peer);
     zhash_insert (self->peers, zre_peer_identity (peer), peer);
-    zre_peer_status_set (peer, zre_peer_status (peer) + 1);
+    zre_peer_set_status (peer, zre_peer_status (peer) + 1);
 }
 
 
@@ -106,7 +106,7 @@ zre_group_leave (zre_group_t *self, zre_peer_t *peer)
     assert (self);
     assert (peer);
     zhash_delete (self->peers, zre_peer_identity (peer));
-    zre_peer_status_set (peer, zre_peer_status (peer) + 1);
+    zre_peer_set_status (peer, zre_peer_status (peer) + 1);
 }
 
 

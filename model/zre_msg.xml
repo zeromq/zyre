@@ -1,4 +1,4 @@
-<class name = "zre_msg" signature = "1" >
+<class name = "zre_msg" signature = "1" title = "work with ZRE messages">
 This is the ZRE protocol raw version.
 <include filename = "license.xml" />
 

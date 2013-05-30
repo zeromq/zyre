@@ -80,7 +80,7 @@ int main (int argc, char *argv [])
 
     //  Announce this to all peers we connect to
     zre_node_t *node = zre_node_new ();
-    zre_node_header_set (node, "X-ZRELOG", "tcp://%s:%d", host, port);
+    zre_node_set_header (node, "X-ZRELOG", "tcp://%s:%d", host, port);
 
     //  Get all log messages (don't filter)
     zsocket_set_subscribe (collector, "");
