@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_log_msg.h
+    zre_log_msg - work with zre logging messages
     
     Generated codec header for zre_log_msg
     -------------------------------------------------------------------------
@@ -55,6 +55,7 @@ extern "C" {
 //  Opaque class structure
 typedef struct _zre_log_msg_t zre_log_msg_t;
 
+//  @interface
 //  Create a new zre_log_msg
 zre_log_msg_t *
     zre_log_msg_new (int id);
@@ -93,13 +94,13 @@ void
 zframe_t *
     zre_log_msg_address (zre_log_msg_t *self);
 void
-    zre_log_msg_address_set (zre_log_msg_t *self, zframe_t *address);
+    zre_log_msg_set_address (zre_log_msg_t *self, zframe_t *address);
 
 //  Get the zre_log_msg id and printable command
 int
     zre_log_msg_id (zre_log_msg_t *self);
 void
-    zre_log_msg_id_set (zre_log_msg_t *self, int id);
+    zre_log_msg_set_id (zre_log_msg_t *self, int id);
 char *
     zre_log_msg_command (zre_log_msg_t *self);
 
@@ -107,42 +108,43 @@ char *
 byte
     zre_log_msg_level (zre_log_msg_t *self);
 void
-    zre_log_msg_level_set (zre_log_msg_t *self, byte level);
+    zre_log_msg_set_level (zre_log_msg_t *self, byte level);
 
 //  Get/set the event field
 byte
     zre_log_msg_event (zre_log_msg_t *self);
 void
-    zre_log_msg_event_set (zre_log_msg_t *self, byte event);
+    zre_log_msg_set_event (zre_log_msg_t *self, byte event);
 
 //  Get/set the node field
 uint16_t
     zre_log_msg_node (zre_log_msg_t *self);
 void
-    zre_log_msg_node_set (zre_log_msg_t *self, uint16_t node);
+    zre_log_msg_set_node (zre_log_msg_t *self, uint16_t node);
 
 //  Get/set the peer field
 uint16_t
     zre_log_msg_peer (zre_log_msg_t *self);
 void
-    zre_log_msg_peer_set (zre_log_msg_t *self, uint16_t peer);
+    zre_log_msg_set_peer (zre_log_msg_t *self, uint16_t peer);
 
 //  Get/set the time field
 uint64_t
     zre_log_msg_time (zre_log_msg_t *self);
 void
-    zre_log_msg_time_set (zre_log_msg_t *self, uint64_t time);
+    zre_log_msg_set_time (zre_log_msg_t *self, uint64_t time);
 
 //  Get/set the data field
 char *
     zre_log_msg_data (zre_log_msg_t *self);
 void
-    zre_log_msg_data_set (zre_log_msg_t *self, char *format, ...);
+    zre_log_msg_set_data (zre_log_msg_t *self, char *format, ...);
 
 //  Self test of this class
 int
     zre_log_msg_test (bool verbose);
-    
+//  @end
+
 #ifdef __cplusplus
 }
 #endif

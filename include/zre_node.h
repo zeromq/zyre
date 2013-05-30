@@ -50,7 +50,7 @@ CZMQ_EXPORT void
 
 //  Set node tracing on or off
 CZMQ_EXPORT void
-    zre_node_verbose_set (zre_node_t *self, bool verbose);
+    zre_node_set_verbose (zre_node_t *self, bool verbose);
 
 //  Join a group
 CZMQ_EXPORT int
@@ -78,7 +78,7 @@ CZMQ_EXPORT void *
 
 //  Set node header value
 CZMQ_EXPORT void
-    zre_node_header_set (zre_node_t *self, char *name, char *format, ...);
+    zre_node_set_header (zre_node_t *self, char *name, char *format, ...);
 
 //  Publish file under some logical name
 //  Physical name is the actual file location

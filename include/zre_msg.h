@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_msg.h
+    zre_msg - work with zre messages
     
     Generated codec header for zre_msg
     -------------------------------------------------------------------------
@@ -73,6 +73,7 @@ extern "C" {
 //  Opaque class structure
 typedef struct _zre_msg_t zre_msg_t;
 
+//  @interface
 //  Create a new zre_msg
 zre_msg_t *
     zre_msg_new (int id);
@@ -148,13 +149,13 @@ void
 zframe_t *
     zre_msg_address (zre_msg_t *self);
 void
-    zre_msg_address_set (zre_msg_t *self, zframe_t *address);
+    zre_msg_set_address (zre_msg_t *self, zframe_t *address);
 
 //  Get the zre_msg id and printable command
 int
     zre_msg_id (zre_msg_t *self);
 void
-    zre_msg_id_set (zre_msg_t *self, int id);
+    zre_msg_set_id (zre_msg_t *self, int id);
 char *
     zre_msg_command (zre_msg_t *self);
 
@@ -162,25 +163,25 @@ char *
 uint16_t
     zre_msg_sequence (zre_msg_t *self);
 void
-    zre_msg_sequence_set (zre_msg_t *self, uint16_t sequence);
+    zre_msg_set_sequence (zre_msg_t *self, uint16_t sequence);
 
 //  Get/set the ipaddress field
 char *
     zre_msg_ipaddress (zre_msg_t *self);
 void
-    zre_msg_ipaddress_set (zre_msg_t *self, char *format, ...);
+    zre_msg_set_ipaddress (zre_msg_t *self, char *format, ...);
 
 //  Get/set the mailbox field
 uint16_t
     zre_msg_mailbox (zre_msg_t *self);
 void
-    zre_msg_mailbox_set (zre_msg_t *self, uint16_t mailbox);
+    zre_msg_set_mailbox (zre_msg_t *self, uint16_t mailbox);
 
 //  Get/set the groups field
 zlist_t *
     zre_msg_groups (zre_msg_t *self);
 void
-    zre_msg_groups_set (zre_msg_t *self, zlist_t *groups);
+    zre_msg_set_groups (zre_msg_t *self, zlist_t *groups);
 
 //  Iterate through the groups field, and append a groups value
 char *
@@ -196,13 +197,13 @@ size_t
 byte
     zre_msg_status (zre_msg_t *self);
 void
-    zre_msg_status_set (zre_msg_t *self, byte status);
+    zre_msg_set_status (zre_msg_t *self, byte status);
 
 //  Get/set the headers field
 zhash_t *
     zre_msg_headers (zre_msg_t *self);
 void
-    zre_msg_headers_set (zre_msg_t *self, zhash_t *headers);
+    zre_msg_set_headers (zre_msg_t *self, zhash_t *headers);
     
 //  Get/set a value in the headers dictionary
 char *
@@ -218,18 +219,19 @@ size_t
 zframe_t *
     zre_msg_content (zre_msg_t *self);
 void
-    zre_msg_content_set (zre_msg_t *self, zframe_t *frame);
+    zre_msg_set_content (zre_msg_t *self, zframe_t *frame);
 
 //  Get/set the group field
 char *
     zre_msg_group (zre_msg_t *self);
 void
-    zre_msg_group_set (zre_msg_t *self, char *format, ...);
+    zre_msg_set_group (zre_msg_t *self, char *format, ...);
 
 //  Self test of this class
 int
     zre_msg_test (bool verbose);
-    
+//  @end
+
 #ifdef __cplusplus
 }
 #endif

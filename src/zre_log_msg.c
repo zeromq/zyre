@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_log_msg.c
+    zre_log_msg - work with zre logging messages
 
     Generated codec implementation for zre_log_msg
     -------------------------------------------------------------------------
@@ -22,6 +22,13 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program. If not, see http://www.gnu.org/licenses/.      
     =========================================================================
+*/
+
+/*
+@header
+    zre_log_msg - work with zre logging messages
+@discuss
+@end
 */
 
 #include <czmq.h>
@@ -369,12 +376,12 @@ zre_log_msg_send_log (
     char *data)
 {
     zre_log_msg_t *self = zre_log_msg_new (ZRE_LOG_MSG_LOG);
-    zre_log_msg_level_set (self, level);
-    zre_log_msg_event_set (self, event);
-    zre_log_msg_node_set (self, node);
-    zre_log_msg_peer_set (self, peer);
-    zre_log_msg_time_set (self, time);
-    zre_log_msg_data_set (self, data);
+    zre_log_msg_set_level (self, level);
+    zre_log_msg_set_event (self, event);
+    zre_log_msg_set_node (self, node);
+    zre_log_msg_set_peer (self, peer);
+    zre_log_msg_set_time (self, time);
+    zre_log_msg_set_data (self, data);
     return zre_log_msg_send (&self, output);
 }
 
@@ -443,7 +450,7 @@ zre_log_msg_address (zre_log_msg_t *self)
 }
 
 void
-zre_log_msg_address_set (zre_log_msg_t *self, zframe_t *address)
+zre_log_msg_set_address (zre_log_msg_t *self, zframe_t *address)
 {
     if (self->address)
         zframe_destroy (&self->address);
@@ -462,7 +469,7 @@ zre_log_msg_id (zre_log_msg_t *self)
 }
 
 void
-zre_log_msg_id_set (zre_log_msg_t *self, int id)
+zre_log_msg_set_id (zre_log_msg_t *self, int id)
 {
     self->id = id;
 }
@@ -493,7 +500,7 @@ zre_log_msg_level (zre_log_msg_t *self)
 }
 
 void
-zre_log_msg_level_set (zre_log_msg_t *self, byte level)
+zre_log_msg_set_level (zre_log_msg_t *self, byte level)
 {
     assert (self);
     self->level = level;
@@ -511,7 +518,7 @@ zre_log_msg_event (zre_log_msg_t *self)
 }
 
 void
-zre_log_msg_event_set (zre_log_msg_t *self, byte event)
+zre_log_msg_set_event (zre_log_msg_t *self, byte event)
 {
     assert (self);
     self->event = event;
@@ -529,7 +536,7 @@ zre_log_msg_node (zre_log_msg_t *self)
 }
 
 void
-zre_log_msg_node_set (zre_log_msg_t *self, uint16_t node)
+zre_log_msg_set_node (zre_log_msg_t *self, uint16_t node)
 {
     assert (self);
     self->node = node;
@@ -547,7 +554,7 @@ zre_log_msg_peer (zre_log_msg_t *self)
 }
 
 void
-zre_log_msg_peer_set (zre_log_msg_t *self, uint16_t peer)
+zre_log_msg_set_peer (zre_log_msg_t *self, uint16_t peer)
 {
     assert (self);
     self->peer = peer;
@@ -565,7 +572,7 @@ zre_log_msg_time (zre_log_msg_t *self)
 }
 
 void
-zre_log_msg_time_set (zre_log_msg_t *self, uint64_t time)
+zre_log_msg_set_time (zre_log_msg_t *self, uint64_t time)
 {
     assert (self);
     self->time = time;
@@ -583,7 +590,7 @@ zre_log_msg_data (zre_log_msg_t *self)
 }
 
 void
-zre_log_msg_data_set (zre_log_msg_t *self, char *format, ...)
+zre_log_msg_set_data (zre_log_msg_t *self, char *format, ...)
 {
     //  Format into newly allocated string
     assert (self);
@@ -606,6 +613,7 @@ zre_log_msg_test (bool verbose)
 {
     printf (" * zre_log_msg: ");
 
+    //  @selftest
     //  Simple create/destroy test
     zre_log_msg_t *self = zre_log_msg_new (0);
     assert (self);
@@ -625,12 +633,12 @@ zre_log_msg_test (bool verbose)
     //  Encode/send/decode and verify each message type
 
     self = zre_log_msg_new (ZRE_LOG_MSG_LOG);
-    zre_log_msg_level_set (self, 123);
-    zre_log_msg_event_set (self, 123);
-    zre_log_msg_node_set (self, 123);
-    zre_log_msg_peer_set (self, 123);
-    zre_log_msg_time_set (self, 123);
-    zre_log_msg_data_set (self, "Life is short but Now lasts for ever");
+    zre_log_msg_set_level (self, 123);
+    zre_log_msg_set_event (self, 123);
+    zre_log_msg_set_node (self, 123);
+    zre_log_msg_set_peer (self, 123);
+    zre_log_msg_set_time (self, 123);
+    zre_log_msg_set_data (self, "Life is short but Now lasts for ever");
     zre_log_msg_send (&self, output);
     
     self = zre_log_msg_recv (input);
@@ -644,6 +652,8 @@ zre_log_msg_test (bool verbose)
     zre_log_msg_destroy (&self);
 
     zctx_destroy (&ctx);
+    //  @end
+
     printf ("OK\n");
     return 0;
 }
