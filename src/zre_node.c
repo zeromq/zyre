@@ -695,8 +695,8 @@ static int
 agent_recv_beacon (agent_t *self)
 {
     //  Get IP address and beacon of peer
-    char *ipaddress = zstr_recv (zbeacon_pipe (self->beacon));
-    zframe_t *frame = zframe_recv (zbeacon_pipe (self->beacon));
+    char *ipaddress = zstr_recv (zbeacon_socket (self->beacon));
+    zframe_t *frame = zframe_recv (zbeacon_socket (self->beacon));
 
     //  Ignore anything that isn't a valid beacon
     bool is_valid = true;
@@ -793,7 +793,7 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
     zmq_pollitem_t pollitems [] = {
         { self->pipe, 0, ZMQ_POLLIN, 0 },
         { self->inbox, 0, ZMQ_POLLIN, 0 },
-        { zbeacon_pipe (self->beacon), 0, ZMQ_POLLIN, 0 },
+        { zbeacon_socket (self->beacon), 0, ZMQ_POLLIN, 0 },
         { fmq_client_handle (self->fmq_client), 0, ZMQ_POLLIN, 0 }
     };
     

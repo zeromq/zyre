@@ -42,7 +42,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
     char *cookie = NULL;
     
     zmq_pollitem_t pollitems [] = {
-        { pipe,                             0, ZMQ_POLLIN, 0 },
+        { pipe,                   0, ZMQ_POLLIN, 0 },
         { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
     };
     //  Do something once a second
