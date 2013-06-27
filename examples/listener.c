@@ -4,14 +4,14 @@
 
 int main (int argc, char *argv [])
 {
-    zre_interface_t *interface = zre_interface_new ();
+    zre_node_t *node = zre_node_new ();
     while (true) {
-        zmsg_t *incoming = zre_interface_recv (interface);
+        zmsg_t *incoming = zre_node_recv (node);
         if (!incoming)
             break;
         zmsg_dump (incoming);
         zmsg_destroy (&incoming);
     }
-    zre_interface_destroy (&interface);
+    zre_node_destroy (&node);
     return 0;
 }
