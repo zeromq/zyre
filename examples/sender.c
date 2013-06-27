@@ -9,15 +9,15 @@ int main (int argc, char *argv [])
         return 0;
     }
     printf ("Publishing %s as %s\n", argv [1], argv [2]);
-    zre_interface_t *interface = zre_interface_new ();
-    zre_interface_publish (interface, argv [1], argv [2]);
+    zre_node_t *node = zre_node_new ();
+    zre_node_publish (node, argv [1], argv [2]);
     while (true) {
-        zmsg_t *incoming = zre_interface_recv (interface);
+        zmsg_t *incoming = zre_node_recv (node);
         if (!incoming)
             break;
         zmsg_dump (incoming);
         zmsg_destroy (&incoming);
     }
-    zre_interface_destroy (&interface);
+    zre_node_destroy (&node);
     return 0;
 }
