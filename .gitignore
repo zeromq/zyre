@@ -9,6 +9,9 @@ config/
 configure
 doc/Makefile
 doc/Makefile.in
+examples/listener
+examples/sender
+examples/zrechat
 libtool
 src/.deps/
 src/Makefile

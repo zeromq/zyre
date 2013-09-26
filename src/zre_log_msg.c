@@ -218,7 +218,7 @@ zre_log_msg_recv (void *input)
     //  garbage data we might receive from badly-connected peers
     while (true) {
         //  If we're reading from a ROUTER socket, get address
-        if (zsockopt_type (input) == ZMQ_ROUTER) {
+        if (zsocket_type (input) == ZMQ_ROUTER) {
             zframe_destroy (&self->address);
             self->address = zframe_recv (input);
             if (!self->address)
@@ -338,7 +338,7 @@ zre_log_msg_send (zre_log_msg_t **self_p, void *output)
             
     }
     //  If we're sending to a ROUTER, we send the address first
-    if (zsockopt_type (output) == ZMQ_ROUTER) {
+    if (zsocket_type (output) == ZMQ_ROUTER) {
         assert (self->address);
         if (zframe_send (&self->address, output, ZFRAME_MORE)) {
             zframe_destroy (&frame);

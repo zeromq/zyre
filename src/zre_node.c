@@ -353,15 +353,15 @@ agent_destroy (agent_t **self_p)
         agent_t *self = *self_p;
 
         //  Destroy inbox and outbox directories if they exist
-        fmq_dir_t *inbox = fmq_dir_new (self->fmq_inbox, NULL);
+        zdir_t *inbox = zdir_new (self->fmq_inbox, NULL);
         if (inbox) {
-            fmq_dir_remove (inbox, true);
-            fmq_dir_destroy (&inbox);
+            zdir_remove (inbox, true);
+            zdir_destroy (&inbox);
         }
-        fmq_dir_t *outbox = fmq_dir_new (self->fmq_outbox, NULL);
+        zdir_t *outbox = zdir_new (self->fmq_outbox, NULL);
         if (outbox) {
-            fmq_dir_remove (outbox, true);
-            fmq_dir_destroy (&outbox);
+            zdir_remove (outbox, true);
+            zdir_destroy (&outbox);
         }
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
@@ -480,11 +480,11 @@ agent_recv_from_api (agent_t *self)
         //  We create symbolic link pointing to real file
         char *symlink = malloc (strlen (logical) + 3);
         sprintf (symlink, "%s.ln", logical + 1);
-        fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
-        int rc = fmq_file_output (file);
+        zfile_t *file = zfile_new (self->fmq_outbox, symlink);
+        int rc = zfile_output (file);
         assert (rc == 0);
-        fprintf (fmq_file_handle (file), "%s\n", physical);
-        fmq_file_destroy (&file);
+        fprintf (zfile_handle (file), "%s\n", physical);
+        zfile_destroy (&file);
         free (symlink);
         free (logical);
         free (physical);
@@ -494,11 +494,10 @@ agent_recv_from_api (agent_t *self)
         char *logical = zmsg_popstr (request);
         //  Logical filename must start with slash
         assert (logical [0] == '/');
-        //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (logical) + 3);
-        sprintf (symlink, "%s.ln", logical + 1);
-        fmq_file_t *file = fmq_file_new (self->fmq_outbox, symlink);
-        fmq_file_remove (file);
+        //  We delete the symbolic link pointing to real file
+        char *symlink = malloc (strlen (self->fmq_outbox) + strlen (logical) + 4);
+        sprintf (symlink, "%s/%s.ln", self->fmq_outbox, logical + 1);
+        zsys_file_delete (symlink);
         free (symlink);
         free (logical);
     }
