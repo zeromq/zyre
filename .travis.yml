@@ -6,18 +6,18 @@ language: c
 before_script:
 - sudo apt-get install uuid-dev
 
-#   libzmq
-- git clone git://github.com/zeromq/libzmq.git
-- cd libzmq
+#   libsodium
+- git clone git://github.com/jedisct1/libsodium.git
+- cd libsodium
 - ./autogen.sh
 - ./configure && make check
 - sudo make install
 - sudo ldconfig
 - cd ..
 
-#   libsodium
-- git clone git://github.com/jedisct1/libsodium.git
-- cd libsodium
+#   libzmq
+- git clone git://github.com/zeromq/libzmq.git
+- cd libzmq
 - ./autogen.sh
 - ./configure && make check
 - sudo make install
