@@ -226,7 +226,7 @@ zre_msg_recv (void *input)
     //  garbage data we might receive from badly-connected peers
     while (true) {
         //  If we're reading from a ROUTER socket, get address
-        if (zsockopt_type (input) == ZMQ_ROUTER) {
+        if (zsocket_type (input) == ZMQ_ROUTER) {
             zframe_destroy (&self->address);
             self->address = zframe_recv (input);
             if (!self->address)
@@ -543,7 +543,7 @@ zre_msg_send (zre_msg_t **self_p, void *output)
             
     }
     //  If we're sending to a ROUTER, we send the address first
-    if (zsockopt_type (output) == ZMQ_ROUTER) {
+    if (zsocket_type (output) == ZMQ_ROUTER) {
         assert (self->address);
         if (zframe_send (&self->address, output, ZFRAME_MORE)) {
             zframe_destroy (&frame);
@@ -726,7 +726,7 @@ zre_msg_dup (zre_msg_t *self)
             copy->sequence = self->sequence;
             copy->ipaddress = strdup (self->ipaddress);
             copy->mailbox = self->mailbox;
-            copy->groups = zlist_copy (self->groups);
+            copy->groups = zlist_dup (self->groups);
             copy->status = self->status;
             copy->headers = zhash_dup (self->headers);
             break;

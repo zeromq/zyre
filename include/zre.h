@@ -37,13 +37,13 @@
     ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
 
 #include <czmq.h>
-#if CZMQ_VERSION < 10304
-#   error "Zyre needs CZMQ/1.4.0 or later"
+#if CZMQ_VERSION < 2000
+#   error "Zyre needs CZMQ/2.0.0 or later"
 #endif
 
 #include <fmq.h>
-#if FMQ_VERSION < 10200
-#   error "Zyre needs FileMQ/1.2.0 or later"
+#if FMQ_VERSION < 10300
+#   error "Zyre needs FileMQ/1.3.0 or later"
 #endif
 
 //  IANA-assigned port for ZRE discovery protocol
