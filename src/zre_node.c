@@ -267,13 +267,6 @@ typedef struct {
     zhash_t *peer_groups;       //  Groups that our peers are in
     zhash_t *own_groups;        //  Groups that we are in
     zhash_t *headers;           //  Our header values
-    
-    fmq_server_t *fmq_server;   //  FileMQ server object
-    int fmq_service;            //  FileMQ server port
-    char fmq_outbox [255];      //  FileMQ server outbox
-    
-    fmq_client_t *fmq_client;   //  FileMQ client object
-    char fmq_inbox [255];       //  FileMQ client inbox
 } agent_t;
 
 static agent_t *
@@ -319,29 +312,6 @@ agent_new (zctx_t *ctx, void *pipe)
     sprintf (endpoint, "%s:%d", self->host, self->port);
     self->log = zre_log_new (endpoint);
 
-    //  Set up content distribution network: Each server binds to an
-    //  ephemeral port and publishes a temporary directory that acts
-    //  as the outbox for this node.
-    //
-    sprintf (self->fmq_outbox, "%s/send/%s", s_tmpdir (), self->identity);
-    zfile_mkdir (self->fmq_outbox);
-    sprintf (self->fmq_inbox, "%s/recv/%s", s_tmpdir (), self->identity);
-    zfile_mkdir (self->fmq_inbox);
-
-    self->fmq_server = fmq_server_new ();
-    self->fmq_service = fmq_server_bind (self->fmq_server, "tcp://*:*");
-    fmq_server_publish (self->fmq_server, self->fmq_outbox, "/");
-    fmq_server_set_anonymous (self->fmq_server, true);
-    char publisher [32];
-    sprintf (publisher, "tcp://%s:%d", self->host, self->fmq_service);
-    zhash_update (self->headers, "X-FILEMQ", publisher);
-
-    //  Client will connect as it discovers new nodes
-    self->fmq_client = fmq_client_new ();
-    fmq_client_set_inbox (self->fmq_client, self->fmq_inbox);
-    fmq_client_set_resync (self->fmq_client, true);
-    fmq_client_subscribe (self->fmq_client, "/");
-    
     return self;
 }
 
@@ -351,27 +321,12 @@ agent_destroy (agent_t **self_p)
     assert (self_p);
     if (*self_p) {
         agent_t *self = *self_p;
-
-        //  Destroy inbox and outbox directories if they exist
-        zdir_t *inbox = zdir_new (self->fmq_inbox, NULL);
-        if (inbox) {
-            zdir_remove (inbox, true);
-            zdir_destroy (&inbox);
-        }
-        zdir_t *outbox = zdir_new (self->fmq_outbox, NULL);
-        if (outbox) {
-            zdir_remove (outbox, true);
-            zdir_destroy (&outbox);
-        }
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
         zbeacon_destroy (&self->beacon);
         zre_log_destroy (&self->log);
-        
-        fmq_server_destroy (&self->fmq_server);
-        fmq_client_destroy (&self->fmq_client);
         free (self->identity);
         free (self);
         *self_p = NULL;
@@ -470,36 +425,6 @@ agent_recv_from_api (agent_t *self)
         zhash_update (self->headers, name, value);
         free (name);
         free (value);
-    }
-    else
-    if (streq (command, "PUBLISH")) {
-        char *logical = zmsg_popstr (request);
-        char *physical = zmsg_popstr (request);
-        //  Virtual filename must start with slash
-        assert (logical [0] == '/');
-        //  We create symbolic link pointing to real file
-        char *symlink = malloc (strlen (logical) + 3);
-        sprintf (symlink, "%s.ln", logical + 1);
-        zfile_t *file = zfile_new (self->fmq_outbox, symlink);
-        int rc = zfile_output (file);
-        assert (rc == 0);
-        fprintf (zfile_handle (file), "%s\n", physical);
-        zfile_destroy (&file);
-        free (symlink);
-        free (logical);
-        free (physical);
-    }
-    else
-    if (streq (command, "RETRACT")) {
-        char *logical = zmsg_popstr (request);
-        //  Logical filename must start with slash
-        assert (logical [0] == '/');
-        //  We delete the symbolic link pointing to real file
-        char *symlink = malloc (strlen (self->fmq_outbox) + strlen (logical) + 4);
-        sprintf (symlink, "%s/%s.ln", self->fmq_outbox, logical + 1);
-        zsys_file_delete (symlink);
-        free (symlink);
-        free (logical);
     }
     free (command);
     zmsg_destroy (&request);
@@ -642,11 +567,6 @@ agent_recv_from_peer (agent_t *self)
         char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
         if (collector)
             zre_log_connect (self->log, collector);
-        
-        //  If peer is a FileMQ publisher, connect to it
-        char *publisher = zre_msg_headers_string (msg, "X-FILEMQ", NULL);
-        if (publisher)
-            fmq_client_connect (self->fmq_client, publisher);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
@@ -723,19 +643,6 @@ agent_recv_beacon (agent_t *self)
 }
 
 
-//  Forward event from fmq_client to caller
-
-static int
-agent_recv_fmq_event (agent_t *self)
-{
-    zmsg_t *msg = fmq_client_recv (self->fmq_client);
-    if (!msg)
-        return 0;
-    zmsg_send (&msg, self->pipe);
-    return 0;
-}
-
-
 //  Remove peer from group, if it's a member
 
 static int
@@ -792,8 +699,7 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
     zmq_pollitem_t pollitems [] = {
         { self->pipe, 0, ZMQ_POLLIN, 0 },
         { self->inbox, 0, ZMQ_POLLIN, 0 },
-        { zbeacon_socket (self->beacon), 0, ZMQ_POLLIN, 0 },
-        { fmq_client_handle (self->fmq_client), 0, ZMQ_POLLIN, 0 }
+        { zbeacon_socket (self->beacon), 0, ZMQ_POLLIN, 0 }
     };
     
     uint64_t reap_at = zclock_time () + REAP_INTERVAL;
@@ -813,9 +719,6 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
 
         if (pollitems [2].revents & ZMQ_POLLIN)
             agent_recv_beacon (self);
-
-        if (pollitems [3].revents & ZMQ_POLLIN)
-            agent_recv_fmq_event (self);
 
         if (zclock_time () >= reap_at) {
             reap_at = zclock_time () + REAP_INTERVAL;

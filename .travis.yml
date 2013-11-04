@@ -33,14 +33,5 @@ before_script:
 - sudo ldconfig
 - cd ..
 
-#   FileMQ
-- git clone git://github.com/zeromq/filemq.git
-- cd filemq
-- ./autogen.sh
-- ./configure && make check
-- sudo make install
-- sudo ldconfig
-- cd ..
-
 #   Build and check libzre
 script: ./autogen.sh && ./configure && make && make check
