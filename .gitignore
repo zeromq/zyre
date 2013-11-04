@@ -30,10 +30,10 @@ core
 .cache
 testit
 *.pc
-zre_ping
-zre_logger
-zre_tester
-zre_perf_local
-zre_perf_remote
-zre_selftest
+zyre_ping
+zyre_logger
+zyre_tester
+zyre_perf_local
+zyre_perf_remote
+zyre_selftest
 doit

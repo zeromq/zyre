@@ -24,13 +24,13 @@ libzre_la_SOURCES = \
     zre_uuid.c 
 
 INCLUDES = -I$(top_srcdir)/include
-bin_PROGRAMS = zre_selftest zre_ping zre_tester zre_logger zre_perf_local zre_perf_remote
-zre_selftest_LDADD = libzre.la
-zre_ping_LDADD = libzre.la
-zre_tester_LDADD = libzre.la
-zre_logger_LDADD = libzre.la
-zre_perf_local_LDADD = libzre.la
-zre_perf_remote_LDADD = libzre.la
+bin_PROGRAMS = zyre_selftest zyre_ping zyre_tester zyre_logger zyre_perf_local zyre_perf_remote
+zyre_selftest_LDADD = libzre.la
+zyre_ping_LDADD = libzre.la
+zyre_tester_LDADD = libzre.la
+zyre_logger_LDADD = libzre.la
+zyre_perf_local_LDADD = libzre.la
+zyre_perf_remote_LDADD = libzre.la
 
 if ON_MINGW
 libzre_la_LDFLAGS = -no-undefined -avoid-version -version-info @LTVER@
@@ -38,4 +38,4 @@ else
 libzre_la_LDFLAGS = -version-info @LTVER@
 endif
 
-TESTS = zre_selftest
+TESTS = zyre_selftest
