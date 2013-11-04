@@ -116,31 +116,6 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <czmq.h>],
                [AC_MSG_RESULT([yes])],
                [AC_MSG_ERROR([no. Please specify libczmq installation prefix using --with-czmq])])
 
-# libfmq integration
-AC_ARG_WITH([libfmq],
-            [AS_HELP_STRING([--with-libfmq],
-                            [Specify libfmq prefix])],
-            [search_libfmq="yes"],
-            [])
-
-if test "x$search_libfmq" = "xyes"; then
-    if test -r "${with_libfmq}/include/fmq.h"; then
-        CFLAGS="-I${with_libfmq}/include ${CFLAGS}"
-        LDFLAGS="-L${with_libfmq}/lib ${LDFLAGS}"
-    else
-        AC_MSG_ERROR([${with_libfmq}/include/fmq.h not found. Please check libfmq prefix])
-    fi
-fi
-
-AC_CHECK_LIB(fmq, fmq_server_new, ,[AC_MSG_ERROR([cannot link with -lfmq, install libfmq.])])
-
-AC_MSG_CHECKING([whether libfmq installation works])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <fmq.h>],
-                                [fmq_server_new ();])
-               ],
-               [AC_MSG_RESULT([yes])],
-               [AC_MSG_ERROR([no. Please specify libfmq installation prefix using --with-fmq])])
-
 # Platform specific checks
 zre_on_mingw32="no"
 zre_on_android="no"
