@@ -708,7 +708,7 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
         assert (timeout <= REAP_INTERVAL);
         if (timeout < 0)
             timeout = 0;
-        if (zmq_poll (pollitems, 4, timeout * ZMQ_POLL_MSEC) == -1)
+        if (zmq_poll (pollitems, 3, timeout * ZMQ_POLL_MSEC) == -1)
             break;              //  Interrupted
 
         if (pollitems [0].revents & ZMQ_POLLIN)
