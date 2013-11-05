@@ -106,8 +106,8 @@ if test "x$search_libczmq" = "xyes"; then
 fi
 
 AC_CHECK_LIB(czmq, zctx_test, 
-							LIBS="-lczmq $LIBS",
-						 [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
+        LIBS="-lczmq $LIBS",
+        [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
 
 AC_MSG_CHECKING([whether libczmq installation works])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <czmq.h>],
@@ -273,4 +273,4 @@ AM_CONDITIONAL(BUILD_DOC, test "x$zre_build_doc" = "xyes")
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(perror gettimeofday memset)
 
-AC_OUTPUT(Makefile src/Makefile doc/Makefile src/libzre.pc)
+AC_OUTPUT(Makefile src/Makefile tools/Makefile doc/Makefile src/libzre.pc)

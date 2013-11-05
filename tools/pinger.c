@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_ping - ping other peers in a ZRE network
+    zyre_ping - ping other peers in a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
