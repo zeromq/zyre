@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre.h - Zyre library header
+    zyre_log - record log data
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -24,27 +24,37 @@
     =========================================================================
 */
 
-#ifndef __ZRE_H_INCLUDED__
-#define __ZRE_H_INCLUDED__
+#ifndef __ZYRE_LOG_H_INCLUDED__
+#define __ZYRE_LOG_H_INCLUDED__
 
-#define ZRE_VERSION_MAJOR 1
-#define ZRE_VERSION_MINOR 1
-#define ZRE_VERSION_PATCH 0
-
-#define ZRE_MAKE_VERSION(major, minor, patch) \
-    ((major) * 10000 + (minor) * 100 + (patch))
-#define ZRE_VERSION \
-    ZRE_MAKE_VERSION(ZRE_VERSION_MAJOR, ZRE_VERSION_MINOR, ZRE_VERSION_PATCH)
-
-#include <czmq.h>
-#if CZMQ_VERSION < 2000
-#   error "Zyre needs CZMQ/2.0.0 or later"
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-//  IANA-assigned port for ZRE discovery protocol
-#define ZRE_DISCOVERY_PORT  5670
+typedef struct _zyre_log_t zyre_log_t;
 
-//  This is the only class that applications should use
-#include "zre_node.h"
+//  Constructor
+zyre_log_t *
+    zyre_log_new (char *endpoint);
+
+//  Destructor
+void
+    zyre_log_destroy (zyre_log_t **self_p);
+
+//  Connect log to remote endpoint
+void
+    zyre_log_connect (zyre_log_t *self, char *endpoint);
+
+//  Record one log event
+void
+    zyre_log_info (zyre_log_t *self, int event, char *peer, char *format, ...);
+
+//  Self test of this class
+void
+    zyre_log_test (bool verbose);
+    
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_perf_remote - remote performance peer
+    perf_remote - remote performance peer
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -25,29 +25,26 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zyre.h"
 
 static bool
-s_node_recv (zre_node_t *node, char* command, char* expected)
+s_node_recv (zyre_t *node, char* command, char* expected)
 {
     bool result = false;
-    zmsg_t *incoming = zre_node_recv (node);
-
+    zmsg_t *incoming = zyre_recv (node);
     assert (incoming);
 
     char *event = zmsg_popstr (incoming);
-
     if (streq (event, command)) {
         char *peer = zmsg_popstr (incoming);
         char *group = NULL;
         if (streq (command, "SHOUT"))
             group = zmsg_popstr (incoming);
+        
         char *cookie = zmsg_popstr (incoming);
-
-        if (streq (cookie, expected)) {
+        if (streq (cookie, expected))
             result = true;
-        }
-
+        
         free (peer);
         if (group)
             free (group);
@@ -63,7 +60,7 @@ int
 main (int argc, char *argv [])
 {
     //  Get number of remote nodes to simulate, default 100
-    //  If we run multiple zre_perf_remote on multiple machines,
+    //  If we run multiple perf_remote on multiple machines,
     //  max_node must be sum of all the remote node counts.
     int max_node = 100;
     int max_message = 10000;
@@ -77,8 +74,9 @@ main (int argc, char *argv [])
     if (argc > 2)
         max_message = atoi (argv [2]);
 
-    zre_node_t *node = zre_node_new ();
-    zre_node_join (node, "GLOBAL");
+    zctx_t *ctx = zctx_new ();
+    zyre_t *node = zyre_new (ctx);
+    zyre_join (node, "GLOBAL");
 
     int64_t start = zclock_time ();
     int64_t elapse;
@@ -86,7 +84,7 @@ main (int argc, char *argv [])
     char **peers = zmalloc (sizeof (char *) * max_node);
 
     while (true) {
-        zmsg_t *incoming = zre_node_recv (node);
+        zmsg_t *incoming = zyre_recv (node);
         if (!incoming)
             break;              //  Interrupted
 
@@ -123,9 +121,8 @@ main (int argc, char *argv [])
         if (nbr_node == max_node && nbr_hello_response == max_node)
             break;
     }
-
     zmq_pollitem_t pollitems [] = {
-        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
+        { zyre_socket (node), 0, ZMQ_POLLIN, 0 }
     };
 
     //  send WHISPER message
@@ -134,7 +131,7 @@ main (int argc, char *argv [])
         zmsg_t *outgoing = zmsg_new ();
         zmsg_addstr (outgoing, peers [nbr_message % max_node]);
         zmsg_addstr (outgoing, "S:WHISPER");
-        zre_node_whisper (node, &outgoing);
+        zyre_whisper (node, &outgoing);
 
         while (zmq_poll (pollitems, 1, 0) > 0) {
             if (s_node_recv (node, "WHISPER", "R:WHISPER"))
@@ -161,7 +158,7 @@ main (int argc, char *argv [])
         zmsg_t *outgoing = zmsg_new ();
         zmsg_addstr (outgoing, "GLOBAL");
         zmsg_addstr (outgoing, "S:SHOUT");
-        zre_node_shout (node, &outgoing);
+        zyre_shout (node, &outgoing);
 
         while (zmq_poll (pollitems, 1, 0) > 0) {
             if (s_node_recv (node, "SHOUT", "R:SHOUT"))
@@ -180,10 +177,11 @@ main (int argc, char *argv [])
             (float) max_node * max_message * 1000 / elapse);
 
 
-    zre_node_destroy (&node);
+    zyre_destroy (&node);
     for (nbr_node = 0; nbr_node < max_node; nbr_node++) {
         free (peers[nbr_node]);
     }
     free (peers);
+    zctx_destroy (&ctx);
     return 0;
 }

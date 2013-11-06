@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_internal.h - Zyre internal library header
+    zyre - node on a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -24,24 +24,8 @@
     =========================================================================
 */
 
-#ifndef __ZRE_INTERNAL_H_INCLUDED__
-#define __ZRE_INTERNAL_H_INCLUDED__
+#ifndef __ZYRE_NODE_H_INCLUDED__
+#define __ZYRE_NODE_H_INCLUDED__
 
-#include "zre.h"
-
-//  Constants, to be configured/reviewed
-
-#define REAP_INTERVAL    1000   //  Once per second
-#define PEER_EVASIVE     5000   //  Five seconds' silence is evasive
-#define PEER_EXPIRED    10000   //  Ten seconds' silence is expired
-
-//  Classes in this stack
-
-#include "zre_msg.h"
-#include "zre_peer.h"
-#include "zre_group.h"
-#include "zre_log.h"
-#include "zre_log_msg.h"
-#include "zre_uuid.h"
 
 #endif

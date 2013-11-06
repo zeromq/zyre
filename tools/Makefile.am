@@ -12,17 +12,17 @@ bin_PROGRAMS = pinger \
                perf_local \
                perf_remote
 
-pinger_LDADD = $(top_srcdir)/src/libzre.la
+pinger_LDADD = $(top_srcdir)/src/libzyre.la
 pinger_SOURCES = pinger.c
 
-tester_LDADD = $(top_srcdir)/src/libzre.la
+tester_LDADD = $(top_srcdir)/src/libzyre.la
 tester_SOURCES = tester.c
 
-logger_LDADD = $(top_srcdir)/src/libzre.la
+logger_LDADD = $(top_srcdir)/src/libzyre.la
 logger_SOURCES = logger.c
 
-perf_local_LDADD = $(top_srcdir)/src/libzre.la
+perf_local_LDADD = $(top_srcdir)/src/libzyre.la
 perf_local_SOURCES = perf_local.c
 
-perf_remote_LDADD = $(top_srcdir)/src/libzre.la
+perf_remote_LDADD = $(top_srcdir)/src/libzyre.la
 perf_remote_SOURCES = perf_remote.c

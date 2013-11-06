@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre_uuid - UUID support class
+    zyre_node - ZRE node on the network
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -24,48 +24,22 @@
     =========================================================================
 */
 
-#ifndef __ZRE_UUID_H_INCLUDED__
-#define __ZRE_UUID_H_INCLUDED__
-
-#define ZRE_UUID_LEN    16
+#ifndef __ZYRE_NODE_H_INCLUDED__
+#define __ZYRE_NODE_H_INCLUDED__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _zre_uuid_t zre_uuid_t;
+typedef struct _zyre_node_t zyre_node_t;
 
-//  Constructor
-zre_uuid_t *
-    zre_uuid_new (void);
-
-//  Destructor
+//  Background engine
 void
-    zre_uuid_destroy (zre_uuid_t **self_p);
-
-//  Returns UUID as string
-char *
-    zre_uuid_str (zre_uuid_t *self);
-
-//  Set UUID to new supplied value 
-void
-    zre_uuid_set (zre_uuid_t *self, byte *source);
-    
-//  Store UUID blob in target array
-void
-    zre_uuid_cpy (zre_uuid_t *self, byte *target);
-
-//  Check if UUID is same as supplied value
-bool
-    zre_uuid_eq (zre_uuid_t *self, byte *compare);
-
-//  Check if UUID is different from supplied value
-bool
-    zre_uuid_neq (zre_uuid_t *self, byte *compare);
+    zyre_node_engine (void *args, zctx_t *ctx, void *pipe);
 
 //  Self test of this class
-int
-    zre_uuid_test (bool verbose);
+void
+    zyre_node_test (bool verbose);
 
 #ifdef __cplusplus
 }

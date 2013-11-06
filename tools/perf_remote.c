@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_perf_remote - remote performance peer
+    perf_remote - remote performance peer
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -25,16 +25,16 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zyre.h"
 
-// to test performances, run zre_perf_remote [node_count] first then zre_perf_local
+// to test performances, run perf_remote [node_count] first then perf_local
 
 #define MAX_GROUP 10
 
 static void
 node_task (void *args, zctx_t *ctx, void *pipe)
 {
-    zre_node_t *node = zre_node_new ();
+    zyre_t *node = zyre_new (ctx);
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
@@ -42,12 +42,12 @@ node_task (void *args, zctx_t *ctx, void *pipe)
     char *sending_cookie = NULL; //  sending message
     
     zmq_pollitem_t pollitems [] = {
-        { pipe,                             0, ZMQ_POLLIN, 0 },
-        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
+        { pipe, 0, ZMQ_POLLIN, 0 },
+        { zyre_socket (node), 0, ZMQ_POLLIN, 0 }
     };
 
     // all node joins GLOBAL
-    zre_node_join (node, "GLOBAL");
+    zyre_join (node, "GLOBAL");
 
     while (!zctx_interrupted) {
         if (zmq_poll (pollitems, 2, randof (1000) * ZMQ_POLL_MSEC) == -1)
@@ -58,7 +58,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
 
         //  Process an event from node
         if (pollitems [1].revents & ZMQ_POLLIN) {
-            zmsg_t *incoming = zre_node_recv (node);
+            zmsg_t *incoming = zyre_recv (node);
             if (!incoming)
                 break;              //  Interrupted
 
@@ -77,7 +77,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 to_peer = zmsg_popstr (incoming);
                 cookie = zmsg_popstr (incoming);
 
-                // if a message comes from zre_perf_local, send back a special response
+                // if a message comes from perf_local, send back a special response
                 if (streq (cookie, "S:WHISPER")) {
                     sending_cookie = "R:WHISPER";
                 }
@@ -94,7 +94,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 to_group = zmsg_popstr (incoming);
                 cookie = zmsg_popstr (incoming);
 
-                // if a message comes from zre_perf_local, send back a special response
+                // if a message comes from perf_local, send back a special response
                 if (streq (cookie, "S:SHOUT")) {
                     free (to_peer);
                     to_peer = NULL;
@@ -115,7 +115,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 zmsg_t *outgoing = zmsg_new ();
                 zmsg_addstr (outgoing, to_peer);
                 zmsg_addstr (outgoing, sending_cookie);
-                zre_node_whisper (node, &outgoing);
+                zyre_whisper (node, &outgoing);
                 free (to_peer);
                 to_peer = NULL;
             }
@@ -123,7 +123,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 zmsg_t *outgoing = zmsg_new ();
                 zmsg_addstr (outgoing, to_group);
                 zmsg_addstr (outgoing, sending_cookie);
-                zre_node_shout (node, &outgoing);
+                zyre_shout (node, &outgoing);
                 free (to_group);
                 to_group = NULL;
             }
@@ -133,7 +133,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
             }
         }
     }
-    zre_node_destroy (&node);
+    zyre_destroy (&node);
 }
 
 

@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre_group - group known to this node
+    zyre_group - group known to this node
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -24,14 +24,12 @@
     =========================================================================
 */
 
-#include <czmq.h>
-#include "../include/zre_internal.h"
-
+#include "zyre_classes.h"
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_group_t {
+struct _zyre_group_t {
     char *name;                 //  Group name
     zhash_t *peers;             //  Peers in group
 };
@@ -42,18 +40,18 @@ struct _zre_group_t {
 static void
 s_delete_group (void *argument)
 {
-    zre_group_t *group = (zre_group_t *) argument;
-    zre_group_destroy (&group);
+    zyre_group_t *group = (zyre_group_t *) argument;
+    zyre_group_destroy (&group);
 }
 
 
 //  ---------------------------------------------------------------------
 //  Construct new group object
 
-zre_group_t *
-zre_group_new (char *name, zhash_t *container)
+zyre_group_t *
+zyre_group_new (char *name, zhash_t *container)
 {
-    zre_group_t *self = (zre_group_t *) zmalloc (sizeof (zre_group_t));
+    zyre_group_t *self = (zyre_group_t *) zmalloc (sizeof (zyre_group_t));
     self->name = strdup (name);
     self->peers = zhash_new ();
     
@@ -70,11 +68,11 @@ zre_group_new (char *name, zhash_t *container)
 //  Destroy group object
 
 void
-zre_group_destroy (zre_group_t **self_p)
+zyre_group_destroy (zyre_group_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
-        zre_group_t *self = *self_p;
+        zyre_group_t *self = *self_p;
         zhash_destroy (&self->peers);
         free (self->name);
         free (self);
@@ -88,12 +86,12 @@ zre_group_destroy (zre_group_t **self_p)
 //  Ignore duplicate joins
 
 void
-zre_group_join (zre_group_t *self, zre_peer_t *peer)
+zyre_group_join (zyre_group_t *self, zyre_peer_t *peer)
 {
     assert (self);
     assert (peer);
-    zhash_insert (self->peers, zre_peer_identity (peer), peer);
-    zre_peer_set_status (peer, zre_peer_status (peer) + 1);
+    zhash_insert (self->peers, zyre_peer_identity (peer), peer);
+    zyre_peer_set_status (peer, zyre_peer_status (peer) + 1);
 }
 
 
@@ -101,21 +99,21 @@ zre_group_join (zre_group_t *self, zre_peer_t *peer)
 //  Remove peer from group
 
 void
-zre_group_leave (zre_group_t *self, zre_peer_t *peer)
+zyre_group_leave (zyre_group_t *self, zyre_peer_t *peer)
 {
     assert (self);
     assert (peer);
-    zhash_delete (self->peers, zre_peer_identity (peer));
-    zre_peer_set_status (peer, zre_peer_status (peer) + 1);
+    zhash_delete (self->peers, zyre_peer_identity (peer));
+    zyre_peer_set_status (peer, zyre_peer_status (peer) + 1);
 }
 
 
 static int
 s_peer_send (const char *key, void *item, void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) item;
+    zyre_peer_t *peer = (zyre_peer_t *) item;
     zre_msg_t *msg = zre_msg_dup ((zre_msg_t *) argument);
-    zre_peer_send (peer, &msg);
+    zyre_peer_send (peer, &msg);
     return 0;
 }
 
@@ -123,9 +121,21 @@ s_peer_send (const char *key, void *item, void *argument)
 //  Send message to all peers in group
 
 void
-zre_group_send (zre_group_t *self, zre_msg_t **msg_p)
+zyre_group_send (zyre_group_t *self, zre_msg_t **msg_p)
 {
     assert (self);
     zhash_foreach (self->peers, s_peer_send, *msg_p);
     zre_msg_destroy (msg_p);
 }
+
+
+//  --------------------------------------------------------------------------
+//  Self test of this class
+
+void
+zyre_group_test (bool verbose)
+{
+    printf (" * zyre_group: ");
+    printf ("OK\n");
+}
+

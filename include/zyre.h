@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre_node - node on a ZRE network
+    zyre.h - Zyre public API
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -24,70 +24,79 @@
     =========================================================================
 */
 
-#ifndef __ZRE_NODE_H_INCLUDED__
-#define __ZRE_NODE_H_INCLUDED__
+#ifndef __ZYRE_H_INCLUDED__
+#define __ZYRE_H_INCLUDED__
+
+#define ZYRE_VERSION_MAJOR 1
+#define ZYRE_VERSION_MINOR 1
+#define ZYRE_VERSION_PATCH 0
+
+#define ZYRE_MAKE_VERSION(major, minor, patch) \
+    ((major) * 10000 + (minor) * 100 + (patch))
+#define ZYRE_VERSION \
+    ZYRE_MAKE_VERSION(ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
+
+#include <czmq.h>
+#if CZMQ_VERSION < 2003
+#   error "Zyre needs CZMQ/2.0.3 or later"
+#endif
+
+//  IANA-assigned port for ZYRE discovery protocol
+#define ZRE_DISCOVERY_PORT  5670
+
+//  The public API consists of the "zyre_t" class
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _zre_node_t zre_node_t;
+typedef struct _zyre_t zyre_t;
 
-//  Optional global context for zre_node instances
-//  Used for large-scale testing simulation only
-CZMQ_EXPORT extern zctx_t *zre_global_ctx;
-
-//  Optional temp directory; set by caller if needed
-CZMQ_EXPORT extern char *zre_global_tmpdir;
-
+//  @interface
 //  Constructor
-CZMQ_EXPORT zre_node_t *
-    zre_node_new (void);
+CZMQ_EXPORT zyre_t *
+    zyre_new (zctx_t *ctx);
 
 //  Destructor
 CZMQ_EXPORT void
-    zre_node_destroy (zre_node_t **self_p);
+    zyre_destroy (zyre_t **self_p);
 
 //  Set node tracing on or off
 CZMQ_EXPORT void
-    zre_node_set_verbose (zre_node_t *self, bool verbose);
+    zyre_set_verbose (zyre_t *self, bool verbose);
 
 //  Join a group
 CZMQ_EXPORT int
-    zre_node_join (zre_node_t *self, const char *group);
-    
+    zyre_join (zyre_t *self, const char *group);
+
 //  Leave a group
 CZMQ_EXPORT int
-    zre_node_leave (zre_node_t *self, const char *group);
+    zyre_leave (zyre_t *self, const char *group);
 
 //  Receive next message from node
 CZMQ_EXPORT zmsg_t *
-    zre_node_recv (zre_node_t *self);
+    zyre_recv (zyre_t *self);
 
 //  Send message to single peer; peer ID is first frame in message
 CZMQ_EXPORT int
-    zre_node_whisper (zre_node_t *self, zmsg_t **msg_p);
-    
+    zyre_whisper (zyre_t *self, zmsg_t **msg_p);
+
 //  Send message to a group of peers
 CZMQ_EXPORT int
-    zre_node_shout (zre_node_t *self, zmsg_t **msg_p);
-    
+    zyre_shout (zyre_t *self, zmsg_t **msg_p);
+
 //  Return node handle, for polling
 CZMQ_EXPORT void *
-    zre_node_handle (zre_node_t *self);
+    zyre_socket (zyre_t *self);
 
-//  Set node header value
+//  Set node property value
 CZMQ_EXPORT void
-    zre_node_set_header (zre_node_t *self, char *name, char *format, ...);
+    zyre_set (zyre_t *self, char *name, char *format, ...);
 
-//  Publish file under some logical name
-//  Physical name is the actual file location
+//  Self test of this class
 CZMQ_EXPORT void
-    zre_node_publish (zre_node_t *self, char *logical, char *physical);
-
-//  Retract published file 
-CZMQ_EXPORT void
-    zre_node_retract (zre_node_t *self, char *logical);
+    zyre_test (bool verbose);
+//  @end
 
 #ifdef __cplusplus
 }

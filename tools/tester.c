@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zre_tester - bulk test tool
+    tester - bulk test tool
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -25,7 +25,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zyre.h"
 
 #define MAX_GROUP 10
 
@@ -35,15 +35,15 @@ static zhash_t *nodes;
 static void
 node_task (void *args, zctx_t *ctx, void *pipe)
 {
-    zre_node_t *node = zre_node_new ();
+    zyre_t *node = zyre_new (ctx);
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
     char *cookie = NULL;
     
     zmq_pollitem_t pollitems [] = {
-        { pipe,                   0, ZMQ_POLLIN, 0 },
-        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
+        { pipe, 0, ZMQ_POLLIN, 0 },
+        { zyre_socket (node), 0, ZMQ_POLLIN, 0 }
     };
     //  Do something once a second
     int64_t trigger = zclock_time () + 1000;
@@ -56,7 +56,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
 
         //  Process an event from node
         if (pollitems [1].revents & ZMQ_POLLIN) {
-            zmsg_t *incoming = zre_node_recv (node);
+            zmsg_t *incoming = zyre_recv (node);
             if (!incoming)
                 break;              //  Interrupted
 
@@ -99,7 +99,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
                 if (randof (3) > 0) {
-                    zre_node_join (node, group);
+                    zyre_join (node, group);
                 }
                 free (from_peer);
                 free (group);
@@ -109,7 +109,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
                 if (randof (3) > 0) {
-                    zre_node_leave (node, group);
+                    zyre_leave (node, group);
                 }
                 free (from_peer);
                 free (group);
@@ -130,7 +130,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 zmsg_t *outgoing = zmsg_new ();
                 zmsg_addstr (outgoing, to_peer);
                 zmsg_addstr (outgoing, "%lu", counter++);
-                zre_node_whisper (node, &outgoing);
+                zyre_whisper (node, &outgoing);
                 free (to_peer);
                 to_peer = NULL;
             }
@@ -138,7 +138,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 zmsg_t *outgoing = zmsg_new ();
                 zmsg_addstr (outgoing, to_group);
                 zmsg_addstr (outgoing, "%lu", counter++);
-                zre_node_shout (node, &outgoing);
+                zyre_shout (node, &outgoing);
                 free (to_group);
                 to_group = NULL;
             }
@@ -152,13 +152,13 @@ node_task (void *args, zctx_t *ctx, void *pipe)
             char group [10];
             sprintf (group, "GROUP%03d", randof (MAX_GROUP));
             if (randof (4) == 0)
-                zre_node_join (node, group);
+                zyre_join (node, group);
             else
             if (randof (3) == 0)
-                zre_node_leave (node, group);
+                zyre_leave (node, group);
         }
     }
-    zre_node_destroy (&node);
+    zyre_destroy (&node);
 }
 
 

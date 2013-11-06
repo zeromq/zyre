@@ -36,5 +36,5 @@ logger
 tester
 perf_local
 perf_remote
-zre_selftest
+zyre_selftest
 doit

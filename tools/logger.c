@@ -2,7 +2,7 @@
     zre_logger - ZRE/LOG collector
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -25,7 +25,8 @@
 */
 
 #include <czmq.h>
-#include "../include/zre_internal.h"
+#include "../include/zyre.h"
+#include "../include/zre_log_msg.h"
 
 static void
 s_print_log_msg (void *collector)
@@ -72,22 +73,22 @@ int main (int argc, char *argv [])
     //  Use the CZMQ zbeacon class to make sure we listen on the 
     //  same network interface as our peers
     void *collector = zsocket_new (ctx, ZMQ_SUB);
-    zbeacon_t *beacon = zbeacon_new (ZRE_DISCOVERY_PORT);
+    zbeacon_t *beacon = zbeacon_new (ctx, ZRE_DISCOVERY_PORT);
     char *host = zbeacon_hostname (beacon);
 
     //  Bind to an ephemeral port
     int port = zsocket_bind (collector, "tcp://%s:*", host);
 
     //  Announce this to all peers we connect to
-    zre_node_t *node = zre_node_new ();
-    zre_node_set_header (node, "X-ZRELOG", "tcp://%s:%d", host, port);
+    zyre_t *node = zyre_new (ctx);
+    zyre_set (node, "X-ZRELOG", "tcp://%s:%d", host, port);
 
     //  Get all log messages (don't filter)
     zsocket_set_subscribe (collector, "");
 
     zmq_pollitem_t pollitems [] = {
         { collector, 0, ZMQ_POLLIN, 0 },
-        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
+        { zyre_socket (node), 0, ZMQ_POLLIN, 0 }
     };
 
     while (!zctx_interrupted) {
@@ -100,13 +101,13 @@ int main (int argc, char *argv [])
 
         //  Handle event from node (ignore it)
         if (pollitems [1].revents & ZMQ_POLLIN) {
-            zmsg_t *msg = zre_node_recv (node);
+            zmsg_t *msg = zyre_recv (node);
             if (!msg)
                 break;              //  Interrupted
             zmsg_destroy (&msg);
         }
     }
-    zre_node_destroy (&node);
+    zyre_destroy (&node);
     zbeacon_destroy (&beacon);
     zctx_destroy (&ctx);
     return 0;

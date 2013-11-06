@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre_node - node on a ZRE network
+    zyre_node - node on a ZYRE network
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -24,213 +24,27 @@
     =========================================================================
 */
 
-#include <czmq.h>
-#include "../include/zre_internal.h"
-
-//  Optional global context for zre_node instances
-zctx_t *zre_global_ctx = NULL;
-//  Optional temp directory; set by caller if needed
-char *zre_global_tmpdir = NULL;
+#include "zyre_classes.h"
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_node_t {
-    zctx_t *ctx;                //  Our context wrapper
-    bool ctx_owned;             //  True if we created the context
-    void *pipe;                 //  Pipe through to agent
+struct _zyre_node_t {
+    zctx_t *ctx;                //  CZMQ context
+    void *pipe;                 //  Pipe back to application
+    zbeacon_t *beacon;          //  Beacon object
+    zyre_log_t *log;            //  Log object
+    zuuid_t *uuid;              //  Our UUID as object
+    char *identity;             //  Our UUID as hex string
+    void *inbox;                //  Our inbox socket (ROUTER)
+    char *host;                 //  Our host IP address
+    int port;                   //  Our inbox port number
+    byte status;                //  Our own change counter
+    zhash_t *peers;             //  Hash of known peers, fast lookup
+    zhash_t *peer_groups;       //  Groups that our peers are in
+    zhash_t *own_groups;        //  Groups that we are in
+    zhash_t *headers;           //  Our header values
 };
-
-//  =====================================================================
-//  Synchronous part, works in our application thread
-
-//  This is the thread that handles our real node class
-static void
-    zre_node_agent (void *args, zctx_t *ctx, void *pipe);
-
-
-//  ---------------------------------------------------------------------
-//  Constructor
-
-zre_node_t *
-zre_node_new (void)
-{
-    zre_node_t
-        *self;
-
-    self = (zre_node_t *) zmalloc (sizeof (zre_node_t));
-    //  If caller set a default ctx use that, else create our own
-    if (zre_global_ctx)
-        self->ctx = zre_global_ctx;
-    else {
-        self->ctx = zctx_new ();
-        self->ctx_owned = true;
-    }
-    self->pipe = zthread_fork (self->ctx, zre_node_agent, NULL);
-    return self;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Destructor
-
-void
-zre_node_destroy (zre_node_t **self_p)
-{
-    assert (self_p);
-    if (*self_p) {
-        zre_node_t *self = *self_p;
-        if (self->ctx_owned)
-            zctx_destroy (&self->ctx);
-        free (self);
-        *self_p = NULL;
-    }
-}
-
-//  ---------------------------------------------------------------------
-//  Receive next message from node
-//  Returns zmsg_t object, or NULL if interrupted
-
-zmsg_t *
-zre_node_recv (zre_node_t *self)
-{
-    assert (self);
-    zmsg_t *msg = zmsg_recv (self->pipe);
-    return msg;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Join a group
-
-int
-zre_node_join (zre_node_t *self, const char *group)
-{
-    assert (self);
-    zstr_sendm (self->pipe, "JOIN");
-    zstr_send  (self->pipe, group);
-    return 0;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Leave a group
-
-int
-zre_node_leave (zre_node_t *self, const char *group)
-{
-    assert (self);
-    zstr_sendm (self->pipe, "LEAVE");
-    zstr_send  (self->pipe, group);
-    return 0;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Send message to single peer; peer ID is first frame in message
-//  Destroys message after sending
-
-int
-zre_node_whisper (zre_node_t *self, zmsg_t **msg_p)
-{
-    assert (self);
-    zstr_sendm (self->pipe, "WHISPER");
-    zmsg_send (msg_p, self->pipe);
-    return 0;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Send message to a group of peers
-
-int
-zre_node_shout (zre_node_t *self, zmsg_t **msg_p)
-{
-    assert (self);
-    zstr_sendm (self->pipe, "SHOUT");
-    zmsg_send (msg_p, self->pipe);
-    return 0;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Return node handle, for polling
-
-void *
-zre_node_handle (zre_node_t *self)
-{
-    assert (self);    
-    return self->pipe;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Set node header value
-
-void
-zre_node_set_header (zre_node_t *self, char *name, char *format, ...)
-{
-    assert (self);
-    va_list argptr;
-    va_start (argptr, format);
-    char *value = (char *) malloc (255 + 1);
-    vsnprintf (value, 255, format, argptr);
-    va_end (argptr);
-    
-    zstr_sendm (self->pipe, "SET");
-    zstr_sendm (self->pipe, name);
-    zstr_send  (self->pipe, value);
-    free (value);
-}
-
-
-//  ---------------------------------------------------------------------
-//  Publish file under some logical name
-//  Physical name is the actual file location
-
-void
-zre_node_publish (zre_node_t *self, char *logical, char *physical)
-{
-    zstr_sendm (self->pipe, "PUBLISH");
-    zstr_sendm (self->pipe, logical);
-    zstr_send  (self->pipe, physical);
-}
-
-//  ---------------------------------------------------------------------
-//  Retract published file
-
-void
-zre_node_retract (zre_node_t *self, char *logical)
-{
-    zstr_sendm (self->pipe, "RETRACT");
-    zstr_send  (self->pipe, logical);
-}
-
-
-//  ---------------------------------------------------------------------
-//  Get temporary directory of INBOX and OUTBOX
-
-static char *
-s_tmpdir (void)
-{
-    static char our_tmpdir [255] = { 0 };
-    if (!zre_global_tmpdir) {
-        zre_global_tmpdir = our_tmpdir;
-        char *tmp_env = getenv ("TMPDIR");
-        if (!tmp_env)
-            tmp_env = "/tmp";
-        strcat (zre_global_tmpdir, tmp_env);
-
-        if (zre_global_tmpdir [strlen (zre_global_tmpdir) -1] != '/')
-            strcat (zre_global_tmpdir, "/");
-        strcat (zre_global_tmpdir, "zyre");
-    }
-    return zre_global_tmpdir;
-}
-
-
-//  =====================================================================
-//  Asynchronous part, works in the background
 
 //  Beacon frame has this format:
 //
@@ -244,35 +58,18 @@ s_tmpdir (void)
 typedef struct {
     byte protocol [3];
     byte version;
-    byte uuid [ZRE_UUID_LEN];
+    byte uuid [ZUUID_LEN];
     uint16_t port;
 } beacon_t;
 
 
-//  This structure holds the context for our agent, so we can
-//  pass that around cleanly to methods which need it
+//  ---------------------------------------------------------------------
+//  Constructor
 
-typedef struct {
-    zctx_t *ctx;                //  CZMQ context
-    void *pipe;                 //  Pipe back to application
-    zbeacon_t *beacon;          //  Beacon object
-    zre_log_t *log;             //  Log object
-    zre_uuid_t *uuid;           //  Our UUID as object
-    char *identity;             //  Our UUID as hex string
-    void *inbox;                //  Our inbox socket (ROUTER)
-    char *host;                 //  Our host IP address
-    int port;                   //  Our inbox port number
-    byte status;                //  Our own change counter
-    zhash_t *peers;             //  Hash of known peers, fast lookup
-    zhash_t *peer_groups;       //  Groups that our peers are in
-    zhash_t *own_groups;        //  Groups that we are in
-    zhash_t *headers;           //  Our header values
-} agent_t;
-
-static agent_t *
-agent_new (zctx_t *ctx, void *pipe)
+zyre_node_t *
+zyre_node_new (zctx_t *ctx, void *pipe)
 {
-    agent_t *self = (agent_t *) zmalloc (sizeof (agent_t));
+    zyre_node_t *self = (zyre_node_t *) zmalloc (sizeof (zyre_node_t));
     self->ctx = ctx;
     self->pipe = pipe;
     self->inbox = zsocket_new (ctx, ZMQ_ROUTER);
@@ -286,21 +83,21 @@ agent_new (zctx_t *ctx, void *pipe)
         return NULL;            //  Interrupted 0MQ call
     }
     //  Set broadcast/listen beacon
-    self->uuid = zre_uuid_new ();
-    self->beacon = zbeacon_new (ZRE_DISCOVERY_PORT);
+    self->uuid = zuuid_new ();
+    self->beacon = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
     beacon_t beacon;
     beacon.protocol [0] = 'Z';
     beacon.protocol [1] = 'R';
     beacon.protocol [2] = 'E';
     beacon.version = BEACON_VERSION;
     beacon.port = htons (self->port);
-    zre_uuid_cpy (self->uuid, beacon.uuid);
+    zuuid_cpy (self->uuid, beacon.uuid);
     zbeacon_noecho (self->beacon);
     zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
-    zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
+    zbeacon_subscribe (self->beacon, (byte *) "ZYRE", 3);
 
     self->host = zbeacon_hostname (self->beacon);
-    self->identity = strdup (zre_uuid_str (self->uuid));
+    self->identity = strdup (zuuid_str (self->uuid));
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
     self->own_groups = zhash_new ();
@@ -310,23 +107,28 @@ agent_new (zctx_t *ctx, void *pipe)
     //  Set up log instance
     char endpoint [30];         //  ipaddress:port endpoint
     sprintf (endpoint, "%s:%d", self->host, self->port);
-    self->log = zre_log_new (endpoint);
+    self->log = zyre_log_new (endpoint);
 
     return self;
 }
 
-static void
-agent_destroy (agent_t **self_p)
+
+//  ---------------------------------------------------------------------
+//  Destructor
+
+void
+zyre_node_destroy (zyre_node_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
-        agent_t *self = *self_p;
+        zyre_node_t *self = *self_p;
+        zuuid_destroy (&self->uuid);
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
         zbeacon_destroy (&self->beacon);
-        zre_log_destroy (&self->log);
+        zyre_log_destroy (&self->log);
         free (self->identity);
         free (self);
         *self_p = NULL;
@@ -339,9 +141,9 @@ agent_destroy (agent_t **self_p)
 static int
 s_peer_send (const char *key, void *item, void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) item;
+    zyre_peer_t *peer = (zyre_peer_t *) item;
     zre_msg_t *msg = zre_msg_dup ((zre_msg_t *) argument);
-    zre_peer_send (peer, &msg);
+    zyre_peer_send (peer, &msg);
     return 0;
 }
 
@@ -349,7 +151,7 @@ s_peer_send (const char *key, void *item, void *argument)
 //  Here we handle the different control messages from the front-end
 
 static int
-agent_recv_from_api (agent_t *self)
+agent_recv_from_api (zyre_node_t *self)
 {
     //  Get the whole message off the pipe in one go
     zmsg_t *request = zmsg_recv (self->pipe);
@@ -360,14 +162,14 @@ agent_recv_from_api (agent_t *self)
     if (streq (command, "WHISPER")) {
         //  Get peer to send message to
         char *identity = zmsg_popstr (request);
-        zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
+        zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, identity);
         
         //  Send frame on out to peer's mailbox, drop message
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
             zre_msg_set_content (msg, zmsg_pop (request));
-            zre_peer_send (peer, &msg);
+            zyre_peer_send (peer, &msg);
         }
         free (identity);
     }
@@ -375,36 +177,36 @@ agent_recv_from_api (agent_t *self)
     if (streq (command, "SHOUT")) {
         //  Get group to send message to
         char *name = zmsg_popstr (request);
-        zre_group_t *group = (zre_group_t *) zhash_lookup (self->peer_groups, name);
+        zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->peer_groups, name);
         if (group) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
             zre_msg_set_group (msg, name);
             zre_msg_set_content (msg, zmsg_pop (request));
-            zre_group_send (group, &msg);
+            zyre_group_send (group, &msg);
         }
         free (name);
     }
     else
     if (streq (command, "JOIN")) {
         char *name = zmsg_popstr (request);
-        zre_group_t *group = (zre_group_t *) zhash_lookup (self->own_groups, name);
+        zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->own_groups, name);
         if (!group) {
             //  Only send if we're not already in group
-            group = zre_group_new (name, self->own_groups);
+            group = zyre_group_new (name, self->own_groups);
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_JOIN);
             zre_msg_set_group (msg, name);
             //  Update status before sending command
             zre_msg_set_status (msg, ++(self->status));
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
-            zre_log_info (self->log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
+            zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
         }
         free (name);
     }
     else
     if (streq (command, "LEAVE")) {
         char *name = zmsg_popstr (request);
-        zre_group_t *group = (zre_group_t *) zhash_lookup (self->own_groups, name);
+        zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->own_groups, name);
         if (group) {
             //  Only send if we are actually in group
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_LEAVE);
@@ -414,7 +216,7 @@ agent_recv_from_api (agent_t *self)
             zhash_foreach (self->peers, s_peer_send, msg);
             zre_msg_destroy (&msg);
             zhash_delete (self->own_groups, name);
-            zre_log_info (self->log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
+            zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
         }
         free (name);
     }
@@ -436,27 +238,27 @@ agent_recv_from_api (agent_t *self)
 static int
 agent_peer_purge (const char *key, void *item, void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) item;
+    zyre_peer_t *peer = (zyre_peer_t *) item;
     char *endpoint = (char *) argument;
-    if (streq (zre_peer_endpoint (peer), endpoint))
-        zre_peer_disconnect (peer);
+    if (streq (zyre_peer_endpoint (peer), endpoint))
+        zyre_peer_disconnect (peer);
     return 0;
 }
 
 //  Find or create peer via its UUID string
 
-static zre_peer_t *
-s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
+static zyre_peer_t *
+s_require_peer (zyre_node_t *self, char *identity, char *address, uint16_t port)
 {
-    zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
+    zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, identity);
     if (!peer) {
         //  Purge any previous peer on same endpoint
         char endpoint [100];
         snprintf (endpoint, 100, "%s:%hu", address, port);
         zhash_foreach (self->peers, agent_peer_purge, endpoint);
 
-        peer = zre_peer_new (identity, self->peers, self->ctx);
-        zre_peer_connect (peer, self->identity, endpoint);
+        peer = zyre_peer_new (identity, self->peers, self->ctx);
+        zyre_peer_connect (peer, self->identity, endpoint);
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
@@ -465,10 +267,10 @@ s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
         zre_msg_set_groups (msg, zhash_keys (self->own_groups));
         zre_msg_set_status (msg, self->status);
         zre_msg_set_headers (msg, zhash_dup (self->headers));
-        zre_peer_send (peer, &msg);
+        zyre_peer_send (peer, &msg);
         
-        zre_log_info (self->log, ZRE_LOG_MSG_EVENT_ENTER,
-                      zre_peer_endpoint (peer), endpoint);
+        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_ENTER,
+                      zyre_peer_endpoint (peer), endpoint);
 
         //  Now tell the caller about the peer
         zstr_sendm (self->pipe, "ENTER");
@@ -480,38 +282,38 @@ s_require_peer (agent_t *self, char *identity, char *address, uint16_t port)
 
 //  Find or create group via its name
 
-static zre_group_t *
-s_require_peer_group (agent_t *self, char *name)
+static zyre_group_t *
+s_require_peer_group (zyre_node_t *self, char *name)
 {
-    zre_group_t *group = (zre_group_t *) zhash_lookup (self->peer_groups, name);
+    zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->peer_groups, name);
     if (!group)
-        group = zre_group_new (name, self->peer_groups);
+        group = zyre_group_new (name, self->peer_groups);
     return group;
 }
 
-static zre_group_t *
-s_join_peer_group (agent_t *self, zre_peer_t *peer, char *name)
+static zyre_group_t *
+s_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
 {
-    zre_group_t *group = s_require_peer_group (self, name);
-    zre_group_join (group, peer);
+    zyre_group_t *group = s_require_peer_group (self, name);
+    zyre_group_join (group, peer);
 
     //  Now tell the caller about the peer joined group
     zstr_sendm (self->pipe, "JOIN");
-    zstr_sendm (self->pipe, zre_peer_identity (peer));
+    zstr_sendm (self->pipe, zyre_peer_identity (peer));
     zstr_send (self->pipe, name);
 
     return group;
 }
 
-static zre_group_t *
-s_leave_peer_group (agent_t *self, zre_peer_t *peer, char *name)
+static zyre_group_t *
+s_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
 {
-    zre_group_t *group = s_require_peer_group (self, name);
-    zre_group_leave (group, peer);
+    zyre_group_t *group = s_require_peer_group (self, name);
+    zyre_group_leave (group, peer);
 
     //  Now tell the caller about the peer left group
     zstr_sendm (self->pipe, "LEAVE");
-    zstr_sendm (self->pipe, zre_peer_identity (peer));
+    zstr_sendm (self->pipe, zyre_peer_identity (peer));
     zstr_send (self->pipe, name);
 
     return group;
@@ -520,7 +322,7 @@ s_leave_peer_group (agent_t *self, zre_peer_t *peer, char *name)
 //  Here we handle messages coming from other peers
 
 static int
-agent_recv_from_peer (agent_t *self)
+agent_recv_from_peer (zyre_node_t *self)
 {
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_recv (self->inbox);
@@ -531,20 +333,20 @@ agent_recv_from_peer (agent_t *self)
         
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist
-    zre_peer_t *peer = (zre_peer_t *) zhash_lookup (self->peers, identity);
+    zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, identity);
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         peer = s_require_peer (
             self, identity, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
-        zre_peer_set_ready (peer, true);
+        zyre_peer_set_ready (peer, true);
     }
     //  Ignore command if peer isn't ready
-    if (peer == NULL || !zre_peer_ready (peer)) {
+    if (peer == NULL || !zyre_peer_ready (peer)) {
 				free(identity);
         zre_msg_destroy (&msg);
         return 0;
     }
-    if (!zre_peer_check_message (peer, msg)) {
+    if (!zyre_peer_check_message (peer, msg)) {
         zclock_log ("W: [%s] lost messages from %s", self->identity, identity);
         assert (false);
     }
@@ -558,15 +360,15 @@ agent_recv_from_peer (agent_t *self)
             name = zre_msg_groups_next (msg);
         }
         //  Hello command holds latest status of peer
-        zre_peer_set_status (peer, zre_msg_status (msg));
+        zyre_peer_set_status (peer, zre_msg_status (msg));
         
         //  Store peer headers for future reference
-        zre_peer_set_headers (peer, zre_msg_headers (msg));
+        zyre_peer_set_headers (peer, zre_msg_headers (msg));
 
-        //  If peer is a ZRE/LOG collector, connect to it
-        char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
+        //  If peer is a ZYRE/LOG collector, connect to it
+        char *collector = zre_msg_headers_string (msg, "X-ZYRELOG", NULL);
         if (collector)
-            zre_log_connect (self->log, collector);
+            zyre_log_connect (self->log, collector);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
@@ -588,30 +390,30 @@ agent_recv_from_peer (agent_t *self)
     else
     if (zre_msg_id (msg) == ZRE_MSG_PING) {
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING_OK);
-        zre_peer_send (peer, &msg);
+        zyre_peer_send (peer, &msg);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_JOIN) {
         s_join_peer_group (self, peer, zre_msg_group (msg));
-        assert (zre_msg_status (msg) == zre_peer_status (peer));
+        assert (zre_msg_status (msg) == zyre_peer_status (peer));
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_LEAVE) {
         s_leave_peer_group (self, peer, zre_msg_group (msg));
-        assert (zre_msg_status (msg) == zre_peer_status (peer));
+        assert (zre_msg_status (msg) == zyre_peer_status (peer));
     }
     free (identity);
     zre_msg_destroy (&msg);
     
     //  Activity from peer resets peer timers
-    zre_peer_refresh (peer);
+    zyre_peer_refresh (peer);
     return 0;
 }
 
 //  Handle beacon
 
 static int
-agent_recv_beacon (agent_t *self)
+agent_recv_beacon (zyre_node_t *self)
 {
     //  Get IP address and beacon of peer
     char *ipaddress = zstr_recv (zbeacon_socket (self->beacon));
@@ -630,12 +432,12 @@ agent_recv_beacon (agent_t *self)
 
     //  Check that the peer, identified by its UUID, exists
     if (is_valid) {
-        zre_uuid_t *uuid = zre_uuid_new ();
-        zre_uuid_set (uuid, beacon.uuid);
-        zre_peer_t *peer = s_require_peer (
-            self, zre_uuid_str (uuid), ipaddress, ntohs (beacon.port));
-        zre_peer_refresh (peer);
-        zre_uuid_destroy (&uuid);
+        zuuid_t *uuid = zuuid_new ();
+        zuuid_set (uuid, beacon.uuid);
+        zyre_peer_t *peer = s_require_peer (
+            self, zuuid_str (uuid), ipaddress, ntohs (beacon.port));
+        zyre_peer_refresh (peer);
+        zuuid_destroy (&uuid);
     }
     free (ipaddress);
     zframe_destroy (&frame);
@@ -648,9 +450,9 @@ agent_recv_beacon (agent_t *self)
 static int
 agent_peer_delete (const char *key, void *item, void *argument)
 {
-    zre_group_t *group = (zre_group_t *) item;
-    zre_peer_t *peer = (zre_peer_t *) argument;
-    zre_group_leave (group, peer);
+    zyre_group_t *group = (zyre_group_t *) item;
+    zyre_peer_t *peer = (zyre_peer_t *) argument;
+    zyre_group_leave (group, peer);
     return 0;
 }
 
@@ -661,13 +463,13 @@ agent_peer_delete (const char *key, void *item, void *argument)
 static int
 agent_ping_peer (const char *key, void *item, void *argument)
 {
-    agent_t *self = (agent_t *) argument;
-    zre_peer_t *peer = (zre_peer_t *) item;
-    char *identity = zre_peer_identity (peer);
-    if (zclock_time () >= zre_peer_expired_at (peer)) {
-        zre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
-                      zre_peer_endpoint (peer),
-                      zre_peer_endpoint (peer));
+    zyre_node_t *self = (zyre_node_t *) argument;
+    zyre_peer_t *peer = (zyre_peer_t *) item;
+    char *identity = zyre_peer_identity (peer);
+    if (zclock_time () >= zyre_peer_expired_at (peer)) {
+        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
+                      zyre_peer_endpoint (peer),
+                      zyre_peer_endpoint (peer));
         //  If peer has really vanished, expire it
         zstr_sendm (self->pipe, "EXIT");
         zstr_send (self->pipe, identity);
@@ -675,33 +477,38 @@ agent_ping_peer (const char *key, void *item, void *argument)
         zhash_delete (self->peers, identity);
     }
     else
-    if (zclock_time () >= zre_peer_evasive_at (peer)) {
+    if (zclock_time () >= zyre_peer_evasive_at (peer)) {
         //  If peer is being evasive, force a TCP ping.
         //  TODO: do this only once for a peer in this state;
         //  it would be nicer to use a proper state machine
         //  for peer management.
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING);
-        zre_peer_send (peer, &msg);
+        zyre_peer_send (peer, &msg);
     }
     return 0;
 }
 
-//  The agent handles API commands
 
-static void
-zre_node_agent (void *args, zctx_t *ctx, void *pipe)
+//  --------------------------------------------------------------------------
+//  This is the engine that runs a single node; it uses one
+//  thread, creates a zyre_node object at start and destroys
+//  that when finishing.
+
+void
+zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
 {
     //  Create agent instance to pass around
-    agent_t *self = agent_new (ctx, pipe);
+    zyre_node_t *self = zyre_node_new (ctx, pipe);
     if (!self)                  //  Interrupted
         return;
+    zstr_send (self->pipe, "OK");
 
     zmq_pollitem_t pollitems [] = {
         { self->pipe, 0, ZMQ_POLLIN, 0 },
         { self->inbox, 0, ZMQ_POLLIN, 0 },
         { zbeacon_socket (self->beacon), 0, ZMQ_POLLIN, 0 }
     };
-    
+
     uint64_t reap_at = zclock_time () + REAP_INTERVAL;
     while (!zctx_interrupted) {
         long timeout = (long) (reap_at - zclock_time ());
@@ -713,7 +520,7 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
 
         if (pollitems [0].revents & ZMQ_POLLIN)
             agent_recv_from_api (self);
-        
+
         if (pollitems [1].revents & ZMQ_POLLIN)
             agent_recv_from_peer (self);
 
@@ -726,5 +533,16 @@ zre_node_agent (void *args, zctx_t *ctx, void *pipe)
             zhash_foreach (self->peers, agent_ping_peer, self);
         }
     }
-    agent_destroy (&self);
+    zyre_node_destroy (&self);
 }
+
+//  --------------------------------------------------------------------------
+//  Self test of this class
+
+void
+zyre_node_test (bool verbose)
+{
+    printf (" * zyre_node: ");
+    printf ("OK\n");
+}
+

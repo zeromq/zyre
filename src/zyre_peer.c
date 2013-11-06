@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre_peer - one of our peers in a ZRE network
+    zyre_peer - one of our peers in a ZRE network
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -24,14 +24,12 @@
     =========================================================================
 */
 
-#include <czmq.h>
-#include "../include/zre_internal.h"
-
+#include "zyre_classes.h"
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_peer_t {
+struct _zyre_peer_t {
     zctx_t *ctx;                //  CZMQ context
     void *mailbox;              //  Socket through to peer
     char *identity;             //  Identity string
@@ -52,18 +50,18 @@ struct _zre_peer_t {
 static void
 s_delete_peer (void *argument)
 {
-    zre_peer_t *peer = (zre_peer_t *) argument;
-    zre_peer_destroy (&peer);
+    zyre_peer_t *peer = (zyre_peer_t *) argument;
+    zyre_peer_destroy (&peer);
 }
 
 
 //  ---------------------------------------------------------------------
 //  Construct new peer object
 
-zre_peer_t *
-zre_peer_new (char *identity, zhash_t *container, zctx_t *ctx)
+zyre_peer_t *
+zyre_peer_new (char *identity, zhash_t *container, zctx_t *ctx)
 {
-    zre_peer_t *self = (zre_peer_t *) zmalloc (sizeof (zre_peer_t));
+    zyre_peer_t *self = (zyre_peer_t *) zmalloc (sizeof (zyre_peer_t));
     self->ctx = ctx;
     self->identity = strdup (identity);
     self->ready = false;
@@ -84,12 +82,12 @@ zre_peer_new (char *identity, zhash_t *container, zctx_t *ctx)
 //  Destroy peer object
 
 void
-zre_peer_destroy (zre_peer_t **self_p)
+zyre_peer_destroy (zyre_peer_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
-        zre_peer_t *self = *self_p;
-        zre_peer_disconnect (self);
+        zyre_peer_t *self = *self_p;
+        zyre_peer_disconnect (self);
         zhash_destroy (&self->headers);
         free (self->identity);
         free (self);
@@ -103,7 +101,7 @@ zre_peer_destroy (zre_peer_t **self_p)
 //  Configures mailbox and connects to peer's router endpoint
 
 void
-zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
+zyre_peer_connect (zyre_peer_t *self, char *reply_to, char *endpoint)
 {
     assert (self);
     assert (!self->connected);
@@ -136,7 +134,7 @@ zre_peer_connect (zre_peer_t *self, char *reply_to, char *endpoint)
 //  No more messages will be sent to peer until connected again
 
 void
-zre_peer_disconnect (zre_peer_t *self)
+zyre_peer_disconnect (zyre_peer_t *self)
 {
     //  If connected, destroy socket and drop all pending messages
     assert (self);
@@ -154,13 +152,13 @@ zre_peer_disconnect (zre_peer_t *self)
 //  Send message to peer
 
 int
-zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
+zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
 {
     assert (self);
     if (self->connected) {
         zre_msg_set_sequence (*msg_p, ++(self->sent_sequence));
         if (zre_msg_send (msg_p, self->mailbox) && errno == EAGAIN) {
-            zre_peer_disconnect (self);
+            zyre_peer_disconnect (self);
             return -1;
         }
     }
@@ -175,7 +173,7 @@ zre_peer_send (zre_peer_t *self, zre_msg_t **msg_p)
 //  Return peer connected status
 
 bool
-zre_peer_connected (zre_peer_t *self)
+zyre_peer_connected (zyre_peer_t *self)
 {
     assert (self);
     return self->connected;
@@ -186,7 +184,7 @@ zre_peer_connected (zre_peer_t *self)
 //  Return peer identity string
 
 char *
-zre_peer_identity (zre_peer_t *self)
+zyre_peer_identity (zyre_peer_t *self)
 {
     assert (self);
     return self->identity;
@@ -197,7 +195,7 @@ zre_peer_identity (zre_peer_t *self)
 //  Return peer connection endpoint
 
 char *
-zre_peer_endpoint (zre_peer_t *self)
+zyre_peer_endpoint (zyre_peer_t *self)
 {
     assert (self);
     if (self->connected)
@@ -211,7 +209,7 @@ zre_peer_endpoint (zre_peer_t *self)
 //  Register activity at peer
 
 void
-zre_peer_refresh (zre_peer_t *self)
+zyre_peer_refresh (zyre_peer_t *self)
 {
     assert (self);
     self->evasive_at = zclock_time () + PEER_EVASIVE;
@@ -223,7 +221,7 @@ zre_peer_refresh (zre_peer_t *self)
 //  Return peer future evasive time
 
 int64_t
-zre_peer_evasive_at (zre_peer_t *self)
+zyre_peer_evasive_at (zyre_peer_t *self)
 {
     assert (self);
     return self->evasive_at;
@@ -234,7 +232,7 @@ zre_peer_evasive_at (zre_peer_t *self)
 //  Return peer future expired time
 
 int64_t
-zre_peer_expired_at (zre_peer_t *self)
+zyre_peer_expired_at (zyre_peer_t *self)
 {
     assert (self);
     return self->expired_at;
@@ -247,7 +245,7 @@ zre_peer_expired_at (zre_peer_t *self)
 //  check against its claimed status, to detect message loss.
 
 byte
-zre_peer_status (zre_peer_t *self)
+zyre_peer_status (zyre_peer_t *self)
 {
     assert (self);
     return self->status;
@@ -258,7 +256,7 @@ zre_peer_status (zre_peer_t *self)
 //  Set peer status
 
 void
-zre_peer_set_status (zre_peer_t *self, byte status)
+zyre_peer_set_status (zyre_peer_t *self, byte status)
 {
     assert (self);
     self->status = status;
@@ -269,7 +267,7 @@ zre_peer_set_status (zre_peer_t *self, byte status)
 //  Return peer ready state
 
 byte
-zre_peer_ready (zre_peer_t *self)
+zyre_peer_ready (zyre_peer_t *self)
 {
     assert (self);
     return self->ready;
@@ -280,7 +278,7 @@ zre_peer_ready (zre_peer_t *self)
 //  Set peer ready
 
 void
-zre_peer_set_ready (zre_peer_t *self, bool ready)
+zyre_peer_set_ready (zyre_peer_t *self, bool ready)
 {
     assert (self);
     self->ready = ready;
@@ -291,7 +289,7 @@ zre_peer_set_ready (zre_peer_t *self, bool ready)
 //  Get peer header value
 
 char *
-zre_peer_header (zre_peer_t *self, char *key, char *default_value)
+zyre_peer_header (zyre_peer_t *self, char *key, char *default_value)
 {
     assert (self);
     char *value = NULL;
@@ -308,7 +306,7 @@ zre_peer_header (zre_peer_t *self, char *key, char *default_value)
 //  Set peer headers from provided dictionary
 
 void
-zre_peer_set_headers (zre_peer_t *self, zhash_t *headers)
+zyre_peer_set_headers (zyre_peer_t *self, zhash_t *headers)
 {
     assert (self);
     zhash_destroy (&self->headers);
@@ -320,7 +318,7 @@ zre_peer_set_headers (zre_peer_t *self, zhash_t *headers)
 //  Check peer message sequence
 
 bool
-zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg)
+zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg)
 {
     assert (self);
     assert (msg);
@@ -332,3 +330,15 @@ zre_peer_check_message (zre_peer_t *self, zre_msg_t *msg)
 
     return valid;
 }
+
+
+//  --------------------------------------------------------------------------
+//  Self test of this class
+
+void
+zyre_peer_test (bool verbose)
+{
+    printf (" * zyre_peer: ");
+    printf ("OK\n");
+}
+

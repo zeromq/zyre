@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre_group - group known to this node
+    zyre_group - group known to this node
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -24,35 +24,39 @@
     =========================================================================
 */
 
-#ifndef __ZRE_GROUP_H_INCLUDED__
-#define __ZRE_GROUP_H_INCLUDED__
+#ifndef __ZYRE_GROUP_H_INCLUDED__
+#define __ZYRE_GROUP_H_INCLUDED__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _zre_group_t zre_group_t;
+typedef struct _zyre_group_t zyre_group_t;
 
 //  Constructor
-zre_group_t *
-    zre_group_new (char *name, zhash_t *container);
+zyre_group_t *
+    zyre_group_new (char *name, zhash_t *container);
 
 //  Destructor
 void
-    zre_group_destroy (zre_group_t **self_p);
+    zyre_group_destroy (zyre_group_t **self_p);
 
 //  Add peer to group
 void
-    zre_group_join (zre_group_t *self, zre_peer_t *peer);
+    zyre_group_join (zyre_group_t *self, zyre_peer_t *peer);
 
 //  Remove peer from group
 void
-    zre_group_leave (zre_group_t *self, zre_peer_t *peer);
+    zyre_group_leave (zyre_group_t *self, zyre_peer_t *peer);
 
 //  Send message to all peers in group
 void
-    zre_group_send (zre_group_t *self, zre_msg_t **msg_p);
+    zyre_group_send (zyre_group_t *self, zre_msg_t **msg_p);
 
+//  Self test of this class
+void
+    zyre_group_test (bool verbose);
+    
 #ifdef __cplusplus
 }
 #endif

@@ -1,36 +1,35 @@
-lib_LTLIBRARIES = libzre.la
+lib_LTLIBRARIES = libzyre.la
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libzre.pc
+pkgconfig_DATA = libzyre.pc
 
-libzre_la_includedir = $(includedir)
-libzre_la_include_HEADERS = \
-    ../include/zre.h \
+libzyre_la_includedir = $(includedir)
+libzyre_la_include_HEADERS = \
+    zyre_log.h \
+    zyre_peer.h \
+    zyre_group.h \
+    zyre_node.h \
     ../include/zre_msg.h \
-    ../include/zre_peer.h \
-    ../include/zre_group.h \
-    ../include/zre_log.h \
     ../include/zre_log_msg.h \
-    ../include/zre_uuid.h \
-    ../include/zre_node.h
+    ../include/zyre.h
 
-libzre_la_SOURCES = \
-    zre_node.c \
-    zre_group.c \
-    zre_log.c \
-    zre_log_msg.c \
+libzyre_la_SOURCES = \
+    zyre_log.c \
+    zyre_group.c \
+    zyre_peer.c \
+    zyre_node.c \
     zre_msg.c \
-    zre_peer.c \
-    zre_uuid.c 
+    zre_log_msg.c \
+    zyre.c
 
 INCLUDES = -I$(top_srcdir)/include
-bin_PROGRAMS = zre_selftest 
-zre_selftest_LDADD = libzre.la
+bin_PROGRAMS = zyre_selftest 
+zyre_selftest_LDADD = libzyre.la
 
 if ON_MINGW
-libzre_la_LDFLAGS = -no-undefined -avoid-version -version-info @LTVER@
+libzyre_la_LDFLAGS = -no-undefined -avoid-version -version-info @LTVER@
 else
-libzre_la_LDFLAGS = -version-info @LTVER@
+libzyre_la_LDFLAGS = -version-info @LTVER@
 endif
 
-TESTS = zre_selftest
+TESTS = zyre_selftest

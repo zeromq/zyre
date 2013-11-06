@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre_log - record log data
+    zyre_log - record log data
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -24,14 +24,12 @@
     =========================================================================
 */
 
-#include <czmq.h>
-#include "../include/zre_internal.h"
-
+#include "zyre_classes.h"
 
 //  ---------------------------------------------------------------------
 //  Structure of our class
 
-struct _zre_log_t {
+struct _zyre_log_t {
     zctx_t *ctx;                //  CZMQ context
     void *publisher;            //  Socket to send to
     uint16_t nodeid;            //  Own correlation ID
@@ -41,10 +39,10 @@ struct _zre_log_t {
 //  ---------------------------------------------------------------------
 //  Construct new log object
 
-zre_log_t *
-zre_log_new (char *endpoint)
+zyre_log_t *
+zyre_log_new (char *endpoint)
 {
-    zre_log_t *self = (zre_log_t *) zmalloc (sizeof (zre_log_t));
+    zyre_log_t *self = (zyre_log_t *) zmalloc (sizeof (zyre_log_t));
     self->ctx = zctx_new ();
     self->publisher = zsocket_new (self->ctx, ZMQ_PUB);
     //  Modified Bernstein hashing function
@@ -59,11 +57,11 @@ zre_log_new (char *endpoint)
 //  Destroy log object
 
 void
-zre_log_destroy (zre_log_t **self_p)
+zyre_log_destroy (zyre_log_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
-        zre_log_t *self = *self_p;
+        zyre_log_t *self = *self_p;
         zctx_destroy (&self->ctx);
         free (self);
         *self_p = NULL;
@@ -75,7 +73,7 @@ zre_log_destroy (zre_log_t **self_p)
 //  Connect log to remote endpoint
 
 void
-zre_log_connect (zre_log_t *self, char *endpoint)
+zyre_log_connect (zyre_log_t *self, char *endpoint)
 {
     assert (self);
     zsocket_connect (self->publisher, endpoint);
@@ -86,7 +84,7 @@ zre_log_connect (zre_log_t *self, char *endpoint)
 //  Record one log event
 
 void
-zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...)
+zyre_log_info (zyre_log_t *self, int event, char *peer, char *format, ...)
 {
     uint16_t peerid = 0;
     while (peer && *peer)
@@ -104,6 +102,18 @@ zre_log_info (zre_log_t *self, int event, char *peer, char *format, ...)
     else
         *body = 0;
     
-    zre_log_msg_send_log (self->publisher, ZRE_LOG_MSG_LEVEL_INFO, 
+    zre_log_msg_send_log (self->publisher, ZRE_LOG_MSG_LEVEL_INFO,
         event, self->nodeid, peerid, time (NULL), body);
 }
+
+
+//  --------------------------------------------------------------------------
+//  Self test of this class
+
+void
+zyre_log_test (bool verbose)
+{
+    printf (" * zyre_log: ");
+    printf ("OK\n");
+}
+

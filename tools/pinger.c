@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zyre_ping - ping other peers in a ZRE network
+    pinger - ping other peers in a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -25,15 +25,16 @@
 */
 
 #include <czmq.h>
-#include "../include/zre.h"
+#include "../include/zyre.h"
 
 int main (int argc, char *argv [])
 {
-    zre_node_t *node = zre_node_new ();
-    zre_node_join (node, "GLOBAL");
+    zctx_t *ctx = zctx_new ();
+    zyre_t *node = zyre_new (ctx);
+    zyre_join (node, "GLOBAL");
 
     while (true) {
-        zmsg_t *incoming = zre_node_recv (node);
+        zmsg_t *incoming = zyre_recv (node);
         if (!incoming)
             break;              //  Interrupted
 
@@ -45,7 +46,7 @@ int main (int argc, char *argv [])
             zmsg_t *outgoing = zmsg_new ();
             zmsg_addstr (outgoing, peer);
             zmsg_addstr (outgoing, "Hello");
-            zre_node_whisper (node, &outgoing);
+            zyre_whisper (node, &outgoing);
             free (peer);
         }
         else
@@ -62,7 +63,7 @@ int main (int argc, char *argv [])
             zmsg_t *outgoing = zmsg_new ();
             zmsg_addstr (outgoing, "GLOBAL");
             zmsg_addstr (outgoing, "Hello");
-            zre_node_shout (node, &outgoing);
+            zyre_shout (node, &outgoing);
         }
         else
         if (streq (event, "SHOUT")) {
@@ -75,6 +76,7 @@ int main (int argc, char *argv [])
         free (event);
         zmsg_destroy (&incoming);
     }
-    zre_node_destroy (&node);
+    zyre_destroy (&node);
+    zctx_destroy (&ctx);
     return 0;
 }

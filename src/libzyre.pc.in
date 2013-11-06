@@ -3,9 +3,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libzre
-Description: ZRE implementation in C
+Name: libzyre
+Description: Decentralized discovery and clustering
 Version: @VERSION@
-Requires: libczmq
-Libs: -L${libdir} -lzre
+Requires: libczmq libzmq
+Libs: -L${libdir} -lzyre -lczmq
 Cflags: -I${includedir}
