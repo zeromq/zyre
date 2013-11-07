@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zyre_node - node on a ZYRE network
+    zyre_node - node on a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
@@ -83,18 +83,22 @@ zyre_node_new (zctx_t *ctx, void *pipe)
         return NULL;            //  Interrupted 0MQ call
     }
     //  Set broadcast/listen beacon
-    self->uuid = zuuid_new ();
     self->beacon = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
+    if (!self->beacon) {
+        free (self);
+        return NULL;
+    }
     beacon_t beacon;
     beacon.protocol [0] = 'Z';
     beacon.protocol [1] = 'R';
     beacon.protocol [2] = 'E';
     beacon.version = BEACON_VERSION;
     beacon.port = htons (self->port);
+    self->uuid = zuuid_new ();
     zuuid_cpy (self->uuid, beacon.uuid);
     zbeacon_noecho (self->beacon);
     zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
-    zbeacon_subscribe (self->beacon, (byte *) "ZYRE", 3);
+    zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
 
     self->host = zbeacon_hostname (self->beacon);
     self->identity = strdup (zuuid_str (self->uuid));
@@ -105,9 +109,9 @@ zyre_node_new (zctx_t *ctx, void *pipe)
     zhash_autofree (self->headers);
 
     //  Set up log instance
-    char endpoint [30];         //  ipaddress:port endpoint
-    sprintf (endpoint, "%s:%d", self->host, self->port);
-    self->log = zyre_log_new (endpoint);
+    char sender [30];         //  ipaddress:port endpoint
+    sprintf (sender, "%s:%d", self->host, self->port);
+    self->log = zyre_log_new (self->ctx, sender);
 
     return self;
 }
@@ -254,10 +258,10 @@ s_require_peer (zyre_node_t *self, char *identity, char *address, uint16_t port)
     if (!peer) {
         //  Purge any previous peer on same endpoint
         char endpoint [100];
-        snprintf (endpoint, 100, "%s:%hu", address, port);
+        snprintf (endpoint, 100, "tcp://%s:%hu", address, port);
         zhash_foreach (self->peers, agent_peer_purge, endpoint);
 
-        peer = zyre_peer_new (identity, self->peers, self->ctx);
+        peer = zyre_peer_new (self->ctx, self->peers, identity);
         zyre_peer_connect (peer, self->identity, endpoint);
 
         //  Handshake discovery by sending HELLO as first message
@@ -342,7 +346,7 @@ agent_recv_from_peer (zyre_node_t *self)
     }
     //  Ignore command if peer isn't ready
     if (peer == NULL || !zyre_peer_ready (peer)) {
-				free(identity);
+        free (identity);
         zre_msg_destroy (&msg);
         return 0;
     }
@@ -365,8 +369,8 @@ agent_recv_from_peer (zyre_node_t *self)
         //  Store peer headers for future reference
         zyre_peer_set_headers (peer, zre_msg_headers (msg));
 
-        //  If peer is a ZYRE/LOG collector, connect to it
-        char *collector = zre_msg_headers_string (msg, "X-ZYRELOG", NULL);
+        //  If peer is a ZRE/LOG collector, connect to it
+        char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
         if (collector)
             zyre_log_connect (self->log, collector);
     }
@@ -503,28 +507,23 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
         return;
     zstr_send (self->pipe, "OK");
 
-    zmq_pollitem_t pollitems [] = {
-        { self->pipe, 0, ZMQ_POLLIN, 0 },
-        { self->inbox, 0, ZMQ_POLLIN, 0 },
-        { zbeacon_socket (self->beacon), 0, ZMQ_POLLIN, 0 }
-    };
-
     uint64_t reap_at = zclock_time () + REAP_INTERVAL;
+    zpoller_t *poller = zpoller_new (
+        self->pipe, self->inbox, zbeacon_socket (self->beacon), NULL);
+
     while (!zctx_interrupted) {
         long timeout = (long) (reap_at - zclock_time ());
         assert (timeout <= REAP_INTERVAL);
         if (timeout < 0)
             timeout = 0;
-        if (zmq_poll (pollitems, 3, timeout * ZMQ_POLL_MSEC) == -1)
-            break;              //  Interrupted
-
-        if (pollitems [0].revents & ZMQ_POLLIN)
+        void *which = zpoller_wait (poller, timeout);
+        if (which == self->pipe)
             agent_recv_from_api (self);
-
-        if (pollitems [1].revents & ZMQ_POLLIN)
+        else
+        if (which == self->inbox)
             agent_recv_from_peer (self);
-
-        if (pollitems [2].revents & ZMQ_POLLIN)
+        else
+        if (which == zbeacon_socket (self->beacon))
             agent_recv_beacon (self);
 
         if (zclock_time () >= reap_at) {
@@ -533,6 +532,7 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
             zhash_foreach (self->peers, agent_ping_peer, self);
         }
     }
+    zpoller_destroy (&poller);
     zyre_node_destroy (&self);
 }
 

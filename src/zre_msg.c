@@ -986,14 +986,12 @@ zre_msg_ipaddress (zre_msg_t *self)
 void
 zre_msg_set_ipaddress (zre_msg_t *self, char *format, ...)
 {
-    //  Format into newly allocated string
+    //  Format ipaddress from provided arguments
     assert (self);
     va_list argptr;
     va_start (argptr, format);
     free (self->ipaddress);
-    self->ipaddress = (char *) malloc (STRING_MAX + 1);
-    assert (self->ipaddress);
-    vsnprintf (self->ipaddress, STRING_MAX, format, argptr);
+    self->ipaddress = zsys_vprintf (format, argptr);
     va_end (argptr);
 }
 
@@ -1067,11 +1065,9 @@ zre_msg_groups_append (zre_msg_t *self, char *format, ...)
     assert (self);
     va_list argptr;
     va_start (argptr, format);
-    char *string = (char *) malloc (STRING_MAX + 1);
-    assert (string);
-    vsnprintf (string, STRING_MAX, format, argptr);
+    char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
-    
+
     //  Attach string to list
     if (!self->groups) {
         self->groups = zlist_new ();
@@ -1160,13 +1156,11 @@ zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value)
 void
 zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...)
 {
-    //  Format string into buffer
+    //  Format into newly allocated string
     assert (self);
     va_list argptr;
     va_start (argptr, format);
-    char *string = (char *) malloc (STRING_MAX + 1);
-    assert (string);
-    vsnprintf (string, STRING_MAX, format, argptr);
+    char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
 
     //  Store string in hash table
@@ -1218,14 +1212,12 @@ zre_msg_group (zre_msg_t *self)
 void
 zre_msg_set_group (zre_msg_t *self, char *format, ...)
 {
-    //  Format into newly allocated string
+    //  Format group from provided arguments
     assert (self);
     va_list argptr;
     va_start (argptr, format);
     free (self->group);
-    self->group = (char *) malloc (STRING_MAX + 1);
-    assert (self->group);
-    vsnprintf (self->group, STRING_MAX, format, argptr);
+    self->group = zsys_vprintf (format, argptr);
     va_end (argptr);
 }
 

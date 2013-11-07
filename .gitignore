@@ -38,3 +38,7 @@ perf_local
 perf_remote
 zyre_selftest
 doit
+src/test-suite.log
+src/zyre_selftest.log
+src/zyre_selftest.trs
+

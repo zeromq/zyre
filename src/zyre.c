@@ -53,10 +53,16 @@ zyre_new (zctx_t *ctx)
     //  Start node engine and wait for it to be ready
     assert (ctx);
     self->pipe = zthread_fork (ctx, zyre_node_engine, NULL);
-    char *status = zstr_recv (self->pipe);
-    if (strneq (status, "OK"))
-        zyre_destroy (&self);
-    zstr_free (&status);
+    if (self->pipe) {
+        char *status = zstr_recv (self->pipe);
+        if (strneq (status, "OK"))
+            zyre_destroy (&self);
+        zstr_free (&status);
+    }
+    else {
+        free (self);
+        self = NULL;
+    }
     return self;
 }
 

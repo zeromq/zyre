@@ -35,7 +35,7 @@ typedef struct _zyre_log_t zyre_log_t;
 
 //  Constructor
 zyre_log_t *
-    zyre_log_new (char *endpoint);
+    zyre_log_new (zctx_t *ctx, char *sender);
 
 //  Destructor
 void
@@ -43,11 +43,19 @@ void
 
 //  Connect log to remote endpoint
 void
-    zyre_log_connect (zyre_log_t *self, char *endpoint);
+    zyre_log_connect (zyre_log_t *self, char *format, ...);
 
-//  Record one log event
+//  Broadcast a log information message
 void
     zyre_log_info (zyre_log_t *self, int event, char *peer, char *format, ...);
+
+//  Broadcast a log warning message
+void
+    zyre_log_warning (zyre_log_t *self, char *peer, char *format, ...);
+
+//  Broadcast a log error message
+void
+    zyre_log_error (zyre_log_t *self, char *peer, char *format, ...);
 
 //  Self test of this class
 void

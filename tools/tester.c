@@ -36,26 +36,25 @@ static void
 node_task (void *args, zctx_t *ctx, void *pipe)
 {
     zyre_t *node = zyre_new (ctx);
+    if (!node)
+        return;                 //  Could not create new node
+
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
     char *cookie = NULL;
-    
-    zmq_pollitem_t pollitems [] = {
-        { pipe, 0, ZMQ_POLLIN, 0 },
-        { zyre_socket (node), 0, ZMQ_POLLIN, 0 }
-    };
-    //  Do something once a second
+
+    zpoller_t *poller = zpoller_new (pipe, zyre_socket (node), NULL);
     int64_t trigger = zclock_time () + 1000;
     while (!zctx_interrupted) {
-        if (zmq_poll (pollitems, 2, randof (1000) * ZMQ_POLL_MSEC) == -1)
-            break;              //  Interrupted
-        
-        if (pollitems [0].revents & ZMQ_POLLIN)
-            break;              //  Any command from parent means EXIT
+        void *which = zpoller_wait (poller, randof (1000));
+
+        //  Any command from parent means EXIT
+        if (which == pipe)
+            break;
 
         //  Process an event from node
-        if (pollitems [1].revents & ZMQ_POLLIN) {
+        if (which == zyre_socket (node)) {
             zmsg_t *incoming = zyre_recv (node);
             if (!incoming)
                 break;              //  Interrupted
@@ -98,9 +97,8 @@ node_task (void *args, zctx_t *ctx, void *pipe)
             if (streq (event, "JOIN")) {
                 char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
-                if (randof (3) > 0) {
+                if (randof (3) > 0)
                     zyre_join (node, group);
-                }
                 free (from_peer);
                 free (group);
             }
@@ -108,9 +106,8 @@ node_task (void *args, zctx_t *ctx, void *pipe)
             if (streq (event, "LEAVE")) {
                 char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
-                if (randof (3) > 0) {
+                if (randof (3) > 0)
                     zyre_leave (node, group);
-                }
                 free (from_peer);
                 free (group);
             }
@@ -158,6 +155,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
                 zyre_leave (node, group);
         }
     }
+    zpoller_destroy (&poller);
     zyre_destroy (&node);
 }
 
@@ -168,22 +166,24 @@ int main (int argc, char *argv [])
     zctx_t *ctx = zctx_new ();
     zctx_set_linger (ctx, 100);
     
-    //  Get number of nodes to simulate, default 100
-    int max_node = 100;
+    //  Get number of nodes N to simulate
+    //  We need 3 x N x N + 3N file handles
+    int max_nodes = 10;
     int nbr_nodes = 0;
+    if (argc > 1)
+        max_nodes = atoi (argv [1]);
+
     int max_iterations = -1;
     int nbr_iterations = 0;
-    if (argc > 1)
-        max_node = atoi (argv [1]);
     if (argc > 2)
         max_iterations = atoi (argv [2]);
 
     //  We address nodes as an array of pipes
-    void **pipes = zmalloc (sizeof (void *) * max_node);
+    void **pipes = zmalloc (sizeof (void *) * max_nodes);
 
     //  We will randomly start and stop node threads
     while (!zctx_interrupted) {
-        uint index = randof (max_node);
+        uint index = randof (max_nodes);
         //  Toggle node thread
         if (pipes [index]) {
             zstr_send (pipes [index], "STOP");

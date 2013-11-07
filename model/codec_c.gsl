@@ -1,4 +1,4 @@
-.#  codec_c.gsl
+    .#  codec_c.gsl
 .#
 .#  Generates a codec for a protocol specification
 .#
@@ -1008,14 +1008,12 @@ $(class.name)_$(name) ($(class.name)_t *self)
 void
 $(class.name)_set_$(name) ($(class.name)_t *self, char *format, ...)
 {
-    //  Format into newly allocated string
+    //  Format $(name) from provided arguments
     assert (self);
     va_list argptr;
     va_start (argptr, format);
     free (self->$(name));
-    self->$(name) = (char *) malloc (STRING_MAX + 1);
-    assert (self->$(name));
-    vsnprintf (self->$(name), STRING_MAX, format, argptr);
+    self->$(name) = zsys_vprintf (format, argptr);
     va_end (argptr);
 }
 
@@ -1071,11 +1069,9 @@ $(class.name)_$(name)_append ($(class.name)_t *self, char *format, ...)
     assert (self);
     va_list argptr;
     va_start (argptr, format);
-    char *string = (char *) malloc (STRING_MAX + 1);
-    assert (string);
-    vsnprintf (string, STRING_MAX, format, argptr);
+    char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
-    
+
     //  Attach string to list
     if (!self->$(name)) {
         self->$(name) = zlist_new ();
@@ -1146,13 +1142,11 @@ $(class.name)_$(name)_number ($(class.name)_t *self, char *key, uint64_t default
 void
 $(class.name)_$(name)_insert ($(class.name)_t *self, char *key, char *format, ...)
 {
-    //  Format string into buffer
+    //  Format into newly allocated string
     assert (self);
     va_list argptr;
     va_start (argptr, format);
-    char *string = (char *) malloc (STRING_MAX + 1);
-    assert (string);
-    vsnprintf (string, STRING_MAX, format, argptr);
+    char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
 
     //  Store string in hash table
