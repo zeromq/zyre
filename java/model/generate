@@ -1,1 +1,0 @@
-gsl -q -script:codec_java -package:zyre ../../model/zre_msg.xml ../../model/zre_log_msg.xml

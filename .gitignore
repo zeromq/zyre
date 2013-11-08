@@ -21,6 +21,7 @@ src/platform.h
 src/platform.h.in
 src/platform.h.in~
 src/stamp-h1
+tools/.deps/
 .libs/
 *.o
 *.lo
@@ -30,10 +31,14 @@ core
 .cache
 testit
 *.pc
-zyre_ping
-zyre_logger
-zyre_tester
-zyre_perf_local
-zyre_perf_remote
+pinger
+logger
+tester
+perf_local
+perf_remote
 zyre_selftest
 doit
+src/test-suite.log
+src/zyre_selftest.log
+src/zyre_selftest.trs
+

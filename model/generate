@@ -1,1 +1,4 @@
+#  codec_c template copied from filemq
+
 gsl -q -script:codec_c zre_msg.xml zre_log_msg.xml
+

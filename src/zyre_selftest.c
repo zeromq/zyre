@@ -1,8 +1,8 @@
 /*  =========================================================================
-    zre_selftest - run self tests
+    zyre_selftest - run self tests
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com
+    Copyright (c) 1991-2013 iMatix Corporation -- http://www.imatix.com
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -23,8 +23,7 @@
     =========================================================================
 */
 
-#include "czmq.h"
-#include "../include/zre_internal.h"
+#include "zyre_classes.h"
 
 int main (int argc, char *argv [])
 {
@@ -35,9 +34,13 @@ int main (int argc, char *argv [])
         verbose = false;
 
     printf ("Running self tests...\n");
-    zre_msg_test (verbose);
-    zre_log_msg_test (verbose);
-    zre_uuid_test (verbose);
+//     zyre_log_test (verbose);
+    zyre_peer_test (verbose);
+//     zyre_group_test (verbose);
+//     zyre_node_test (verbose);
+//     zyre_test (verbose);
+//     zre_msg_test (verbose);
+//     zre_log_msg_test (verbose);
     printf ("Tests passed OK\n");
     return 0;
 }

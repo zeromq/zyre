@@ -592,14 +592,12 @@ zre_log_msg_data (zre_log_msg_t *self)
 void
 zre_log_msg_set_data (zre_log_msg_t *self, char *format, ...)
 {
-    //  Format into newly allocated string
+    //  Format data from provided arguments
     assert (self);
     va_list argptr;
     va_start (argptr, format);
     free (self->data);
-    self->data = (char *) malloc (STRING_MAX + 1);
-    assert (self->data);
-    vsnprintf (self->data, STRING_MAX, format, argptr);
+    self->data = zsys_vprintf (format, argptr);
     va_end (argptr);
 }
 
