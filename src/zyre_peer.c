@@ -351,11 +351,13 @@ zyre_peer_test (bool verbose)
     zyre_peer_connect (peer, "me", "tcp://127.0.0.1:5555");
     assert (zyre_peer_connected (peer));
 
-    zre_msg_t *msg = zre_msg_new (1);
+    zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
+    zre_msg_set_ipaddress (msg, "127.0.0.1");
     int rc = zyre_peer_send (peer, &msg);
     assert (rc == 0);
 
     msg = zre_msg_recv (mailbox);
+    assert (msg);
     if (verbose)
         zre_msg_dump (msg);
     zre_msg_destroy (&msg);

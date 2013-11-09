@@ -193,9 +193,10 @@ zyre_log_test (bool verbose)
     zyre_log_connect (log, "tcp://127.0.0.1:5555");
 
     //  Workaround for issue 270; give time for connect to
-    //  happen and subscriptions to go to pub socket
+    //  happen and subscriptions to go to pub socket; 200
+    //  msec should be enough for under valgrind on a slow PC
     zpoller_t *poller = zpoller_new (collector, NULL);
-    zpoller_wait (poller, 100);
+    zpoller_wait (poller, 200);
 
     //  Send some messages
     zyre_log_info (log, ZRE_LOG_MSG_EVENT_JOIN, NULL, "this is you");

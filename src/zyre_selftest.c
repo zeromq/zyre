@@ -34,13 +34,13 @@ int main (int argc, char *argv [])
         verbose = false;
 
     printf ("Running self tests...\n");
-//     zyre_log_test (verbose);
+    zyre_log_test (verbose);
     zyre_peer_test (verbose);
-//     zyre_group_test (verbose);
-//     zyre_node_test (verbose);
-//     zyre_test (verbose);
-//     zre_msg_test (verbose);
-//     zre_log_msg_test (verbose);
+    zre_msg_test (verbose);
+    zre_log_msg_test (verbose);
+    zyre_group_test (verbose);
+    zyre_node_test (verbose);
+    zyre_test (verbose);
     printf ("Tests passed OK\n");
     return 0;
 }

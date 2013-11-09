@@ -1,0 +1,94 @@
+zyre(3)
+=======
+
+NAME
+----
+zyre - API wrapping one Zyre node
+
+SYNOPSIS
+--------
+----
+//  Constructor
+CZMQ_EXPORT zyre_t *
+    zyre_new (zctx_t *ctx);
+
+//  Destructor
+CZMQ_EXPORT void
+    zyre_destroy (zyre_t **self_p);
+
+//  Set node tracing on or off
+CZMQ_EXPORT void
+    zyre_set_verbose (zyre_t *self, bool verbose);
+
+//  Join a group
+CZMQ_EXPORT int
+    zyre_join (zyre_t *self, const char *group);
+
+//  Leave a group
+CZMQ_EXPORT int
+    zyre_leave (zyre_t *self, const char *group);
+
+//  Receive next message from node
+CZMQ_EXPORT zmsg_t *
+    zyre_recv (zyre_t *self);
+
+//  Send message to single peer; peer ID is first frame in message
+CZMQ_EXPORT int
+    zyre_whisper (zyre_t *self, zmsg_t **msg_p);
+
+//  Send message to a group of peers
+CZMQ_EXPORT int
+    zyre_shout (zyre_t *self, zmsg_t **msg_p);
+
+//  Return node handle, for polling
+CZMQ_EXPORT void *
+    zyre_socket (zyre_t *self);
+
+//  Set node property value
+CZMQ_EXPORT void
+    zyre_set (zyre_t *self, char *name, char *format, ...);
+
+//  Self test of this class
+CZMQ_EXPORT void
+    zyre_test (bool verbose);
+----
+
+DESCRIPTION
+-----------
+
+Zyre does local area discovery and clustering. A Zyre node broadcasts
+UDP beacons, and connects to peers that it finds. This class wraps a
+Zyre node with a message-based API.
+
+All incoming events are zmsg_t messages delivered via the zyre_recv
+call. The first frame defines the type of the message:
+
+    ENTER       a new peer has entered the network
+    EXIT        a peer has left the network
+    WHISPER     a peer has sent this node a message
+    SHOUT       a peer has sent one of our groups a message
+
+In all these cases the next frame after the type is the sending peer
+ID. In a SHOUT, the next frame is the group name. After that, in all
+cases, the following frame is the message content, limited to one
+frame in this version of Zyre.
+
+To join or leave a group, use the zyre_join and zyre_leave methods.
+To set a header value, use the zyre_set method. To send a message to
+a single peer, use zyre_whisper. To send a message to a group, use
+zyre_shout.
+
+Todo: export peer header values to caller via API
+Todo: allow multipart contents
+
+EXAMPLE
+-------
+.From zyre_test method
+----
+    zctx_t *ctx = zctx_new ();
+    zyre_t *zyre = zyre_new (ctx);
+    
+    zyre_destroy (&zyre);
+    zctx_destroy (&ctx);
+----
+

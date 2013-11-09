@@ -32,6 +32,7 @@
 struct _zyre_node_t {
     zctx_t *ctx;                //  CZMQ context
     void *pipe;                 //  Pipe back to application
+    bool terminated;            //  API shut us down
     zbeacon_t *beacon;          //  Beacon object
     zyre_log_t *log;            //  Log object
     zuuid_t *uuid;              //  Our UUID as object
@@ -231,6 +232,11 @@ agent_recv_from_api (zyre_node_t *self)
         zhash_update (self->headers, name, value);
         free (name);
         free (value);
+    }
+    else
+    if (streq (command, "TERMINATE")) {
+        self->terminated = true;
+        zstr_send (self->pipe, "OK");
     }
     free (command);
     zmsg_destroy (&request);
@@ -511,8 +517,8 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
     zpoller_t *poller = zpoller_new (
         self->pipe, self->inbox, zbeacon_socket (self->beacon), NULL);
 
-    while (!zctx_interrupted) {
-        long timeout = (long) (reap_at - zclock_time ());
+    while (!zpoller_terminated (poller)) {
+        int timeout = (int) (reap_at - zclock_time ());
         assert (timeout <= REAP_INTERVAL);
         if (timeout < 0)
             timeout = 0;
@@ -525,12 +531,14 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
         else
         if (which == zbeacon_socket (self->beacon))
             agent_recv_beacon (self);
-
+        
         if (zclock_time () >= reap_at) {
             reap_at = zclock_time () + REAP_INTERVAL;
             //  Ping all peers and reap any expired ones
             zhash_foreach (self->peers, agent_ping_peer, self);
         }
+        if (self->terminated)
+            break;
     }
     zpoller_destroy (&poller);
     zyre_node_destroy (&self);
@@ -543,6 +551,10 @@ void
 zyre_node_test (bool verbose)
 {
     printf (" * zyre_node: ");
+    zctx_t *ctx = zctx_new ();
+    void *pipe = zsocket_new (ctx, ZMQ_PAIR);
+    zyre_node_t *node = zyre_node_new (ctx, pipe);
+    zyre_node_destroy (&node);
+    zctx_destroy (&ctx);
     printf ("OK\n");
 }
-

@@ -22,6 +22,7 @@ src/platform.h.in
 src/platform.h.in~
 src/stamp-h1
 tools/.deps/
+doc/*.3
 .libs/
 *.o
 *.lo

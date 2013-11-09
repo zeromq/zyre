@@ -136,6 +136,34 @@ void
 zyre_group_test (bool verbose)
 {
     printf (" * zyre_group: ");
+    zctx_t *ctx = zctx_new ();
+    void *mailbox = zsocket_new (ctx, ZMQ_DEALER);
+    zsocket_bind (mailbox, "tcp://127.0.0.1:5555");
+
+    zhash_t *groups = zhash_new ();
+    zyre_group_t *group = zyre_group_new ("tests", groups);
+
+    zhash_t *peers = zhash_new ();
+    zyre_peer_t *peer = zyre_peer_new (ctx, peers, "you");
+    assert (!zyre_peer_connected (peer));
+    zyre_peer_connect (peer, "me", "tcp://127.0.0.1:5555");
+    assert (zyre_peer_connected (peer));
+
+    zyre_group_join (group, peer);
+    
+    zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
+    zre_msg_set_ipaddress (msg, "127.0.0.1");
+    zyre_group_send (group, &msg);
+
+    msg = zre_msg_recv (mailbox);
+    assert (msg);
+    if (verbose)
+        zre_msg_dump (msg);
+    zre_msg_destroy (&msg);
+
+    zhash_destroy (&peers);
+    zhash_destroy (&groups);
+    zctx_destroy (&ctx);
     printf ("OK\n");
 }
 

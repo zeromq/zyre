@@ -26,8 +26,30 @@
 
 /*
 @header
-    The zyre class implements a socket-like interface to one node.
+    Zyre does local area discovery and clustering. A Zyre node broadcasts
+    UDP beacons, and connects to peers that it finds. This class wraps a
+    Zyre node with a message-based API.
+
+    All incoming events are zmsg_t messages delivered via the zyre_recv
+    call. The first frame defines the type of the message:
+
+        ENTER       a new peer has entered the network
+        EXIT        a peer has left the network
+        WHISPER     a peer has sent this node a message
+        SHOUT       a peer has sent one of our groups a message
+
+    In all these cases the next frame after the type is the sending peer
+    ID. In a SHOUT, the next frame is the group name. After that, in all
+    cases, the following frame is the message content, limited to one
+    frame in this version of Zyre.
+
+    To join or leave a group, use the zyre_join and zyre_leave methods.
+    To set a header value, use the zyre_set method. To send a message to
+    a single peer, use zyre_whisper. To send a message to a group, use
+    zyre_shout.
 @discuss
+    Todo: export peer header values to caller via API
+    Todo: allow multipart contents
 @end
 */
 
@@ -76,6 +98,9 @@ zyre_destroy (zyre_t **self_p)
     assert (self_p);
     if (*self_p) {
         zyre_t *self = *self_p;
+        zstr_send (self->pipe, "TERMINATE");
+        char *reply = zstr_recv (self->pipe);
+        zstr_free (&reply);
         free (self);
         *self_p = NULL;
     }
@@ -187,10 +212,16 @@ zyre_test (bool verbose)
 
     //  @selftest
     zctx_t *ctx = zctx_new ();
-    zyre_t *zyre = zyre_new (ctx);
-    zyre_destroy (&zyre);
+    zyre_t *node = zyre_new (ctx);
+    zyre_join (node, "GLOBAL");
+
+    zmsg_t *outgoing = zmsg_new ();
+    zmsg_addstr (outgoing, "GLOBAL");
+    zmsg_addstr (outgoing, "Hello");
+    zyre_shout (node, &outgoing);
+
+    zyre_destroy (&node);
     zctx_destroy (&ctx);
     //  @end
     printf ("OK\n");
 }
-
