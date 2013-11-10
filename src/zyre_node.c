@@ -278,13 +278,10 @@ s_require_peer (zyre_node_t *self, char *identity, char *address, uint16_t port)
         zre_msg_set_status (msg, self->status);
         zre_msg_set_headers (msg, zhash_dup (self->headers));
         zyre_peer_send (peer, &msg);
-        
+
+        //  Send new peer event to logger, if any
         zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_ENTER,
                       zyre_peer_endpoint (peer), endpoint);
-
-        //  Now tell the caller about the peer
-        zstr_sendm (self->pipe, "ENTER");
-        zstr_send (self->pipe, identity);
     }
     return peer;
 }
@@ -363,6 +360,12 @@ agent_recv_from_peer (zyre_node_t *self)
 
     //  Now process each command
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
+        //  Tell the caller about the peer
+        zstr_sendm (self->pipe, "ENTER");
+        zstr_sendm (self->pipe, identity);
+        zstr_sendm (self->pipe, zre_msg_headers_string (msg, "X-ZRELOG", ""));
+        zstr_send  (self->pipe, zre_msg_headers_string (msg, "X-FILEMQ", ""));
+
         //  Join peer to listed groups
         char *name = zre_msg_groups_first (msg);
         while (name) {

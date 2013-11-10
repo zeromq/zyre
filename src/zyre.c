@@ -31,17 +31,26 @@
     Zyre node with a message-based API.
 
     All incoming events are zmsg_t messages delivered via the zyre_recv
-    call. The first frame defines the type of the message:
+    call. The first frame defines the type of the message, and following
+    frames provide further values:
 
-        ENTER       a new peer has entered the network
-        EXIT        a peer has left the network
-        WHISPER     a peer has sent this node a message
-        SHOUT       a peer has sent one of our groups a message
+        ENTER fromnode x-zrelog x-filemq
+            a new peer has entered the network
+        EXIT fromnode
+            a peer has left the network
+        JOIN fromnode groupname
+            a peer has joined a specific group
+        LEAVE fromnode groupname
+            a peer has joined a specific group
+        WHISPER fromnode message
+            a peer has sent this node a message
+        SHOUT fromnode groupname message
+            a peer has sent one of our groups a message
 
-    In all these cases the next frame after the type is the sending peer
-    ID. In a SHOUT, the next frame is the group name. After that, in all
-    cases, the following frame is the message content, limited to one
-    frame in this version of Zyre.
+            
+    In SHOUT and WHISPER the message is a single frame in this version
+    of Zyre. In ENTER, x-zrelog and x-filemq provide endpoints for the
+    ZRE/LOG and FileMQ services if the peer supports these.
 
     To join or leave a group, use the zyre_join and zyre_leave methods.
     To set a header value, use the zyre_set method. To send a message to
@@ -212,15 +221,46 @@ zyre_test (bool verbose)
 
     //  @selftest
     zctx_t *ctx = zctx_new ();
-    zyre_t *node = zyre_new (ctx);
-    zyre_join (node, "GLOBAL");
+    //  Create two nodes
+    zyre_t *node1 = zyre_new (ctx);
+    zyre_set (node1, "X-FILEMQ", "tcp://128.0.0.1:6777");
+    zyre_set (node1, "X-IGNORED", "Hello world");
+    zyre_join (node1, "GLOBAL");
+    
+    zyre_t *node2 = zyre_new (ctx);
+    zyre_join (node2, "GLOBAL");
+    
+    //  Give time for them to interconnect
+    zclock_sleep (250);
 
-    zmsg_t *outgoing = zmsg_new ();
-    zmsg_addstr (outgoing, "GLOBAL");
-    zmsg_addstr (outgoing, "Hello");
-    zyre_shout (node, &outgoing);
+    //  One node shouts to GLOBAL
+    zmsg_t *msg = zmsg_new ();
+    zmsg_addstr (msg, "GLOBAL");
+    zmsg_addstr (msg, "Hello, World");
+    zyre_shout (node1, &msg);
 
-    zyre_destroy (&node);
+    //  Second node should receive ENTER, JOIN, and SHOUT
+    msg = zyre_recv (node2);
+    zmsg_dump (msg);
+    char *command = zmsg_popstr (msg);
+    assert (streq (command, "ENTER"));
+    free (command);
+    zmsg_destroy (&msg);
+    
+    msg = zyre_recv (node2);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "JOIN"));
+    free (command);
+    zmsg_destroy (&msg);
+    
+    msg = zyre_recv (node2);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "SHOUT"));
+    free (command);
+    zmsg_destroy (&msg);
+    
+    zyre_destroy (&node1);
+    zyre_destroy (&node2);
     zctx_destroy (&ctx);
     //  @end
     printf ("OK\n");
