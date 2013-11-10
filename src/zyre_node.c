@@ -32,6 +32,7 @@
 struct _zyre_node_t {
     zctx_t *ctx;                //  CZMQ context
     void *pipe;                 //  Pipe back to application
+    bool terminated;            //  API shut us down
     zbeacon_t *beacon;          //  Beacon object
     zyre_log_t *log;            //  Log object
     zuuid_t *uuid;              //  Our UUID as object
@@ -232,6 +233,11 @@ agent_recv_from_api (zyre_node_t *self)
         free (name);
         free (value);
     }
+    else
+    if (streq (command, "TERMINATE")) {
+        self->terminated = true;
+        zstr_send (self->pipe, "OK");
+    }
     free (command);
     zmsg_destroy (&request);
     return 0;
@@ -272,13 +278,10 @@ s_require_peer (zyre_node_t *self, char *identity, char *address, uint16_t port)
         zre_msg_set_status (msg, self->status);
         zre_msg_set_headers (msg, zhash_dup (self->headers));
         zyre_peer_send (peer, &msg);
-        
+
+        //  Send new peer event to logger, if any
         zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_ENTER,
                       zyre_peer_endpoint (peer), endpoint);
-
-        //  Now tell the caller about the peer
-        zstr_sendm (self->pipe, "ENTER");
-        zstr_send (self->pipe, identity);
     }
     return peer;
 }
@@ -357,6 +360,12 @@ agent_recv_from_peer (zyre_node_t *self)
 
     //  Now process each command
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
+        //  Tell the caller about the peer
+        zstr_sendm (self->pipe, "ENTER");
+        zstr_sendm (self->pipe, identity);
+        zstr_sendm (self->pipe, zre_msg_headers_string (msg, "X-ZRELOG", ""));
+        zstr_send  (self->pipe, zre_msg_headers_string (msg, "X-FILEMQ", ""));
+
         //  Join peer to listed groups
         char *name = zre_msg_groups_first (msg);
         while (name) {
@@ -511,8 +520,8 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
     zpoller_t *poller = zpoller_new (
         self->pipe, self->inbox, zbeacon_socket (self->beacon), NULL);
 
-    while (!zctx_interrupted) {
-        long timeout = (long) (reap_at - zclock_time ());
+    while (!zpoller_terminated (poller)) {
+        int timeout = (int) (reap_at - zclock_time ());
         assert (timeout <= REAP_INTERVAL);
         if (timeout < 0)
             timeout = 0;
@@ -525,12 +534,14 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
         else
         if (which == zbeacon_socket (self->beacon))
             agent_recv_beacon (self);
-
+        
         if (zclock_time () >= reap_at) {
             reap_at = zclock_time () + REAP_INTERVAL;
             //  Ping all peers and reap any expired ones
             zhash_foreach (self->peers, agent_ping_peer, self);
         }
+        if (self->terminated)
+            break;
     }
     zpoller_destroy (&poller);
     zyre_node_destroy (&self);
@@ -543,6 +554,10 @@ void
 zyre_node_test (bool verbose)
 {
     printf (" * zyre_node: ");
+    zctx_t *ctx = zctx_new ();
+    void *pipe = zsocket_new (ctx, ZMQ_PAIR);
+    zyre_node_t *node = zyre_node_new (ctx, pipe);
+    zyre_node_destroy (&node);
+    zctx_destroy (&ctx);
     printf ("OK\n");
 }
-

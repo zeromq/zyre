@@ -1,0 +1,292 @@
+zre_msg(3)
+==========
+
+NAME
+----
+zre_msg - work with zre messages
+
+SYNOPSIS
+--------
+----
+//  Create a new zre_msg
+zre_msg_t *
+    zre_msg_new (int id);
+
+//  Destroy the zre_msg
+void
+    zre_msg_destroy (zre_msg_t **self_p);
+
+//  Receive and parse a zre_msg from the input
+zre_msg_t *
+    zre_msg_recv (void *input);
+
+//  Send the zre_msg to the output, and destroy it
+int
+    zre_msg_send (zre_msg_t **self_p, void *output);
+
+//  Send the HELLO to the output in one step
+int
+    zre_msg_send_hello (void *output,
+        uint16_t sequence,
+        char *ipaddress,
+        uint16_t mailbox,
+        zlist_t *groups,
+        byte status,
+        zhash_t *headers);
+    
+//  Send the WHISPER to the output in one step
+int
+    zre_msg_send_whisper (void *output,
+        uint16_t sequence,
+        zframe_t *content);
+    
+//  Send the SHOUT to the output in one step
+int
+    zre_msg_send_shout (void *output,
+        uint16_t sequence,
+        char *group,
+        zframe_t *content);
+    
+//  Send the JOIN to the output in one step
+int
+    zre_msg_send_join (void *output,
+        uint16_t sequence,
+        char *group,
+        byte status);
+    
+//  Send the LEAVE to the output in one step
+int
+    zre_msg_send_leave (void *output,
+        uint16_t sequence,
+        char *group,
+        byte status);
+    
+//  Send the PING to the output in one step
+int
+    zre_msg_send_ping (void *output,
+        uint16_t sequence);
+    
+//  Send the PING_OK to the output in one step
+int
+    zre_msg_send_ping_ok (void *output,
+        uint16_t sequence);
+    
+//  Duplicate the zre_msg message
+zre_msg_t *
+    zre_msg_dup (zre_msg_t *self);
+
+//  Print contents of message to stdout
+void
+    zre_msg_dump (zre_msg_t *self);
+
+//  Get/set the message address
+zframe_t *
+    zre_msg_address (zre_msg_t *self);
+void
+    zre_msg_set_address (zre_msg_t *self, zframe_t *address);
+
+//  Get the zre_msg id and printable command
+int
+    zre_msg_id (zre_msg_t *self);
+void
+    zre_msg_set_id (zre_msg_t *self, int id);
+char *
+    zre_msg_command (zre_msg_t *self);
+
+//  Get/set the sequence field
+uint16_t
+    zre_msg_sequence (zre_msg_t *self);
+void
+    zre_msg_set_sequence (zre_msg_t *self, uint16_t sequence);
+
+//  Get/set the ipaddress field
+char *
+    zre_msg_ipaddress (zre_msg_t *self);
+void
+    zre_msg_set_ipaddress (zre_msg_t *self, char *format, ...);
+
+//  Get/set the mailbox field
+uint16_t
+    zre_msg_mailbox (zre_msg_t *self);
+void
+    zre_msg_set_mailbox (zre_msg_t *self, uint16_t mailbox);
+
+//  Get/set the groups field
+zlist_t *
+    zre_msg_groups (zre_msg_t *self);
+void
+    zre_msg_set_groups (zre_msg_t *self, zlist_t *groups);
+
+//  Iterate through the groups field, and append a groups value
+char *
+    zre_msg_groups_first (zre_msg_t *self);
+char *
+    zre_msg_groups_next (zre_msg_t *self);
+void
+    zre_msg_groups_append (zre_msg_t *self, char *format, ...);
+size_t
+    zre_msg_groups_size (zre_msg_t *self);
+
+//  Get/set the status field
+byte
+    zre_msg_status (zre_msg_t *self);
+void
+    zre_msg_set_status (zre_msg_t *self, byte status);
+
+//  Get/set the headers field
+zhash_t *
+    zre_msg_headers (zre_msg_t *self);
+void
+    zre_msg_set_headers (zre_msg_t *self, zhash_t *headers);
+    
+//  Get/set a value in the headers dictionary
+char *
+    zre_msg_headers_string (zre_msg_t *self, char *key, char *default_value);
+uint64_t
+    zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value);
+void
+    zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...);
+size_t
+    zre_msg_headers_size (zre_msg_t *self);
+
+//  Get/set the content field
+zframe_t *
+    zre_msg_content (zre_msg_t *self);
+void
+    zre_msg_set_content (zre_msg_t *self, zframe_t *frame);
+
+//  Get/set the group field
+char *
+    zre_msg_group (zre_msg_t *self);
+void
+    zre_msg_set_group (zre_msg_t *self, char *format, ...);
+
+//  Self test of this class
+int
+    zre_msg_test (bool verbose);
+----
+
+DESCRIPTION
+-----------
+
+zre_msg - work with zre messages
+
+
+EXAMPLE
+-------
+.From zre_msg_test method
+----
+    //  Simple create/destroy test
+    zre_msg_t *self = zre_msg_new (0);
+    assert (self);
+    zre_msg_destroy (&self);
+
+    //  Create pair of sockets we can send through
+    zctx_t *ctx = zctx_new ();
+    assert (ctx);
+
+    void *output = zsocket_new (ctx, ZMQ_DEALER);
+    assert (output);
+    zsocket_bind (output, "inproc://selftest");
+    void *input = zsocket_new (ctx, ZMQ_ROUTER);
+    assert (input);
+    zsocket_connect (input, "inproc://selftest");
+    
+    //  Encode/send/decode and verify each message type
+
+    self = zre_msg_new (ZRE_MSG_HELLO);
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_ipaddress (self, "Life is short but Now lasts for ever");
+    zre_msg_set_mailbox (self, 123);
+    zre_msg_groups_append (self, "Name: %s", "Brutus");
+    zre_msg_groups_append (self, "Age: %d", 43);
+    zre_msg_set_status (self, 123);
+    zre_msg_headers_insert (self, "Name", "Brutus");
+    zre_msg_headers_insert (self, "Age", "%d", 43);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_sequence (self) == 123);
+    assert (streq (zre_msg_ipaddress (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_mailbox (self) == 123);
+    assert (zre_msg_groups_size (self) == 2);
+    assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
+    assert (streq (zre_msg_groups_next (self), "Age: 43"));
+    assert (zre_msg_status (self) == 123);
+    assert (zre_msg_headers_size (self) == 2);
+    assert (streq (zre_msg_headers_string (self, "Name", "?"), "Brutus"));
+    assert (zre_msg_headers_number (self, "Age", 0) == 43);
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_WHISPER);
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_content (self, zframe_new ("Captcha Diem", 12));
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_sequence (self) == 123);
+    assert (zframe_streq (zre_msg_content (self), "Captcha Diem"));
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_SHOUT);
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_group (self, "Life is short but Now lasts for ever");
+    zre_msg_set_content (self, zframe_new ("Captcha Diem", 12));
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_sequence (self) == 123);
+    assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+    assert (zframe_streq (zre_msg_content (self), "Captcha Diem"));
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_JOIN);
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_group (self, "Life is short but Now lasts for ever");
+    zre_msg_set_status (self, 123);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_sequence (self) == 123);
+    assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_status (self) == 123);
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_LEAVE);
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_group (self, "Life is short but Now lasts for ever");
+    zre_msg_set_status (self, 123);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_sequence (self) == 123);
+    assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_status (self) == 123);
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_PING);
+    zre_msg_set_sequence (self, 123);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_sequence (self) == 123);
+    zre_msg_destroy (&self);
+
+    self = zre_msg_new (ZRE_MSG_PING_OK);
+    zre_msg_set_sequence (self, 123);
+    zre_msg_send (&self, output);
+    
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_sequence (self) == 123);
+    zre_msg_destroy (&self);
+
+    zctx_destroy (&ctx);
+----
+

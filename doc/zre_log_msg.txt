@@ -1,0 +1,149 @@
+zre_log_msg(3)
+==============
+
+NAME
+----
+zre_log_msg - work with zre logging messages
+
+SYNOPSIS
+--------
+----
+//  Create a new zre_log_msg
+zre_log_msg_t *
+    zre_log_msg_new (int id);
+
+//  Destroy the zre_log_msg
+void
+    zre_log_msg_destroy (zre_log_msg_t **self_p);
+
+//  Receive and parse a zre_log_msg from the input
+zre_log_msg_t *
+    zre_log_msg_recv (void *input);
+
+//  Send the zre_log_msg to the output, and destroy it
+int
+    zre_log_msg_send (zre_log_msg_t **self_p, void *output);
+
+//  Send the LOG to the output in one step
+int
+    zre_log_msg_send_log (void *output,
+        byte level,
+        byte event,
+        uint16_t node,
+        uint16_t peer,
+        uint64_t time,
+        char *data);
+    
+//  Duplicate the zre_log_msg message
+zre_log_msg_t *
+    zre_log_msg_dup (zre_log_msg_t *self);
+
+//  Print contents of message to stdout
+void
+    zre_log_msg_dump (zre_log_msg_t *self);
+
+//  Get/set the message address
+zframe_t *
+    zre_log_msg_address (zre_log_msg_t *self);
+void
+    zre_log_msg_set_address (zre_log_msg_t *self, zframe_t *address);
+
+//  Get the zre_log_msg id and printable command
+int
+    zre_log_msg_id (zre_log_msg_t *self);
+void
+    zre_log_msg_set_id (zre_log_msg_t *self, int id);
+char *
+    zre_log_msg_command (zre_log_msg_t *self);
+
+//  Get/set the level field
+byte
+    zre_log_msg_level (zre_log_msg_t *self);
+void
+    zre_log_msg_set_level (zre_log_msg_t *self, byte level);
+
+//  Get/set the event field
+byte
+    zre_log_msg_event (zre_log_msg_t *self);
+void
+    zre_log_msg_set_event (zre_log_msg_t *self, byte event);
+
+//  Get/set the node field
+uint16_t
+    zre_log_msg_node (zre_log_msg_t *self);
+void
+    zre_log_msg_set_node (zre_log_msg_t *self, uint16_t node);
+
+//  Get/set the peer field
+uint16_t
+    zre_log_msg_peer (zre_log_msg_t *self);
+void
+    zre_log_msg_set_peer (zre_log_msg_t *self, uint16_t peer);
+
+//  Get/set the time field
+uint64_t
+    zre_log_msg_time (zre_log_msg_t *self);
+void
+    zre_log_msg_set_time (zre_log_msg_t *self, uint64_t time);
+
+//  Get/set the data field
+char *
+    zre_log_msg_data (zre_log_msg_t *self);
+void
+    zre_log_msg_set_data (zre_log_msg_t *self, char *format, ...);
+
+//  Self test of this class
+int
+    zre_log_msg_test (bool verbose);
+----
+
+DESCRIPTION
+-----------
+
+zre_log_msg - work with zre logging messages
+
+
+EXAMPLE
+-------
+.From zre_log_msg_test method
+----
+    //  Simple create/destroy test
+    zre_log_msg_t *self = zre_log_msg_new (0);
+    assert (self);
+    zre_log_msg_destroy (&self);
+
+    //  Create pair of sockets we can send through
+    zctx_t *ctx = zctx_new ();
+    assert (ctx);
+
+    void *output = zsocket_new (ctx, ZMQ_DEALER);
+    assert (output);
+    zsocket_bind (output, "inproc://selftest");
+    void *input = zsocket_new (ctx, ZMQ_ROUTER);
+    assert (input);
+    zsocket_connect (input, "inproc://selftest");
+    
+    //  Encode/send/decode and verify each message type
+
+    self = zre_log_msg_new (ZRE_LOG_MSG_LOG);
+    zre_log_msg_set_level (self, 123);
+    zre_log_msg_set_event (self, 123);
+    zre_log_msg_set_node (self, 123);
+    zre_log_msg_set_peer (self, 123);
+    zre_log_msg_set_time (self, 123);
+    zre_log_msg_set_data (self, "Life is short but Now lasts for ever");
+    zre_log_msg_send (&self, output);
+    
+    self = zre_log_msg_recv (input);
+    assert (self);
+    assert (zre_log_msg_level (self) == 123);
+    assert (zre_log_msg_event (self) == 123);
+    assert (zre_log_msg_node (self) == 123);
+    assert (zre_log_msg_peer (self) == 123);
+    assert (zre_log_msg_time (self) == 123);
+    assert (streq (zre_log_msg_data (self), "Life is short but Now lasts for ever"));
+    zre_log_msg_destroy (&self);
+
+    zctx_destroy (&ctx);
+----
+
