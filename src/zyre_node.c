@@ -363,9 +363,9 @@ agent_recv_from_peer (zyre_node_t *self)
         //  Tell the caller about the peer
         zstr_sendm (self->pipe, "ENTER");
         zstr_sendm (self->pipe, identity);
-        zstr_sendm (self->pipe, zre_msg_headers_string (msg, "X-ZRELOG", ""));
-        zstr_send  (self->pipe, zre_msg_headers_string (msg, "X-FILEMQ", ""));
-
+        zframe_t *headers = zhash_pack (zre_msg_headers (msg));
+        zframe_send (&headers, self->pipe, 0);
+        
         //  Join peer to listed groups
         char *name = zre_msg_groups_first (msg);
         while (name) {
