@@ -82,7 +82,8 @@ int main (int argc, char *argv [])
 
     //  Announce this to all peers we connect to
     zyre_t *node = zyre_new (ctx);
-    zyre_set (node, "X-ZRELOG", "tcp://%s:%d", host, port);
+    zyre_set_header (node, "X-ZRELOG", "tcp://%s:%d", host, port);
+    zyre_start (node);
 
     zpoller_t *poller = zpoller_new (collector, zyre_socket (node), NULL);
     while (!zctx_interrupted) {

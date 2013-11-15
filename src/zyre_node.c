@@ -47,6 +47,65 @@ struct _zyre_node_t {
     zhash_t *headers;           //  Our header values
 };
 
+
+//  ---------------------------------------------------------------------
+//  Constructor
+
+static zyre_node_t *
+zyre_node_new (zctx_t *ctx, void *pipe)
+{
+    zyre_node_t *self = (zyre_node_t *) zmalloc (sizeof (zyre_node_t));
+    self->ctx = ctx;
+    self->pipe = pipe;
+    self->inbox = zsocket_new (ctx, ZMQ_ROUTER);
+    if (self->inbox == NULL) {
+        free (self);
+        return NULL;            //  Interrupted 0MQ call
+    }
+    self->port = zsocket_bind (self->inbox, "tcp://*:*");
+    if (self->port < 0) {
+        free (self);
+        return NULL;            //  Interrupted 0MQ call
+    }
+    self->beacon = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
+    if (!self->beacon) {
+        free (self);
+        return NULL;            //  Exhausted process sockets
+    }
+    self->uuid = zuuid_new ();
+    self->identity = strdup (zuuid_str (self->uuid));
+    self->peers = zhash_new ();
+    self->peer_groups = zhash_new ();
+    self->own_groups = zhash_new ();
+    self->headers = zhash_new ();
+    zhash_autofree (self->headers);
+
+    return self;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Destructor
+
+static void
+zyre_node_destroy (zyre_node_t **self_p)
+{
+    assert (self_p);
+    if (*self_p) {
+        zyre_node_t *self = *self_p;
+        zuuid_destroy (&self->uuid);
+        zhash_destroy (&self->peers);
+        zhash_destroy (&self->peer_groups);
+        zhash_destroy (&self->own_groups);
+        zhash_destroy (&self->headers);
+        zbeacon_destroy (&self->beacon);
+        zyre_log_destroy (&self->log);
+        free (self->identity);
+        free (self);
+        *self_p = NULL;
+    }
+}
+
 //  Beacon frame has this format:
 //
 //  Z R E       3 bytes
@@ -64,80 +123,28 @@ typedef struct {
 } beacon_t;
 
 
-//  ---------------------------------------------------------------------
-//  Constructor
-
-zyre_node_t *
-zyre_node_new (zctx_t *ctx, void *pipe)
+static void
+zyre_node_start (zyre_node_t *self)
 {
-    zyre_node_t *self = (zyre_node_t *) zmalloc (sizeof (zyre_node_t));
-    self->ctx = ctx;
-    self->pipe = pipe;
-    self->inbox = zsocket_new (ctx, ZMQ_ROUTER);
-    if (self->inbox == NULL) {
-        free (self);
-        return NULL;            //  Interrupted 0MQ call
-    }
-    self->port = zsocket_bind (self->inbox, "tcp://*:*");
-    if (self->port < 0) {
-        free (self);
-        return NULL;            //  Interrupted 0MQ call
-    }
     //  Set broadcast/listen beacon
-    self->beacon = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
-    if (!self->beacon) {
-        free (self);
-        return NULL;
-    }
     beacon_t beacon;
     beacon.protocol [0] = 'Z';
     beacon.protocol [1] = 'R';
     beacon.protocol [2] = 'E';
     beacon.version = BEACON_VERSION;
     beacon.port = htons (self->port);
-    self->uuid = zuuid_new ();
     zuuid_cpy (self->uuid, beacon.uuid);
     zbeacon_noecho (self->beacon);
     zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
     zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
 
+    //  Our own host endpoint is provided by the beacon
     self->host = zbeacon_hostname (self->beacon);
-    self->identity = strdup (zuuid_str (self->uuid));
-    self->peers = zhash_new ();
-    self->peer_groups = zhash_new ();
-    self->own_groups = zhash_new ();
-    self->headers = zhash_new ();
-    zhash_autofree (self->headers);
 
     //  Set up log instance
     char sender [30];         //  ipaddress:port endpoint
     sprintf (sender, "%s:%d", self->host, self->port);
     self->log = zyre_log_new (self->ctx, sender);
-
-    return self;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Destructor
-
-void
-zyre_node_destroy (zyre_node_t **self_p)
-{
-    assert (self_p);
-    if (*self_p) {
-        zyre_node_t *self = *self_p;
-        zuuid_destroy (&self->uuid);
-        zhash_destroy (&self->peers);
-        zhash_destroy (&self->peer_groups);
-        zhash_destroy (&self->own_groups);
-        zhash_destroy (&self->headers);
-        zbeacon_destroy (&self->beacon);
-        zyre_log_destroy (&self->log);
-        free (self->identity);
-        free (self);
-        *self_p = NULL;
-    }
 }
 
 
@@ -164,6 +171,19 @@ agent_recv_from_api (zyre_node_t *self)
     if (!command)
         return -1;                  //  Interrupted
 
+    if (streq (command, "SET")) {
+        char *name = zmsg_popstr (request);
+        char *value = zmsg_popstr (request);
+        zhash_update (self->headers, name, value);
+        free (name);
+        free (value);
+    }
+    else
+    if (streq (command, "START")) {
+        zyre_node_start (self);
+        zstr_send (self->pipe, "OK");
+    }
+    else
     if (streq (command, "WHISPER")) {
         //  Get peer to send message to
         char *identity = zmsg_popstr (request);
@@ -224,14 +244,6 @@ agent_recv_from_api (zyre_node_t *self)
             zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
         }
         free (name);
-    }
-    else
-    if (streq (command, "SET")) {
-        char *name = zmsg_popstr (request);
-        char *value = zmsg_popstr (request);
-        zhash_update (self->headers, name, value);
-        free (name);
-        free (value);
     }
     else
     if (streq (command, "TERMINATE")) {

@@ -53,19 +53,29 @@ extern "C" {
 typedef struct _zyre_t zyre_t;
 
 //  @interface
-//  Constructor
+//  Constructor, creates a new Zyre node. Note that until you start the
+//  node it is silent and invisible to other nodes on the network.
 CZMQ_EXPORT zyre_t *
     zyre_new (zctx_t *ctx);
 
-//  Destructor
+//  Destructor, destroys a Zyre node. When you destroy a node, any
+//  messages it is sending or receiving will be discarded.
 CZMQ_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
-//  Set node tracing on or off
+//  Set node header; these are provided to other nodes during discovery
+//  and come in each ENTER message.
 CZMQ_EXPORT void
-    zyre_set_verbose (zyre_t *self, bool verbose);
+    zyre_set_header (zyre_t *self, char *name, char *format, ...);
 
-//  Join a group
+//  Start node, after setting header values. When you start a node it
+//  begins discovery and connection. There is no stop method; to stop
+//  a node, destroy it.
+CZMQ_EXPORT void
+    zyre_start (zyre_t *self);
+
+//  Join a named group; after joining a group you can send messages to
+//  the group and all Zyre nodes in that group will receive them.
 CZMQ_EXPORT int
     zyre_join (zyre_t *self, const char *group);
 
@@ -73,11 +83,14 @@ CZMQ_EXPORT int
 CZMQ_EXPORT int
     zyre_leave (zyre_t *self, const char *group);
 
-//  Receive next message from node
+//  Receive next message from network; the message may be a control
+//  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
+//  Returns zmsg_t object, or NULL if interrupted
 CZMQ_EXPORT zmsg_t *
     zyre_recv (zyre_t *self);
 
 //  Send message to single peer; peer ID is first frame in message
+//  Destroys message after sending
 CZMQ_EXPORT int
     zyre_whisper (zyre_t *self, zmsg_t **msg_p);
 
@@ -85,13 +98,9 @@ CZMQ_EXPORT int
 CZMQ_EXPORT int
     zyre_shout (zyre_t *self, zmsg_t **msg_p);
 
-//  Return node handle, for polling
+//  Return handle to the Zyre node, for polling
 CZMQ_EXPORT void *
     zyre_socket (zyre_t *self);
-
-//  Set node property value
-CZMQ_EXPORT void
-    zyre_set (zyre_t *self, char *name, char *format, ...);
 
 //  Self test of this class
 CZMQ_EXPORT void
