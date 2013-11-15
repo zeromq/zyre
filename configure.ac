@@ -11,7 +11,7 @@ AC_INIT([libzyre],[m4_esyscmd([./version.sh zyre])],[zeromq-dev@lists.zeromq.org
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
 AC_CONFIG_HEADERS([src/platform.h])
-AM_INIT_AUTOMAKE(tar-ustar)
+AM_INIT_AUTOMAKE([tar-ustar foreign])
 
 # This defines PACKAGE_VERSION_... in src/platform.h
 PV_MAJOR=`echo $PACKAGE_VERSION | cut -d . -f 1`

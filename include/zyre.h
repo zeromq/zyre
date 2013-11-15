@@ -37,7 +37,7 @@
     ZYRE_MAKE_VERSION(ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
 
 #include <czmq.h>
-#if CZMQ_VERSION < 2003
+#if CZMQ_VERSION < 20003
 #   error "Zyre needs CZMQ/2.0.3 or later"
 #endif
 
