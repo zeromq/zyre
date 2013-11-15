@@ -36,7 +36,6 @@ struct _zyre_node_t {
     zbeacon_t *beacon;          //  Beacon object
     zyre_log_t *log;            //  Log object
     zuuid_t *uuid;              //  Our UUID as object
-    char *identity;             //  Our UUID as hex string
     void *inbox;                //  Our inbox socket (ROUTER)
     char *host;                 //  Our host IP address
     int port;                   //  Our inbox port number
@@ -73,7 +72,6 @@ zyre_node_new (zctx_t *ctx, void *pipe)
         return NULL;            //  Exhausted process sockets
     }
     self->uuid = zuuid_new ();
-    self->identity = strdup (zuuid_str (self->uuid));
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
     self->own_groups = zhash_new ();
@@ -100,7 +98,6 @@ zyre_node_destroy (zyre_node_t **self_p)
         zhash_destroy (&self->headers);
         zbeacon_destroy (&self->beacon);
         zyre_log_destroy (&self->log);
-        free (self->identity);
         free (self);
         *self_p = NULL;
     }
@@ -133,7 +130,7 @@ zyre_node_start (zyre_node_t *self)
     beacon.protocol [2] = 'E';
     beacon.version = BEACON_VERSION;
     beacon.port = htons (self->port);
-    zuuid_cpy (self->uuid, beacon.uuid);
+    zuuid_export (self->uuid, beacon.uuid);
     zbeacon_noecho (self->beacon);
     zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
     zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
@@ -267,20 +264,20 @@ agent_peer_purge (const char *key, void *item, void *argument)
     return 0;
 }
 
-//  Find or create peer via its UUID string
+//  Find or create peer via its UUID
 
 static zyre_peer_t *
-s_require_peer (zyre_node_t *self, char *identity, char *address, uint16_t port)
+s_require_peer (zyre_node_t *self, zuuid_t *uuid, char *address, uint16_t port)
 {
-    zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, identity);
+    zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (!peer) {
         //  Purge any previous peer on same endpoint
         char endpoint [100];
         snprintf (endpoint, 100, "tcp://%s:%hu", address, port);
         zhash_foreach (self->peers, agent_peer_purge, endpoint);
 
-        peer = zyre_peer_new (self->ctx, self->peers, identity);
-        zyre_peer_connect (peer, self->identity, endpoint);
+        peer = zyre_peer_new (self->ctx, self->peers, uuid);
+        zyre_peer_connect (peer, self->uuid, endpoint);
 
         //  Handshake discovery by sending HELLO as first message
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
@@ -348,25 +345,26 @@ agent_recv_from_peer (zyre_node_t *self)
     if (msg == NULL)
         return 0;               //  Interrupted
 
-    char *identity = zframe_strdup (zre_msg_address (msg));
-        
+    //  First frame is sender identity, holding binary UUID
+    zuuid_t *uuid = zuuid_new ();
+    zuuid_set (uuid, zframe_data (zre_msg_address (msg)));
+
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist
-    zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, identity);
+    zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
-        peer = s_require_peer (
-            self, identity, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
+        peer = s_require_peer (self, uuid, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
         zyre_peer_set_ready (peer, true);
     }
     //  Ignore command if peer isn't ready
     if (peer == NULL || !zyre_peer_ready (peer)) {
-        free (identity);
         zre_msg_destroy (&msg);
+        zuuid_destroy (&uuid);
         return 0;
     }
     if (!zyre_peer_check_message (peer, msg)) {
-        zclock_log ("W: [%s] lost messages from %s", self->identity, identity);
+        zclock_log ("W: [%s] lost messages from %s", zuuid_str (self->uuid), zuuid_str (uuid));
         assert (false);
     }
 
@@ -374,7 +372,7 @@ agent_recv_from_peer (zyre_node_t *self)
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         //  Tell the caller about the peer
         zstr_sendm (self->pipe, "ENTER");
-        zstr_sendm (self->pipe, identity);
+        zstr_sendm (self->pipe, zuuid_str (uuid));
         zframe_t *headers = zhash_pack (zre_msg_headers (msg));
         zframe_send (&headers, self->pipe, 0);
         
@@ -400,7 +398,7 @@ agent_recv_from_peer (zyre_node_t *self)
         //  Pass up to caller API as WHISPER event
         zframe_t *cookie = zre_msg_content (msg);
         zstr_sendm (self->pipe, "WHISPER");
-        zstr_sendm (self->pipe, identity);
+        zstr_sendm (self->pipe, zuuid_str (uuid));
         zframe_send (&cookie, self->pipe, ZFRAME_REUSE); // let msg free the frame
     }
     else
@@ -408,7 +406,7 @@ agent_recv_from_peer (zyre_node_t *self)
         //  Pass up to caller as SHOUT event
         zframe_t *cookie = zre_msg_content (msg);
         zstr_sendm (self->pipe, "SHOUT");
-        zstr_sendm (self->pipe, identity);
+        zstr_sendm (self->pipe, zuuid_str (uuid));
         zstr_sendm (self->pipe, zre_msg_group (msg));
         zframe_send (&cookie, self->pipe, ZFRAME_REUSE); // let msg free the frame
     }
@@ -427,7 +425,7 @@ agent_recv_from_peer (zyre_node_t *self)
         s_leave_peer_group (self, peer, zre_msg_group (msg));
         assert (zre_msg_status (msg) == zyre_peer_status (peer));
     }
-    free (identity);
+    zuuid_destroy (&uuid);
     zre_msg_destroy (&msg);
     
     //  Activity from peer resets peer timers
@@ -459,8 +457,7 @@ agent_recv_beacon (zyre_node_t *self)
     if (is_valid) {
         zuuid_t *uuid = zuuid_new ();
         zuuid_set (uuid, beacon.uuid);
-        zyre_peer_t *peer = s_require_peer (
-            self, zuuid_str (uuid), ipaddress, ntohs (beacon.port));
+        zyre_peer_t *peer = s_require_peer (self, uuid, ipaddress, ntohs (beacon.port));
         zyre_peer_refresh (peer);
         zuuid_destroy (&uuid);
     }

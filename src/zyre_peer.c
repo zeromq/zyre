@@ -32,7 +32,7 @@
 struct _zyre_peer_t {
     zctx_t *ctx;                //  CZMQ context
     void *mailbox;              //  Socket through to peer
-    char *identity;             //  Identity string
+    zuuid_t *uuid;              //  Identity object
     char *endpoint;             //  Endpoint connected to
     uint64_t evasive_at;        //  Peer is being evasive
     uint64_t expired_at;        //  Peer has expired by now
@@ -59,20 +59,20 @@ s_delete_peer (void *argument)
 //  Construct new peer object
 
 zyre_peer_t *
-zyre_peer_new (zctx_t *ctx, zhash_t *container, char *identity)
+zyre_peer_new (zctx_t *ctx, zhash_t *container, zuuid_t *uuid)
 {
     zyre_peer_t *self = (zyre_peer_t *) zmalloc (sizeof (zyre_peer_t));
     self->ctx = ctx;
-    self->identity = strdup (identity);
+    self->uuid = zuuid_dup (uuid);
     self->ready = false;
     self->connected = false;
     self->sent_sequence = 0;
     self->want_sequence = 0;
-    
+
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, identity, self);
-        zhash_freefn (container, identity, s_delete_peer);
+        zhash_insert (container, zuuid_str (self->uuid), self);
+        zhash_freefn (container, zuuid_str (self->uuid), s_delete_peer);
     }
     return self;
 }
@@ -89,7 +89,7 @@ zyre_peer_destroy (zyre_peer_t **self_p)
         zyre_peer_t *self = *self_p;
         zyre_peer_disconnect (self);
         zhash_destroy (&self->headers);
-        free (self->identity);
+        zuuid_destroy (&self->uuid);
         free (self);
         *self_p = NULL;
     }
@@ -101,7 +101,7 @@ zyre_peer_destroy (zyre_peer_t **self_p)
 //  Configures mailbox and connects to peer's router endpoint
 
 void
-zyre_peer_connect (zyre_peer_t *self, char *reply_to, char *endpoint)
+zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
 {
     assert (self);
     assert (!self->connected);
@@ -110,9 +110,10 @@ zyre_peer_connect (zyre_peer_t *self, char *reply_to, char *endpoint)
     self->mailbox = zsocket_new (self->ctx, ZMQ_DEALER);
     //  Null if shutting down
     if (self->mailbox) {
-        //  Set our caller 'From' identity so that receiving node knows
-        //  who each message came from.
-        zsocket_set_identity (self->mailbox, reply_to);
+        //  Set our own identity on the socket so that receiving node
+        //  knows who each message came from.
+        zmq_setsockopt (self->mailbox, ZMQ_IDENTITY,
+                        zuuid_data (from), zuuid_size (from));
 
         //  Set a high-water mark that allows for reasonable activity
         zsocket_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
@@ -188,7 +189,7 @@ char *
 zyre_peer_identity (zyre_peer_t *self)
 {
     assert (self);
-    return self->identity;
+    return zuuid_str (self->uuid);
 }
 
 
@@ -346,9 +347,11 @@ zyre_peer_test (bool verbose)
     zsocket_bind (mailbox, "tcp://127.0.0.1:5555");
 
     zhash_t *peers = zhash_new ();
-    zyre_peer_t *peer = zyre_peer_new (ctx, peers, "you");
+    zuuid_t *you = zuuid_new ();
+    zuuid_t *me = zuuid_new ();
+    zyre_peer_t *peer = zyre_peer_new (ctx, peers, you);
     assert (!zyre_peer_connected (peer));
-    zyre_peer_connect (peer, "me", "tcp://127.0.0.1:5555");
+    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5555");
     assert (zyre_peer_connected (peer));
 
     zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
@@ -363,6 +366,8 @@ zyre_peer_test (bool verbose)
     zre_msg_destroy (&msg);
 
     //  Destroying container destroys all peers it contains
+    zuuid_destroy (&me);
+    zuuid_destroy (&you);
     zhash_destroy (&peers);
     zctx_destroy (&ctx);
 

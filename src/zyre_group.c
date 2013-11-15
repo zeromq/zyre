@@ -144,9 +144,11 @@ zyre_group_test (bool verbose)
     zyre_group_t *group = zyre_group_new ("tests", groups);
 
     zhash_t *peers = zhash_new ();
-    zyre_peer_t *peer = zyre_peer_new (ctx, peers, "you");
+    zuuid_t *you = zuuid_new ();
+    zuuid_t *me = zuuid_new ();
+    zyre_peer_t *peer = zyre_peer_new (ctx, peers, you);
     assert (!zyre_peer_connected (peer));
-    zyre_peer_connect (peer, "me", "tcp://127.0.0.1:5555");
+    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5555");
     assert (zyre_peer_connected (peer));
 
     zyre_group_join (group, peer);
@@ -161,6 +163,8 @@ zyre_group_test (bool verbose)
         zre_msg_dump (msg);
     zre_msg_destroy (&msg);
 
+    zuuid_destroy (&me);
+    zuuid_destroy (&you);
     zhash_destroy (&peers);
     zhash_destroy (&groups);
     zctx_destroy (&ctx);
