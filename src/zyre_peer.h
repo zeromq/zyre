@@ -35,7 +35,7 @@ typedef struct _zyre_peer_t zyre_peer_t;
 
 //  Constructor
 zyre_peer_t *
-    zyre_peer_new (zctx_t *ctx, zhash_t *container, char *identity);
+    zyre_peer_new (zctx_t *ctx, zhash_t *container, zuuid_t *uuid);
 
 //  Destructor
 void
@@ -43,7 +43,7 @@ void
 
 //  Connect peer mailbox
 void
-    zyre_peer_connect (zyre_peer_t *self, char *reply_to, char *endpoint);
+    zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint);
 
 //  Connect peer mailbox
 void

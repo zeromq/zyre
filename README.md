@@ -1,37 +1,148 @@
 # Zyre - an open-source framework for proximity-based peer-to-peer applications
 
-Zyre lets you build exciting apps that work across groups of PCs and mobile devices. Zyre works across all operating systems and languages. It uses standard WiFi to connect devices to each other in real-time. Zyre gives you simple group messaging, file transfer, and real-time events.
+## Description
 
-## Use Cases
+Zyre does local area discovery and clustering. A Zyre node broadcasts
+UDP beacons, and connects to peers that it finds. This class wraps a
+Zyre node with a message-based API.
 
-* We go on a road-trip, so I load up some tablets with movies for the kids to watch.
+All incoming events are zmsg_t messages delivered via the zyre_recv
+call. The first frame defines the type of the message, and following
+frames provide further values:
 
-* My kids are in the back seat during the road-trip, and they're playing a game together, each on their tablets.
+    ENTER fromnode headers
+        a new peer has entered the network
+    EXIT fromnode
+        a peer has left the network
+    JOIN fromnode groupname
+        a peer has joined a specific group
+    LEAVE fromnode groupname
+        a peer has joined a specific group
+    WHISPER fromnode message
+        a peer has sent this node a message
+    SHOUT fromnode groupname message
+        a peer has sent one of our groups a message
 
-* The car, a rental, streams music from my phone. The kids join in with their favorite tracks.
+In SHOUT and WHISPER the message is a single frame in this version
+of Zyre. In ENTER, the headers frame contains a packed dictionary,
+see zhash_pack/unpack.
 
-* As I take pictures with my camera, I can review, delete, edit them immediately on my tablet.
+To join or leave a group, use the zyre_join and zyre_leave methods.
+To set a header value, use the zyre_set_header method. To send a message
+to a single peer, use zyre_whisper. To send a message to a group, use
+zyre_shout.
 
-* I tap my phone to a reader in the hotel room, and we get Internet access on all our devices.
+## API
 
-* In the hotel bar, my wife and I can monitor the kids sleeping, with a secure video stream from the hotel room.
+    //  Constructor, creates a new Zyre node. Note that until you start the
+    //  node it is silent and invisible to other nodes on the network.
+    zyre_t *
+        zyre_new (zctx_t *ctx);
 
-* After the trip I share the photos with my cousin, sending them from my phone to his tablet.
+    //  Destructor, destroys a Zyre node. When you destroy a node, any
+    //  messages it is sending or receiving will be discarded.
+    void
+        zyre_destroy (zyre_t **self_p);
 
-* In the office, on Monday, I make an interactive presentation where everyone in the room can participate.
+    //  Set node header; these are provided to other nodes during discovery
+    //  and come in each ENTER message.
+    void
+        zyre_set_header (zyre_t *self, char *name, char *format, ...);
 
-* That evening at the game, we follow the shared photo feed and vote on the game pictures we like best.
+    //  Start node, after setting header values. When you start a node it
+    //  begins discovery and connection. There is no stop method; to stop
+    //  a node, destroy it.
+    void
+        zyre_start (zyre_t *self);
 
-* My photos are automatically copied to my laptop, and via the hard cable connection to my cloud storage.
+    //  Join a named group; after joining a group you can send messages to
+    //  the group and all Zyre nodes in that group will receive them.
+    int
+        zyre_join (zyre_t *self, const char *group);
 
-## Vision
+    //  Leave a group
+    int
+        zyre_leave (zyre_t *self, const char *group);
 
-Zyre will run on everything that speaks TCP/IP and has space for code. This means smartphones, tablets, laptops, servers, TVs, toasters, ebooks, smart lightbulbs, cameras, and dongles and devices of every denomination.
+    //  Receive next message from network; the message may be a control
+    //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
+    //  Returns zmsg_t object, or NULL if interrupted
+    zmsg_t *
+        zyre_recv (zyre_t *self);
+
+    //  Send message to single peer; peer ID is first frame in message
+    //  Destroys message after sending
+    int
+        zyre_whisper (zyre_t *self, zmsg_t **msg_p);
+
+    //  Send message to a group of peers
+    int
+        zyre_shout (zyre_t *self, zmsg_t **msg_p);
+
+    //  Return handle to the Zyre node, for polling
+    void *
+        zyre_socket (zyre_t *self);
+
+    //  Self test of this class
+    void
+        zyre_test (bool verbose);
+
+## Example
+
+    zctx_t *ctx = zctx_new ();
+    //  Create two nodes
+    zyre_t *node1 = zyre_new (ctx);
+    zyre_t *node2 = zyre_new (ctx);
+    zyre_set_header (node1, "X-FILEMQ", "tcp://128.0.0.1:6777");
+    zyre_set_header (node1, "X-HELLO", "World");
+    zyre_start (node1);
+    zyre_start (node2);
+    zyre_join (node1, "GLOBAL");
+    zyre_join (node2, "GLOBAL");
+
+    //  Give time for them to interconnect
+    zclock_sleep (250);
+
+    //  One node shouts to GLOBAL
+    zmsg_t *msg = zmsg_new ();
+    zmsg_addstr (msg, "GLOBAL");
+    zmsg_addstr (msg, "Hello, World");
+    zyre_shout (node1, &msg);
+
+    //  TODO: should timeout and not hang if there's no networking
+    //  ALSO why doesn't this work with localhost? zbeacon?
+    //  Second node should receive ENTER, JOIN, and SHOUT
+    msg = zyre_recv (node2);
+    char *command = zmsg_popstr (msg);
+    assert (streq (command, "ENTER"));
+    free (command);
+    char *peerid = zmsg_popstr (msg);
+    free (peerid);
+    zframe_t *headers_packed = zmsg_pop (msg);
+    zhash_t *headers = zhash_unpack (headers_packed);
+    zframe_destroy (&headers_packed);
+    assert (streq (zhash_lookup (headers, "X-HELLO"), "World"));
+    zhash_destroy (&headers);
+    zmsg_destroy (&msg);
+
+    msg = zyre_recv (node2);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "JOIN"));
+    free (command);
+    zmsg_destroy (&msg);
+
+    msg = zyre_recv (node2);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "SHOUT"));
+    free (command);
+    zmsg_destroy (&msg);
+
+    zyre_destroy (&node1);
+    zyre_destroy (&node2);
+    zctx_destroy (&ctx);
 
 ## Project Organization
 
-Zyre is a protocol (ZRE) plus a set of implementations. We've structured the project as a collection of interoperable implementations in different languages, starting with C and Java. All protocols are on the [0MQ protocol site](http://rfc.zeromq.org).
-
-## Who owns Zyre?
-
-Zyre is owned by all its authors and contributors. This is an open source project licensed under the LGPLv3. To contribute to Zyre please read the [C4.1 process](http://rfc.zeromq.org/spec:22) that we use.
+Zyre is owned by all its authors and contributors. This is an open source
+project licensed under the LGPLv3. To contribute to Zyre please read the
+[C4.1 process](http://rfc.zeromq.org/spec:22) that we use.

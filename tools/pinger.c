@@ -31,6 +31,7 @@ int main (int argc, char *argv [])
 {
     zctx_t *ctx = zctx_new ();
     zyre_t *node = zyre_new (ctx);
+    zyre_start (node);
     zyre_join (node, "GLOBAL");
 
     while (true) {

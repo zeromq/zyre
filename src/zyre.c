@@ -34,7 +34,7 @@
     call. The first frame defines the type of the message, and following
     frames provide further values:
 
-        ENTER fromnode x-zrelog x-filemq
+        ENTER fromnode headers
             a new peer has entered the network
         EXIT fromnode
             a peer has left the network
@@ -46,18 +46,16 @@
             a peer has sent this node a message
         SHOUT fromnode groupname message
             a peer has sent one of our groups a message
-
             
     In SHOUT and WHISPER the message is a single frame in this version
-    of Zyre. In ENTER, x-zrelog and x-filemq provide endpoints for the
-    ZRE/LOG and FileMQ services if the peer supports these.
+    of Zyre. In ENTER, the headers frame contains a packed dictionary,
+    see zhash_pack/unpack.
 
     To join or leave a group, use the zyre_join and zyre_leave methods.
-    To set a header value, use the zyre_set method. To send a message to
-    a single peer, use zyre_whisper. To send a message to a group, use
+    To set a header value, use the zyre_set_header method. To send a message
+    to a single peer, use zyre_whisper. To send a message to a group, use
     zyre_shout.
 @discuss
-    Todo: export peer header values to caller via API
     Todo: allow multipart contents
 @end
 */
@@ -73,7 +71,8 @@ struct _zyre_t {
 
 
 //  ---------------------------------------------------------------------
-//  Constructor
+//  Constructor, creates a new Zyre node. Note that until you start the
+//  node it is silent and invisible to other nodes on the network.
 
 zyre_t *
 zyre_new (zctx_t *ctx)
@@ -99,7 +98,8 @@ zyre_new (zctx_t *ctx)
 
 
 //  ---------------------------------------------------------------------
-//  Destructor
+//  Destructor, destroys a Zyre node. When you destroy a node, any
+//  messages it is sending or receiving will be discarded.
 
 void
 zyre_destroy (zyre_t **self_p)
@@ -115,21 +115,44 @@ zyre_destroy (zyre_t **self_p)
     }
 }
 
-//  ---------------------------------------------------------------------
-//  Receive next message from node
-//  Returns zmsg_t object, or NULL if interrupted
 
-zmsg_t *
-zyre_recv (zyre_t *self)
+//  ---------------------------------------------------------------------
+//  Set node header; these are provided to other nodes during discovery
+//  and come in each ENTER message.
+
+void
+zyre_set_header (zyre_t *self, char *name, char *format, ...)
 {
     assert (self);
-    zmsg_t *msg = zmsg_recv (self->pipe);
-    return msg;
+    va_list argptr;
+    va_start (argptr, format);
+    char *string = zsys_vprintf (format, argptr);
+    va_end (argptr);
+
+    zstr_sendm (self->pipe, "SET");
+    zstr_sendm (self->pipe, name);
+    zstr_send  (self->pipe, string);
+    free (string);
 }
 
 
 //  ---------------------------------------------------------------------
-//  Join a group
+//  Start node, after setting header values. When you start a node it
+//  begins discovery and connection. There is no stop method; to stop
+//  a node, destroy it.
+
+void
+zyre_start (zyre_t *self)
+{
+    zstr_send (self->pipe, "START");
+    char *reply = zstr_recv (self->pipe);
+    zstr_free (&reply);
+}
+
+
+//  ---------------------------------------------------------------------
+//  Join a named group; after joining a group you can send messages to
+//  the group and all Zyre nodes in that group will receive them.
 
 int
 zyre_join (zyre_t *self, const char *group)
@@ -151,6 +174,20 @@ zyre_leave (zyre_t *self, const char *group)
     zstr_sendm (self->pipe, "LEAVE");
     zstr_send  (self->pipe, group);
     return 0;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Receive next message from network; the message may be a control
+//  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
+//  Returns zmsg_t object, or NULL if interrupted
+
+zmsg_t *
+zyre_recv (zyre_t *self)
+{
+    assert (self);
+    zmsg_t *msg = zmsg_recv (self->pipe);
+    return msg;
 }
 
 
@@ -192,25 +229,6 @@ zyre_socket (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
-//  Set node property value
-
-void
-zyre_set (zyre_t *self, char *name, char *format, ...)
-{
-    assert (self);
-    va_list argptr;
-    va_start (argptr, format);
-    char *string = zsys_vprintf (format, argptr);
-    va_end (argptr);
-
-    zstr_sendm (self->pipe, "SET");
-    zstr_sendm (self->pipe, name);
-    zstr_send  (self->pipe, string);
-    free (string);
-}
-
-
 //  --------------------------------------------------------------------------
 //  Self test of this class
 
@@ -223,13 +241,14 @@ zyre_test (bool verbose)
     zctx_t *ctx = zctx_new ();
     //  Create two nodes
     zyre_t *node1 = zyre_new (ctx);
-    zyre_set (node1, "X-FILEMQ", "tcp://128.0.0.1:6777");
-    zyre_set (node1, "X-IGNORED", "Hello world");
-    zyre_join (node1, "GLOBAL");
-    
     zyre_t *node2 = zyre_new (ctx);
+    zyre_set_header (node1, "X-FILEMQ", "tcp://128.0.0.1:6777");
+    zyre_set_header (node1, "X-HELLO", "World");
+    zyre_start (node1);
+    zyre_start (node2);
+    zyre_join (node1, "GLOBAL");
     zyre_join (node2, "GLOBAL");
-    
+
     //  Give time for them to interconnect
     zclock_sleep (250);
 
@@ -239,12 +258,20 @@ zyre_test (bool verbose)
     zmsg_addstr (msg, "Hello, World");
     zyre_shout (node1, &msg);
 
+    //  TODO: should timeout and not hang if there's no networking
+    //  ALSO why doesn't this work with localhost? zbeacon?
     //  Second node should receive ENTER, JOIN, and SHOUT
     msg = zyre_recv (node2);
-    zmsg_dump (msg);
     char *command = zmsg_popstr (msg);
     assert (streq (command, "ENTER"));
     free (command);
+    char *peerid = zmsg_popstr (msg);
+    free (peerid);
+    zframe_t *headers_packed = zmsg_pop (msg);
+    zhash_t *headers = zhash_unpack (headers_packed);
+    zframe_destroy (&headers_packed);
+    assert (streq (zhash_lookup (headers, "X-HELLO"), "World"));
+    zhash_destroy (&headers);
     zmsg_destroy (&msg);
     
     msg = zyre_recv (node2);
