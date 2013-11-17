@@ -27,7 +27,6 @@
 #ifndef __ZYRE_CLASSES_H_INCLUDED__
 #define __ZYRE_CLASSES_H_INCLUDED__
 
-#include <czmq.h>
 #include "../include/zre_msg.h"
 #include "../include/zre_log_msg.h"
 #include "../include/zyre.h"
@@ -41,7 +40,5 @@
 #define PEER_EVASIVE     5000   //  Five seconds' silence is evasive
 #define PEER_EXPIRED    10000   //  Ten seconds' silence is expired
 #define REAP_INTERVAL    1000   //  Once per second
-
-
 
 #endif
