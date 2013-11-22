@@ -24,7 +24,7 @@
 //  --------------------------------------------------------------------------
 
 
-#include "zre.h"
+#include "zyre.h"
 
 //  This thread will listen and publish anything received
 //  on the CHAT group
@@ -32,12 +32,13 @@
 static void
 chat_task (void *args, zctx_t *ctx, void *pipe) 
 {
-    zre_node_t *node = zre_node_new ();
-    zre_node_join (node, "CHAT");
+    zyre_t *node = zyre_new (ctx);
+    zyre_start (node);
+    zyre_join (node, "CHAT");
     
     zmq_pollitem_t items [] = {
         { pipe, 0, ZMQ_POLLIN, 0 },
-        { zre_node_handle (node), 0, ZMQ_POLLIN, 0 }
+        { zyre_socket (node), 0, ZMQ_POLLIN, 0 }
     };
     while (true) {
         if (zmq_poll (items, 2, -1) == -1)
@@ -47,11 +48,11 @@ chat_task (void *args, zctx_t *ctx, void *pipe)
         if (items [0].revents & ZMQ_POLLIN) {
             zmsg_t *msg = zmsg_recv (pipe);
             zmsg_pushstr (msg, "CHAT");
-            zre_node_shout (node, &msg);
+            zyre_shout (node, &msg);
         }
         //  Activity on my node handle
         if (items [1].revents & ZMQ_POLLIN) {
-            zmsg_t *msg = zre_node_recv (node);
+            zmsg_t *msg = zyre_recv (node);
             zmsg_dump (msg);
             char *command = zmsg_popstr (msg);
             if (streq (command, "SHOUT")) {
@@ -66,7 +67,7 @@ chat_task (void *args, zctx_t *ctx, void *pipe)
             zmsg_destroy (&msg);
         }
     }
-    zre_node_destroy (&node);
+    zyre_destroy (&node);
 }
 
 int main (int argn, char *argv []) 
