@@ -69,17 +69,6 @@ struct _zyre_t {
     void *pipe;                 //  Pipe through to node
 };
 
-//  ---------------------------------------------------------------------
-//  Structure of zyre_msg class
-
-struct _zyre_msg_t {
-    char *command;      // command type of the message
-    char *peerid;         // uuid from router
-    zhash_t *headers;   // headers send by enter 
-    char *group;        // group name send by shout
-    zmsg_t *data;       // actual message data
-};
-
 
 //  ---------------------------------------------------------------------
 //  Constructor, creates a new Zyre node. Note that until you start the
@@ -123,37 +112,6 @@ zyre_destroy (zyre_t **self_p)
         zstr_free (&reply);
         free (self);
         *self_p = NULL;
-    }
-}
-
-//  ---------------------------------------------------------------------
-//  Constructor, creates a new Zyre message.
-
-zyre_msg_t *
-zyre_msg_new ()
-{
-    zyre_msg_t *self = (zyre_msg_t *) zmalloc(sizeof (zyre_t));
-    assert (self);
-
-    return self;
-}
-
-//  ---------------------------------------------------------------------
-//  Destructor, destroys a Zyre message.
-
-void
-zyre_msg_destroy (zyre_msg_t **self_p) 
-{
-    assert (self_p);
-    if (*self_p) {
-        zyre_msg_t *self = *self_p;
-        free (self->command);
-        free (self->peerid);
-        if (self->headers) 
-            zhash_destroy (&self->headers);
-        if (self->data)
-            zmsg_destroy (&self->data);
-        free (self->group);
     }
 }
 
@@ -224,32 +182,12 @@ zyre_leave (zyre_t *self, const char *group)
 //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
 //  Returns zmsg_t object, or NULL if interrupted
 
-zyre_msg_t *
+zmsg_t *
 zyre_recv (zyre_t *self)
 {
     assert (self);
     zmsg_t *msg = zmsg_recv (self->pipe);
-    
-    // recveice message, get command and peerid
-    zyre_msg_t *zyre_msg = zyre_msg_new (); 
-    zyre_msg->command = zmsg_popstr (msg);
-    zyre_msg->peerid = zmsg_popstr (msg);
-    
-    if (streq (zyre_msg->command, "ENTER")) {
-        // get and unpack headers
-        zframe_t *headers_packed = zmsg_pop (msg);
-        zyre_msg->headers = zhash_dup (zhash_unpack (headers_packed));
-        // cleanup
-        zframe_destroy (&headers_packed);
-    } else if (streq (zyre_msg->command, "SHOUT")) {
-        zyre_msg->group = zmsg_popstr (msg);        
-    }
-
-    
-    // rest of the message is data
-    zyre_msg->data = msg;
-
-    return zyre_msg;
+    return msg;
 }
 
 
@@ -258,11 +196,10 @@ zyre_recv (zyre_t *self)
 //  Destroys message after sending
 
 int
-zyre_whisper (zyre_t *self, zmsg_t **msg_p, char *peerid)
+zyre_whisper (zyre_t *self, zmsg_t **msg_p)
 {
     assert (self);
     zstr_sendm (self->pipe, "WHISPER");
-    zmsg_pushstr (*msg_p, peerid);
     zmsg_send (msg_p, self->pipe);
     return 0;
 }
@@ -272,11 +209,10 @@ zyre_whisper (zyre_t *self, zmsg_t **msg_p, char *peerid)
 //  Send message to a group of peers
 
 int
-zyre_shout (zyre_t *self, zmsg_t **msg_p, char *group)
+zyre_shout (zyre_t *self, zmsg_t **msg_p)
 {
     assert (self);
     zstr_sendm (self->pipe, "SHOUT");
-    zmsg_pushstr (*msg_p, group); // push group in fron of message
     zmsg_send (msg_p, self->pipe);
     return 0;
 }
@@ -292,55 +228,6 @@ zyre_socket (zyre_t *self)
     return self->pipe;
 }
 
-//  ---------------------------------------------------------------------
-//  Gets the message type
-
-char *
-zyre_msg_cmd (zyre_msg_t *self)
-{   
-    assert (self);
-    return self->command;
-}
-
-//  ---------------------------------------------------------------------
-//  Gets the message peer uuid
-
-char *
-zyre_msg_peerid (zyre_msg_t *self) 
-{
-    assert (self);
-    return self->peerid;
-}
-
-//  ---------------------------------------------------------------------
-//  Gets the message headers
-
-zhash_t *
-zyre_msg_headers (zyre_msg_t *self)
-{
-    assert (self);
-    return self->headers;  
-}
-
-//  ---------------------------------------------------------------------
-//  Gets the message group in case of shout
-
-char *
-zyre_msg_group (zyre_msg_t *self) 
-{
-    assert (self);
-    return self->group;
-}
-
-//  ---------------------------------------------------------------------
-//  Gets the actual message data
-
-zmsg_t *
-zyre_msg_data (zyre_msg_t *self) 
-{
-    assert (self);
-    return self->data;
-}
 
 //  --------------------------------------------------------------------------
 //  Self test of this class
@@ -367,33 +254,37 @@ zyre_test (bool verbose)
 
     //  One node shouts to GLOBAL
     zmsg_t *msg = zmsg_new ();
+    zmsg_addstr (msg, "GLOBAL");
     zmsg_addstr (msg, "Hello, World");
-    zyre_shout (node1, &msg, "GLOBAL");
+    zyre_shout (node1, &msg);
 
     //  TODO: should timeout and not hang if there's no networking
     //  ALSO why doesn't this work with localhost? zbeacon?
     //  Second node should receive ENTER, JOIN, and SHOUT
-   
-    // parse ENTER 
-    zyre_msg_t *zyre_msg = zyre_recv (node2);
-    msg = zyre_msg_data (zyre_msg);
-    assert (streq (zyre_msg_cmd (zyre_msg) , "ENTER"));
-    char *peerid = zyre_msg_peerid (zyre_msg);
-    zhash_t *headers = zyre_msg_headers (zyre_msg);
+    msg = zyre_recv (node2);
+    char *command = zmsg_popstr (msg);
+    assert (streq (command, "ENTER"));
+    free (command);
+    char *peerid = zmsg_popstr (msg);
+    free (peerid);
+    zframe_t *headers_packed = zmsg_pop (msg);
+    zhash_t *headers = zhash_unpack (headers_packed);
+    zframe_destroy (&headers_packed);
     assert (streq (zhash_lookup (headers, "X-HELLO"), "World"));
-    zyre_msg_destroy (&zyre_msg);
+    zhash_destroy (&headers);
+    zmsg_destroy (&msg);
     
-    // parse JOIN
-    zyre_msg = zyre_recv (node2);
-    assert (streq (zyre_msg_cmd (zyre_msg), "JOIN"));
-    zyre_msg_destroy (&zyre_msg);
+    msg = zyre_recv (node2);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "JOIN"));
+    free (command);
+    zmsg_destroy (&msg);
     
-    // parse SHOUT
-    zyre_msg = zyre_recv (node2);
-    msg = zyre_msg_data (zyre_msg);
-    assert (streq (zyre_msg_cmd (zyre_msg), "SHOUT"));
-    assert (streq (zyre_msg_group (zyre_msg), "GLOBAL"));
-    zyre_msg_destroy (&zyre_msg);
+    msg = zyre_recv (node2);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "SHOUT"));
+    free (command);
+    zmsg_destroy (&msg);
     
     zyre_destroy (&node1);
     zyre_destroy (&node2);

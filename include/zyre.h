@@ -52,8 +52,6 @@ extern "C" {
 
 typedef struct _zyre_t zyre_t;
 
-typedef struct _zyre_msg_t zyre_msg_t;
-
 //  @interface
 //  Constructor, creates a new Zyre node. Note that until you start the
 //  node it is silent and invisible to other nodes on the network.
@@ -64,10 +62,6 @@ CZMQ_EXPORT zyre_t *
 //  messages it is sending or receiving will be discarded.
 CZMQ_EXPORT void
     zyre_destroy (zyre_t **self_p);
-
-//  Destructor, destroys a Zyre message.
-CZMQ_EXPORT void
-    zyre_msg_destroy (zyre_msg_t **self_p);
 
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
@@ -92,17 +86,17 @@ CZMQ_EXPORT int
 //  Receive next message from network; the message may be a control
 //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
 //  Returns zmsg_t object, or NULL if interrupted
-CZMQ_EXPORT zyre_msg_t *
+CZMQ_EXPORT zmsg_t *
     zyre_recv (zyre_t *self);
 
 //  Send message to single peer; peer ID is first frame in message
 //  Destroys message after sending
 CZMQ_EXPORT int
-    zyre_whisper (zyre_t *self, zmsg_t **msg_p, char *peerid);
+    zyre_whisper (zyre_t *self, zmsg_t **msg_p);
 
 //  Send message to a group of peers
 CZMQ_EXPORT int
-    zyre_shout (zyre_t *self, zmsg_t **msg_p, char *group);
+    zyre_shout (zyre_t *self, zmsg_t **msg_p);
 
 //  Return handle to the Zyre node, for polling
 CZMQ_EXPORT void *
@@ -111,27 +105,6 @@ CZMQ_EXPORT void *
 //  Self test of this class
 CZMQ_EXPORT void
     zyre_test (bool verbose);
-
-//  Gets the message type 
-CZMQ_EXPORT char *
-    zyre_msg_cmd (zyre_msg_t *self);
-
-//  Gets the peer that did send the message
-CZMQ_EXPORT char *
-    zyre_msg_peerid (zyre_msg_t *self);
-
-// Gets the headers that enter send
-CZMQ_EXPORT zhash_t *
-    zyre_msg_headers (zyre_msg_t *self);
-
-//  Gets the group name that shout send
-CZMQ_EXPORT char *
-    zyre_msg_group (zyre_msg_t *self);
-
-//  Gets the actual message data
-CZMQ_EXPORT zmsg_t *
-    zyre_msg_data (zyre_msg_t *self);
-
 //  @end
 
 #ifdef __cplusplus
@@ -139,3 +112,4 @@ CZMQ_EXPORT zmsg_t *
 #endif
 
 #endif
+

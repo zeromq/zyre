@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zyre_classes - all classes in proper order for building
+    zyre_msg.h - Parsing Zyre messages
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
@@ -24,24 +24,49 @@
     =========================================================================
 */
 
-#ifndef __ZYRE_CLASSES_H_INCLUDED__
-#define __ZYRE_CLASSES_H_INCLUDED__
+#ifndef __ZYRE_MSG_H_INCLUDED__
+#define __ZYRE_MSG_H_INCLUDED__
 
-#include <czmq.h>
-#include "../include/zre_msg.h"
-#include "../include/zre_log_msg.h"
-#include "../include/zyre.h"
-#include "../include/zyre_msg.h"
-#include "zyre_peer.h"
-#include "zyre_group.h"
-#include "zyre_log.h"
-#include "zyre_node.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-//  Constants, to be configured/reviewed
-#define PEER_EVASIVE     5000   //  Five seconds' silence is evasive
-#define PEER_EXPIRED    10000   //  Ten seconds' silence is expired
-#define REAP_INTERVAL    1000   //  Once per second
+typedef struct _zyre_msg_t zyre_msg_t;
 
+//  Destructor, destroys a Zyre message.
+CZMQ_EXPORT void
+    zyre_msg_destroy (zyre_msg_t **self_p);
 
+// Wrapper for zyre_recv
+CZMQ_EXPORT zyre_msg_t *
+    zyre_msg_recv (zyre_t *self);
+
+//  Gets the message type 
+CZMQ_EXPORT char *
+    zyre_msg_cmd (zyre_msg_t *self);
+
+//  Gets the peer that did send the message
+CZMQ_EXPORT char *
+    zyre_msg_peerid (zyre_msg_t *self);
+
+// Gets the headers that enter send
+CZMQ_EXPORT zhash_t *
+    zyre_msg_headers (zyre_msg_t *self);
+
+//  Gets the group name that shout send
+CZMQ_EXPORT char *
+    zyre_msg_group (zyre_msg_t *self);
+
+//  Gets the actual message data
+CZMQ_EXPORT zmsg_t *
+    zyre_msg_data (zyre_msg_t *self);
+
+// Self test of this class
+CZMQ_EXPORT void
+    zyre_msg_test (bool verbose);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
