@@ -292,3 +292,4 @@ zyre_test (bool verbose)
     //  @end
     printf ("OK\n");
 }
+
