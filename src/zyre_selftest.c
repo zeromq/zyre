@@ -41,7 +41,7 @@ int main (int argc, char *argv [])
     zyre_group_test (verbose);
     zyre_node_test (verbose);
     zyre_test (verbose);
-    zyre_msg_test (verbose);
+    zyre_event_test (verbose);
     printf ("Tests passed OK\n");
     return 0;
 }

@@ -43,3 +43,8 @@ src/test-suite.log
 src/zyre_selftest.log
 src/zyre_selftest.trs
 
+src/zyre_logger
+src/zyre_perf_local
+src/zyre_perf_remote
+src/zyre_ping
+src/zyre_tester

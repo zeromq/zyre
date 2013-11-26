@@ -11,7 +11,7 @@ libzyre_la_include_HEADERS = \
     zyre_node.h \
     ../include/zre_msg.h \
     ../include/zre_log_msg.h \
-    ../include/zyre_msg.h \
+    ../include/zyre_event.h \
     ../include/zyre.h
 
 libzyre_la_SOURCES = \
@@ -21,7 +21,7 @@ libzyre_la_SOURCES = \
     zyre_node.c \
     zre_msg.c \
     zre_log_msg.c \
-    zyre_msg.c \
+    zyre_event.c \
     zyre.c
 
 INCLUDES = -I$(top_srcdir)/include
