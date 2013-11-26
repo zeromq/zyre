@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zyre_msg.h - Parsing Zyre messages
+    zyre_event.h - Parsing Zyre messages
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
@@ -24,60 +24,60 @@
     =========================================================================
 */
 
-#ifndef __ZYRE_MSG_H_INCLUDED__
-#define __ZYRE_MSG_H_INCLUDED__
+#ifndef __ZYRE_EVENT_H_INCLUDED__
+#define __ZYRE_EVENT_H_INCLUDED__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct _zyre_msg_t zyre_msg_t;
+typedef struct _zyre_event_t zyre_event_t;
 
 // @interface
-#define ZYRE_MSG_ENTER 0x1
-#define ZYRE_MSG_JOIN 0x2
-#define ZYRE_MSG_LEAVE 0x3
-#define ZYRE_MSG_EXIT 0x4
-#define ZYRE_MSG_WHISPER 0x5
-#define ZYRE_MSG_SHOUT 0x6
+#define ZYRE_EVENT_ENTER 0x1
+#define ZYRE_EVENT_JOIN 0x2
+#define ZYRE_EVENT_LEAVE 0x3
+#define ZYRE_EVENT_EXIT 0x4
+#define ZYRE_EVENT_WHISPER 0x5
+#define ZYRE_EVENT_SHOUT 0x6
 
 //  Destructor, destroys a Zyre message.
 CZMQ_EXPORT void
-    zyre_msg_destroy (zyre_msg_t **self_p);
+    zyre_event_destroy (zyre_event_t **self_p);
 
 // Wrapper for zyre_recv
-CZMQ_EXPORT zyre_msg_t *
-    zyre_msg_recv (zyre_t *self);
+CZMQ_EXPORT zyre_event_t *
+    zyre_event_recv (zyre_t *self);
 
 // Returns message command which can be used in
 // swtich case with defines above.
 CZMQ_EXPORT int
-    zyre_msg_cmd (zyre_msg_t *self);
+    zyre_event_cmd (zyre_event_t *self);
 
 //  Return the sending peer's id
 CZMQ_EXPORT char *
-    zyre_msg_peerid (zyre_msg_t *self);
+    zyre_event_peerid (zyre_event_t *self);
 
 // Returns all headers or NULL
 CZMQ_EXPORT zhash_t *
-    zyre_msg_headers (zyre_msg_t *self);
+    zyre_event_headers (zyre_event_t *self);
 
 //  Returns value of header attribute name from the message headers 
 //  obtained by ENTER. Return NULL if no value was found.
 CZMQ_EXPORT char *
-    zyre_msg_get_header (zyre_msg_t *self, char *name);
+    zyre_event_get_header (zyre_event_t *self, char *name);
 
 //  Returns the group name that has been shouted 
 CZMQ_EXPORT char *
-    zyre_msg_group (zyre_msg_t *self);
+    zyre_event_group (zyre_event_t *self);
 
 //  Returns the actual message data without any Zyre meta data
 CZMQ_EXPORT zmsg_t *
-    zyre_msg_data (zyre_msg_t *self);
+    zyre_event_data (zyre_event_t *self);
 
 // Self test of this class
 CZMQ_EXPORT void
-    zyre_msg_test (bool verbose);
+    zyre_event_test (bool verbose);
 // @end
 
 #ifdef __cplusplus
