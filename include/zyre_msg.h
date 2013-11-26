@@ -33,6 +33,14 @@ extern "C" {
 
 typedef struct _zyre_msg_t zyre_msg_t;
 
+// @interface
+#define ZYRE_MSG_ENTER 0x1
+#define ZYRE_MSG_JOIN 0x2
+#define ZYRE_MSG_LEAVE 0x3
+#define ZYRE_MSG_EXIT 0x4
+#define ZYRE_MSG_WHISPER 0x5
+#define ZYRE_MSG_SHOUT 0x6
+
 //  Destructor, destroys a Zyre message.
 CZMQ_EXPORT void
     zyre_msg_destroy (zyre_msg_t **self_p);
@@ -41,29 +49,36 @@ CZMQ_EXPORT void
 CZMQ_EXPORT zyre_msg_t *
     zyre_msg_recv (zyre_t *self);
 
-//  Gets the message type 
-CZMQ_EXPORT char *
+// Returns message command which can be used in
+// swtich case with defines above.
+CZMQ_EXPORT int
     zyre_msg_cmd (zyre_msg_t *self);
 
-//  Gets the peer that did send the message
+//  Return the sending peer's id
 CZMQ_EXPORT char *
     zyre_msg_peerid (zyre_msg_t *self);
 
-// Gets the headers that enter send
+// Returns all headers or NULL
 CZMQ_EXPORT zhash_t *
     zyre_msg_headers (zyre_msg_t *self);
 
-//  Gets the group name that shout send
+//  Returns value of header attribute name from the message headers 
+//  obtained by ENTER. Return NULL if no value was found.
+CZMQ_EXPORT char *
+    zyre_msg_get_header (zyre_msg_t *self, char *name);
+
+//  Returns the group name that has been shouted 
 CZMQ_EXPORT char *
     zyre_msg_group (zyre_msg_t *self);
 
-//  Gets the actual message data
+//  Returns the actual message data without any Zyre meta data
 CZMQ_EXPORT zmsg_t *
     zyre_msg_data (zyre_msg_t *self);
 
 // Self test of this class
 CZMQ_EXPORT void
     zyre_msg_test (bool verbose);
+// @end
 
 #ifdef __cplusplus
 }

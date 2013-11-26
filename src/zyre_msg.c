@@ -36,7 +36,7 @@
 //  Structure of zyre_msg class
 
 struct _zyre_msg_t {
-    char *command;      // command type of the message
+    int command;      // command type of the message
     char *peerid;         // uuid from router
     zhash_t *headers;   // headers send by enter 
     char *group;        // group name send by shout
@@ -64,7 +64,6 @@ zyre_msg_destroy (zyre_msg_t **self_p)
     assert (self_p);
     if (*self_p) {
         zyre_msg_t *self = *self_p;
-        free (self->command);
         free (self->peerid);
         if (self->headers) 
             zhash_destroy (&self->headers);
@@ -85,16 +84,36 @@ zyre_msg_recv (zyre_t *self)
     assert (self);
     zmsg_t *msg = zyre_recv (self);
     zyre_msg_t *zyre_msg = zyre_msg_new (); 
-    zyre_msg->command = zmsg_popstr (msg);
+    char *command = zmsg_popstr (msg);
     zyre_msg->peerid = zmsg_popstr (msg);
     
-    if (streq (zyre_msg->command, "ENTER")) {
+    if (streq (command, "ENTER")) {
+        zyre_msg->command = ZYRE_MSG_ENTER;
         // get and unpack headers
         zframe_t *headers_packed = zmsg_pop (msg);
         zyre_msg->headers = zhash_dup (zhash_unpack (headers_packed));
         // cleanup
         zframe_destroy (&headers_packed);
-    } else if (streq (zyre_msg->command, "SHOUT")) {
+    }
+    else
+    if (streq (command, "JOIN")) {
+       zyre_msg->command = ZYRE_MSG_JOIN;
+    }
+    else
+    if (streq (command, "LEAVE")) {
+        zyre_msg->command = ZYRE_MSG_LEAVE;
+    }
+    else
+    if (streq (command, "EXIT")) {
+        zyre_msg->command = ZYRE_MSG_EXIT;
+    }
+    else
+    if (streq (command, "WHISPER")) {
+        zyre_msg->command = ZYRE_MSG_WHISPER;
+    }
+    else 
+    if (streq (command, "SHOUT")) {
+        zyre_msg->command = ZYRE_MSG_SHOUT;
         zyre_msg->group = zmsg_popstr (msg);        
     }
 
@@ -108,7 +127,7 @@ zyre_msg_recv (zyre_t *self)
 //  ---------------------------------------------------------------------
 //  Gets the message type
 
-char *
+int
 zyre_msg_cmd (zyre_msg_t *self)
 {   
     assert (self);
@@ -133,6 +152,18 @@ zyre_msg_headers (zyre_msg_t *self)
 {
     assert (self);
     return self->headers;  
+}
+
+//  ---------------------------------------------------------------------
+//  Gets message a header value from the headers 
+//  obtained by ENTER message.
+
+char *
+zyre_msg_get_header (zyre_msg_t *self, char *name) 
+{
+    assert (self);
+    zhash_t *headers = zyre_msg_headers (self);
+    return zhash_lookup (headers, name);
 }
 
 //  ---------------------------------------------------------------------
@@ -191,21 +222,20 @@ zyre_msg_test (bool verbose)
     // parse ENTER 
     zyre_msg_t *zyre_msg = zyre_msg_recv (node2);
     msg = zyre_msg_data (zyre_msg);
-    assert (streq (zyre_msg_cmd (zyre_msg) , "ENTER"));
+    assert (zyre_msg_cmd (zyre_msg) == ZYRE_MSG_ENTER);
     char *peerid = zyre_msg_peerid (zyre_msg);
-    zhash_t *headers = zyre_msg_headers (zyre_msg);
-    assert (streq (zhash_lookup (headers, "X-HELLO"), "World"));
+    assert (streq (zyre_msg_get_header (zyre_msg, "X-HELLO"), "World"));
     zyre_msg_destroy (&zyre_msg);
     
     // parse JOIN
     zyre_msg = zyre_msg_recv (node2);
-    assert (streq (zyre_msg_cmd (zyre_msg), "JOIN"));
+    assert (zyre_msg_cmd (zyre_msg) == ZYRE_MSG_JOIN);
     zyre_msg_destroy (&zyre_msg);
     
     // parse SHOUT
     zyre_msg = zyre_msg_recv (node2);
     msg = zyre_msg_data (zyre_msg);
-    assert (streq (zyre_msg_cmd (zyre_msg), "SHOUT"));
+    assert (zyre_msg_cmd (zyre_msg) == ZYRE_MSG_SHOUT);
     assert (streq (zyre_msg_group (zyre_msg), "GLOBAL"));
     zyre_msg_destroy (&zyre_msg);
     
