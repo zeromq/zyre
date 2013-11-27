@@ -27,6 +27,7 @@
 #ifndef __ZYRE_CLASSES_H_INCLUDED__
 #define __ZYRE_CLASSES_H_INCLUDED__
 
+#include "../include/zyre.h"
 #include "../include/zre_msg.h"
 #include "../include/zre_log_msg.h"
 #include "../include/zyre.h"

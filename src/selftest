@@ -1,6 +1,6 @@
 #  Run selftests and check memory
 echo "Rebuilding zyre_selftest..."
-gcc -g -o zyre_selftest z*.c ${CFLAGS} ${LDFLAGS} -lczmq -lzmq -lpthread -lsodium
+gcc -g -o zyre_selftest z*.c ${CFLAGS} ${LDFLAGS} -lczmq -lzmq -lpthread 
 if [ $? -eq 0 ]; then
     echo "Starting Valgrind memcheck..."
     valgrind --tool=memcheck --leak-check=full --suppressions=valgrind.supp ./zyre_selftest -v
