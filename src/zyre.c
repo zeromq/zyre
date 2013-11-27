@@ -262,25 +262,31 @@ zyre_test (bool verbose)
     //  ALSO why doesn't this work with localhost? zbeacon?
     //  Second node should receive ENTER, JOIN, and SHOUT
     msg = zyre_recv (node2);
+    assert (msg);
     char *command = zmsg_popstr (msg);
     assert (streq (command, "ENTER"));
     free (command);
     char *peerid = zmsg_popstr (msg);
     free (peerid);
     zframe_t *headers_packed = zmsg_pop (msg);
+
+    assert (headers_packed);
     zhash_t *headers = zhash_unpack (headers_packed);
+    assert (headers);
     zframe_destroy (&headers_packed);
     assert (streq (zhash_lookup (headers, "X-HELLO"), "World"));
     zhash_destroy (&headers);
     zmsg_destroy (&msg);
     
     msg = zyre_recv (node2);
+    assert (msg);
     command = zmsg_popstr (msg);
     assert (streq (command, "JOIN"));
     free (command);
     zmsg_destroy (&msg);
     
     msg = zyre_recv (node2);
+    assert (msg);
     command = zmsg_popstr (msg);
     assert (streq (command, "SHOUT"));
     free (command);

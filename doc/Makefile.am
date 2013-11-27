@@ -1,5 +1,5 @@
 MAN1 = 
-MAN3 = zyre.3 zre_msg.3 zre_log_msg.3
+MAN3 = zyre.3 zyre_event.3 zre_msg.3 zre_log_msg.3
 MAN7 = 
 MAN_DOC = $(MAN1) $(MAN3) $(MAN7)
 

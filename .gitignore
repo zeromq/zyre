@@ -32,9 +32,9 @@ core
 .cache
 testit
 *.pc
-pinger
-logger
-tester
+zpinger
+zlogger
+ztester
 perf_local
 perf_remote
 zyre_selftest
