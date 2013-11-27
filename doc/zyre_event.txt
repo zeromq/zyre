@@ -1,0 +1,122 @@
+zyre_event(3)
+=============
+
+NAME
+----
+zyre_event - no title found
+
+SYNOPSIS
+--------
+----
+typedef enum {
+    ZYRE_EVENT_ENTER = 1,
+    ZYRE_EVENT_JOIN = 2,
+    ZYRE_EVENT_LEAVE = 3,
+    ZYRE_EVENT_EXIT = 4,
+    ZYRE_EVENT_WHISPER = 5,
+    ZYRE_EVENT_SHOUT = 6
+} zyre_event_type_t;
+
+//  Constructor; creates a new event of a specified type
+CZMQ_EXPORT zyre_event_t *
+    zyre_event_new (zyre_event_type_t type);
+
+//  Destructor; destroys an event instance
+CZMQ_EXPORT void
+    zyre_event_destroy (zyre_event_t **self_p);
+
+//  Receive an event from the zyre node, wraps zyre_recv.
+//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE)
+//  or data (WHISPER, SHOUT).
+CZMQ_EXPORT zyre_event_t *
+    zyre_event_recv (zyre_t *self);
+
+//  Returns event type, which is a zyre_event_type_t
+CZMQ_EXPORT zyre_event_type_t
+    zyre_event_type (zyre_event_t *self);
+
+//  Return the sending peer's id as a string
+CZMQ_EXPORT char *
+    zyre_event_sender (zyre_event_t *self);
+
+//  Returns the event headers, or NULL if there are none
+CZMQ_EXPORT zhash_t *
+    zyre_event_headers (zyre_event_t *self);
+
+//  Returns value of a header from the message headers
+//  obtained by ENTER. Return NULL if no value was found.
+CZMQ_EXPORT char *
+    zyre_event_header (zyre_event_t *self, char *name);
+
+//  Returns the group name that a SHOUT event was sent to
+CZMQ_EXPORT char *
+    zyre_event_group (zyre_event_t *self);
+
+//  Returns the message payload (currently one frame)
+CZMQ_EXPORT zmsg_t *
+    zyre_event_msg (zyre_event_t *self);
+
+// Self test of this class
+CZMQ_EXPORT void
+    zyre_event_test (bool verbose);
+----
+
+DESCRIPTION
+-----------
+
+This class provides a higher-level API to the zyre_recv call, by doing
+work that you will want to do in many cases, such as unpacking the peer
+headers for each ENTER event received.
+
+The current implementation does not allow sending of events though this
+would be a natural extension.
+
+EXAMPLE
+-------
+.From zyre_event_test method
+----
+    zctx_t *ctx = zctx_new ();
+    //  Create two nodes
+    zyre_t *node1 = zyre_new (ctx);
+    zyre_t *node2 = zyre_new (ctx);
+    zyre_set_header (node1, "X-FILEMQ", "tcp://128.0.0.1:6777");
+    zyre_set_header (node1, "X-HELLO", "World");
+    zyre_start (node1);
+    zyre_start (node2);
+    zyre_join (node1, "GLOBAL");
+    zyre_join (node2, "GLOBAL");
+
+    //  Give time for them to interconnect
+    zclock_sleep (250);
+
+    //  One node shouts to GLOBAL
+    zmsg_t *msg = zmsg_new ();
+    zmsg_addstr (msg, "GLOBAL");
+    zmsg_addstr (msg, "Hello, World");
+    zyre_shout (node1, &msg);
+
+    //  Parse ENTER
+    zyre_event_t *zyre_event = zyre_event_recv (node2);
+    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_ENTER);
+    char *sender = zyre_event_sender (zyre_event);
+    assert (streq (zyre_event_header (zyre_event, "X-HELLO"), "World"));
+    msg = zyre_event_msg (zyre_event);
+    zyre_event_destroy (&zyre_event);
+    
+    //  Parse JOIN
+    zyre_event = zyre_event_recv (node2);
+    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_JOIN);
+    zyre_event_destroy (&zyre_event);
+    
+    //  Parse SHOUT
+    zyre_event = zyre_event_recv (node2);
+    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_SHOUT);
+    assert (streq (zyre_event_group (zyre_event), "GLOBAL"));
+    msg = zyre_event_msg (zyre_event);
+    zyre_event_destroy (&zyre_event);
+    
+    zyre_destroy (&node1);
+    zyre_destroy (&node2);
+    zctx_destroy (&ctx);
+----
+

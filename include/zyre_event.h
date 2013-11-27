@@ -34,46 +34,53 @@ extern "C" {
 typedef struct _zyre_event_t zyre_event_t;
 
 // @interface
-#define ZYRE_EVENT_ENTER 0x1
-#define ZYRE_EVENT_JOIN 0x2
-#define ZYRE_EVENT_LEAVE 0x3
-#define ZYRE_EVENT_EXIT 0x4
-#define ZYRE_EVENT_WHISPER 0x5
-#define ZYRE_EVENT_SHOUT 0x6
+typedef enum {
+    ZYRE_EVENT_ENTER = 1,
+    ZYRE_EVENT_JOIN = 2,
+    ZYRE_EVENT_LEAVE = 3,
+    ZYRE_EVENT_EXIT = 4,
+    ZYRE_EVENT_WHISPER = 5,
+    ZYRE_EVENT_SHOUT = 6
+} zyre_event_type_t;
 
-//  Destructor, destroys a Zyre message.
+//  Constructor; creates a new event of a specified type
+CZMQ_EXPORT zyre_event_t *
+    zyre_event_new (zyre_event_type_t type);
+
+//  Destructor; destroys an event instance
 CZMQ_EXPORT void
     zyre_event_destroy (zyre_event_t **self_p);
 
-// Wrapper for zyre_recv
+//  Receive an event from the zyre node, wraps zyre_recv.
+//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE)
+//  or data (WHISPER, SHOUT).
 CZMQ_EXPORT zyre_event_t *
     zyre_event_recv (zyre_t *self);
 
-// Returns message command which can be used in
-// swtich case with defines above.
-CZMQ_EXPORT int
-    zyre_event_cmd (zyre_event_t *self);
+//  Returns event type, which is a zyre_event_type_t
+CZMQ_EXPORT zyre_event_type_t
+    zyre_event_type (zyre_event_t *self);
 
-//  Return the sending peer's id
+//  Return the sending peer's id as a string
 CZMQ_EXPORT char *
-    zyre_event_peerid (zyre_event_t *self);
+    zyre_event_sender (zyre_event_t *self);
 
-// Returns all headers or NULL
+//  Returns the event headers, or NULL if there are none
 CZMQ_EXPORT zhash_t *
     zyre_event_headers (zyre_event_t *self);
 
-//  Returns value of header attribute name from the message headers 
+//  Returns value of a header from the message headers
 //  obtained by ENTER. Return NULL if no value was found.
 CZMQ_EXPORT char *
-    zyre_event_get_header (zyre_event_t *self, char *name);
+    zyre_event_header (zyre_event_t *self, char *name);
 
-//  Returns the group name that has been shouted 
+//  Returns the group name that a SHOUT event was sent to
 CZMQ_EXPORT char *
     zyre_event_group (zyre_event_t *self);
 
-//  Returns the actual message data without any Zyre meta data
+//  Returns the message payload (currently one frame)
 CZMQ_EXPORT zmsg_t *
-    zyre_event_data (zyre_event_t *self);
+    zyre_event_msg (zyre_event_t *self);
 
 // Self test of this class
 CZMQ_EXPORT void
