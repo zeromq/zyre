@@ -5,16 +5,16 @@ pkgconfig_DATA = libzyre.pc
 
 libzyre_la_includedir = $(includedir)
 libzyre_la_include_HEADERS = \
-    zyre_log.h \
-    zyre_peer.h \
-    zyre_group.h \
-    zyre_node.h \
     ../include/zre_msg.h \
     ../include/zre_log_msg.h \
     ../include/zyre_event.h \
     ../include/zyre.h
 
 libzyre_la_SOURCES = \
+    zyre_log.h \
+    zyre_peer.h \
+    zyre_group.h \
+    zyre_node.h \
     zyre_log.c \
     zyre_group.c \
     zyre_peer.c \

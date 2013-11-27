@@ -111,5 +111,9 @@ CZMQ_EXPORT void
 }
 #endif
 
+//  Additional public API classes
+
+#include "zyre_event.h"
+
 #endif
 
