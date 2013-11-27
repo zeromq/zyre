@@ -26,7 +26,12 @@
 
 /*
 @header
+    This class provides a higher-level API to the zyre_recv call, by doing
+    work that you will want to do in many cases, such as unpacking the peer
+    headers for each ENTER event received.
 @discuss
+    The current implementation does not allow sending of events though this
+    would be a natural extension.
 @end
 */
 
@@ -36,155 +41,165 @@
 //  Structure of zyre_event class
 
 struct _zyre_event_t {
-    int command;      // command type of the message
-    char *peerid;         // uuid from router
-    zhash_t *headers;   // headers send by enter 
-    char *group;        // group name send by shout
-    zmsg_t *data;       // actual message data
+    zyre_event_type_t type; //  Event type
+    char *sender;           //  Sender UUID as string
+    zhash_t *headers;       //  Headers, for a ENTER event
+    char *group;            //  Group name for a SHOUT event
+    zmsg_t *msg;            //  Message payload for SHOUT or WHISPER
 };
 
+
 //  ---------------------------------------------------------------------
-//  Constructor, creates a new Zyre message.
+//  Constructor; creates a new event of a specified type
 
 zyre_event_t *
-zyre_event_new ()
+zyre_event_new (zyre_event_type_t type)
 {
     zyre_event_t *self = (zyre_event_t *) zmalloc (sizeof (zyre_event_t));
     assert (self);
-
+    self->type = type;
     return self;
 }
 
+
 //  ---------------------------------------------------------------------
-//  Destructor, destroys a Zyre message.
+//  Destructor; destroys an event instance
 
 void
-zyre_event_destroy (zyre_event_t **self_p) 
+zyre_event_destroy (zyre_event_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
         zyre_event_t *self = *self_p;
-        free (self->peerid);
-        if (self->headers) 
-            zhash_destroy (&self->headers);
-        if (self->data)
-            zmsg_destroy (&self->data);
+        free (self->sender);
         free (self->group);
+        zhash_destroy (&self->headers);
+        zmsg_destroy (&self->msg);
+        free (self);
+        *self_p = NULL;
     }
 }
 
+
 //  ---------------------------------------------------------------------
-//  Receive next message from network; the message may be a control
-//  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
-//  Returns zmsg_t object, or NULL if interrupted
+//  Receive an event from the zyre node, wraps zyre_recv.
+//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE)
+//  or data (WHISPER, SHOUT).
 
 zyre_event_t *
 zyre_event_recv (zyre_t *self)
 {
     assert (self);
     zmsg_t *msg = zyre_recv (self);
-    zyre_event_t *zyre_event = zyre_event_new (); 
-    char *command = zmsg_popstr (msg);
-    zyre_event->peerid = zmsg_popstr (msg);
-    
-    if (streq (command, "ENTER")) {
-        zyre_event->command = ZYRE_EVENT_ENTER;
-        // get and unpack headers
-        zframe_t *headers_packed = zmsg_pop (msg);
-        zyre_event->headers = zhash_dup (zhash_unpack (headers_packed));
-        // cleanup
-        zframe_destroy (&headers_packed);
-    }
-    else
-    if (streq (command, "JOIN")) {
-       zyre_event->command = ZYRE_EVENT_JOIN;
-    }
-    else
-    if (streq (command, "LEAVE")) {
-        zyre_event->command = ZYRE_EVENT_LEAVE;
-    }
-    else
-    if (streq (command, "EXIT")) {
-        zyre_event->command = ZYRE_EVENT_EXIT;
-    }
-    else
-    if (streq (command, "WHISPER")) {
-        zyre_event->command = ZYRE_EVENT_WHISPER;
-    }
-    else 
-    if (streq (command, "SHOUT")) {
-        zyre_event->command = ZYRE_EVENT_SHOUT;
-        zyre_event->group = zmsg_popstr (msg);        
-    }
+    zmsg_dump (msg);
+    zyre_event_t *event = zyre_event_new (0);
+    char *type = zmsg_popstr (msg);
+    event->sender = zmsg_popstr (msg);
 
-    
-    // rest of the message is data
-    zyre_event->data = msg;
-
-    return zyre_event;
+    if (streq (type, "ENTER")) {
+        event->type = ZYRE_EVENT_ENTER;
+        zframe_t *headers = zmsg_pop (msg);
+        event->headers = zhash_unpack (headers);
+        zframe_destroy (&headers);
+    }
+    else
+    if (streq (type, "EXIT"))
+        event->type = ZYRE_EVENT_EXIT;
+    else
+    if (streq (type, "JOIN")) {
+        event->type = ZYRE_EVENT_JOIN;
+        event->group = zmsg_popstr (msg);
+    }
+    else
+    if (streq (type, "LEAVE")) {
+        event->type = ZYRE_EVENT_LEAVE;
+        event->group = zmsg_popstr (msg);
+    }
+    else
+    if (streq (type, "WHISPER")) {
+        event->type = ZYRE_EVENT_WHISPER;
+        event->msg = msg;
+        msg = NULL;
+    }
+    else
+    if (streq (type, "SHOUT")) {
+        event->type = ZYRE_EVENT_SHOUT;
+        event->group = zmsg_popstr (msg);
+        event->msg = msg;
+        msg = NULL;
+    }
+    free (type);
+    zmsg_destroy (&msg);
+    return event;
 }
 
-//  ---------------------------------------------------------------------
-//  Gets the message type
-
-int
-zyre_event_cmd (zyre_event_t *self)
-{   
-    assert (self);
-    return self->command;
-}
 
 //  ---------------------------------------------------------------------
-//  Gets the message peer uuid
+//  Returns event type, which is a zyre_event_type_t
 
-char *
-zyre_event_peerid (zyre_event_t *self) 
+zyre_event_type_t
+zyre_event_type (zyre_event_t *self)
 {
     assert (self);
-    return self->peerid;
+    return self->type;
 }
 
+
 //  ---------------------------------------------------------------------
-//  Gets the message headers
+//  Return the sending peer's id as a string
+
+char *
+zyre_event_sender (zyre_event_t *self)
+{
+    assert (self);
+    return self->sender;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Returns the event headers, or NULL if there are none
 
 zhash_t *
 zyre_event_headers (zyre_event_t *self)
 {
     assert (self);
-    return self->headers;  
+    return self->headers;
 }
 
+
 //  ---------------------------------------------------------------------
-//  Gets message a header value from the headers 
-//  obtained by ENTER message.
+//  Returns value of a header from the message headers
+//  obtained by ENTER. Return NULL if no value was found.
 
 char *
-zyre_event_get_header (zyre_event_t *self, char *name) 
+zyre_event_header (zyre_event_t *self, char *name)
 {
     assert (self);
-    zhash_t *headers = zyre_event_headers (self);
-    return zhash_lookup (headers, name);
+    return zhash_lookup (self->headers, name);
 }
 
+
 //  ---------------------------------------------------------------------
-//  Gets the message group in case of shout
+//  Returns the group name that a SHOUT event was sent to
 
 char *
-zyre_event_group (zyre_event_t *self) 
+zyre_event_group (zyre_event_t *self)
 {
     assert (self);
     return self->group;
 }
 
+
 //  ---------------------------------------------------------------------
-//  Gets the actual message data
+//  Returns the message payload (currently one frame)
 
 zmsg_t *
-zyre_event_data (zyre_event_t *self) 
+zyre_event_msg (zyre_event_t *self)
 {
     assert (self);
-    return self->data;
+    return self->msg;
 }
+
 
 //  --------------------------------------------------------------------------
 //  Self test of this class
@@ -215,28 +230,24 @@ zyre_event_test (bool verbose)
     zmsg_addstr (msg, "Hello, World");
     zyre_shout (node1, &msg);
 
-    //  TODO: should timeout and not hang if there's no networking
-    //  ALSO why doesn't this work with localhost? zbeacon?
-    //  Second node should receive ENTER, JOIN, and SHOUT
-   
-    // parse ENTER 
+    //  Parse ENTER
     zyre_event_t *zyre_event = zyre_event_recv (node2);
-    msg = zyre_event_data (zyre_event);
-    assert (zyre_event_cmd (zyre_event) == ZYRE_EVENT_ENTER);
-    char *peerid = zyre_event_peerid (zyre_event);
-    assert (streq (zyre_event_get_header (zyre_event, "X-HELLO"), "World"));
+    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_ENTER);
+    char *sender = zyre_event_sender (zyre_event);
+    assert (streq (zyre_event_header (zyre_event, "X-HELLO"), "World"));
+    msg = zyre_event_msg (zyre_event);
     zyre_event_destroy (&zyre_event);
     
-    // parse JOIN
+    //  Parse JOIN
     zyre_event = zyre_event_recv (node2);
-    assert (zyre_event_cmd (zyre_event) == ZYRE_EVENT_JOIN);
+    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_JOIN);
     zyre_event_destroy (&zyre_event);
     
-    // parse SHOUT
+    //  Parse SHOUT
     zyre_event = zyre_event_recv (node2);
-    msg = zyre_event_data (zyre_event);
-    assert (zyre_event_cmd (zyre_event) == ZYRE_EVENT_SHOUT);
+    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_SHOUT);
     assert (streq (zyre_event_group (zyre_event), "GLOBAL"));
+    msg = zyre_event_msg (zyre_event);
     zyre_event_destroy (&zyre_event);
     
     zyre_destroy (&node1);
