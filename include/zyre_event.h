@@ -57,6 +57,11 @@ CZMQ_EXPORT void
 CZMQ_EXPORT zyre_event_t *
     zyre_event_recv (zyre_t *self);
 
+//  Sends an zyre event. Returns 0 if succesful else 1.
+//  Destroys event after sending
+CZMQ_EXPORT int
+    zyre_event_send (zyre_t *zyre, zyre_event_t *event);
+
 //  Returns event type, which is a zyre_event_type_t
 CZMQ_EXPORT zyre_event_type_t
     zyre_event_type (zyre_event_t *self);
@@ -64,6 +69,10 @@ CZMQ_EXPORT zyre_event_type_t
 //  Return the sending peer's id as a string
 CZMQ_EXPORT char *
     zyre_event_sender (zyre_event_t *self);
+
+//  Sets the receiving peer's id as a string
+CZMQ_EXPORT void
+    zyre_event_set_receiver (zyre_event_t *self, char *format, ...);
 
 //  Returns the event headers, or NULL if there are none
 CZMQ_EXPORT zhash_t *
@@ -78,9 +87,17 @@ CZMQ_EXPORT char *
 CZMQ_EXPORT char *
     zyre_event_group (zyre_event_t *self);
 
-//  Returns the message payload (currently one frame)
+//  Sets the group name that a SHOUT will be send to
+CZMQ_EXPORT void
+    zyre_event_set_group (zyre_event_t *self, char *format, ...);
+
+//  Returns the incoming message payload (currently one frame)
 CZMQ_EXPORT zmsg_t *
     zyre_event_msg (zyre_event_t *self);
+
+//  Sets the outgoing message payload (currently one frame)
+CZMQ_EXPORT void
+    zyre_event_set_msg (zyre_event_t *self, zmsg_t *msg);
 
 // Self test of this class
 CZMQ_EXPORT void

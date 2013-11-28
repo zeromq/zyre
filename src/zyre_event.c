@@ -30,8 +30,11 @@
     work that you will want to do in many cases, such as unpacking the peer
     headers for each ENTER event received.
 @discuss
-    The current implementation does not allow sending of events though this
-    would be a natural extension.
+    Sending via zyre_event_t might be cumbersome. Alternatively we could use
+    zyre_event_whisper (zmsg, recevier_uuid) and 
+    zyre_event_shout (zmsg, group_name)
+
+    Also we should deliver all of the payload frames.
 @end
 */
 
@@ -43,6 +46,7 @@
 struct _zyre_event_t {
     zyre_event_type_t type; //  Event type
     char *sender;           //  Sender UUID as string
+    char *receiver;         //  Receiver UUID as string
     zhash_t *headers;       //  Headers, for a ENTER event
     char *group;            //  Group name for a SHOUT event
     zmsg_t *msg;            //  Message payload for SHOUT or WHISPER
@@ -72,6 +76,7 @@ zyre_event_destroy (zyre_event_t **self_p)
     if (*self_p) {
         zyre_event_t *self = *self_p;
         free (self->sender);
+        free (self->receiver);
         free (self->group);
         zhash_destroy (&self->headers);
         zmsg_destroy (&self->msg);
@@ -133,6 +138,36 @@ zyre_event_recv (zyre_t *self)
     return event;
 }
 
+//  ---------------------------------------------------------------------
+//  Sends an zyre event. Returns 0 if succesful else 1.
+//  Destroys event after sending
+
+int
+zyre_event_send (zyre_t *zyre, zyre_event_t *event) 
+{
+    assert (event);
+    assert (event->msg);
+    int rc = 1;
+    switch (event->type) {
+        case ZYRE_EVENT_WHISPER:
+            if (event->receiver) {
+                zmsg_pushstr (event->msg, event->receiver);
+                rc = zyre_whisper (zyre, &event->msg);       
+            }
+            break;
+        case ZYRE_EVENT_SHOUT:
+            if (event->group) {
+                zmsg_pushstr (event->msg, event->group);
+                rc = zyre_shout (zyre, &event->msg);
+            }
+            break;
+        default:
+            rc = 1;
+            break;
+    }
+    zyre_event_destroy (&event);
+    return rc;
+}
 
 //  ---------------------------------------------------------------------
 //  Returns event type, which is a zyre_event_type_t
@@ -153,6 +188,20 @@ zyre_event_sender (zyre_event_t *self)
 {
     assert (self);
     return self->sender;
+}
+
+//  ---------------------------------------------------------------------
+//  Sets the receiving peer's id as a string
+
+void
+zyre_event_set_receiver (zyre_event_t *self, char *format, ...)
+{
+    assert (self);
+    va_list argptr;
+    va_start (argptr, format);
+    free (self->receiver);
+    self->receiver = zsys_vprintf (format, argptr);
+    va_end (argptr);
 }
 
 
@@ -189,15 +238,40 @@ zyre_event_group (zyre_event_t *self)
     return self->group;
 }
 
+//  ---------------------------------------------------------------------
+//  Sets the group name that a SHOUT should send to
+
+void
+zyre_event_set_group (zyre_event_t *self, char *format, ...) 
+{
+    assert (self);
+    va_list argptr;
+    va_start (argptr, format);
+    free (self->group);
+    self->group = zsys_vprintf (format, argptr);
+    va_end (argptr);
+}
+
 
 //  ---------------------------------------------------------------------
-//  Returns the message payload (currently one frame)
+//  Returns the incoming message payload (currently one frame)
 
 zmsg_t *
 zyre_event_msg (zyre_event_t *self)
 {
     assert (self);
     return self->msg;
+}
+
+//  ---------------------------------------------------------------------
+//  Sets the outgoing message payload (currently one frame)
+
+void
+zyre_event_set_msg (zyre_event_t *self, zmsg_t *msg) 
+{
+    assert (self);
+    zmsg_destroy (&self->msg);
+    self->msg = msg;
 }
 
 
@@ -225,10 +299,12 @@ zyre_event_test (bool verbose)
     zclock_sleep (250);
 
     //  One node shouts to GLOBAL
+    zyre_event_t *event = zyre_event_new (ZYRE_EVENT_SHOUT);
+    zyre_event_set_group (event, "%s", "GLOBAL");
     zmsg_t *msg = zmsg_new ();
-    zmsg_addstr (msg, "GLOBAL");
     zmsg_addstr (msg, "Hello, World");
-    zyre_shout (node1, &msg);
+    zyre_event_set_msg (event, msg);
+    zyre_event_send (node1, event);
 
     //  Parse ENTER
     zyre_event_t *zyre_event = zyre_event_recv (node2);
