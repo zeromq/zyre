@@ -30,7 +30,7 @@
     work that you will want to do in many cases, such as unpacking the peer
     headers for each ENTER event received.
 @discuss
-    Sending via zyre_event_t might be overdue. Alternatively we could use
+    Sending via zyre_event_t might be cumbersome. Alternatively we could use
     zyre_event_whisper (zmsg, recevier_uuid) and 
     zyre_event_shout (zmsg, group_name)
 
