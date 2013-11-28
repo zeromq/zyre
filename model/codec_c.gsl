@@ -1,4 +1,4 @@
-    .#  codec_c.gsl
+.#  codec_c.gsl
 .#
 .#  Generates a codec for a protocol specification
 .#
@@ -121,6 +121,8 @@ int
         zhash_t *$(name)\
 .   elsif type = "frame"
         zframe_t *$(name)\
+.   elsif type = "msg"
+        zmsg_t *$(name)\
 .   endif
 .endfor
 );
@@ -211,6 +213,13 @@ zframe_t *
 void
     $(class.name)_set_$(name) ($(class.name)_t *self, zframe_t *frame);
 .#
+.   elsif type = "msg"
+//  Get/set the $(name) field
+zmsg_t *
+    $(class.name)_$(name) ($(class.name)_t *self);
+void
+    $(class.name)_set_$(name) ($(class.name)_t *self, zmsg_t *msg);
+.#
 .   else
 .       echo "E: unknown type '$(type)' for field '$(name)'"
 .   endif
@@ -268,6 +277,8 @@ struct _$(class.name)_t {
     size_t $(name)_bytes;       //  Size of dictionary content
 .   elsif type = "frame"
     zframe_t *$(name);
+.   elsif type = "msg"
+    zmsg_t *$(name);
 .   endif
 .endfor
 };
@@ -424,6 +435,8 @@ $(class.name)_destroy ($(class.name)_t **self_p)
         zhash_destroy (&self->$(name));
 .   elsif type = "frame"
         zframe_destroy (&self->$(name));
+.   elsif type = "msg"
+        zmsg_destroy (&self->$(name));
 .   endif
 .endfor
 
@@ -530,6 +543,12 @@ $(class.name)_recv (void *input)
             if (!zsocket_rcvmore (input))
                 goto malformed;
             self->$(name) = zframe_recv (input);
+.       elsif type = "msg"
+            //  Get zero or more remaining frames,
+            //  leave current frame untouched
+            self->$(name) = zmsg_new ();
+            while (zsocket_rcvmore (input))
+                zmsg_add (self->$(name), zframe_recv (input));
 .       endif
 .   endfor
             break;
@@ -688,6 +707,8 @@ $(class.name)_send ($(class.name)_t **self_p, void *output)
                 PUT_NUMBER1 (0);    //  Empty dictionary
 .       elsif type = "frame"
             frame_flags = ZFRAME_MORE;
+.       elsif type = "msg"
+            frame_flags = zmsg_size (self->$(name))? ZFRAME_MORE: 0;
 .       endif
 .   endfor
             break;
@@ -709,28 +730,33 @@ $(class.name)_send ($(class.name)_t **self_p, void *output)
         $(class.name)_destroy (self_p);
         return -1;
     }
-    
-    //  Now send any frame fields, in order
-    switch (self->id) {
 .for class.message where count (field, type = "frame")
-        case $(CLASS.NAME)_$(MESSAGE.NAME):
+    //  Now send any frame fields, in order
+    if (self->id == $(CLASS.NAME)_$(MESSAGE.NAME)) {
 .   for field where type = "frame"
-            //  If $(name) isn't set, send an empty frame
-            if (!self->$(field.name))
-                self->$(field.name) = zframe_new (NULL, 0);
+        //  If $(name) isn't set, send an empty frame
+        if (!self->$(field.name))
+            self->$(field.name) = zframe_new (NULL, 0);
 .       if last ()
-            if (zframe_send (&self->$(field.name), output, 0)) {
+        if (zframe_send (&self->$(field.name), output, 0)) {
 .       else
-            if (zframe_send (&self->$(field.name), output, ZFRAME_MORE)) {
+        if (zframe_send (&self->$(field.name), output, ZFRAME_MORE)) {
 .       endif
-                zframe_destroy (&frame);
-                $(class.name)_destroy (self_p);
-                return -1;
-            }
+            zframe_destroy (&frame);
+            $(class.name)_destroy (self_p);
+            return -1;
+        }
 .   endfor
-            break;
-.endfor
     }
+.endfor
+.for class.message where count (field, type = "msg")
+.   for field where type = "msg"
+    //  Now send the $(field.name) field if set
+    if (self->id == $(CLASS.NAME)_$(MESSAGE.NAME))
+        zmsg_send (&self->$(field.name), output);
+        
+.   endfor
+.endfor
     //  Destroy $(class.name) object
     $(class.name)_destroy (self_p);
     return 0;
@@ -758,6 +784,8 @@ $(class.name)_send_$(name) (
     zhash_t *$(name)\
 .   elsif type = "frame"
     zframe_t *$(name)\
+.   elsif type = "msg"
+    zmsg_t *$(name)\
 .   endif
 .endfor
 )
@@ -772,6 +800,8 @@ $(class.name)_send_$(name) (
     $(class.name)_set_$(name) (self, zhash_dup ($(name)));
 .   elsif type = "frame"
     $(class.name)_set_$(name) (self, zframe_dup ($(name)));
+.   elsif type = "msg"
+    $(class.name)_set_$(name) (self, zmsg_dup ($(name)));
 .   endif
 .endfor
     return $(class.name)_send (&self, output);
@@ -807,6 +837,8 @@ $(class.name)_dup ($(class.name)_t *self)
             copy->$(name) = zhash_dup (self->$(name));
 .       elsif type = "frame"
             copy->$(name) = zframe_dup (self->$(name));
+.       elsif type = "msg"
+            copy->$(name) = zmsg_dup (self->$(name));
 .       endif
 .   endfor
             break;
@@ -882,19 +914,13 @@ $(class.name)_dump ($(class.name)_t *self)
             printf ("    }\\n");
 .       elsif type = "frame"
             printf ("    $(name)={\\n");
-            if (self->$(name)) {
-                size_t size = zframe_size (self->$(name));
-                byte *data = zframe_data (self->$(name));
-                printf ("        size=%td\\n", zframe_size (self->$(name)));
-                if (size > 32)
-                    size = 32;
-                int $(name)_index;
-                for ($(name)_index = 0; $(name)_index < size; $(name)_index++) {
-                    if ($(name)_index && ($(name)_index % 4 == 0))
-                        printf ("-");
-                    printf ("%02X", data [$(name)_index]);
-                }
-            }
+            if (self->$(name))
+                zframe_print (self->$(name), NULL);
+            printf ("    }\\n");
+.       elsif type = "msg"
+            printf ("    $(name)={\\n");
+            if (self->$(name))
+                zmsg_dump (self->$(name));
             printf ("    }\\n");
 .       endif
 .   endfor
@@ -1184,6 +1210,27 @@ $(class.name)_set_$(name) ($(class.name)_t *self, zframe_t *frame)
         zframe_destroy (&self->$(name));
     self->$(name) = frame;
 }
+
+.   elsif type = "msg"
+//  --------------------------------------------------------------------------
+//  Get/set the $(name) field
+
+zmsg_t *
+$(class.name)_$(name) ($(class.name)_t *self)
+{
+    assert (self);
+    return self->$(name);
+}
+
+//  Takes ownership of supplied msg
+void
+$(class.name)_set_$(name) ($(class.name)_t *self, zmsg_t *msg)
+{
+    assert (self);
+    if (self->$(name))
+        zmsg_destroy (&self->$(name));
+    self->$(name) = msg;
+}
 .   endif
 
 .endfor
@@ -1234,6 +1281,8 @@ $(class.name)_test (bool verbose)
     $(class.name)_$(name)_insert (self, "Age", "%d", 43);
 .       elsif type = "frame"
     $(class.name)_set_$(name) (self, zframe_new ("Captcha Diem", 12));
+.       elsif type = "msg"
+    $(class.name)_set_$(name) (self, zmsg_new ());
 .       endif
 .   endfor
     $(class.name)_send (&self, output);
@@ -1258,6 +1307,8 @@ $(class.name)_test (bool verbose)
     assert ($(class.name)_$(name)_number (self, "Age", 0) == 43);
 .       elsif type = "frame"
     assert (zframe_streq ($(class.name)_$(name) (self), "Captcha Diem"));
+.       elsif type = "msg"
+    assert (zmsg_size ($(class.name)_$(name) (self)) == 0);
 .       endif
 .   endfor
     $(class.name)_destroy (&self);

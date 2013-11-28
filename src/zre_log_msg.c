@@ -352,10 +352,6 @@ zre_log_msg_send (zre_log_msg_t **self_p, void *output)
         zre_log_msg_destroy (self_p);
         return -1;
     }
-    
-    //  Now send any frame fields, in order
-    switch (self->id) {
-    }
     //  Destroy zre_log_msg object
     zre_log_msg_destroy (self_p);
     return 0;

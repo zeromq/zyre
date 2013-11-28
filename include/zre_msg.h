@@ -35,13 +35,13 @@
         groups        strings
         status        number 1
         headers       dictionary
-    WHISPER - Send a message to a peer
+    WHISPER - Send a multi-part message to a peer
         sequence      number 2
-        content       frame
-    SHOUT - Send a message to a group
+        content       msg
+    SHOUT - Send a multi-part message to a group
         sequence      number 2
         group         string
-        content       frame
+        content       msg
     JOIN - Join a group
         sequence      number 2
         group         string
@@ -104,14 +104,14 @@ int
 int
     zre_msg_send_whisper (void *output,
         uint16_t sequence,
-        zframe_t *content);
+        zmsg_t *content);
     
 //  Send the SHOUT to the output in one step
 int
     zre_msg_send_shout (void *output,
         uint16_t sequence,
         char *group,
-        zframe_t *content);
+        zmsg_t *content);
     
 //  Send the JOIN to the output in one step
 int
@@ -216,10 +216,10 @@ size_t
     zre_msg_headers_size (zre_msg_t *self);
 
 //  Get/set the content field
-zframe_t *
+zmsg_t *
     zre_msg_content (zre_msg_t *self);
 void
-    zre_msg_set_content (zre_msg_t *self, zframe_t *frame);
+    zre_msg_set_content (zre_msg_t *self, zmsg_t *msg);
 
 //  Get/set the group field
 char *
