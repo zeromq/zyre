@@ -48,7 +48,7 @@ struct _zre_msg_t {
     byte status;
     zhash_t *headers;
     size_t headers_bytes;       //  Size of dictionary content
-    zframe_t *content;
+    zmsg_t *content;
     char *group;
 };
 
@@ -198,7 +198,7 @@ zre_msg_destroy (zre_msg_t **self_p)
         if (self->groups)
             zlist_destroy (&self->groups);
         zhash_destroy (&self->headers);
-        zframe_destroy (&self->content);
+        zmsg_destroy (&self->content);
         free (self->group);
 
         //  Free object itself
@@ -289,20 +289,22 @@ zre_msg_recv (void *input)
 
         case ZRE_MSG_WHISPER:
             GET_NUMBER2 (self->sequence);
-            //  Get next frame, leave current untouched
-            if (!zsocket_rcvmore (input))
-                goto malformed;
-            self->content = zframe_recv (input);
+            //  Get zero or more remaining frames,
+            //  leave current frame untouched
+            self->content = zmsg_new ();
+            while (zsocket_rcvmore (input))
+                zmsg_add (self->content, zframe_recv (input));
             break;
 
         case ZRE_MSG_SHOUT:
             GET_NUMBER2 (self->sequence);
             free (self->group);
             GET_STRING (self->group);
-            //  Get next frame, leave current untouched
-            if (!zsocket_rcvmore (input))
-                goto malformed;
-            self->content = zframe_recv (input);
+            //  Get zero or more remaining frames,
+            //  leave current frame untouched
+            self->content = zmsg_new ();
+            while (zsocket_rcvmore (input))
+                zmsg_add (self->content, zframe_recv (input));
             break;
 
         case ZRE_MSG_JOIN:
@@ -500,7 +502,7 @@ zre_msg_send (zre_msg_t **self_p, void *output)
             
         case ZRE_MSG_WHISPER:
             PUT_NUMBER2 (self->sequence);
-            frame_flags = ZFRAME_MORE;
+            frame_flags = zmsg_size (self->content)? ZFRAME_MORE: 0;
             break;
             
         case ZRE_MSG_SHOUT:
@@ -510,7 +512,7 @@ zre_msg_send (zre_msg_t **self_p, void *output)
             }
             else
                 PUT_NUMBER1 (0);    //  Empty string
-            frame_flags = ZFRAME_MORE;
+            frame_flags = zmsg_size (self->content)? ZFRAME_MORE: 0;
             break;
             
         case ZRE_MSG_JOIN:
@@ -557,30 +559,14 @@ zre_msg_send (zre_msg_t **self_p, void *output)
         zre_msg_destroy (self_p);
         return -1;
     }
-    
-    //  Now send any frame fields, in order
-    switch (self->id) {
-        case ZRE_MSG_WHISPER:
-            //  If content isn't set, send an empty frame
-            if (!self->content)
-                self->content = zframe_new (NULL, 0);
-            if (zframe_send (&self->content, output, 0)) {
-                zframe_destroy (&frame);
-                zre_msg_destroy (self_p);
-                return -1;
-            }
-            break;
-        case ZRE_MSG_SHOUT:
-            //  If content isn't set, send an empty frame
-            if (!self->content)
-                self->content = zframe_new (NULL, 0);
-            if (zframe_send (&self->content, output, 0)) {
-                zframe_destroy (&frame);
-                zre_msg_destroy (self_p);
-                return -1;
-            }
-            break;
-    }
+    //  Now send the content field if set
+    if (self->id == ZRE_MSG_WHISPER)
+        zmsg_send (&self->content, output);
+        
+    //  Now send the content field if set
+    if (self->id == ZRE_MSG_SHOUT)
+        zmsg_send (&self->content, output);
+        
     //  Destroy zre_msg object
     zre_msg_destroy (self_p);
     return 0;
@@ -618,11 +604,11 @@ int
 zre_msg_send_whisper (
     void *output,
     uint16_t sequence,
-    zframe_t *content)
+    zmsg_t *content)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_WHISPER);
     zre_msg_set_sequence (self, sequence);
-    zre_msg_set_content (self, zframe_dup (content));
+    zre_msg_set_content (self, zmsg_dup (content));
     return zre_msg_send (&self, output);
 }
 
@@ -635,12 +621,12 @@ zre_msg_send_shout (
     void *output,
     uint16_t sequence,
     char *group,
-    zframe_t *content)
+    zmsg_t *content)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_SHOUT);
     zre_msg_set_sequence (self, sequence);
     zre_msg_set_group (self, group);
-    zre_msg_set_content (self, zframe_dup (content));
+    zre_msg_set_content (self, zmsg_dup (content));
     return zre_msg_send (&self, output);
 }
 
@@ -733,13 +719,13 @@ zre_msg_dup (zre_msg_t *self)
 
         case ZRE_MSG_WHISPER:
             copy->sequence = self->sequence;
-            copy->content = zframe_dup (self->content);
+            copy->content = zmsg_dup (self->content);
             break;
 
         case ZRE_MSG_SHOUT:
             copy->sequence = self->sequence;
             copy->group = strdup (self->group);
-            copy->content = zframe_dup (self->content);
+            copy->content = zmsg_dup (self->content);
             break;
 
         case ZRE_MSG_JOIN:
@@ -813,19 +799,8 @@ zre_msg_dump (zre_msg_t *self)
             puts ("WHISPER:");
             printf ("    sequence=%ld\n", (long) self->sequence);
             printf ("    content={\n");
-            if (self->content) {
-                size_t size = zframe_size (self->content);
-                byte *data = zframe_data (self->content);
-                printf ("        size=%td\n", zframe_size (self->content));
-                if (size > 32)
-                    size = 32;
-                int content_index;
-                for (content_index = 0; content_index < size; content_index++) {
-                    if (content_index && (content_index % 4 == 0))
-                        printf ("-");
-                    printf ("%02X", data [content_index]);
-                }
-            }
+            if (self->content)
+                zmsg_dump (self->content);
             printf ("    }\n");
             break;
             
@@ -837,19 +812,8 @@ zre_msg_dump (zre_msg_t *self)
             else
                 printf ("    group=\n");
             printf ("    content={\n");
-            if (self->content) {
-                size_t size = zframe_size (self->content);
-                byte *data = zframe_data (self->content);
-                printf ("        size=%td\n", zframe_size (self->content));
-                if (size > 32)
-                    size = 32;
-                int content_index;
-                for (content_index = 0; content_index < size; content_index++) {
-                    if (content_index && (content_index % 4 == 0))
-                        printf ("-");
-                    printf ("%02X", data [content_index]);
-                }
-            }
+            if (self->content)
+                zmsg_dump (self->content);
             printf ("    }\n");
             break;
             
@@ -1182,21 +1146,21 @@ zre_msg_headers_size (zre_msg_t *self)
 //  --------------------------------------------------------------------------
 //  Get/set the content field
 
-zframe_t *
+zmsg_t *
 zre_msg_content (zre_msg_t *self)
 {
     assert (self);
     return self->content;
 }
 
-//  Takes ownership of supplied frame
+//  Takes ownership of supplied msg
 void
-zre_msg_set_content (zre_msg_t *self, zframe_t *frame)
+zre_msg_set_content (zre_msg_t *self, zmsg_t *msg)
 {
     assert (self);
     if (self->content)
-        zframe_destroy (&self->content);
-    self->content = frame;
+        zmsg_destroy (&self->content);
+    self->content = msg;
 }
 
 //  --------------------------------------------------------------------------
@@ -1277,26 +1241,26 @@ zre_msg_test (bool verbose)
 
     self = zre_msg_new (ZRE_MSG_WHISPER);
     zre_msg_set_sequence (self, 123);
-    zre_msg_set_content (self, zframe_new ("Captcha Diem", 12));
+    zre_msg_set_content (self, zmsg_new ());
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
     assert (self);
     assert (zre_msg_sequence (self) == 123);
-    assert (zframe_streq (zre_msg_content (self), "Captcha Diem"));
+    assert (zmsg_size (zre_msg_content (self)) == 0);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_SHOUT);
     zre_msg_set_sequence (self, 123);
     zre_msg_set_group (self, "Life is short but Now lasts for ever");
-    zre_msg_set_content (self, zframe_new ("Captcha Diem", 12));
+    zre_msg_set_content (self, zmsg_new ());
     zre_msg_send (&self, output);
     
     self = zre_msg_recv (input);
     assert (self);
     assert (zre_msg_sequence (self) == 123);
     assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
-    assert (zframe_streq (zre_msg_content (self), "Captcha Diem"));
+    assert (zmsg_size (zre_msg_content (self)) == 0);
     zre_msg_destroy (&self);
 
     self = zre_msg_new (ZRE_MSG_JOIN);

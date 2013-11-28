@@ -20,14 +20,14 @@ Greet a peer so it can connect back to us
 </message>
 
 <message name = "WHISPER" id = "2">
-    <field name = "content" type = "frame" />
-Send a message to a peer
+    <field name = "content" type = "msg" />
+Send a multi-part message to a peer
 </message>
 
 <message name = "SHOUT" id = "3">
     <field name = "group" type = "string" />
-    <field name = "content" type = "frame" />
-Send a message to a group
+    <field name = "content" type = "msg" />
+Send a multi-part message to a group
 </message>
 
 <message name = "JOIN" id = "4">
