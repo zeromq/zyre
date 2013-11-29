@@ -33,7 +33,8 @@ extern "C" {
 
 typedef struct _zyre_node_t zyre_node_t;
 
-//  Background engine
+//  This is the engine that runs a single node; it uses one thread, creates
+//  a zyre_node object at start and destroys that when finishing.
 void
     zyre_node_engine (void *args, zctx_t *ctx, void *pipe);
 

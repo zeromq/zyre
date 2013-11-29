@@ -145,10 +145,10 @@ zyre_node_start (zyre_node_t *self)
 }
 
 
-//  Send message to all peers
+//  Send message to one peer; called via zhash_foreach
 
 static int
-s_peer_send (const char *key, void *item, void *argument)
+zyre_node_send_peer (const char *key, void *item, void *argument)
 {
     zyre_peer_t *peer = (zyre_peer_t *) item;
     zre_msg_t *msg = zre_msg_dup ((zre_msg_t *) argument);
@@ -160,7 +160,7 @@ s_peer_send (const char *key, void *item, void *argument)
 //  Here we handle the different control messages from the front-end
 
 static int
-agent_recv_from_api (zyre_node_t *self)
+zyre_node_recv_api (zyre_node_t *self)
 {
     //  Get the whole message off the pipe in one go
     zmsg_t *request = zmsg_recv (self->pipe);
@@ -221,7 +221,7 @@ agent_recv_from_api (zyre_node_t *self)
             zre_msg_set_group (msg, name);
             //  Update status before sending command
             zre_msg_set_status (msg, ++(self->status));
-            zhash_foreach (self->peers, s_peer_send, msg);
+            zhash_foreach (self->peers, zyre_node_send_peer, msg);
             zre_msg_destroy (&msg);
             zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
         }
@@ -237,7 +237,7 @@ agent_recv_from_api (zyre_node_t *self)
             zre_msg_set_group (msg, name);
             //  Update status before sending command
             zre_msg_set_status (msg, ++(self->status));
-            zhash_foreach (self->peers, s_peer_send, msg);
+            zhash_foreach (self->peers, zyre_node_send_peer, msg);
             zre_msg_destroy (&msg);
             zhash_delete (self->own_groups, name);
             zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
@@ -257,7 +257,7 @@ agent_recv_from_api (zyre_node_t *self)
 //  Delete peer for a given endpoint
 
 static int
-agent_peer_purge (const char *key, void *item, void *argument)
+zyre_node_purge_peer (const char *key, void *item, void *argument)
 {
     zyre_peer_t *peer = (zyre_peer_t *) item;
     char *endpoint = (char *) argument;
@@ -269,14 +269,14 @@ agent_peer_purge (const char *key, void *item, void *argument)
 //  Find or create peer via its UUID
 
 static zyre_peer_t *
-s_require_peer (zyre_node_t *self, zuuid_t *uuid, char *address, uint16_t port)
+zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, char *address, uint16_t port)
 {
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (!peer) {
         //  Purge any previous peer on same endpoint
         char endpoint [100];
         snprintf (endpoint, 100, "tcp://%s:%hu", address, port);
-        zhash_foreach (self->peers, agent_peer_purge, endpoint);
+        zhash_foreach (self->peers, zyre_node_purge_peer, endpoint);
 
         peer = zyre_peer_new (self->ctx, self->peers, uuid);
         zyre_peer_connect (peer, self->uuid, endpoint);
@@ -301,7 +301,7 @@ s_require_peer (zyre_node_t *self, zuuid_t *uuid, char *address, uint16_t port)
 //  Find or create group via its name
 
 static zyre_group_t *
-s_require_peer_group (zyre_node_t *self, char *name)
+zyre_node_require_peer_group (zyre_node_t *self, char *name)
 {
     zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->peer_groups, name);
     if (!group)
@@ -310,9 +310,9 @@ s_require_peer_group (zyre_node_t *self, char *name)
 }
 
 static zyre_group_t *
-s_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
+zyre_node_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
 {
-    zyre_group_t *group = s_require_peer_group (self, name);
+    zyre_group_t *group = zyre_node_require_peer_group (self, name);
     zyre_group_join (group, peer);
 
     //  Now tell the caller about the peer joined group
@@ -324,9 +324,9 @@ s_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
 }
 
 static zyre_group_t *
-s_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
+zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
 {
-    zyre_group_t *group = s_require_peer_group (self, name);
+    zyre_group_t *group = zyre_node_require_peer_group (self, name);
     zyre_group_leave (group, peer);
 
     //  Now tell the caller about the peer left group
@@ -340,7 +340,7 @@ s_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
 //  Here we handle messages coming from other peers
 
 static int
-agent_recv_from_peer (zyre_node_t *self)
+zyre_node_recv_peer (zyre_node_t *self)
 {
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_recv (self->inbox);
@@ -355,7 +355,7 @@ agent_recv_from_peer (zyre_node_t *self)
     //  On other commands the peer must already exist
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
-        peer = s_require_peer (self, uuid, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
+        peer = zyre_node_require_peer (self, uuid, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
         zyre_peer_set_ready (peer, true);
     }
@@ -381,7 +381,7 @@ agent_recv_from_peer (zyre_node_t *self)
         //  Join peer to listed groups
         char *name = zre_msg_groups_first (msg);
         while (name) {
-            s_join_peer_group (self, peer, name);
+            zyre_node_join_peer_group (self, peer, name);
             name = zre_msg_groups_next (msg);
         }
         //  Hello command holds latest status of peer
@@ -419,12 +419,12 @@ agent_recv_from_peer (zyre_node_t *self)
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_JOIN) {
-        s_join_peer_group (self, peer, zre_msg_group (msg));
+        zyre_node_join_peer_group (self, peer, zre_msg_group (msg));
         assert (zre_msg_status (msg) == zyre_peer_status (peer));
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_LEAVE) {
-        s_leave_peer_group (self, peer, zre_msg_group (msg));
+        zyre_node_leave_peer_group (self, peer, zre_msg_group (msg));
         assert (zre_msg_status (msg) == zyre_peer_status (peer));
     }
     zuuid_destroy (&uuid);
@@ -438,7 +438,7 @@ agent_recv_from_peer (zyre_node_t *self)
 //  Handle beacon
 
 static int
-agent_recv_beacon (zyre_node_t *self)
+zyre_node_recv_beacon (zyre_node_t *self)
 {
     //  Get IP address and beacon of peer
     char *ipaddress = zstr_recv (zbeacon_socket (self->beacon));
@@ -459,7 +459,7 @@ agent_recv_beacon (zyre_node_t *self)
     if (is_valid) {
         zuuid_t *uuid = zuuid_new ();
         zuuid_set (uuid, beacon.uuid);
-        zyre_peer_t *peer = s_require_peer (self, uuid, ipaddress, ntohs (beacon.port));
+        zyre_peer_t *peer = zyre_node_require_peer (self, uuid, ipaddress, ntohs (beacon.port));
         zyre_peer_refresh (peer);
         zuuid_destroy (&uuid);
     }
@@ -472,7 +472,7 @@ agent_recv_beacon (zyre_node_t *self)
 //  Remove peer from group, if it's a member
 
 static int
-agent_peer_delete (const char *key, void *item, void *argument)
+zyre_node_delete_peer (const char *key, void *item, void *argument)
 {
     zyre_group_t *group = (zyre_group_t *) item;
     zyre_peer_t *peer = (zyre_peer_t *) argument;
@@ -497,7 +497,7 @@ agent_ping_peer (const char *key, void *item, void *argument)
         //  If peer has really vanished, expire it
         zstr_sendm (self->pipe, "EXIT");
         zstr_send (self->pipe, identity);
-        zhash_foreach (self->peer_groups, agent_peer_delete, peer);
+        zhash_foreach (self->peer_groups, zyre_node_delete_peer, peer);
         zhash_delete (self->peers, identity);
     }
     else
@@ -514,9 +514,8 @@ agent_ping_peer (const char *key, void *item, void *argument)
 
 
 //  --------------------------------------------------------------------------
-//  This is the engine that runs a single node; it uses one
-//  thread, creates a zyre_node object at start and destroys
-//  that when finishing.
+//  This is the engine that runs a single node; it uses one thread, creates
+//  a zyre_node object at start and destroys that when finishing.
 
 void
 zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
@@ -538,13 +537,13 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
             timeout = 0;
         void *which = zpoller_wait (poller, timeout);
         if (which == self->pipe)
-            agent_recv_from_api (self);
+            zyre_node_recv_api (self);
         else
         if (which == self->inbox)
-            agent_recv_from_peer (self);
+            zyre_node_recv_peer (self);
         else
         if (which == zbeacon_socket (self->beacon))
-            agent_recv_beacon (self);
+            zyre_node_recv_beacon (self);
         
         if (zclock_time () >= reap_at) {
             reap_at = zclock_time () + REAP_INTERVAL;
