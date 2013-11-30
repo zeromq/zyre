@@ -485,7 +485,7 @@ zyre_node_delete_peer (const char *key, void *item, void *argument)
 //  - if peer has disappeared, expire it
 
 static int
-agent_ping_peer (const char *key, void *item, void *argument)
+zyre_node_ping_peer (const char *key, void *item, void *argument)
 {
     zyre_node_t *self = (zyre_node_t *) argument;
     zyre_peer_t *peer = (zyre_peer_t *) item;
@@ -548,7 +548,7 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
         if (zclock_time () >= reap_at) {
             reap_at = zclock_time () + REAP_INTERVAL;
             //  Ping all peers and reap any expired ones
-            zhash_foreach (self->peers, agent_ping_peer, self);
+            zhash_foreach (self->peers, zyre_node_ping_peer, self);
         }
         if (self->terminated)
             break;
