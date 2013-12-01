@@ -69,10 +69,15 @@ CZMQ_EXPORT void
     zyre_set_header (zyre_t *self, char *name, char *format, ...);
 
 //  Start node, after setting header values. When you start a node it
-//  begins discovery and connection. There is no stop method; to stop
-//  a node, destroy it.
+//  begins discovery and connection.
 CZMQ_EXPORT void
     zyre_start (zyre_t *self);
+
+//  Stop node; this signals to other peers that this node will go away.
+//  This is polite; however you can also just destroy the node without
+//  stopping it.
+CZMQ_EXPORT void
+    zyre_stop (zyre_t *self);
 
 //  Join a named group; after joining a group you can send messages to
 //  the group and all Zyre nodes in that group will receive them.

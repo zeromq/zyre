@@ -138,13 +138,26 @@ zyre_set_header (zyre_t *self, char *name, char *format, ...)
 
 //  ---------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
-//  begins discovery and connection. There is no stop method; to stop
-//  a node, destroy it.
+//  begins discovery and connection.
 
 void
 zyre_start (zyre_t *self)
 {
     zstr_send (self->pipe, "START");
+    char *reply = zstr_recv (self->pipe);
+    zstr_free (&reply);
+}
+
+
+//  ---------------------------------------------------------------------
+//  Stop node; this signals to other peers that this node will go away.
+//  This is polite; however you can also just destroy the node without
+//  stopping it.
+
+void
+zyre_stop (zyre_t *self)
+{
+    zstr_send (self->pipe, "STOP");
     char *reply = zstr_recv (self->pipe);
     zstr_free (&reply);
 }
@@ -341,6 +354,9 @@ zyre_test (bool verbose)
     assert (streq (command, "SHOUT"));
     free (command);
     zmsg_destroy (&msg);
+    
+    zyre_stop (node1);
+    zyre_stop (node2);
     
     zyre_destroy (&node1);
     zyre_destroy (&node2);

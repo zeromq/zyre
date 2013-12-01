@@ -145,6 +145,22 @@ zyre_node_start (zyre_node_t *self)
 }
 
 
+static void
+zyre_node_stop (zyre_node_t *self)
+{
+    //  Set broadcast/listen beacon
+    beacon_t beacon;
+    beacon.protocol [0] = 'Z';
+    beacon.protocol [1] = 'R';
+    beacon.protocol [2] = 'E';
+    beacon.version = BEACON_VERSION;
+    beacon.port = 0;            //  Zero means we're stopping
+    zuuid_export (self->uuid, beacon.uuid);
+    zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
+    zclock_sleep (1);           //  Allow 1 msec for beacon to go out
+}
+
+
 //  Send message to one peer; called via zhash_foreach
 
 static int
@@ -178,6 +194,11 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "START")) {
         zyre_node_start (self);
+        zstr_send (self->pipe, "OK");
+    }
+    else
+    if (streq (command, "STOP")) {
+        zyre_node_stop (self);
         zstr_send (self->pipe, "OK");
     }
     else
@@ -295,6 +316,36 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, char *address, uint16_
                       zyre_peer_endpoint (peer), endpoint);
     }
     return peer;
+}
+
+
+//  Remove peer from group, if it's a member
+
+static int
+zyre_node_delete_peer (const char *key, void *item, void *argument)
+{
+    zyre_group_t *group = (zyre_group_t *) item;
+    zyre_peer_t *peer = (zyre_peer_t *) argument;
+    zyre_group_leave (group, peer);
+    return 0;
+}
+
+//  Remove a peer from our data structures
+
+static void
+zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
+{
+    //  Tell the calling application the peer has gone
+    zstr_sendm (self->pipe, "EXIT");
+    zstr_send (self->pipe, zyre_peer_identity (peer));
+    //  Send a log event
+    zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
+                    zyre_peer_endpoint (peer),
+                    zyre_peer_endpoint (peer));
+    //  Remove peer from any groups we've got it in
+    zhash_foreach (self->peer_groups, zyre_node_delete_peer, peer);
+    //  To destroy peer, we remove from peers hash table
+    zhash_delete (self->peers, zyre_peer_identity (peer));
 }
 
 
@@ -459,8 +510,19 @@ zyre_node_recv_beacon (zyre_node_t *self)
     if (is_valid) {
         zuuid_t *uuid = zuuid_new ();
         zuuid_set (uuid, beacon.uuid);
-        zyre_peer_t *peer = zyre_node_require_peer (self, uuid, ipaddress, ntohs (beacon.port));
-        zyre_peer_refresh (peer);
+        if (beacon.port) {
+            zyre_peer_t *peer = zyre_node_require_peer (
+                self, uuid, ipaddress, ntohs (beacon.port));
+            zyre_peer_refresh (peer);
+        }
+        else {
+            //  Zero port means peer is going away; remove it if
+            //  we had any knowledge of it already
+            zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (
+                self->peers, zuuid_str (uuid));
+            if (peer)
+                zyre_node_remove_peer (self, peer);
+        }
         zuuid_destroy (&uuid);
     }
     free (ipaddress);
@@ -469,17 +531,6 @@ zyre_node_recv_beacon (zyre_node_t *self)
 }
 
 
-//  Remove peer from group, if it's a member
-
-static int
-zyre_node_delete_peer (const char *key, void *item, void *argument)
-{
-    zyre_group_t *group = (zyre_group_t *) item;
-    zyre_peer_t *peer = (zyre_peer_t *) argument;
-    zyre_group_leave (group, peer);
-    return 0;
-}
-
 //  We do this once a second:
 //  - if peer has gone quiet, send TCP ping
 //  - if peer has disappeared, expire it
@@ -487,19 +538,10 @@ zyre_node_delete_peer (const char *key, void *item, void *argument)
 static int
 zyre_node_ping_peer (const char *key, void *item, void *argument)
 {
-    zyre_node_t *self = (zyre_node_t *) argument;
     zyre_peer_t *peer = (zyre_peer_t *) item;
-    char *identity = zyre_peer_identity (peer);
-    if (zclock_time () >= zyre_peer_expired_at (peer)) {
-        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
-                      zyre_peer_endpoint (peer),
-                      zyre_peer_endpoint (peer));
-        //  If peer has really vanished, expire it
-        zstr_sendm (self->pipe, "EXIT");
-        zstr_send (self->pipe, identity);
-        zhash_foreach (self->peer_groups, zyre_node_delete_peer, peer);
-        zhash_delete (self->peers, identity);
-    }
+    zyre_node_t *self = (zyre_node_t *) argument;
+    if (zclock_time () >= zyre_peer_expired_at (peer))
+        zyre_node_remove_peer (self, peer);
     else
     if (zclock_time () >= zyre_peer_evasive_at (peer)) {
         //  If peer is being evasive, force a TCP ping.
@@ -520,7 +562,7 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
 void
 zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
 {
-    //  Create agent instance to pass around
+    //  Create node instance to pass around
     zyre_node_t *self = zyre_node_new (ctx, pipe);
     if (!self)                  //  Interrupted
         return;
