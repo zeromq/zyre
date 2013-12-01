@@ -46,7 +46,6 @@
 struct _zyre_event_t {
     zyre_event_type_t type; //  Event type
     char *sender;           //  Sender UUID as string
-    char *receiver;         //  Receiver UUID as string
     zhash_t *headers;       //  Headers, for a ENTER event
     char *group;            //  Group name for a SHOUT event
     zmsg_t *msg;            //  Message payload for SHOUT or WHISPER
@@ -76,7 +75,6 @@ zyre_event_destroy (zyre_event_t **self_p)
     if (*self_p) {
         zyre_event_t *self = *self_p;
         free (self->sender);
-        free (self->receiver);
         free (self->group);
         zhash_destroy (&self->headers);
         zmsg_destroy (&self->msg);
@@ -96,7 +94,6 @@ zyre_event_recv (zyre_t *self)
 {
     assert (self);
     zmsg_t *msg = zyre_recv (self);
-    zmsg_dump (msg);
     zyre_event_t *event = zyre_event_new (0);
     char *type = zmsg_popstr (msg);
     event->sender = zmsg_popstr (msg);
@@ -139,33 +136,34 @@ zyre_event_recv (zyre_t *self)
 }
 
 //  ---------------------------------------------------------------------
-//  Sends an zyre event. Returns 0 if succesful else 1.
-//  Destroys event after sending
+//  Sends an zyre whisper. Returns 0 if succesful else 1.
+//  Destroys msg after sending
 
 int
-zyre_event_send (zyre_t *zyre, zyre_event_t *event) 
+zyre_event_send_whisper (zyre_t *zyre, zmsg_t *msg, char *receiver) 
 {
-    assert (event);
-    assert (event->msg);
-    int rc = 1;
-    switch (event->type) {
-        case ZYRE_EVENT_WHISPER:
-            if (event->receiver) {
-                zmsg_pushstr (event->msg, event->receiver);
-                rc = zyre_whisper (zyre, &event->msg);       
-            }
-            break;
-        case ZYRE_EVENT_SHOUT:
-            if (event->group) {
-                zmsg_pushstr (event->msg, event->group);
-                rc = zyre_shout (zyre, &event->msg);
-            }
-            break;
-        default:
-            rc = 1;
-            break;
-    }
-    zyre_event_destroy (&event);
+    assert (zyre);
+    assert (msg);
+
+    zmsg_pushstr (msg, receiver);
+    int rc = zyre_whisper (zyre, &msg); 
+    zmsg_destroy (&msg);
+    return rc;
+}
+
+//  ---------------------------------------------------------------------
+//  Sends an zyre shout. Returns 0 if succesful else 1.
+//  Destroys msg after sending
+
+int
+zyre_event_send_shout (zyre_t *zyre, zmsg_t *msg, char *group)
+{
+    assert (zyre);
+    assert (msg);
+    
+    zmsg_pushstr (msg, group);
+    int rc = zyre_shout (zyre, &msg);
+    zmsg_destroy (&msg);
     return rc;
 }
 
@@ -189,21 +187,6 @@ zyre_event_sender (zyre_event_t *self)
     assert (self);
     return self->sender;
 }
-
-//  ---------------------------------------------------------------------
-//  Sets the receiving peer's id as a string
-
-void
-zyre_event_set_receiver (zyre_event_t *self, char *format, ...)
-{
-    assert (self);
-    va_list argptr;
-    va_start (argptr, format);
-    free (self->receiver);
-    self->receiver = zsys_vprintf (format, argptr);
-    va_end (argptr);
-}
-
 
 //  ---------------------------------------------------------------------
 //  Returns the event headers, or NULL if there are none
@@ -239,21 +222,6 @@ zyre_event_group (zyre_event_t *self)
 }
 
 //  ---------------------------------------------------------------------
-//  Sets the group name that a SHOUT should send to
-
-void
-zyre_event_set_group (zyre_event_t *self, char *format, ...) 
-{
-    assert (self);
-    va_list argptr;
-    va_start (argptr, format);
-    free (self->group);
-    self->group = zsys_vprintf (format, argptr);
-    va_end (argptr);
-}
-
-
-//  ---------------------------------------------------------------------
 //  Returns the incoming message payload (currently one frame)
 
 zmsg_t *
@@ -262,18 +230,6 @@ zyre_event_msg (zyre_event_t *self)
     assert (self);
     return self->msg;
 }
-
-//  ---------------------------------------------------------------------
-//  Sets the outgoing message payload (currently one frame)
-
-void
-zyre_event_set_msg (zyre_event_t *self, zmsg_t *msg) 
-{
-    assert (self);
-    zmsg_destroy (&self->msg);
-    self->msg = msg;
-}
-
 
 //  --------------------------------------------------------------------------
 //  Self test of this class
@@ -299,12 +255,9 @@ zyre_event_test (bool verbose)
     zclock_sleep (250);
 
     //  One node shouts to GLOBAL
-    zyre_event_t *event = zyre_event_new (ZYRE_EVENT_SHOUT);
-    zyre_event_set_group (event, "%s", "GLOBAL");
     zmsg_t *msg = zmsg_new ();
     zmsg_addstr (msg, "Hello, World");
-    zyre_event_set_msg (event, msg);
-    zyre_event_send (node1, event);
+    zyre_event_send_shout (node1, msg, "GLOBAL");
 
     //  Parse ENTER
     zyre_event_t *zyre_event = zyre_event_recv (node2);
@@ -324,6 +277,7 @@ zyre_event_test (bool verbose)
     assert (zyre_event_type (zyre_event) == ZYRE_EVENT_SHOUT);
     assert (streq (zyre_event_group (zyre_event), "GLOBAL"));
     msg = zyre_event_msg (zyre_event);
+    assert (streq (zmsg_popstr (msg), "Hello, World"));
     zyre_event_destroy (&zyre_event);
     
     zyre_destroy (&node1);
