@@ -241,7 +241,9 @@ zyre_event_test (bool verbose)
     assert (zyre_event_type (zyre_event) == ZYRE_EVENT_SHOUT);
     assert (streq (zyre_event_group (zyre_event), "GLOBAL"));
     msg = zyre_event_msg (zyre_event);
-    assert (streq (zmsg_popstr (msg), "Hello, World"));
+    char *string = zmsg_popstr (msg);
+    assert (streq (string, "Hello, World"));
+    free (string);
     zyre_event_destroy (&zyre_event);
     
     zyre_destroy (&node1);
