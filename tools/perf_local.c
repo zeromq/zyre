@@ -129,11 +129,7 @@ main (int argc, char *argv [])
     //  send WHISPER message
     start = zclock_time ();
     for (nbr_message = 0; nbr_message < max_message; nbr_message++) {
-        zmsg_t *outgoing = zmsg_new ();
-        zmsg_addstr (outgoing, peers [nbr_message % max_node]);
-        zmsg_addstr (outgoing, "S:WHISPER");
-        zyre_whisper (node, &outgoing);
-
+        zyre_whispers (node, peers [nbr_message % max_node], "S:WHISPER");
         while (zmq_poll (pollitems, 1, 0) > 0) {
             if (s_node_recv (node, "WHISPER", "R:WHISPER"))
                 nbr_message_response++;
@@ -156,11 +152,7 @@ main (int argc, char *argv [])
     max_message = max_message / max_node;
 
     for (nbr_message = 0; nbr_message < max_message; nbr_message++) {
-        zmsg_t *outgoing = zmsg_new ();
-        zmsg_addstr (outgoing, "GLOBAL");
-        zmsg_addstr (outgoing, "S:SHOUT");
-        zyre_shout (node, &outgoing);
-
+        zyre_shouts (node, "GLOBAL", "S:SHOUT");
         while (zmq_poll (pollitems, 1, 0) > 0) {
             if (s_node_recv (node, "SHOUT", "R:SHOUT"))
                 nbr_message_response++;

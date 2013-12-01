@@ -57,16 +57,6 @@ CZMQ_EXPORT void
 CZMQ_EXPORT zyre_event_t *
     zyre_event_recv (zyre_t *self);
 
-//  Sends a zyre whisper. Returns 0 if succesful else 1.
-//  Destroys msg after sending
-CZMQ_EXPORT int
-    zyre_event_send_whisper (zyre_t *zyre, zmsg_t *msg, char *receiver);
-
-//  Sends a zyre shout. Returns 0 if succesful else 1.
-//  Destroys msg after sending
-CZMQ_EXPORT int
-    zyre_event_send_shout (zyre_t *zyre, zmsg_t *msg, char *group);
-
 //  Returns event type, which is a zyre_event_type_t
 CZMQ_EXPORT zyre_event_type_t
     zyre_event_type (zyre_event_t *self);
