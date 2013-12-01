@@ -113,18 +113,12 @@ node_task (void *args, zctx_t *ctx, void *pipe)
 
             //  Send outgoing messages if needed
             if (to_peer) {
-                zmsg_t *outgoing = zmsg_new ();
-                zmsg_addstr (outgoing, to_peer);
-                zmsg_addstr (outgoing, sending_cookie);
-                zyre_whisper (node, &outgoing);
+                zyre_whispers (node, to_peer, sending_cookie);
                 free (to_peer);
                 to_peer = NULL;
             }
             if (to_group) {
-                zmsg_t *outgoing = zmsg_new ();
-                zmsg_addstr (outgoing, to_group);
-                zmsg_addstr (outgoing, sending_cookie);
-                zyre_shout (node, &outgoing);
+                zyre_shouts (node, to_group, sending_cookie);
                 free (to_group);
                 to_group = NULL;
             }

@@ -192,28 +192,81 @@ zyre_recv (zyre_t *self)
 
 
 //  ---------------------------------------------------------------------
-//  Send message to single peer; peer ID is first frame in message
+//  Send message to single peer, specified as a UUID string
 //  Destroys message after sending
 
 int
-zyre_whisper (zyre_t *self, zmsg_t **msg_p)
+zyre_whisper (zyre_t *self, char *peer, zmsg_t **msg_p)
 {
     assert (self);
+    assert (peer);
     zstr_sendm (self->pipe, "WHISPER");
+    zstr_sendm (self->pipe, peer);
     zmsg_send (msg_p, self->pipe);
     return 0;
 }
 
 
 //  ---------------------------------------------------------------------
-//  Send message to a group of peers
+//  Send message to a named group
+//  Destroys message after sending
 
 int
-zyre_shout (zyre_t *self, zmsg_t **msg_p)
+zyre_shout (zyre_t *self, char *group, zmsg_t **msg_p)
 {
     assert (self);
+    assert (group);
     zstr_sendm (self->pipe, "SHOUT");
+    zstr_sendm (self->pipe, group);
     zmsg_send (msg_p, self->pipe);
+    return 0;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Send string to single peer specified as a UUID string.
+//  String is formatted using printf specifiers.
+
+int
+zyre_whispers (zyre_t *self, char *peer, char *format, ...)
+{
+    assert (self);
+    assert (peer);
+    assert (format);
+
+    va_list argptr;
+    va_start (argptr, format);
+    char *string = zsys_vprintf (format, argptr);
+    va_end (argptr);
+
+    zstr_sendm (self->pipe, "WHISPER");
+    zstr_sendm (self->pipe, peer);
+    zstr_send  (self->pipe, string);
+    free (string);
+    return 0;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Send message to a named group
+//  Destroys message after sending
+
+int
+zyre_shouts (zyre_t *self, char *group, char *format, ...)
+{
+    assert (self);
+    assert (group);
+    assert (format);
+
+    va_list argptr;
+    va_start (argptr, format);
+    char *string = zsys_vprintf (format, argptr);
+    va_end (argptr);
+
+    zstr_sendm (self->pipe, "SHOUT");
+    zstr_sendm (self->pipe, group);
+    zstr_send  (self->pipe, string);
+    free (string);
     return 0;
 }
 
@@ -253,15 +306,12 @@ zyre_test (bool verbose)
     zclock_sleep (250);
 
     //  One node shouts to GLOBAL
-    zmsg_t *msg = zmsg_new ();
-    zmsg_addstr (msg, "GLOBAL");
-    zmsg_addstr (msg, "Hello, World");
-    zyre_shout (node1, &msg);
+    zyre_shouts (node1,"GLOBAL", "Hello, World");
 
     //  TODO: should timeout and not hang if there's no networking
     //  ALSO why doesn't this work with localhost? zbeacon?
     //  Second node should receive ENTER, JOIN, and SHOUT
-    msg = zyre_recv (node2);
+    zmsg_t *msg = zyre_recv (node2);
     assert (msg);
     char *command = zmsg_popstr (msg);
     assert (streq (command, "ENTER"));

@@ -44,10 +44,7 @@ int main (int argc, char *argv [])
         if (streq (event, "ENTER")) {
             char *peer = zmsg_popstr (incoming);
             printf ("I: [%s] peer entered\n", peer);
-            zmsg_t *outgoing = zmsg_new ();
-            zmsg_addstr (outgoing, peer);
-            zmsg_addstr (outgoing, "Hello");
-            zyre_whisper (node, &outgoing);
+            zyre_whispers (node, peer, "Hello");
             free (peer);
         }
         else
@@ -61,10 +58,7 @@ int main (int argc, char *argv [])
             char *peer = zmsg_popstr (incoming);
             printf ("I: [%s] received ping (WHISPER)\n", peer);
             free (peer);
-            zmsg_t *outgoing = zmsg_new ();
-            zmsg_addstr (outgoing, "GLOBAL");
-            zmsg_addstr (outgoing, "Hello");
-            zyre_shout (node, &outgoing);
+            zyre_shouts (node, "GLOBAL", "Hello");
         }
         else
         if (streq (event, "SHOUT")) {

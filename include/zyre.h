@@ -89,14 +89,25 @@ CZMQ_EXPORT int
 CZMQ_EXPORT zmsg_t *
     zyre_recv (zyre_t *self);
 
-//  Send message to single peer; peer ID is first frame in message
+//  Send message to single peer, specified as a UUID string
 //  Destroys message after sending
 CZMQ_EXPORT int
-    zyre_whisper (zyre_t *self, zmsg_t **msg_p);
+    zyre_whisper (zyre_t *self, char *peer, zmsg_t **msg_p);
 
-//  Send message to a group of peers
+//  Send message to a named group
+//  Destroys message after sending
 CZMQ_EXPORT int
-    zyre_shout (zyre_t *self, zmsg_t **msg_p);
+    zyre_shout (zyre_t *self, char *group, zmsg_t **msg_p);
+
+//  Send string to single peer specified as a UUID string.
+//  String is formatted using printf specifiers.
+CZMQ_EXPORT int
+    zyre_whispers (zyre_t *self, char *peer, char *format, ...);
+
+//  Send message to a named group
+//  Destroys message after sending
+CZMQ_EXPORT int
+    zyre_shouts (zyre_t *self, char *group, char *format, ...);
 
 //  Return handle to the Zyre node, for polling
 CZMQ_EXPORT void *

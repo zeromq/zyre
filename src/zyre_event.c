@@ -30,11 +30,6 @@
     work that you will want to do in many cases, such as unpacking the peer
     headers for each ENTER event received.
 @discuss
-    Sending via zyre_event_t might be cumbersome. Alternatively we could use
-    zyre_event_whisper (zmsg, recevier_uuid) and 
-    zyre_event_shout (zmsg, group_name)
-
-    Also we should deliver all of the payload frames.
 @end
 */
 
@@ -135,37 +130,6 @@ zyre_event_recv (zyre_t *self)
     return event;
 }
 
-//  ---------------------------------------------------------------------
-//  Sends an zyre whisper. Returns 0 if succesful else 1.
-//  Destroys msg after sending
-
-int
-zyre_event_send_whisper (zyre_t *zyre, zmsg_t *msg, char *receiver) 
-{
-    assert (zyre);
-    assert (msg);
-
-    zmsg_pushstr (msg, receiver);
-    int rc = zyre_whisper (zyre, &msg); 
-    zmsg_destroy (&msg);
-    return rc;
-}
-
-//  ---------------------------------------------------------------------
-//  Sends an zyre shout. Returns 0 if succesful else 1.
-//  Destroys msg after sending
-
-int
-zyre_event_send_shout (zyre_t *zyre, zmsg_t *msg, char *group)
-{
-    assert (zyre);
-    assert (msg);
-    
-    zmsg_pushstr (msg, group);
-    int rc = zyre_shout (zyre, &msg);
-    zmsg_destroy (&msg);
-    return rc;
-}
 
 //  ---------------------------------------------------------------------
 //  Returns event type, which is a zyre_event_type_t
@@ -257,7 +221,7 @@ zyre_event_test (bool verbose)
     //  One node shouts to GLOBAL
     zmsg_t *msg = zmsg_new ();
     zmsg_addstr (msg, "Hello, World");
-    zyre_event_send_shout (node1, msg, "GLOBAL");
+    zyre_shout (node1, "GLOBAL", &msg);
 
     //  Parse ENTER
     zyre_event_t *zyre_event = zyre_event_recv (node2);
