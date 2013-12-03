@@ -168,9 +168,7 @@ zyre_shout.
 
 ## Extended API
 
-Besides the plain receive method Zyre provides an API to receive an
-wrapped event. The obove explained message types are hereby replaced  
-with the following enumerations:
+Besides the plain receive method Zyre provides an API to receive an wrapped event. The obove explained message types are hereby replaced with the following enumerations:
 
     ENTER   = ZYRE_EVENT_ENTER
 
