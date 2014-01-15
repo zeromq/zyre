@@ -48,7 +48,7 @@ chat_task (void *args, zctx_t *ctx, void *pipe)
         if (items [0].revents & ZMQ_POLLIN) {
             zmsg_t *msg = zmsg_recv (pipe);
             zmsg_pushstr (msg, "CHAT");
-            zyre_shout (node, &msg);
+            zyre_shout (node, "CHAT", &msg);
         }
         //  Activity on my node handle
         if (items [1].revents & ZMQ_POLLIN) {
