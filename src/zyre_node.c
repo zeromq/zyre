@@ -188,8 +188,8 @@ zyre_node_recv_api (zyre_node_t *self)
         char *name = zmsg_popstr (request);
         char *value = zmsg_popstr (request);
         zhash_update (self->headers, name, value);
-        free (name);
-        free (value);
+        zstr_free (name);
+        zstr_free (value);
     }
     else
     if (streq (command, "START")) {
@@ -215,7 +215,7 @@ zyre_node_recv_api (zyre_node_t *self)
             zyre_peer_send (peer, &msg);
             request = NULL;
         }
-        free (identity);
+        zstr_free (identity);
     }
     else
     if (streq (command, "SHOUT")) {
@@ -229,7 +229,7 @@ zyre_node_recv_api (zyre_node_t *self)
             zyre_group_send (group, &msg);
             request = NULL;
         }
-        free (name);
+        zstr_free (name);
     }
     else
     if (streq (command, "JOIN")) {
@@ -246,7 +246,7 @@ zyre_node_recv_api (zyre_node_t *self)
             zre_msg_destroy (&msg);
             zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
         }
-        free (name);
+        zstr_free (name);
     }
     else
     if (streq (command, "LEAVE")) {
@@ -263,14 +263,14 @@ zyre_node_recv_api (zyre_node_t *self)
             zhash_delete (self->own_groups, name);
             zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
         }
-        free (name);
+        zstr_free (name);
     }
     else
     if (streq (command, "TERMINATE")) {
         self->terminated = true;
         zstr_send (self->pipe, "OK");
     }
-    free (command);
+    zstr_free (command);
     zmsg_destroy (&request);
     return 0;
 }
@@ -525,7 +525,7 @@ zyre_node_recv_beacon (zyre_node_t *self)
         }
         zuuid_destroy (&uuid);
     }
-    free (ipaddress);
+    zstr_free (ipaddress);
     zframe_destroy (&frame);
     return 0;
 }

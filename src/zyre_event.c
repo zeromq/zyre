@@ -224,27 +224,27 @@ zyre_event_test (bool verbose)
     zyre_shout (node1, "GLOBAL", &msg);
 
     //  Parse ENTER
-    zyre_event_t *zyre_event = zyre_event_recv (node2);
-    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_ENTER);
-    char *sender = zyre_event_sender (zyre_event);
-    assert (streq (zyre_event_header (zyre_event, "X-HELLO"), "World"));
-    msg = zyre_event_msg (zyre_event);
-    zyre_event_destroy (&zyre_event);
+    zyre_event_t *event = zyre_event_recv (node2);
+    assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
+    char *sender = zyre_event_sender (event);
+    assert (streq (zyre_event_header (event, "X-HELLO"), "World"));
+    msg = zyre_event_msg (event);
+    zyre_event_destroy (&event);
     
     //  Parse JOIN
-    zyre_event = zyre_event_recv (node2);
-    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_JOIN);
-    zyre_event_destroy (&zyre_event);
+    event = zyre_event_recv (node2);
+    assert (zyre_event_type (event) == ZYRE_EVENT_JOIN);
+    zyre_event_destroy (&event);
     
     //  Parse SHOUT
-    zyre_event = zyre_event_recv (node2);
-    assert (zyre_event_type (zyre_event) == ZYRE_EVENT_SHOUT);
-    assert (streq (zyre_event_group (zyre_event), "GLOBAL"));
-    msg = zyre_event_msg (zyre_event);
+    event = zyre_event_recv (node2);
+    assert (zyre_event_type (event) == ZYRE_EVENT_SHOUT);
+    assert (streq (zyre_event_group (event), "GLOBAL"));
+    msg = zyre_event_msg (event);
     char *string = zmsg_popstr (msg);
     assert (streq (string, "Hello, World"));
     free (string);
-    zyre_event_destroy (&zyre_event);
+    zyre_event_destroy (&event);
     
     zyre_destroy (&node1);
     zyre_destroy (&node2);
