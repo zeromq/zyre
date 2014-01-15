@@ -328,9 +328,9 @@ zyre_test (bool verbose)
     assert (msg);
     char *command = zmsg_popstr (msg);
     assert (streq (command, "ENTER"));
-    free (command);
+    zstr_free (command);
     char *peerid = zmsg_popstr (msg);
-    free (peerid);
+    zstr_free (peerid);
     zframe_t *headers_packed = zmsg_pop (msg);
 
     assert (headers_packed);
@@ -345,14 +345,14 @@ zyre_test (bool verbose)
     assert (msg);
     command = zmsg_popstr (msg);
     assert (streq (command, "JOIN"));
-    free (command);
+    zstr_free (command);
     zmsg_destroy (&msg);
     
     msg = zyre_recv (node2);
     assert (msg);
     command = zmsg_popstr (msg);
     assert (streq (command, "SHOUT"));
-    free (command);
+    zstr_free (command);
     zmsg_destroy (&msg);
     
     zyre_stop (node1);
