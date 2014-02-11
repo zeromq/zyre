@@ -235,25 +235,6 @@ AC_C_VOLATILE
 # Math libraries
 AC_CHECK_LIB([m], [pow])
 
-# Other libraries
-
-# libuuid 
-AC_ARG_WITH([libuuid],
-            [AS_HELP_STRING([--with-libuuid],
-            [Specify libuuid prefix])],
-            [shuppan_search_libuuid="yes"],
-            [])
-if test "x$shuppan_search_libuuid" = "xyes"; then
-    if test -r "${with_libuuid}/include/uuid/uuid.h"; then
-        CPPFLAGS="-I${with_libuuid}/include ${CPPFLAGS}"
-        LDFLAGS="-L${with_libuuid}/lib ${LDFLAGS}"
-    else
-        AC_MSG_ERROR([${with_libuuid}/include/uuid/uuid.h not found. Please check libuuid prefix])
-    fi
-fi
-
-AC_CHECK_LIB(uuid, uuid_generate,  [], [AC_MSG_ERROR([libuuid was not found.])])
-
 # These options are GNU compiler specific.
 if test "x$GCC" = "xyes"; then
     CPPFLAGS="-pedantic -Werror -Wall -Wno-unused ${CPPFLAGS}"
