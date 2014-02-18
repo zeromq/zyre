@@ -15,6 +15,7 @@ libzyre_la_SOURCES = \
     zyre_peer.h \
     zyre_group.h \
     zyre_node.h \
+    zyre_classes.h \
     zyre_log.c \
     zyre_group.c \
     zyre_peer.c \

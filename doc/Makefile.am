@@ -1,3 +1,5 @@
+if BUILD_DOC
+
 MAN1 = 
 MAN3 = zyre.3 zyre_event.3 zre_msg.3 zre_log_msg.3
 MAN7 = 
@@ -30,4 +32,6 @@ SUFFIXES=.txt .xml .1 .3 .7
 	xmlto man $<
 .xml.7:
 	xmlto man $<
+endif
+
 endif
