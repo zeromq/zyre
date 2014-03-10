@@ -34,7 +34,7 @@
     call. The first frame defines the type of the message, and following
     frames provide further values:
 
-        ENTER fromnode headers
+        ENTER fromnode ipaddress headers
             a new peer has entered the network
         EXIT fromnode
             a peer has left the network
@@ -331,6 +331,8 @@ zyre_test (bool verbose)
     zstr_free (&command);
     char *peerid = zmsg_popstr (msg);
     zstr_free (&peerid);
+    char *peeraddress = zmsg_popstr (msg);
+    zstr_free (&peeraddress);
     zframe_t *headers_packed = zmsg_pop (msg);
 
     assert (headers_packed);
