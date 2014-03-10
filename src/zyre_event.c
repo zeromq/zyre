@@ -97,10 +97,10 @@ zyre_event_recv (zyre_t *self)
 
     if (streq (type, "ENTER")) {
         event->type = ZYRE_EVENT_ENTER;
-        event->address = zmsg_popstr (msg);
         zframe_t *headers = zmsg_pop (msg);
         event->headers = zhash_unpack (headers);
         zframe_destroy (&headers);
+        event->address = zmsg_popstr (msg);
     }
     else
     if (streq (type, "EXIT"))

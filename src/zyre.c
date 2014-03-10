@@ -331,9 +331,9 @@ zyre_test (bool verbose)
     zstr_free (&command);
     char *peerid = zmsg_popstr (msg);
     zstr_free (&peerid);
+    zframe_t *headers_packed = zmsg_pop (msg);
     char *peeraddress = zmsg_popstr (msg);
     zstr_free (&peeraddress);
-    zframe_t *headers_packed = zmsg_pop (msg);
 
     assert (headers_packed);
     zhash_t *headers = zhash_unpack (headers_packed);
