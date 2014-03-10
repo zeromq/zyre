@@ -10,7 +10,7 @@ All incoming events are zmsg_t messages delivered via the zyre_recv
 call. The first frame defines the type of the message, and following
 frames provide further values:
 
-    ENTER fromnode headers
+    ENTER fromnode headers ipaddress
         a new peer has entered the network
     EXIT fromnode
         a peer has left the network
@@ -201,6 +201,10 @@ Events must be destroyed once you no longer need them.
     // Return the sending peer's id as a string
     char *
         zyre_event_sender (zyre_event_t *self);
+
+    // Return the sending peer's ipaddress as a string
+    char *
+        zyre_event_address (zyre_event_t *self);
 
     // Returns the event headers, or NULL if there are none
     zhash_t *

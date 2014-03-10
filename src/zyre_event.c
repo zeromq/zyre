@@ -41,7 +41,8 @@
 struct _zyre_event_t {
     zyre_event_type_t type; //  Event type
     char *sender;           //  Sender UUID as string
-    zhash_t *headers;       //  Headers, for a ENTER event
+    char *address;          //  Sender ipaddress as string, for an ENTER event
+    zhash_t *headers;       //  Headers, for an ENTER event
     char *group;            //  Group name for a SHOUT event
     zmsg_t *msg;            //  Message payload for SHOUT or WHISPER
 };
@@ -70,6 +71,7 @@ zyre_event_destroy (zyre_event_t **self_p)
     if (*self_p) {
         zyre_event_t *self = *self_p;
         free (self->sender);
+        free (self->address);
         free (self->group);
         zhash_destroy (&self->headers);
         zmsg_destroy (&self->msg);
@@ -98,6 +100,7 @@ zyre_event_recv (zyre_t *self)
         zframe_t *headers = zmsg_pop (msg);
         event->headers = zhash_unpack (headers);
         zframe_destroy (&headers);
+        event->address = zmsg_popstr (msg);
     }
     else
     if (streq (type, "EXIT"))
@@ -151,6 +154,18 @@ zyre_event_sender (zyre_event_t *self)
     assert (self);
     return self->sender;
 }
+
+
+//  ---------------------------------------------------------------------
+//  Return the sending peer's ipaddress as a string
+
+char *
+zyre_event_address (zyre_event_t *self)
+{
+    assert (self);
+    return self->address;
+}
+
 
 //  ---------------------------------------------------------------------
 //  Returns the event headers, or NULL if there are none
@@ -227,6 +242,8 @@ zyre_event_test (bool verbose)
     zyre_event_t *event = zyre_event_recv (node2);
     assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
     char *sender = zyre_event_sender (event);
+    char *address = zyre_event_address (event);
+    assert (address);
     assert (streq (zyre_event_header (event, "X-HELLO"), "World"));
     msg = zyre_event_msg (event);
     zyre_event_destroy (&event);
