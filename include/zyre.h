@@ -43,6 +43,7 @@
 
 //  IANA-assigned port for ZYRE discovery protocol
 #define ZRE_DISCOVERY_PORT  5670
+#define ZRE_DISCOVERY_PORT_TEST_TIMEOUT 1000
 
 //  The public API consists of the "zyre_t" class
 

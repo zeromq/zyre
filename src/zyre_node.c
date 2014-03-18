@@ -47,6 +47,8 @@ struct _zyre_node_t {
 };
 
 
+static int zyre_node_discovery_test (zyre_node_t *self);
+
 //  ---------------------------------------------------------------------
 //  Constructor
 
@@ -66,6 +68,10 @@ zyre_node_new (zctx_t *ctx, void *pipe)
         free (self);
         return NULL;            //  Interrupted 0MQ call
     }
+
+    // test if ZRE_DISCOVERY_PORT/udp is open
+    if (!zyre_node_discovery_test(self)) self->terminated = true;
+
     self->beacon = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
     if (!self->beacon) {
         free (self);
@@ -567,8 +573,13 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
     zyre_node_t *self = zyre_node_new (ctx, pipe);
     if (!self)                  //  Interrupted
         return;
-    zstr_send (self->pipe, "OK");
-
+    if (self->terminated) {
+      zstr_send (self->pipe, "TERM");
+      zyre_node_destroy (&self);
+      return;
+    } else {
+      zstr_send (self->pipe, "OK");
+    }
     uint64_t reap_at = zclock_time () + REAP_INTERVAL;
     zpoller_t *poller = zpoller_new (
         self->pipe, self->inbox, zbeacon_socket (self->beacon), NULL);
@@ -598,6 +609,39 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
     }
     zpoller_destroy (&poller);
     zyre_node_destroy (&self);
+}
+
+//  --------------------------------------------------------------------------
+//  Test for discovery (check if ZRE_DISCOVERY_PORT/udp is open)
+
+static int
+zyre_node_discovery_test (zyre_node_t *self)
+{
+    zbeacon_t *test = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
+    assert (*zbeacon_hostname (test));
+    zbeacon_publish (test, (byte *) "TEST", 4);
+    zbeacon_subscribe (test, (byte *) "TEST", 4);
+    
+    zpoller_t *poller = zpoller_new (zbeacon_socket (test), NULL);
+    int is_discovery_port_open = 1;
+    void *which = zpoller_wait (poller, ZRE_DISCOVERY_PORT_TEST_TIMEOUT * ZMQ_POLL_MSEC);
+        if (which) {
+            assert (which == zbeacon_socket (test));
+            char *ipaddress, *beacon;
+            zstr_recvx (zbeacon_socket (test), &ipaddress, &beacon, NULL);
+            assert (streq (beacon, "TEST"));
+            zstr_free (&ipaddress);
+            zstr_free (&beacon);
+        } else {
+          zclock_log("E: Discovery is not possible !!!");
+          zclock_log("E: Make sure that port %d/udp is open !!!",ZRE_DISCOVERY_PORT);
+          is_discovery_port_open = 0;
+        }
+    zpoller_destroy (&poller);
+    zbeacon_unsubscribe (test);
+    zbeacon_silence (test);
+    zbeacon_destroy (&test);
+    return is_discovery_port_open;
 }
 
 //  --------------------------------------------------------------------------

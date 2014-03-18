@@ -85,9 +85,16 @@ zyre_new (zctx_t *ctx)
     self->pipe = zthread_fork (ctx, zyre_node_engine, NULL);
     if (self->pipe) {
         char *status = zstr_recv (self->pipe);
-        if (strneq (status, "OK"))
-            zyre_destroy (&self);
-        zstr_free (&status);
+        if (streq (status, "OK")) {
+          zstr_free (&status);
+        } else if (streq (status, "TERM")) {
+          zstr_free (&status);
+          free (self);
+          self = NULL;
+        } else {
+          zyre_destroy (&self);
+          zstr_free (&status);
+        }
     }
     else {
         free (self);
