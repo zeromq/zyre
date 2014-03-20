@@ -17,7 +17,7 @@ frames provide further values:
     JOIN fromnode groupname
         a peer has joined a specific group
     LEAVE fromnode groupname
-        a peer has joined a specific group
+        a peer has left a specific group
     WHISPER fromnode message
         a peer has sent this node a message
     SHOUT fromnode groupname message
