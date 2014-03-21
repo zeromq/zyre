@@ -24,6 +24,13 @@
     =========================================================================
 */
 
+/*
+@header
+    This class lets you send ZRE log messages to a remote collector.
+@discuss
+@end
+*/
+
 #include "zyre_classes.h"
 
 //  ---------------------------------------------------------------------
@@ -182,6 +189,7 @@ zyre_log_test (bool verbose)
 {
     printf (" * zyre_log: ");
 
+    //  @selftest
     zctx_t *ctx = zctx_new ();
     //  Get all incoming log messages
     void *collector = zsocket_new (ctx, ZMQ_SUB);
@@ -216,5 +224,6 @@ zyre_log_test (bool verbose)
     zpoller_destroy (&poller);
     zyre_log_destroy (&log);
     zctx_destroy (&ctx);
+    //  @end
     printf ("OK\n");
 }
