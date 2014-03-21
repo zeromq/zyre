@@ -1,0 +1,85 @@
+zyre_log(3)
+===========
+
+NAME
+----
+zyre_log - record log data remotely to a collector
+
+SYNOPSIS
+--------
+----
+//  Constructor
+CZMQ_EXPORT zyre_log_t *
+    zyre_log_new (zctx_t *ctx, char *sender);
+
+//  Destructor
+CZMQ_EXPORT void
+    zyre_log_destroy (zyre_log_t **self_p);
+
+//  Connect log to remote endpoint
+CZMQ_EXPORT void
+    zyre_log_connect (zyre_log_t *self, char *format, ...);
+
+//  Broadcast a log information message
+CZMQ_EXPORT void
+    zyre_log_info (zyre_log_t *self, int event, char *peer, char *format, ...);
+
+//  Broadcast a log warning message
+CZMQ_EXPORT void
+    zyre_log_warning (zyre_log_t *self, char *peer, char *format, ...);
+
+//  Broadcast a log error message
+CZMQ_EXPORT void
+    zyre_log_error (zyre_log_t *self, char *peer, char *format, ...);
+
+//  Self test of this class
+CZMQ_EXPORT void
+    zyre_log_test (bool verbose);
+----
+
+DESCRIPTION
+-----------
+
+This class lets you send ZRE log messages to a remote collector.
+
+
+EXAMPLE
+-------
+.From zyre_log_test method
+----
+    zctx_t *ctx = zctx_new ();
+    //  Get all incoming log messages
+    void *collector = zsocket_new (ctx, ZMQ_SUB);
+    zsocket_bind (collector, "tcp://127.0.0.1:5555");
+    zsocket_set_subscribe (collector, "");
+
+    //  Create a log instance to send log messages
+    zyre_log_t *log = zyre_log_new (ctx, "this is me");
+    zyre_log_connect (log, "tcp://127.0.0.1:5555");
+
+    //  Workaround for issue 270; give time for connect to
+    //  happen and subscriptions to go to pub socket; 200
+    //  msec should be enough for under valgrind on a slow PC
+    zpoller_t *poller = zpoller_new (collector, NULL);
+    zpoller_wait (poller, 200);
+
+    //  Send some messages
+    zyre_log_info (log, ZRE_LOG_MSG_EVENT_JOIN, NULL, "this is you");
+    zyre_log_info (log, ZRE_LOG_MSG_EVENT_EXIT, "Pizza time", "this is you");
+    zyre_log_warning (log, "this is you", "Time flies like an %s", "arrow");
+    zyre_log_error (log, "this is you", "Fruit flies like a %s", "banana");
+
+    int count = 0;
+    while (count < 4) {
+        zre_log_msg_t *msg = zre_log_msg_recv (collector);
+        assert (msg);
+        if (verbose)
+            zre_log_msg_dump (msg);
+        zre_log_msg_destroy (&msg);
+        count++;
+    }
+    zpoller_destroy (&poller);
+    zyre_log_destroy (&log);
+    zctx_destroy (&ctx);
+----
+

@@ -86,7 +86,6 @@ CZMQ_EXPORT char *
 CZMQ_EXPORT zmsg_t *
     zyre_event_msg (zyre_event_t *self);
 
-
 // Self test of this class
 CZMQ_EXPORT void
     zyre_event_test (bool verbose);
