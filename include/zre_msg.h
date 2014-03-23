@@ -1,8 +1,18 @@
 /*  =========================================================================
-    zre_msg - work with zre messages
+    zre_msg - work with ZRE messages
     
-    Generated codec header for zre_msg
-    -------------------------------------------------------------------------
+    Codec header for zre_msg.
+
+    ** WARNING *************************************************************
+    THIS SOURCE FILE IS 100% GENERATED. If you edit this file, you will lose
+    your changes at the next build cycle. This is great for temporary printf
+    statements. DO NOT MAKE ANY CHANGES YOU WISH TO KEEP. The correct places
+    for commits are:
+
+    * The XML model used for this code generation: zre_msg.xml
+    * The code generation script that built this file: zproto_codec_c
+    ************************************************************************
+    
     Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
     Copyright other contributors as noted in the AUTHORS file.              
                                                                             
@@ -27,33 +37,40 @@
 #ifndef __ZRE_MSG_H_INCLUDED__
 #define __ZRE_MSG_H_INCLUDED__
 
-/*  These are the zre_msg messages
+/*  These are the zre_msg messages:
+
     HELLO - Greet a peer so it can connect back to us
-        sequence      number 2
-        ipaddress     string
-        mailbox       number 2
-        groups        strings
-        status        number 1
-        headers       dictionary
+        sequence            number 2    
+        ipaddress           string      
+        mailbox             number 2    
+        groups              strings     
+        status              number 1    
+        headers             dictionary  
+
     WHISPER - Send a multi-part message to a peer
-        sequence      number 2
-        content       msg
+        sequence            number 2    
+        content             msg         
+
     SHOUT - Send a multi-part message to a group
-        sequence      number 2
-        group         string
-        content       msg
+        sequence            number 2    
+        group               string      
+        content             msg         
+
     JOIN - Join a group
-        sequence      number 2
-        group         string
-        status        number 1
+        sequence            number 2    
+        group               string      
+        status              number 1    
+
     LEAVE - Leave a group
-        sequence      number 2
-        group         string
-        status        number 1
+        sequence            number 2    
+        group               string      
+        status              number 1    
+
     PING - Ping a peer that has gone silent
-        sequence      number 2
+        sequence            number 2    
+
     PING_OK - Reply to a peer's ping
-        sequence      number 2
+        sequence            number 2    
 */
 
 #define ZRE_MSG_VERSION                     1
@@ -82,19 +99,43 @@ zre_msg_t *
 void
     zre_msg_destroy (zre_msg_t **self_p);
 
-//  Receive and parse a zre_msg from the input
+//  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
+//  the message could not be parsed, or was NULL. If the socket type is
+//  ZMQ_ROUTER, then parses the first frame as a routing_id. Destroys msg
+//  and nullifies the msg refernce.
+zre_msg_t *
+    zre_msg_decode (zmsg_t **msg_p, int socket_type);
+
+//  Encode zre_msg into zmsg and destroy it. Returns a newly created
+//  object or NULL if error. Use when not in control of sending the message.
+//  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
+//  first frame of the resulting message.
+zmsg_t *
+    zre_msg_encode (zre_msg_t *self, int socket_type);
+
+//  Receive and parse a zre_msg from the socket. Returns new object, 
+//  or NULL if error. Will block if there's no message waiting.
 zre_msg_t *
     zre_msg_recv (void *input);
+
+//  Receive and parse a zre_msg from the socket. Returns new object, 
+//  or NULL either if there was no input waiting, or the recv was interrupted.
+zre_msg_t *
+    zre_msg_recv_nowait (void *input);
 
 //  Send the zre_msg to the output, and destroy it
 int
     zre_msg_send (zre_msg_t **self_p, void *output);
 
+//  Send the zre_msg to the output, and do not destroy it
+int
+    zre_msg_send_again (zre_msg_t *self, void *output);
+
 //  Send the HELLO to the output in one step
 int
     zre_msg_send_hello (void *output,
         uint16_t sequence,
-        char *ipaddress,
+        const char *ipaddress,
         uint16_t mailbox,
         zlist_t *groups,
         byte status,
@@ -110,21 +151,21 @@ int
 int
     zre_msg_send_shout (void *output,
         uint16_t sequence,
-        char *group,
+        const char *group,
         zmsg_t *content);
     
 //  Send the JOIN to the output in one step
 int
     zre_msg_send_join (void *output,
         uint16_t sequence,
-        char *group,
+        const char *group,
         byte status);
     
 //  Send the LEAVE to the output in one step
 int
     zre_msg_send_leave (void *output,
         uint16_t sequence,
-        char *group,
+        const char *group,
         byte status);
     
 //  Send the PING to the output in one step
@@ -145,18 +186,18 @@ zre_msg_t *
 void
     zre_msg_dump (zre_msg_t *self);
 
-//  Get/set the message address
+//  Get/set the message routing id
 zframe_t *
-    zre_msg_address (zre_msg_t *self);
+    zre_msg_routing_id (zre_msg_t *self);
 void
-    zre_msg_set_address (zre_msg_t *self, zframe_t *address);
+    zre_msg_set_routing_id (zre_msg_t *self, zframe_t *routing_id);
 
 //  Get the zre_msg id and printable command
 int
     zre_msg_id (zre_msg_t *self);
 void
     zre_msg_set_id (zre_msg_t *self, int id);
-char *
+const char *
     zre_msg_command (zre_msg_t *self);
 
 //  Get/set the sequence field
@@ -166,10 +207,10 @@ void
     zre_msg_set_sequence (zre_msg_t *self, uint16_t sequence);
 
 //  Get/set the ipaddress field
-char *
+const char *
     zre_msg_ipaddress (zre_msg_t *self);
 void
-    zre_msg_set_ipaddress (zre_msg_t *self, char *format, ...);
+    zre_msg_set_ipaddress (zre_msg_t *self, const char *format, ...);
 
 //  Get/set the mailbox field
 uint16_t
@@ -180,16 +221,20 @@ void
 //  Get/set the groups field
 zlist_t *
     zre_msg_groups (zre_msg_t *self);
+//  Get the groups field and transfer ownership to caller
+zlist_t *
+    zre_msg_get_groups (zre_msg_t *self);
+//  Set the groups field, transferring ownership from caller
 void
-    zre_msg_set_groups (zre_msg_t *self, zlist_t *groups);
+    zre_msg_set_groups (zre_msg_t *self, zlist_t **groups_p);
 
 //  Iterate through the groups field, and append a groups value
-char *
+const char *
     zre_msg_groups_first (zre_msg_t *self);
-char *
+const char *
     zre_msg_groups_next (zre_msg_t *self);
 void
-    zre_msg_groups_append (zre_msg_t *self, char *format, ...);
+    zre_msg_groups_append (zre_msg_t *self, const char *format, ...);
 size_t
     zre_msg_groups_size (zre_msg_t *self);
 
@@ -202,30 +247,41 @@ void
 //  Get/set the headers field
 zhash_t *
     zre_msg_headers (zre_msg_t *self);
+//  Get the headers field and transfer ownership to caller
+zhash_t *
+    zre_msg_get_headers (zre_msg_t *self);
+//  Set the headers field, transferring ownership from caller
 void
-    zre_msg_set_headers (zre_msg_t *self, zhash_t *headers);
+    zre_msg_set_headers (zre_msg_t *self, zhash_t **headers_p);
     
 //  Get/set a value in the headers dictionary
-char *
-    zre_msg_headers_string (zre_msg_t *self, char *key, char *default_value);
+const char *
+    zre_msg_headers_string (zre_msg_t *self,
+        const char *key, const char *default_value);
 uint64_t
-    zre_msg_headers_number (zre_msg_t *self, char *key, uint64_t default_value);
+    zre_msg_headers_number (zre_msg_t *self,
+        const char *key, uint64_t default_value);
 void
-    zre_msg_headers_insert (zre_msg_t *self, char *key, char *format, ...);
+    zre_msg_headers_insert (zre_msg_t *self,
+        const char *key, const char *format, ...);
 size_t
     zre_msg_headers_size (zre_msg_t *self);
 
-//  Get/set the content field
+//  Get a copy of the content field
 zmsg_t *
     zre_msg_content (zre_msg_t *self);
+//  Get the content field and transfer ownership to caller
+zmsg_t *
+    zre_msg_get_content (zre_msg_t *self);
+//  Set the content field, transferring ownership from caller
 void
-    zre_msg_set_content (zre_msg_t *self, zmsg_t *msg);
+    zre_msg_set_content (zre_msg_t *self, zmsg_t **msg_p);
 
 //  Get/set the group field
-char *
+const char *
     zre_msg_group (zre_msg_t *self);
 void
-    zre_msg_set_group (zre_msg_t *self, char *format, ...);
+    zre_msg_set_group (zre_msg_t *self, const char *format, ...);
 
 //  Self test of this class
 int

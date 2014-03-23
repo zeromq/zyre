@@ -36,3 +36,7 @@ libzyre_la_LDFLAGS = -version-info @LTVER@
 endif
 
 TESTS = zyre_selftest
+
+# Produce generated models; do this manually in src directory
+code:
+	gsl -q zre_msg.xml zre_log_msg.xml

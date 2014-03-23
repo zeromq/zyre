@@ -46,7 +46,7 @@ struct _zyre_log_t {
 //  Construct new log object
 
 zyre_log_t *
-zyre_log_new (zctx_t *ctx, char *sender)
+zyre_log_new (zctx_t *ctx, const char *sender)
 {
     zyre_log_t *self = (zyre_log_t *) zmalloc (sizeof (zyre_log_t));
     //  If the system can't create new sockets, discard log data silently
@@ -79,7 +79,7 @@ zyre_log_destroy (zyre_log_t **self_p)
 //  Connect log to remote endpoint
 
 void
-zyre_log_connect (zyre_log_t *self, char *format, ...)
+zyre_log_connect (zyre_log_t *self, const char *format, ...)
 {
     assert (self);
     if (self->publisher) {
@@ -98,7 +98,7 @@ zyre_log_connect (zyre_log_t *self, char *format, ...)
 //  Broadcast a log information message
 
 void
-zyre_log_info (zyre_log_t *self, int event, char *peer, char *format, ...)
+zyre_log_info (zyre_log_t *self, int event, const char *peer, const char *format, ...)
 {
     assert (self);
 
@@ -130,7 +130,7 @@ zyre_log_info (zyre_log_t *self, int event, char *peer, char *format, ...)
 //  Broadcast a log warning message
 
 void
-zyre_log_warning (zyre_log_t *self, char *peer, char *format, ...)
+zyre_log_warning (zyre_log_t *self, const char *peer, const char *format, ...)
 {
     assert (self);
     assert (format);
@@ -158,7 +158,7 @@ zyre_log_warning (zyre_log_t *self, char *peer, char *format, ...)
 //  Broadcast a log error message
 
 void
-zyre_log_error (zyre_log_t *self, char *peer, char *format, ...)
+zyre_log_error (zyre_log_t *self, const char *peer, const char *format, ...)
 {
     assert (self);
 

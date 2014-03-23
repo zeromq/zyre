@@ -49,7 +49,7 @@ s_delete_group (void *argument)
 //  Construct new group object
 
 zyre_group_t *
-zyre_group_new (char *name, zhash_t *container)
+zyre_group_new (const char *name, zhash_t *container)
 {
     zyre_group_t *self = (zyre_group_t *) zmalloc (sizeof (zyre_group_t));
     self->name = strdup (name);
