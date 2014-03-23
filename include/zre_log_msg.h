@@ -1,8 +1,18 @@
 /*  =========================================================================
-    zre_log_msg - work with zre logging messages
+    zre_log_msg - work with ZRE logging messages
     
-    Generated codec header for zre_log_msg
-    -------------------------------------------------------------------------
+    Codec header for zre_log_msg.
+
+    ** WARNING *************************************************************
+    THIS SOURCE FILE IS 100% GENERATED. If you edit this file, you will lose
+    your changes at the next build cycle. This is great for temporary printf
+    statements. DO NOT MAKE ANY CHANGES YOU WISH TO KEEP. The correct places
+    for commits are:
+
+    * The XML model used for this code generation: zre_log_msg.xml
+    * The code generation script that built this file: zproto_codec_c
+    ************************************************************************
+    
     Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
     Copyright other contributors as noted in the AUTHORS file.              
                                                                             
@@ -27,14 +37,15 @@
 #ifndef __ZRE_LOG_MSG_H_INCLUDED__
 #define __ZRE_LOG_MSG_H_INCLUDED__
 
-/*  These are the zre_log_msg messages
+/*  These are the zre_log_msg messages:
+
     LOG - Log an event
-        level         number 1
-        event         number 1
-        node          number 2
-        peer          number 2
-        time          number 8
-        data          string
+        level               number 1    
+        event               number 1    
+        node                number 2    
+        peer                number 2    
+        time                number 8    
+        data                string      
 */
 
 #define ZRE_LOG_MSG_VERSION                 1
@@ -64,13 +75,37 @@ zre_log_msg_t *
 void
     zre_log_msg_destroy (zre_log_msg_t **self_p);
 
-//  Receive and parse a zre_log_msg from the input
+//  Parse a zre_log_msg from zmsg_t. Returns a new object, or NULL if
+//  the message could not be parsed, or was NULL. If the socket type is
+//  ZMQ_ROUTER, then parses the first frame as a routing_id. Destroys msg
+//  and nullifies the msg refernce.
+zre_log_msg_t *
+    zre_log_msg_decode (zmsg_t **msg_p, int socket_type);
+
+//  Encode zre_log_msg into zmsg and destroy it. Returns a newly created
+//  object or NULL if error. Use when not in control of sending the message.
+//  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
+//  first frame of the resulting message.
+zmsg_t *
+    zre_log_msg_encode (zre_log_msg_t *self, int socket_type);
+
+//  Receive and parse a zre_log_msg from the socket. Returns new object, 
+//  or NULL if error. Will block if there's no message waiting.
 zre_log_msg_t *
     zre_log_msg_recv (void *input);
+
+//  Receive and parse a zre_log_msg from the socket. Returns new object, 
+//  or NULL either if there was no input waiting, or the recv was interrupted.
+zre_log_msg_t *
+    zre_log_msg_recv_nowait (void *input);
 
 //  Send the zre_log_msg to the output, and destroy it
 int
     zre_log_msg_send (zre_log_msg_t **self_p, void *output);
+
+//  Send the zre_log_msg to the output, and do not destroy it
+int
+    zre_log_msg_send_again (zre_log_msg_t *self, void *output);
 
 //  Send the LOG to the output in one step
 int
@@ -80,7 +115,7 @@ int
         uint16_t node,
         uint16_t peer,
         uint64_t time,
-        char *data);
+        const char *data);
     
 //  Duplicate the zre_log_msg message
 zre_log_msg_t *
@@ -90,18 +125,18 @@ zre_log_msg_t *
 void
     zre_log_msg_dump (zre_log_msg_t *self);
 
-//  Get/set the message address
+//  Get/set the message routing id
 zframe_t *
-    zre_log_msg_address (zre_log_msg_t *self);
+    zre_log_msg_routing_id (zre_log_msg_t *self);
 void
-    zre_log_msg_set_address (zre_log_msg_t *self, zframe_t *address);
+    zre_log_msg_set_routing_id (zre_log_msg_t *self, zframe_t *routing_id);
 
 //  Get the zre_log_msg id and printable command
 int
     zre_log_msg_id (zre_log_msg_t *self);
 void
     zre_log_msg_set_id (zre_log_msg_t *self, int id);
-char *
+const char *
     zre_log_msg_command (zre_log_msg_t *self);
 
 //  Get/set the level field
@@ -135,10 +170,10 @@ void
     zre_log_msg_set_time (zre_log_msg_t *self, uint64_t time);
 
 //  Get/set the data field
-char *
+const char *
     zre_log_msg_data (zre_log_msg_t *self);
 void
-    zre_log_msg_set_data (zre_log_msg_t *self, char *format, ...);
+    zre_log_msg_set_data (zre_log_msg_t *self, const char *format, ...);
 
 //  Self test of this class
 int

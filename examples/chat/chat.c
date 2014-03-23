@@ -2,7 +2,7 @@
 //  Example Zyre distributed chat application
 //
 //  --------------------------------------------------------------------------
-//  Copyright (c) 2010-2013 iMatix Corporation and Contributors
+//  Copyright (c) 2010-2014 iMatix Corporation and Contributors
 //  
 //  Permission is hereby granted, free of charge, to any person obtaining a 
 //  copy of this software and associated documentation files (the "Software"),

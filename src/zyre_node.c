@@ -2,7 +2,7 @@
     zyre_node - node on a ZRE network
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2014 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -211,9 +211,8 @@ zyre_node_recv_api (zyre_node_t *self)
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
-            zre_msg_set_content (msg, request);
+            zre_msg_set_content (msg, &request);
             zyre_peer_send (peer, &msg);
-            request = NULL;
         }
         zstr_free (&identity);
     }
@@ -225,9 +224,8 @@ zyre_node_recv_api (zyre_node_t *self)
         if (group) {
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
             zre_msg_set_group (msg, name);
-            zre_msg_set_content (msg, request);
+            zre_msg_set_content (msg, &request);
             zyre_group_send (group, &msg);
-            request = NULL;
         }
         zstr_free (&name);
     }
@@ -290,7 +288,7 @@ zyre_node_purge_peer (const char *key, void *item, void *argument)
 //  Find or create peer via its UUID
 
 static zyre_peer_t *
-zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, char *address, uint16_t port)
+zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *address, uint16_t port)
 {
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (!peer) {
@@ -303,12 +301,15 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, char *address, uint16_
         zyre_peer_connect (peer, self->uuid, endpoint);
 
         //  Handshake discovery by sending HELLO as first message
+        zlist_t *groups = zhash_keys (self->own_groups);
+        zhash_t *headers = zhash_dup (self->headers);
+        
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
         zre_msg_set_ipaddress (msg, self->host);
         zre_msg_set_mailbox (msg, self->port);
-        zre_msg_set_groups (msg, zhash_keys (self->own_groups));
+        zre_msg_set_groups (msg, &groups);
         zre_msg_set_status (msg, self->status);
-        zre_msg_set_headers (msg, zhash_dup (self->headers));
+        zre_msg_set_headers (msg, &headers);
         zyre_peer_send (peer, &msg);
 
         //  Send new peer event to logger, if any
@@ -352,7 +353,7 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 //  Find or create group via its name
 
 static zyre_group_t *
-zyre_node_require_peer_group (zyre_node_t *self, char *name)
+zyre_node_require_peer_group (zyre_node_t *self, const char *name)
 {
     zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->peer_groups, name);
     if (!group)
@@ -361,7 +362,7 @@ zyre_node_require_peer_group (zyre_node_t *self, char *name)
 }
 
 static zyre_group_t *
-zyre_node_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
+zyre_node_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *name)
 {
     zyre_group_t *group = zyre_node_require_peer_group (self, name);
     zyre_group_join (group, peer);
@@ -375,7 +376,7 @@ zyre_node_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
 }
 
 static zyre_group_t *
-zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, char *name)
+zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *name)
 {
     zyre_group_t *group = zyre_node_require_peer_group (self, name);
     zyre_group_leave (group, peer);
@@ -400,13 +401,14 @@ zyre_node_recv_peer (zyre_node_t *self)
 
     //  First frame is sender identity, holding binary UUID
     zuuid_t *uuid = zuuid_new ();
-    zuuid_set (uuid, zframe_data (zre_msg_address (msg)));
+    zuuid_set (uuid, zframe_data (zre_msg_routing_id (msg)));
 
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
-        peer = zyre_node_require_peer (self, uuid, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
+        peer = zyre_node_require_peer (
+            self, uuid, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
         zyre_peer_set_ready (peer, true);
     }
@@ -431,7 +433,7 @@ zyre_node_recv_peer (zyre_node_t *self)
         zstr_send (self->pipe, zre_msg_ipaddress (msg));
         
         //  Join peer to listed groups
-        char *name = zre_msg_groups_first (msg);
+        const char *name = zre_msg_groups_first (msg);
         while (name) {
             zyre_node_join_peer_group (self, peer, name);
             name = zre_msg_groups_next (msg);
@@ -443,7 +445,7 @@ zyre_node_recv_peer (zyre_node_t *self)
         zyre_peer_set_headers (peer, zre_msg_headers (msg));
 
         //  If peer is a ZRE/LOG collector, connect to it
-        char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
+        const char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
         if (collector)
             zyre_log_connect (self->log, collector);
     }

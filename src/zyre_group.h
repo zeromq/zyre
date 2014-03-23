@@ -2,7 +2,7 @@
     zyre_group - group known to this node
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2014 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -35,7 +35,7 @@ typedef struct _zyre_group_t zyre_group_t;
 
 //  Constructor
 zyre_group_t *
-    zyre_group_new (char *name, zhash_t *container);
+    zyre_group_new (const char *name, zhash_t *container);
 
 //  Destructor
 void

@@ -1,0 +1,21 @@
+The following ABNF grammar defines the work with ZRE logging messages:
+
+    zre_log_msg     = *(  LOG )
+
+    ;     Log an event
+    C:LOG           = signature %d1 level event node peer time data
+    signature       = %xAA %d2              ; two octets
+    level           = number-1              ; 
+    event           = number-1              ; 
+    node            = number-2              ; 
+    peer            = number-2              ; 
+    time            = number-8              ; 
+    data            = string                ; 
+
+    ; Strings are always length + text contents
+    string          = number-1 *VCHAR
+
+    ; Numbers are unsigned integers in network byte order
+    number-1        = 1OCTET
+    number-2        = 2OCTET
+    number-8        = 8OCTET

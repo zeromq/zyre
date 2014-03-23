@@ -2,7 +2,7 @@
     zyre_log - record log data
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2013 iMatix Corporation <www.imatix.com>
+    Copyright (c) 1991-2014 iMatix Corporation <www.imatix.com>
     Copyright other contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
@@ -36,7 +36,7 @@ typedef struct _zyre_log_t zyre_log_t;
 // @interface
 //  Constructor
 CZMQ_EXPORT zyre_log_t *
-    zyre_log_new (zctx_t *ctx, char *sender);
+    zyre_log_new (zctx_t *ctx, const char *sender);
 
 //  Destructor
 CZMQ_EXPORT void
@@ -44,19 +44,19 @@ CZMQ_EXPORT void
 
 //  Connect log to remote endpoint
 CZMQ_EXPORT void
-    zyre_log_connect (zyre_log_t *self, char *format, ...);
+    zyre_log_connect (zyre_log_t *self, const char *format, ...);
 
 //  Broadcast a log information message
 CZMQ_EXPORT void
-    zyre_log_info (zyre_log_t *self, int event, char *peer, char *format, ...);
+    zyre_log_info (zyre_log_t *self, int event, const char *peer, const char *format, ...);
 
 //  Broadcast a log warning message
 CZMQ_EXPORT void
-    zyre_log_warning (zyre_log_t *self, char *peer, char *format, ...);
+    zyre_log_warning (zyre_log_t *self, const char *peer, const char *format, ...);
 
 //  Broadcast a log error message
 CZMQ_EXPORT void
-    zyre_log_error (zyre_log_t *self, char *peer, char *format, ...);
+    zyre_log_error (zyre_log_t *self, const char *peer, const char *format, ...);
 
 //  Self test of this class
 CZMQ_EXPORT void

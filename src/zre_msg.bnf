@@ -1,0 +1,60 @@
+The following ABNF grammar defines the work with ZRE messages:
+
+    zre_msg         = *(  HELLO |  WHISPER |  SHOUT |  JOIN |  LEAVE |  PING |  PING-OK )
+
+    ;     Greet a peer so it can connect back to us
+    C:HELLO         = signature %d1 ipaddress mailbox groups status headers
+    signature       = %xAA %d1              ; two octets
+    ipaddress       = string                ; 
+    mailbox         = number-2              ; 
+    groups          = strings               ; 
+    status          = number-1              ; 
+    headers         = dictionary            ; 
+
+    ;     Send a multi-part message to a peer
+    C:WHISPER       = signature %d2 content
+    content         = msg                   ; 
+
+    ;     Send a multi-part message to a group
+    C:SHOUT         = signature %d3 group content
+    group           = string                ; 
+    content         = msg                   ; 
+
+    ;     Join a group
+    C:JOIN          = signature %d4 group status
+    group           = string                ; 
+    status          = number-1              ; 
+
+    ;     Leave a group
+    C:LEAVE         = signature %d5 group status
+    group           = string                ; 
+    status          = number-1              ; 
+
+    ;     Ping a peer that has gone silent
+    C:PING          = signature %d6
+
+    ;     Reply to a peer's ping
+    C:PING-OK       = signature %d7
+
+    ; A list of string values
+    strings         = strings-count *strings-value
+    strings-count   = number-4
+    strings-value   = longstr
+
+    ; A list of name/value pairs
+    dictionary      = dict-count *( dict-name dict-value )
+    dict-count      = number-4
+    dict-value      = longstr
+    dict-name       = string
+
+    ; A msg is zero or more distinct frames
+    msg             = *frame
+
+    ; Strings are always length + text contents
+    string          = number-1 *VCHAR
+    longstr         = number-4 *VCHAR
+
+    ; Numbers are unsigned integers in network byte order
+    number-1        = 1OCTET
+    number-2        = 2OCTET
+    number-4        = 4OCTET
