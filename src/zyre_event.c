@@ -223,7 +223,6 @@ zyre_event_test (bool verbose)
     //  Create two nodes
     zyre_t *node1 = zyre_new (ctx);
     zyre_t *node2 = zyre_new (ctx);
-    zyre_set_header (node1, "X-FILEMQ", "tcp://128.0.0.1:6777");
     zyre_set_header (node1, "X-HELLO", "World");
     zyre_start (node1);
     zyre_start (node2);

@@ -68,6 +68,11 @@ CZMQ_EXPORT void
 CZMQ_EXPORT void
     zyre_set_header (zyre_t *self, char *name, char *format, ...);
 
+//  Set verbose mode; this tells the node to log all traffic as well
+//  as all major events.
+CZMQ_EXPORT void
+    zyre_set_verbose (zyre_t *self);
+
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection.
 CZMQ_EXPORT void
