@@ -123,7 +123,7 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
         zsocket_set_sndtimeo (self->mailbox, 0);
 
         //  Connect through to peer node
-        int rc = zsocket_connect (self->mailbox, endpoint);
+        int rc = zsocket_connect (self->mailbox, "%s", endpoint);
         assert (rc == 0);
         self->endpoint = strdup (endpoint);
         self->connected = true;
