@@ -37,8 +37,8 @@
     ZYRE_MAKE_VERSION(ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
 
 #include <czmq.h>
-#if CZMQ_VERSION < 20100
-#   error "Zyre needs CZMQ/2.1.0 or later"
+#if CZMQ_VERSION < 20200
+#   error "Zyre needs CZMQ/2.2.0 or later"
 #endif
 
 //  IANA-assigned port for ZYRE discovery protocol
