@@ -309,6 +309,8 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *address, u
 
         peer = zyre_peer_new (self->ctx, self->peers, uuid);
         zyre_peer_connect (peer, self->uuid, endpoint);
+        if (self->verbose)
+            zyre_peer_set_log (peer, self->log);
 
         //  Handshake discovery by sending HELLO as first message
         zlist_t *groups = zhash_keys (self->own_groups);
@@ -412,6 +414,9 @@ zyre_node_recv_peer (zyre_node_t *self)
     //  First frame is sender identity, holding binary UUID
     zuuid_t *uuid = zuuid_new ();
     zuuid_set (uuid, zframe_data (zre_msg_routing_id (msg)));
+    if (self->verbose)
+        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_RECV,
+                    zuuid_str (self->uuid), zuuid_str (uuid));
 
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist

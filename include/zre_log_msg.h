@@ -56,6 +56,8 @@
 #define ZRE_LOG_MSG_EVENT_LEAVE             2
 #define ZRE_LOG_MSG_EVENT_ENTER             3
 #define ZRE_LOG_MSG_EVENT_EXIT              4
+#define ZRE_LOG_MSG_EVENT_SEND              5
+#define ZRE_LOG_MSG_EVENT_RECV              6
 
 #define ZRE_LOG_MSG_LOG                     1
 

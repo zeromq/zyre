@@ -42,6 +42,7 @@ struct _zyre_peer_t {
     uint16_t sent_sequence;     //  Outgoing message sequence
     uint16_t want_sequence;     //  Incoming message sequence
     zhash_t *headers;           //  Peer headers
+    zyre_log_t *log;            //  Log publisher, if any
 };
 
 
@@ -159,6 +160,10 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
     assert (self);
     if (self->connected) {
         zre_msg_set_sequence (*msg_p, ++(self->sent_sequence));
+        if (self->log)
+            zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_SEND,
+                      zuuid_str (self->uuid), "todo");
+            
         if (zre_msg_send (msg_p, self->mailbox) && errno == EAGAIN) {
             zyre_peer_disconnect (self);
             return -1;
@@ -331,6 +336,17 @@ zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg)
         --(self->want_sequence);    //  Rollback
 
     return valid;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Ask peer to log all traffic via ZRE_LOG
+
+void
+zyre_peer_set_log (zyre_peer_t *self, zyre_log_t *log)
+{
+    assert (self);
+    self->log = log;
 }
 
 
