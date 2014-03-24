@@ -87,7 +87,7 @@ zyre_log_connect (zyre_log_t *self, const char *format, ...)
         va_start (argptr, format);
         char *endpoint = zsys_vprintf (format, argptr);
         va_end (argptr);
-        int rc = zsocket_connect (self->publisher, endpoint);
+        int rc = zsocket_connect (self->publisher, "%s", endpoint);
         assert (rc == 0);
         free (endpoint);
     }

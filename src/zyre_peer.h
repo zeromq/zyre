@@ -105,6 +105,10 @@ void
 bool
     zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg);
 
+//  Ask peer to log all traffic via ZRE_LOG
+void
+    zyre_peer_set_log (zyre_peer_t *self, zyre_log_t *log);
+
 //  Self test of this class
 void
     zyre_peer_test (bool verbose);

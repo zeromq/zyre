@@ -38,6 +38,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
     zyre_t *node = zyre_new (ctx);
     if (!node)
         return;                 //  Could not create new node
+    zyre_set_verbose (node);
     zyre_start (node);
 
     int64_t counter = 0;

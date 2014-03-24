@@ -33,6 +33,7 @@ struct _zyre_node_t {
     zctx_t *ctx;                //  CZMQ context
     void *pipe;                 //  Pipe back to application
     bool terminated;            //  API shut us down
+    bool verbose;               //  Log all traffic
     zbeacon_t *beacon;          //  Beacon object
     zyre_log_t *log;            //  Log object
     zuuid_t *uuid;              //  Our UUID as object
@@ -192,14 +193,19 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&value);
     }
     else
+    if (streq (command, "VERBOSE")) {
+        self->verbose = true;
+        zsocket_signal (self->pipe);
+    }
+    else
     if (streq (command, "START")) {
         zyre_node_start (self);
-        zstr_send (self->pipe, "OK");
+        zsocket_signal (self->pipe);
     }
     else
     if (streq (command, "STOP")) {
         zyre_node_stop (self);
-        zstr_send (self->pipe, "OK");
+        zsocket_signal (self->pipe);
     }
     else
     if (streq (command, "WHISPER")) {
@@ -266,7 +272,11 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "TERMINATE")) {
         self->terminated = true;
-        zstr_send (self->pipe, "OK");
+        zsocket_signal (self->pipe);
+    }
+    else {
+        printf ("E: invalid command '%s'\n", command);
+        assert (false);
     }
     zstr_free (&command);
     zmsg_destroy (&request);
@@ -299,6 +309,8 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *address, u
 
         peer = zyre_peer_new (self->ctx, self->peers, uuid);
         zyre_peer_connect (peer, self->uuid, endpoint);
+        if (self->verbose)
+            zyre_peer_set_log (peer, self->log);
 
         //  Handshake discovery by sending HELLO as first message
         zlist_t *groups = zhash_keys (self->own_groups);
@@ -341,8 +353,8 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
     zstr_send (self->pipe, zyre_peer_identity (peer));
     //  Send a log event
     zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
-                    zyre_peer_endpoint (peer),
-                    zyre_peer_endpoint (peer));
+                   zyre_peer_endpoint (peer),
+                   zyre_peer_endpoint (peer));
     //  Remove peer from any groups we've got it in
     zhash_foreach (self->peer_groups, zyre_node_delete_peer, peer);
     //  To destroy peer, we remove from peers hash table
@@ -402,6 +414,9 @@ zyre_node_recv_peer (zyre_node_t *self)
     //  First frame is sender identity, holding binary UUID
     zuuid_t *uuid = zuuid_new ();
     zuuid_set (uuid, zframe_data (zre_msg_routing_id (msg)));
+    if (self->verbose)
+        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_RECV,
+                    zuuid_str (self->uuid), zuuid_str (uuid));
 
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist
@@ -569,7 +584,7 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
     zyre_node_t *self = zyre_node_new (ctx, pipe);
     if (!self)                  //  Interrupted
         return;
-    zstr_send (self->pipe, "OK");
+    zsocket_signal (self->pipe);
 
     uint64_t reap_at = zclock_time () + REAP_INTERVAL;
     zpoller_t *poller = zpoller_new (

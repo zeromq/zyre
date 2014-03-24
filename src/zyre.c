@@ -83,12 +83,8 @@ zyre_new (zctx_t *ctx)
     //  Start node engine and wait for it to be ready
     assert (ctx);
     self->pipe = zthread_fork (ctx, zyre_node_engine, NULL);
-    if (self->pipe) {
-        char *status = zstr_recv (self->pipe);
-        if (strneq (status, "OK"))
-            zyre_destroy (&self);
-        zstr_free (&status);
-    }
+    if (self->pipe)
+        zsocket_wait (self->pipe);
     else {
         free (self);
         self = NULL;
@@ -108,8 +104,7 @@ zyre_destroy (zyre_t **self_p)
     if (*self_p) {
         zyre_t *self = *self_p;
         zstr_send (self->pipe, "TERMINATE");
-        char *reply = zstr_recv (self->pipe);
-        zstr_free (&reply);
+        zsocket_wait (self->pipe);
         free (self);
         *self_p = NULL;
     }
@@ -137,6 +132,18 @@ zyre_set_header (zyre_t *self, char *name, char *format, ...)
 
 
 //  ---------------------------------------------------------------------
+//  Set verbose mode; this tells the node to log all traffic as well
+//  as all major events.
+
+void
+zyre_set_verbose (zyre_t *self)
+{
+    zstr_send (self->pipe, "VERBOSE");
+    zsocket_wait (self->pipe);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection.
 
@@ -144,8 +151,7 @@ void
 zyre_start (zyre_t *self)
 {
     zstr_send (self->pipe, "START");
-    char *reply = zstr_recv (self->pipe);
-    zstr_free (&reply);
+    zsocket_wait (self->pipe);
 }
 
 
@@ -158,8 +164,7 @@ void
 zyre_stop (zyre_t *self)
 {
     zstr_send (self->pipe, "STOP");
-    char *reply = zstr_recv (self->pipe);
-    zstr_free (&reply);
+    zsocket_wait (self->pipe);
 }
 
 
@@ -308,8 +313,9 @@ zyre_test (bool verbose)
     //  Create two nodes
     zyre_t *node1 = zyre_new (ctx);
     zyre_t *node2 = zyre_new (ctx);
-    zyre_set_header (node1, "X-FILEMQ", "tcp://128.0.0.1:6777");
     zyre_set_header (node1, "X-HELLO", "World");
+//     zyre_set_verbose (node1);
+//     zyre_set_verbose (node2);
     zyre_start (node1);
     zyre_start (node2);
     zyre_join (node1, "GLOBAL");

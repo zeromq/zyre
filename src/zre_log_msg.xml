@@ -20,6 +20,8 @@
     <define name = "EVENT_LEAVE" value = "2" />
     <define name = "EVENT_ENTER" value = "3" />
     <define name = "EVENT_EXIT" value = "4" />
+    <define name = "EVENT_SEND" value = "5" />
+    <define name = "EVENT_RECV" value = "6" />
 
     <message name = "LOG" id = "1">
         <field name = "level" type = "number" size = "1" />
