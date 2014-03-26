@@ -422,6 +422,23 @@ zyre_node_recv_peer (zyre_node_t *self)
     //  On other commands the peer must already exist
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
+        if (peer) {
+            // Remove fake peers
+            if (zyre_peer_ready(peer)) {
+                zyre_node_remove_peer(self, peer);
+                assert(!(zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid)));
+            }
+            else {
+                char endpoint_node [30];
+                sprintf(endpoint_node, "tcp://%s:%d", self->host, self->port);
+                // We ignore HELLO, because peer has same host:port as current node
+                if (streq(endpoint_node, zyre_peer_endpoint(peer))) {
+                    zre_msg_destroy (&msg);
+                    zuuid_destroy (&uuid);
+                    return 0;
+                }
+            }
+        }
         peer = zyre_node_require_peer (
             self, uuid, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
