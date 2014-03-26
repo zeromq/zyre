@@ -162,8 +162,8 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
         zre_msg_set_sequence (*msg_p, ++(self->sent_sequence));
         if (self->log)
             zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_SEND,
-                      zuuid_str (self->uuid), "todo");
-            
+                zuuid_str (self->uuid), "seq=%d command=%s",
+                zre_msg_sequence (*msg_p), zre_msg_command (*msg_p));
         if (zre_msg_send (msg_p, self->mailbox) && errno == EAGAIN) {
             zyre_peer_disconnect (self);
             return -1;
