@@ -24,7 +24,6 @@
     =========================================================================
 */
 
-#include <czmq.h>
 #include "../include/zyre.h"
 #include "../include/zre_log_msg.h"
 
@@ -49,6 +48,12 @@ s_print_log_msg (void *collector)
             break;
         case ZRE_LOG_MSG_EVENT_EXIT:
             event = "Peer exits";
+            break;
+        case ZRE_LOG_MSG_EVENT_SEND:
+            event = "Send";
+            break;
+        case ZRE_LOG_MSG_EVENT_RECV:
+            event = "Recv";
             break;
     }
     struct tm *loctime = localtime (&curtime);
