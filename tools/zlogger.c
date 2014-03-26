@@ -24,7 +24,6 @@
     =========================================================================
 */
 
-#include <czmq.h>
 #include "../include/zyre.h"
 #include "../include/zre_log_msg.h"
 
