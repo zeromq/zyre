@@ -64,13 +64,13 @@ zyre_node_new (zctx_t *ctx, void *pipe)
     }
     self->port = zsocket_bind (self->inbox, "tcp://*:*");
     if (self->port < 0) {
-        zsocket_destroy(self->ctx, self->inbox);
+        zsocket_destroy (self->ctx, self->inbox);
         free (self);
         return NULL;            //  Interrupted 0MQ call
     }
     self->beacon = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
     if (!self->beacon) {
-        zsocket_destroy(self->ctx, self->inbox);
+        zsocket_destroy (self->ctx, self->inbox);
         free (self);
         return NULL;            //  Exhausted process sockets
     }
@@ -99,7 +99,7 @@ zyre_node_destroy (zyre_node_t **self_p)
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
-        zsocket_destroy(self->ctx, self->inbox);
+        zsocket_destroy (self->ctx, self->inbox);
         zbeacon_destroy (&self->beacon);
         zyre_log_destroy (&self->log);
         free (self);
@@ -427,15 +427,15 @@ zyre_node_recv_peer (zyre_node_t *self)
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         if (peer) {
             // Remove fake peers
-            if (zyre_peer_ready(peer)) {
-                zyre_node_remove_peer(self, peer);
-                assert(!(zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid)));
+            if (zyre_peer_ready (peer)) {
+                zyre_node_remove_peer (self, peer);
+                assert (!(zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid)));
             }
             else {
                 char endpoint_node [30];
-                sprintf(endpoint_node, "tcp://%s:%d", self->host, self->port);
+                sprintf (endpoint_node, "tcp://%s:%d", self->host, self->port);
                 // We ignore HELLO, because peer has same host:port as current node
-                if (streq(endpoint_node, zyre_peer_endpoint(peer))) {
+                if (streq (endpoint_node, zyre_peer_endpoint (peer))) {
                     zre_msg_destroy (&msg);
                     zuuid_destroy (&uuid);
                     return 0;
@@ -610,13 +610,13 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
     zpoller_t *poller = zpoller_new (
         self->pipe, self->inbox, zbeacon_socket (self->beacon), NULL);
 
-    while (!zpoller_terminated (poller)) {
-        if (self->terminated)
-            break;
+    //  Loop until the agent is terminated one way or another
+    while (!self->terminated) {
         int timeout = (int) (reap_at - zclock_time ());
         assert (timeout <= REAP_INTERVAL);
         if (timeout < 0)
             timeout = 0;
+        
         void *which = zpoller_wait (poller, timeout);
         if (which == self->pipe)
             zyre_node_recv_api (self);
@@ -627,7 +627,7 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
         if (which == zbeacon_socket (self->beacon))
             zyre_node_recv_beacon (self);
         else
-        if (zpoller_expired(poller)) {
+        if (zpoller_expired (poller)) {
             if (zclock_time () >= reap_at) {
                 reap_at = zclock_time () + REAP_INTERVAL;
                 //  Ping all peers and reap any expired ones
@@ -635,15 +635,13 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
             }
         }
         else
-        if (zpoller_terminated(poller))
-            break;
-        else
-            // This should never happen
-            assert(false);
+        if (zpoller_terminated (poller))
+            break;          //  Interrupted
     }
     zpoller_destroy (&poller);
     zyre_node_destroy (&self);
 }
+
 
 //  --------------------------------------------------------------------------
 //  Self test of this class
