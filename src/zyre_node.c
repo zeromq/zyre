@@ -611,6 +611,8 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
         self->pipe, self->inbox, zbeacon_socket (self->beacon), NULL);
 
     while (!zpoller_terminated (poller)) {
+        if (self->terminated)
+            break;
         int timeout = (int) (reap_at - zclock_time ());
         assert (timeout <= REAP_INTERVAL);
         if (timeout < 0)
@@ -624,14 +626,20 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
         else
         if (which == zbeacon_socket (self->beacon))
             zyre_node_recv_beacon (self);
-        
-        if (zclock_time () >= reap_at) {
-            reap_at = zclock_time () + REAP_INTERVAL;
-            //  Ping all peers and reap any expired ones
-            zhash_foreach (self->peers, zyre_node_ping_peer, self);
+        else
+        if (zpoller_expired(poller)) {
+            if (zclock_time () >= reap_at) {
+                reap_at = zclock_time () + REAP_INTERVAL;
+                //  Ping all peers and reap any expired ones
+                zhash_foreach (self->peers, zyre_node_ping_peer, self);
+            }
         }
-        if (self->terminated)
+        else
+        if (zpoller_terminated(poller))
             break;
+        else
+            // This should never happen
+            assert(false);
     }
     zpoller_destroy (&poller);
     zyre_node_destroy (&self);
