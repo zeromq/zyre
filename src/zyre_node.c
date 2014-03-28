@@ -64,11 +64,13 @@ zyre_node_new (zctx_t *ctx, void *pipe)
     }
     self->port = zsocket_bind (self->inbox, "tcp://*:*");
     if (self->port < 0) {
+        zsocket_destroy(self->ctx, self->inbox);
         free (self);
         return NULL;            //  Interrupted 0MQ call
     }
     self->beacon = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
     if (!self->beacon) {
+        zsocket_destroy(self->ctx, self->inbox);
         free (self);
         return NULL;            //  Exhausted process sockets
     }
@@ -97,6 +99,7 @@ zyre_node_destroy (zyre_node_t **self_p)
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
+        zsocket_destroy(self->ctx, self->inbox);
         zbeacon_destroy (&self->beacon);
         zyre_log_destroy (&self->log);
         free (self);
