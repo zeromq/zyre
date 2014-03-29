@@ -47,16 +47,16 @@
 //  Structure of our class
 
 struct _zre_log_msg_t {
-    zframe_t *routing_id;       //  Routing_id from ROUTER, if any
-    int id;                     //  zre_log_msg message ID
-    byte *needle;               //  Read/write pointer for serialization
-    byte *ceiling;              //  Valid upper limit for read pointer
-    byte level;                 //  
-    byte event;                 //  
-    uint16_t node;              //  
-    uint16_t peer;              //  
-    uint64_t time;              //  
-    char *data;                 //  
+    zframe_t *routing_id;               //  Routing_id from ROUTER, if any
+    int id;                             //  zre_log_msg message ID
+    byte *needle;                       //  Read/write pointer for serialization
+    byte *ceiling;                      //  Valid upper limit for read pointer
+    byte level;                         //  
+    byte event;                         //  
+    uint16_t node;                      //  
+    uint16_t peer;                      //  
+    uint64_t time;                      //  
+    char *data;                         //  
 };
 
 //  --------------------------------------------------------------------------
@@ -559,7 +559,7 @@ zre_log_msg_command (zre_log_msg_t *self)
 //  --------------------------------------------------------------------------
 //  Get/set the level field
 
-byte
+byte 
 zre_log_msg_level (zre_log_msg_t *self)
 {
     assert (self);
@@ -577,7 +577,7 @@ zre_log_msg_set_level (zre_log_msg_t *self, byte level)
 //  --------------------------------------------------------------------------
 //  Get/set the event field
 
-byte
+byte 
 zre_log_msg_event (zre_log_msg_t *self)
 {
     assert (self);
@@ -595,7 +595,7 @@ zre_log_msg_set_event (zre_log_msg_t *self, byte event)
 //  --------------------------------------------------------------------------
 //  Get/set the node field
 
-uint16_t
+uint16_t 
 zre_log_msg_node (zre_log_msg_t *self)
 {
     assert (self);
@@ -613,7 +613,7 @@ zre_log_msg_set_node (zre_log_msg_t *self, uint16_t node)
 //  --------------------------------------------------------------------------
 //  Get/set the peer field
 
-uint16_t
+uint16_t 
 zre_log_msg_peer (zre_log_msg_t *self)
 {
     assert (self);
@@ -631,7 +631,7 @@ zre_log_msg_set_peer (zre_log_msg_t *self, uint16_t peer)
 //  --------------------------------------------------------------------------
 //  Get/set the time field
 
-uint64_t
+uint64_t 
 zre_log_msg_time (zre_log_msg_t *self)
 {
     assert (self);

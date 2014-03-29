@@ -3,8 +3,8 @@ The following ABNF grammar defines the work with ZRE messages:
     zre_msg         = *(  HELLO |  WHISPER |  SHOUT |  JOIN |  LEAVE |  PING |  PING-OK )
 
     ;     Greet a peer so it can connect back to us
-    C:hello         = signature %d1 ipaddress mailbox groups status headers
-    signature       = %xAA %d1              ; two octets
+    hello           = signature %d1 ipaddress mailbox groups status headers
+    signature       = %xAA %xA1             ; two octets
     ipaddress       = string                ; 
     mailbox         = number-2              ; 
     groups          = strings               ; 
@@ -12,29 +12,29 @@ The following ABNF grammar defines the work with ZRE messages:
     headers         = dictionary            ; 
 
     ;     Send a multi-part message to a peer
-    C:whisper       = signature %d2 content
+    whisper         = signature %d2 content
     content         = msg                   ; 
 
     ;     Send a multi-part message to a group
-    C:shout         = signature %d3 group content
+    shout           = signature %d3 group content
     group           = string                ; 
     content         = msg                   ; 
 
     ;     Join a group
-    C:join          = signature %d4 group status
+    join            = signature %d4 group status
     group           = string                ; 
     status          = number-1              ; 
 
     ;     Leave a group
-    C:leave         = signature %d5 group status
+    leave           = signature %d5 group status
     group           = string                ; 
     status          = number-1              ; 
 
     ;     Ping a peer that has gone silent
-    C:ping          = signature %d6
+    ping            = signature %d6
 
     ;     Reply to a peer's ping
-    C:ping_ok       = signature %d7
+    ping_ok         = signature %d7
 
     ; A list of string values
     strings         = strings-count *strings-value
