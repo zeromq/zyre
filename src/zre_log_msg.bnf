@@ -3,8 +3,8 @@ The following ABNF grammar defines the work with ZRE logging messages:
     zre_log_msg     = *(  LOG )
 
     ;     Log an event
-    C:log           = signature %d1 level event node peer time data
-    signature       = %xAA %d2              ; two octets
+    log             = signature %d1 level event node peer time data
+    signature       = %xAA %xA2             ; two octets
     level           = number-1              ; 
     event           = number-1              ; 
     node            = number-2              ; 
