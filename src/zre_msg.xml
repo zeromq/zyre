@@ -9,43 +9,50 @@
     
     <include filename = "license.xml" />
 
+    <grammar>
+    ZRE             = N:greeting *traffic
+    greeting        = N:hello
+    traffic         = N:whisper / N:shout / N:join / N:leave
+                    / N:ping P:ping-ok
+    </grammar>
+
     <!-- Protocol constants -->
-    <define name = "VERSION" value = "1" />
+    <define name = "VERSION" value = "2" />
 
     <!-- Header for all messages -->
     <header>
-        <field name = "sequence" type = "number" size = "2" />
+        <field name = "sequence" type = "number" size = "2">Incremental sequence number</field>
     </header>
 
     <message name = "HELLO" id = "1">
-        <field name = "ipaddress" type = "string" />
-        <field name = "mailbox" type = "number" size = "2" />
-        <field name = "groups" type = "strings" />
-        <field name = "status" type = "number" size = "1" />
-        <field name = "headers" type = "dictionary" />
+        <field name = "ipaddress" type = "string">Sender IP address</field>
+        <field name = "mailbox" type = "number" size = "2">Sender mailbox port numer</field>
+        <field name = "groups" type = "strings">List of groups sender is in</field>
+        <field name = "status" type = "number" size = "1">Sender groups status sequence</field>
+        <field name = "headers" type = "dictionary">Sender header properties</field>
     Greet a peer so it can connect back to us
     </message>
 
     <message name = "WHISPER" id = "2">
-        <field name = "content" type = "msg" />
+        <field name = "content" type = "msg">Wrapped message content</field>
     Send a multi-part message to a peer
     </message>
 
     <message name = "SHOUT" id = "3">
-        <field name = "group" type = "string" />
-        <field name = "content" type = "msg" />
+        <field name = "group" type = "string">Group to send to</field>
+        <field name = "content" type = "msg">Wrapped message content</field>
     Send a multi-part message to a group
     </message>
 
     <message name = "JOIN" id = "4">
-        <field name = "group" type = "string" />
-        <field name = "status" type = "number" size = "1" />
+        <field name = "group" type = "string">Name of group</field>
+        <field name = "status" type = "number" size = "1">Sender groups status sequence</field>
     Join a group
     </message>
 
     <message name = "LEAVE" id = "5">
-        <field name = "group" type = "string" />
-        <field name = "status" type = "number" size = "1" />
+        <field name = "group" type = "string">Name of group</field>
+        <field name = "status" type = "number" size = "1">Sender groups status sequence</field>
     Leave a group
     </message>
 
@@ -56,5 +63,4 @@
     <message name = "PING-OK" id = "7">
     Reply to a peer's ping
     </message>
-
 </class>

@@ -1,40 +1,50 @@
 The following ABNF grammar defines the work with ZRE messages:
 
-    zre_msg         = *(  HELLO |  WHISPER |  SHOUT |  JOIN |  LEAVE |  PING |  PING-OK )
+    ZRE             = greeting *traffic
+    greeting        = hello
+    traffic         = whisper / shout / join / leave
+                    / ping ping-ok
 
     ;     Greet a peer so it can connect back to us
-    hello           = signature %d1 ipaddress mailbox groups status headers
+    hello           = signature %d1 sequence ipaddress mailbox groups status headers
     signature       = %xAA %xA1             ; two octets
-    ipaddress       = string                ; 
-    mailbox         = number-2              ; 
-    groups          = strings               ; 
-    status          = number-1              ; 
-    headers         = dictionary            ; 
+    sequence        = number-2              ; Incremental sequence number
+    ipaddress       = string                ; Sender IP address
+    mailbox         = number-2              ; Sender mailbox port numer
+    groups          = strings               ; List of groups sender is in
+    status          = number-1              ; Sender groups status sequence
+    headers         = dictionary            ; Sender header properties
 
     ;     Send a multi-part message to a peer
-    whisper         = signature %d2 content
-    content         = msg                   ; 
+    whisper         = signature %d2 sequence content
+    sequence        = number-2              ; Incremental sequence number
+    content         = msg                   ; Wrapped message content
 
     ;     Send a multi-part message to a group
-    shout           = signature %d3 group content
-    group           = string                ; 
-    content         = msg                   ; 
+    shout           = signature %d3 sequence group content
+    sequence        = number-2              ; Incremental sequence number
+    group           = string                ; Group to send to
+    content         = msg                   ; Wrapped message content
 
     ;     Join a group
-    join            = signature %d4 group status
-    group           = string                ; 
-    status          = number-1              ; 
+    join            = signature %d4 sequence group status
+    sequence        = number-2              ; Incremental sequence number
+    group           = string                ; Name of group
+    status          = number-1              ; Sender groups status sequence
 
     ;     Leave a group
-    leave           = signature %d5 group status
-    group           = string                ; 
-    status          = number-1              ; 
+    leave           = signature %d5 sequence group status
+    sequence        = number-2              ; Incremental sequence number
+    group           = string                ; Name of group
+    status          = number-1              ; Sender groups status sequence
 
     ;     Ping a peer that has gone silent
-    ping            = signature %d6
+    ping            = signature %d6 sequence
+    sequence        = number-2              ; Incremental sequence number
 
     ;     Reply to a peer's ping
-    ping_ok         = signature %d7
+    ping_ok         = signature %d7 sequence
+    sequence        = number-2              ; Incremental sequence number
 
     ; A list of string values
     strings         = strings-count *strings-value
