@@ -465,7 +465,8 @@ zyre_node_recv_peer (zyre_node_t *self)
         zstr_sendm (self->pipe, zuuid_str (uuid));
         zframe_t *headers = zhash_pack (zre_msg_headers (msg));
         zframe_send (&headers, self->pipe, ZFRAME_MORE);
-        zstr_send (self->pipe, zre_msg_ipaddress (msg));
+        zstr_sendf (self->pipe, "%s:%d",
+                    zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         
         //  Join peer to listed groups
         const char *name = zre_msg_groups_first (msg);
