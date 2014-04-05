@@ -184,6 +184,12 @@ Besides the plain receive method Zyre provides an API to receive an wrapped even
 
 Events must be destroyed once you no longer need them.
     
+    // Constructor: receive an event from the zyre node, wraps zyre_recv.
+    // The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+    // data (WHISPER, SHOUT).
+    CZMQ_EXPORT zyre_event_t *
+    zyre_event_new (zyre_t *self);
+    
     // Destructor; destroys an event instance
     void
         zyre_event_destroy (zyre_event_t **self_p);
