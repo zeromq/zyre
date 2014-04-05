@@ -51,15 +51,15 @@ struct _zre_msg_t {
     int id;                             //  zre_msg message ID
     byte *needle;                       //  Read/write pointer for serialization
     byte *ceiling;                      //  Valid upper limit for read pointer
-    uint16_t sequence;                  //  
-    char *ipaddress;                    //  
-    uint16_t mailbox;                   //  
-    zlist_t *groups;                    //  
-    byte status;                        //  
-    zhash_t *headers;                   //  
+    uint16_t sequence;                  //  Incremental sequence number
+    char *ipaddress;                    //  Sender IP address
+    uint16_t mailbox;                   //  Sender mailbox port numer
+    zlist_t *groups;                    //  List of groups sender is in
+    byte status;                        //  Sender groups status sequence
+    zhash_t *headers;                   //  Sender header properties
     size_t headers_bytes;               //  Size of dictionary content
-    zmsg_t *content;                    //  
-    char *group;                        //  
+    zmsg_t *content;                    //  Wrapped message content
+    char *group;                        //  Group to send to
 };
 
 //  --------------------------------------------------------------------------
@@ -668,7 +668,7 @@ zre_msg_send_hello (
     zre_msg_set_sequence (self, sequence);
     zre_msg_set_ipaddress (self, ipaddress);
     zre_msg_set_mailbox (self, mailbox);
-        zlist_t *groups_copy = zlist_dup (groups);
+    zlist_t *groups_copy = zlist_dup (groups);
     zre_msg_set_groups (self, &groups_copy);
     zre_msg_set_status (self, status);
     zhash_t *headers_copy = zhash_dup (headers);
@@ -789,7 +789,6 @@ zre_msg_dup (zre_msg_t *self)
     zre_msg_t *copy = zre_msg_new (self->id);
     if (self->routing_id)
         copy->routing_id = zframe_dup (self->routing_id);
-
     switch (self->id) {
         case ZRE_MSG_HELLO:
             copy->sequence = self->sequence;
@@ -1010,7 +1009,7 @@ zre_msg_command (zre_msg_t *self)
 //  --------------------------------------------------------------------------
 //  Get/set the sequence field
 
-uint16_t 
+uint16_t
 zre_msg_sequence (zre_msg_t *self)
 {
     assert (self);
@@ -1051,7 +1050,7 @@ zre_msg_set_ipaddress (zre_msg_t *self, const char *format, ...)
 //  --------------------------------------------------------------------------
 //  Get/set the mailbox field
 
-uint16_t 
+uint16_t
 zre_msg_mailbox (zre_msg_t *self)
 {
     assert (self);
@@ -1151,7 +1150,7 @@ zre_msg_groups_size (zre_msg_t *self)
 //  --------------------------------------------------------------------------
 //  Get/set the status field
 
-byte 
+byte
 zre_msg_status (zre_msg_t *self)
 {
     assert (self);

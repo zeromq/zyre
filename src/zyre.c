@@ -34,7 +34,7 @@
     call. The first frame defines the type of the message, and following
     frames provide further values:
 
-        ENTER fromnode headers ipaddress
+        ENTER fromnode headers ipaddress:port
             a new peer has entered the network
         EXIT fromnode
             a peer has left the network

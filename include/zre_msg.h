@@ -39,40 +39,40 @@
 /*  These are the zre_msg messages:
 
     HELLO - Greet a peer so it can connect back to us
-        sequence            number 2    
-        ipaddress           string      
-        mailbox             number 2    
-        groups              strings     
-        status              number 1    
-        headers             dictionary  
+        sequence            number 2    Incremental sequence number
+        ipaddress           string      Sender IP address
+        mailbox             number 2    Sender mailbox port numer
+        groups              strings     List of groups sender is in
+        status              number 1    Sender groups status sequence
+        headers             dictionary  Sender header properties
 
     WHISPER - Send a multi-part message to a peer
-        sequence            number 2    
-        content             msg         
+        sequence            number 2    Incremental sequence number
+        content             msg         Wrapped message content
 
     SHOUT - Send a multi-part message to a group
-        sequence            number 2    
-        group               string      
-        content             msg         
+        sequence            number 2    Incremental sequence number
+        group               string      Group to send to
+        content             msg         Wrapped message content
 
     JOIN - Join a group
-        sequence            number 2    
-        group               string      
-        status              number 1    
+        sequence            number 2    Incremental sequence number
+        group               string      Name of group
+        status              number 1    Sender groups status sequence
 
     LEAVE - Leave a group
-        sequence            number 2    
-        group               string      
-        status              number 1    
+        sequence            number 2    Incremental sequence number
+        group               string      Name of group
+        status              number 1    Sender groups status sequence
 
     PING - Ping a peer that has gone silent
-        sequence            number 2    
+        sequence            number 2    Incremental sequence number
 
     PING_OK - Reply to a peer's ping
-        sequence            number 2    
+        sequence            number 2    Incremental sequence number
 */
 
-#define ZRE_MSG_VERSION                     1
+#define ZRE_MSG_VERSION                     2
 
 #define ZRE_MSG_HELLO                       1
 #define ZRE_MSG_WHISPER                     2

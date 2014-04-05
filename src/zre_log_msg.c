@@ -464,7 +464,6 @@ zre_log_msg_dup (zre_log_msg_t *self)
     zre_log_msg_t *copy = zre_log_msg_new (self->id);
     if (self->routing_id)
         copy->routing_id = zframe_dup (self->routing_id);
-
     switch (self->id) {
         case ZRE_LOG_MSG_LOG:
             copy->level = self->level;
@@ -559,7 +558,7 @@ zre_log_msg_command (zre_log_msg_t *self)
 //  --------------------------------------------------------------------------
 //  Get/set the level field
 
-byte 
+byte
 zre_log_msg_level (zre_log_msg_t *self)
 {
     assert (self);
@@ -577,7 +576,7 @@ zre_log_msg_set_level (zre_log_msg_t *self, byte level)
 //  --------------------------------------------------------------------------
 //  Get/set the event field
 
-byte 
+byte
 zre_log_msg_event (zre_log_msg_t *self)
 {
     assert (self);
@@ -595,7 +594,7 @@ zre_log_msg_set_event (zre_log_msg_t *self, byte event)
 //  --------------------------------------------------------------------------
 //  Get/set the node field
 
-uint16_t 
+uint16_t
 zre_log_msg_node (zre_log_msg_t *self)
 {
     assert (self);
@@ -613,7 +612,7 @@ zre_log_msg_set_node (zre_log_msg_t *self, uint16_t node)
 //  --------------------------------------------------------------------------
 //  Get/set the peer field
 
-uint16_t 
+uint16_t
 zre_log_msg_peer (zre_log_msg_t *self)
 {
     assert (self);
@@ -631,7 +630,7 @@ zre_log_msg_set_peer (zre_log_msg_t *self, uint16_t peer)
 //  --------------------------------------------------------------------------
 //  Get/set the time field
 
-uint64_t 
+uint64_t
 zre_log_msg_time (zre_log_msg_t *self)
 {
     assert (self);
