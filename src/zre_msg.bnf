@@ -1,9 +1,9 @@
 The following ABNF grammar defines the work with ZRE messages:
 
-    ZRE             = greeting *traffic
-    greeting        = hello
-    traffic         = whisper / shout / join / leave
-                    / ping ping-ok
+    ZRE             = N:greeting *traffic
+    greeting        = N:hello
+    traffic         = N:whisper / N:shout / N:join / N:leave
+                    / N:ping P:ping-ok
 
     ;     Greet a peer so it can connect back to us
     hello           = signature %d1 sequence ipaddress mailbox groups status headers

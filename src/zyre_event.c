@@ -49,14 +49,58 @@ struct _zyre_event_t {
 
 
 //  ---------------------------------------------------------------------
-//  Constructor; creates a new event of a specified type
+//  Constructor: receive an event from the zyre node, wraps zyre_recv.
+//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+//  data (WHISPER, SHOUT).
 
 zyre_event_t *
-zyre_event_new (zyre_event_type_t type)
+zyre_event_new (zyre_t *node)
 {
+    zmsg_t *msg = zyre_recv (node);
+    if (!msg)
+        return NULL;            //  Interrupted
+
     zyre_event_t *self = (zyre_event_t *) zmalloc (sizeof (zyre_event_t));
     assert (self);
-    self->type = type;
+
+    char *type = zmsg_popstr (msg);
+    self->sender = zmsg_popstr (msg);
+
+    if (streq (type, "ENTER")) {
+        self->type = ZYRE_EVENT_ENTER;
+        zframe_t *headers = zmsg_pop (msg);
+        self->headers = zhash_unpack (headers);
+        zframe_destroy (&headers);
+        self->address = zmsg_popstr (msg);
+    }
+    else
+    if (streq (type, "EXIT"))
+        self->type = ZYRE_EVENT_EXIT;
+    else
+    if (streq (type, "JOIN")) {
+        self->type = ZYRE_EVENT_JOIN;
+        self->group = zmsg_popstr (msg);
+    }
+    else
+    if (streq (type, "LEAVE")) {
+        self->type = ZYRE_EVENT_LEAVE;
+        self->group = zmsg_popstr (msg);
+    }
+    else
+    if (streq (type, "WHISPER")) {
+        self->type = ZYRE_EVENT_WHISPER;
+        self->msg = msg;
+        msg = NULL;
+    }
+    else
+    if (streq (type, "SHOUT")) {
+        self->type = ZYRE_EVENT_SHOUT;
+        self->group = zmsg_popstr (msg);
+        self->msg = msg;
+        msg = NULL;
+    }
+    free (type);
+    zmsg_destroy (&msg);
     return self;
 }
 
@@ -78,59 +122,6 @@ zyre_event_destroy (zyre_event_t **self_p)
         free (self);
         *self_p = NULL;
     }
-}
-
-
-//  ---------------------------------------------------------------------
-//  Receive an event from the zyre node, wraps zyre_recv.
-//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE)
-//  or data (WHISPER, SHOUT).
-
-zyre_event_t *
-zyre_event_recv (zyre_t *self)
-{
-    assert (self);
-    zmsg_t *msg = zyre_recv (self);
-    zyre_event_t *event = zyre_event_new (0);
-    char *type = zmsg_popstr (msg);
-    event->sender = zmsg_popstr (msg);
-
-    if (streq (type, "ENTER")) {
-        event->type = ZYRE_EVENT_ENTER;
-        zframe_t *headers = zmsg_pop (msg);
-        event->headers = zhash_unpack (headers);
-        zframe_destroy (&headers);
-        event->address = zmsg_popstr (msg);
-    }
-    else
-    if (streq (type, "EXIT"))
-        event->type = ZYRE_EVENT_EXIT;
-    else
-    if (streq (type, "JOIN")) {
-        event->type = ZYRE_EVENT_JOIN;
-        event->group = zmsg_popstr (msg);
-    }
-    else
-    if (streq (type, "LEAVE")) {
-        event->type = ZYRE_EVENT_LEAVE;
-        event->group = zmsg_popstr (msg);
-    }
-    else
-    if (streq (type, "WHISPER")) {
-        event->type = ZYRE_EVENT_WHISPER;
-        event->msg = msg;
-        msg = NULL;
-    }
-    else
-    if (streq (type, "SHOUT")) {
-        event->type = ZYRE_EVENT_SHOUT;
-        event->group = zmsg_popstr (msg);
-        event->msg = msg;
-        msg = NULL;
-    }
-    free (type);
-    zmsg_destroy (&msg);
-    return event;
 }
 
 
@@ -238,7 +229,7 @@ zyre_event_test (bool verbose)
     zyre_shout (node1, "GLOBAL", &msg);
 
     //  Parse ENTER
-    zyre_event_t *event = zyre_event_recv (node2);
+    zyre_event_t *event = zyre_event_new (node2);
     assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
     char *sender = zyre_event_sender (event);
     char *address = zyre_event_address (event);
@@ -248,12 +239,12 @@ zyre_event_test (bool verbose)
     zyre_event_destroy (&event);
     
     //  Parse JOIN
-    event = zyre_event_recv (node2);
+    event = zyre_event_new (node2);
     assert (zyre_event_type (event) == ZYRE_EVENT_JOIN);
     zyre_event_destroy (&event);
     
     //  Parse SHOUT
-    event = zyre_event_recv (node2);
+    event = zyre_event_new (node2);
     assert (zyre_event_type (event) == ZYRE_EVENT_SHOUT);
     assert (streq (zyre_event_group (event), "GLOBAL"));
     msg = zyre_event_msg (event);

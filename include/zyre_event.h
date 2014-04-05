@@ -43,19 +43,16 @@ typedef enum {
     ZYRE_EVENT_SHOUT = 6
 } zyre_event_type_t;
 
-//  Constructor; creates a new event of a specified type
+
+//  Constructor: receive an event from the zyre node, wraps zyre_recv.
+//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+//  data (WHISPER, SHOUT).
 CZMQ_EXPORT zyre_event_t *
-    zyre_event_new (zyre_event_type_t type);
+    zyre_event_new (zyre_t *self);
 
 //  Destructor; destroys an event instance
 CZMQ_EXPORT void
     zyre_event_destroy (zyre_event_t **self_p);
-
-//  Receive an event from the zyre node, wraps zyre_recv.
-//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE)
-//  or data (WHISPER, SHOUT).
-CZMQ_EXPORT zyre_event_t *
-    zyre_event_recv (zyre_t *self);
 
 //  Returns event type, which is a zyre_event_type_t
 CZMQ_EXPORT zyre_event_type_t
