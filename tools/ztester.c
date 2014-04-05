@@ -98,8 +98,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
             if (streq (event, "JOIN")) {
                 char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
-                if (randof (3) > 0)
-                    zyre_join (node, group);
+                printf ("I: %s joined %s\n", from_peer, group);
                 free (from_peer);
                 free (group);
             }
@@ -107,8 +106,7 @@ node_task (void *args, zctx_t *ctx, void *pipe)
             if (streq (event, "LEAVE")) {
                 char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
-                if (randof (3) > 0)
-                    zyre_leave (node, group);
+                printf ("I: %s left %s\n", from_peer, group);
                 free (from_peer);
                 free (group);
             }
