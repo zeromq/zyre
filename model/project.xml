@@ -1,0 +1,16 @@
+<project name = "zyre">
+    <header name = "zyre" />
+    <header name = "zyre_event" />
+    <header name = "zyre_log" />
+    <header name = "zre_log_msg" />
+    <header name = "zre_msg" />
+    <class name = "zre_log_msg" />
+    <class name = "zre_msg" />
+    <class name = "zyre" />
+    <class name = "zyre_event" />
+    <class name = "zyre_group" />
+    <class name = "zyre_log" />
+    <class name = "zyre_node" />
+    <class name = "zyre_peer" />
+    <class name = "zyre_selftest" />
+</project>
