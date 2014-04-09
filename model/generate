@@ -1,0 +1,6 @@
+#   Run all code generation scripts
+#   Requires iMatix GSL4, from http://github.com/imatix/gsl
+#   Use this when:
+#       - add a new project class (project.xml)
+
+gsl -q -script:project.gsl project.xml
