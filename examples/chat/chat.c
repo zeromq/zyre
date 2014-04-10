@@ -82,7 +82,7 @@ int main (int argn, char *argv [])
         char message [1024];
         if (!fgets (message, 1024, stdin))
             break;
-        zstr_send (chat_pipe, "%s:%s", argv [1], message);
+        zstr_sendf (chat_pipe, "%s:%s", argv [1], message);
     }
     zctx_destroy (&ctx);
     return 0;
