@@ -283,7 +283,7 @@ void
     zre_msg_set_group (zre_msg_t *self, const char *format, ...);
 
 //  Self test of this class
-int
+CZMQ_EXPORT int
     zre_msg_test (bool verbose);
 //  @end
 

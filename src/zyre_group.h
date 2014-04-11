@@ -54,7 +54,7 @@ void
     zyre_group_send (zyre_group_t *self, zre_msg_t **msg_p);
 
 //  Self test of this class
-void
+CZMQ_EXPORT void
     zyre_group_test (bool verbose);
     
 #ifdef __cplusplus
