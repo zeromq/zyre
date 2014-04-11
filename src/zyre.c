@@ -47,9 +47,9 @@
         SHOUT fromnode groupname message
             a peer has sent one of our groups a message
             
-    In SHOUT and WHISPER the message is a single frame in this version
-    of Zyre. In ENTER, the headers frame contains a packed dictionary,
-    see zhash_pack/unpack.
+    In SHOUT and WHISPER the message is zero or more frames, and can hold
+    any ZeroMQ message. In ENTER, the headers frame contains a packed
+    dictionary, see zhash_pack/unpack.
 
     To join or leave a group, use the zyre_join and zyre_leave methods.
     To set a header value, use the zyre_set_header method. To send a message
@@ -67,6 +67,7 @@
 
 struct _zyre_t {
     void *pipe;                 //  Pipe through to node
+    char *uuid;                 //  Our UUID as string
 };
 
 
@@ -84,7 +85,7 @@ zyre_new (zctx_t *ctx)
     assert (ctx);
     self->pipe = zthread_fork (ctx, zyre_node_engine, NULL);
     if (self->pipe)
-        zsocket_wait (self->pipe);
+        self->uuid = zstr_recv (self->pipe);
     else {
         free (self);
         self = NULL;
@@ -105,9 +106,21 @@ zyre_destroy (zyre_t **self_p)
         zyre_t *self = *self_p;
         zstr_send (self->pipe, "TERMINATE");
         zsocket_wait (self->pipe);
+        zstr_free (&self->uuid);
         free (self);
         *self_p = NULL;
     }
+}
+
+
+//  ---------------------------------------------------------------------
+//  Return our own UUID, after successful initialization.
+
+const char *
+zyre_uuid (zyre_t *self)
+{
+    assert (self);
+    return self->uuid;
 }
 
 
@@ -242,8 +255,7 @@ zyre_shout (zyre_t *self, char *group, zmsg_t **msg_p)
 
 
 //  ---------------------------------------------------------------------
-//  Send string to single peer specified as a UUID string.
-//  String is formatted using printf specifiers.
+//  Send formatted string to a single peer specified as UUID string
 
 int
 zyre_whispers (zyre_t *self, char *peer, char *format, ...)
@@ -266,8 +278,7 @@ zyre_whispers (zyre_t *self, char *peer, char *format, ...)
 
 
 //  ---------------------------------------------------------------------
-//  Send message to a named group
-//  Destroys message after sending
+//  Send formatted string to a named group
 
 int
 zyre_shouts (zyre_t *self, char *group, char *format, ...)
@@ -314,6 +325,8 @@ zyre_test (bool verbose)
     zyre_t *node1 = zyre_new (ctx);
     zyre_t *node2 = zyre_new (ctx);
     zyre_set_header (node1, "X-HELLO", "World");
+    assert (strneq (zyre_uuid (node1), zyre_uuid (node2)));
+    
 //     zyre_set_verbose (node1);
 //     zyre_set_verbose (node2);
     zyre_start (node1);

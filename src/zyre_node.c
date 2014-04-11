@@ -605,7 +605,9 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
     zyre_node_t *self = zyre_node_new (ctx, pipe);
     if (!self)                  //  Interrupted
         return;
-    zsocket_signal (self->pipe);
+    
+    //  Signal success by returning our node ID to API
+    zstr_send (self->pipe, zuuid_str (self->uuid));
 
     uint64_t reap_at = zclock_time () + REAP_INTERVAL;
     zpoller_t *poller = zpoller_new (
