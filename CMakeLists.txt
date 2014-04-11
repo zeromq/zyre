@@ -99,7 +99,7 @@ set (zyre_sources
 )
 source_group ("Source Files" FILES ${zyre_sources})
 add_library(zyre SHARED ${zyre_sources})
-set_target_properties(zyre PROPERTIES DEFINE_SYMBOL "LIBZYRE_EXPORTS")
+set_target_properties(zyre PROPERTIES DEFINE_SYMBOL "LIBCZMQ_EXPORTS")
 target_link_libraries(zyre ${CZMQ_LIBRARIES} ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES})
 
 install(TARGETS zyre

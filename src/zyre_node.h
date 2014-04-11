@@ -39,7 +39,7 @@ void
     zyre_node_engine (void *args, zctx_t *ctx, void *pipe);
 
 //  Self test of this class
-void
+CZMQ_EXPORT void
     zyre_node_test (bool verbose);
 
 #ifdef __cplusplus

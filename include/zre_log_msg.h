@@ -177,7 +177,7 @@ void
     zre_log_msg_set_data (zre_log_msg_t *self, const char *format, ...);
 
 //  Self test of this class
-int
+CZMQ_EXPORT int
     zre_log_msg_test (bool verbose);
 //  @end
 

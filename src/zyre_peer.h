@@ -110,7 +110,7 @@ void
     zyre_peer_set_log (zyre_peer_t *self, zyre_log_t *log);
 
 //  Self test of this class
-void
+CZMQ_EXPORT void
     zyre_peer_test (bool verbose);
 
 #ifdef __cplusplus
