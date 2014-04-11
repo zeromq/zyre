@@ -69,47 +69,47 @@ typedef struct _zre_log_msg_t zre_log_msg_t;
 
 //  @interface
 //  Create a new zre_log_msg
-zre_log_msg_t *
+CZMQ_EXPORT zre_log_msg_t *
     zre_log_msg_new (int id);
 
 //  Destroy the zre_log_msg
-void
+CZMQ_EXPORT void
     zre_log_msg_destroy (zre_log_msg_t **self_p);
 
 //  Parse a zre_log_msg from zmsg_t. Returns a new object, or NULL if
 //  the message could not be parsed, or was NULL. If the socket type is
 //  ZMQ_ROUTER, then parses the first frame as a routing_id. Destroys msg
 //  and nullifies the msg refernce.
-zre_log_msg_t *
+CZMQ_EXPORT zre_log_msg_t *
     zre_log_msg_decode (zmsg_t **msg_p, int socket_type);
 
 //  Encode zre_log_msg into zmsg and destroy it. Returns a newly created
 //  object or NULL if error. Use when not in control of sending the message.
 //  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
 //  first frame of the resulting message.
-zmsg_t *
+CZMQ_EXPORT zmsg_t *
     zre_log_msg_encode (zre_log_msg_t *self, int socket_type);
 
 //  Receive and parse a zre_log_msg from the socket. Returns new object, 
 //  or NULL if error. Will block if there's no message waiting.
-zre_log_msg_t *
+CZMQ_EXPORT zre_log_msg_t *
     zre_log_msg_recv (void *input);
 
 //  Receive and parse a zre_log_msg from the socket. Returns new object, 
 //  or NULL either if there was no input waiting, or the recv was interrupted.
-zre_log_msg_t *
+CZMQ_EXPORT zre_log_msg_t *
     zre_log_msg_recv_nowait (void *input);
 
 //  Send the zre_log_msg to the output, and destroy it
-int
+CZMQ_EXPORT int
     zre_log_msg_send (zre_log_msg_t **self_p, void *output);
 
 //  Send the zre_log_msg to the output, and do not destroy it
-int
+CZMQ_EXPORT int
     zre_log_msg_send_again (zre_log_msg_t *self, void *output);
 
 //  Send the LOG to the output in one step
-int
+CZMQ_EXPORT int
     zre_log_msg_send_log (void *output,
         byte level,
         byte event,
@@ -119,61 +119,61 @@ int
         const char *data);
     
 //  Duplicate the zre_log_msg message
-zre_log_msg_t *
+CZMQ_EXPORT zre_log_msg_t *
     zre_log_msg_dup (zre_log_msg_t *self);
 
 //  Print contents of message to stdout
-void
+CZMQ_EXPORT void
     zre_log_msg_dump (zre_log_msg_t *self);
 
 //  Get/set the message routing id
-zframe_t *
+CZMQ_EXPORT zframe_t *
     zre_log_msg_routing_id (zre_log_msg_t *self);
-void
+CZMQ_EXPORT void
     zre_log_msg_set_routing_id (zre_log_msg_t *self, zframe_t *routing_id);
 
 //  Get the zre_log_msg id and printable command
-int
+CZMQ_EXPORT int
     zre_log_msg_id (zre_log_msg_t *self);
-void
+CZMQ_EXPORT void
     zre_log_msg_set_id (zre_log_msg_t *self, int id);
-const char *
+CZMQ_EXPORT const char *
     zre_log_msg_command (zre_log_msg_t *self);
 
 //  Get/set the level field
-byte
+CZMQ_EXPORT byte
     zre_log_msg_level (zre_log_msg_t *self);
-void
+CZMQ_EXPORT void
     zre_log_msg_set_level (zre_log_msg_t *self, byte level);
 
 //  Get/set the event field
-byte
+CZMQ_EXPORT byte
     zre_log_msg_event (zre_log_msg_t *self);
-void
+CZMQ_EXPORT void
     zre_log_msg_set_event (zre_log_msg_t *self, byte event);
 
 //  Get/set the node field
-uint16_t
+CZMQ_EXPORT uint16_t
     zre_log_msg_node (zre_log_msg_t *self);
-void
+CZMQ_EXPORT void
     zre_log_msg_set_node (zre_log_msg_t *self, uint16_t node);
 
 //  Get/set the peer field
-uint16_t
+CZMQ_EXPORT uint16_t
     zre_log_msg_peer (zre_log_msg_t *self);
-void
+CZMQ_EXPORT void
     zre_log_msg_set_peer (zre_log_msg_t *self, uint16_t peer);
 
 //  Get/set the time field
-uint64_t
+CZMQ_EXPORT uint64_t
     zre_log_msg_time (zre_log_msg_t *self);
-void
+CZMQ_EXPORT void
     zre_log_msg_set_time (zre_log_msg_t *self, uint64_t time);
 
 //  Get/set the data field
-const char *
+CZMQ_EXPORT const char *
     zre_log_msg_data (zre_log_msg_t *self);
-void
+CZMQ_EXPORT void
     zre_log_msg_set_data (zre_log_msg_t *self, const char *format, ...);
 
 //  Self test of this class
