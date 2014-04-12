@@ -77,6 +77,12 @@ CZMQ_EXPORT void
 CZMQ_EXPORT void
     zyre_set_verbose (zyre_t *self);
 
+//  Set ZRE discovery port; defaults to 5670, this call overrides that
+//  so you can create independent clusters on the same network, for e.g
+//  development vs. production. Has no effect after zyre_start().
+CZMQ_EXPORT void
+    zyre_set_port (zyre_t *self, int port_nbr);
+
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection.
 CZMQ_EXPORT void

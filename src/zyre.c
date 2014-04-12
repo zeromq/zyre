@@ -157,6 +157,19 @@ zyre_set_verbose (zyre_t *self)
 
 
 //  ---------------------------------------------------------------------
+//  Set ZRE discovery port; defaults to 5670, this call overrides that
+//  so you can create independent clusters on the same network, for e.g
+//  development vs. production.
+
+void
+zyre_set_port (zyre_t *self, int port_nbr)
+{
+    zstr_sendm (self->pipe, "PORT");
+    zstr_sendf (self->pipe, "%d", port_nbr);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection.
 
@@ -326,6 +339,11 @@ zyre_test (bool verbose)
     zyre_t *node2 = zyre_new (ctx);
     zyre_set_header (node1, "X-HELLO", "World");
     assert (strneq (zyre_uuid (node1), zyre_uuid (node2)));
+
+    //  Test ability to switch to different discovery port
+    //  Both nodes have to be using same port, or test will fail.
+    zyre_set_port (node1, 9999);
+    zyre_set_port (node2, 9999);
     
 //     zyre_set_verbose (node1);
 //     zyre_set_verbose (node2);
