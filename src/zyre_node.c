@@ -34,6 +34,8 @@ struct _zyre_node_t {
     void *pipe;                 //  Pipe back to application
     bool terminated;            //  API shut us down
     bool verbose;               //  Log all traffic
+    int beacon_port;            //  Beacon port number
+    zpoller_t *poller;          //  Socket poller
     zbeacon_t *beacon;          //  Beacon object
     zyre_log_t *log;            //  Log object
     zuuid_t *uuid;              //  Our UUID as object
@@ -68,12 +70,8 @@ zyre_node_new (zctx_t *ctx, void *pipe)
         free (self);
         return NULL;            //  Interrupted 0MQ call
     }
-    self->beacon = zbeacon_new (self->ctx, ZRE_DISCOVERY_PORT);
-    if (!self->beacon) {
-        zsocket_destroy (self->ctx, self->inbox);
-        free (self);
-        return NULL;            //  Exhausted process sockets
-    }
+    self->poller = zpoller_new (self->pipe, self->inbox, NULL);
+    self->beacon_port = ZRE_DISCOVERY_PORT;
     self->uuid = zuuid_new ();
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
@@ -94,6 +92,7 @@ zyre_node_destroy (zyre_node_t **self_p)
     assert (self_p);
     if (*self_p) {
         zyre_node_t *self = *self_p;
+        zpoller_destroy (&self->poller);
         zuuid_destroy (&self->uuid);
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
@@ -127,6 +126,10 @@ typedef struct {
 static void
 zyre_node_start (zyre_node_t *self)
 {
+    assert (!self->beacon);
+    self->beacon = zbeacon_new (self->ctx, self->beacon_port);
+    zpoller_add (self->poller, zbeacon_socket (self->beacon));
+    
     //  Set broadcast/listen beacon
     beacon_t beacon;
     beacon.protocol [0] = 'Z';
@@ -162,6 +165,10 @@ zyre_node_stop (zyre_node_t *self)
     zuuid_export (self->uuid, beacon.uuid);
     zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
     zclock_sleep (1);           //  Allow 1 msec for beacon to go out
+    
+    zbeacon_destroy (&self->beacon);
+    zpoller_destroy (&self->poller);
+    self->poller = zpoller_new (self->pipe, self->inbox, NULL);
 }
 
 
@@ -199,6 +206,12 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "VERBOSE")) {
         self->verbose = true;
         zsocket_signal (self->pipe);
+    }
+    else
+    if (streq (command, "PORT")) {
+        char *value = zmsg_popstr (request);
+        self->beacon_port = atoi (value);
+        zstr_free (&value);
     }
     else
     if (streq (command, "START")) {
@@ -605,11 +618,11 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
     zyre_node_t *self = zyre_node_new (ctx, pipe);
     if (!self)                  //  Interrupted
         return;
-    zsocket_signal (self->pipe);
+    
+    //  Signal success by returning our node ID to API
+    zstr_send (self->pipe, zuuid_str (self->uuid));
 
     uint64_t reap_at = zclock_time () + REAP_INTERVAL;
-    zpoller_t *poller = zpoller_new (
-        self->pipe, self->inbox, zbeacon_socket (self->beacon), NULL);
 
     //  Loop until the agent is terminated one way or another
     while (!self->terminated) {
@@ -618,17 +631,18 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
         if (timeout < 0)
             timeout = 0;
         
-        void *which = zpoller_wait (poller, timeout);
+        void *which = zpoller_wait (self->poller, timeout);
         if (which == self->pipe)
             zyre_node_recv_api (self);
         else
         if (which == self->inbox)
             zyre_node_recv_peer (self);
         else
-        if (which == zbeacon_socket (self->beacon))
+        if (self->beacon
+        &&  which == zbeacon_socket (self->beacon))
             zyre_node_recv_beacon (self);
         else
-        if (zpoller_expired (poller)) {
+        if (zpoller_expired (self->poller)) {
             if (zclock_time () >= reap_at) {
                 reap_at = zclock_time () + REAP_INTERVAL;
                 //  Ping all peers and reap any expired ones
@@ -636,10 +650,9 @@ zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
             }
         }
         else
-        if (zpoller_terminated (poller))
+        if (zpoller_terminated (self->poller))
             break;          //  Interrupted
     }
-    zpoller_destroy (&poller);
     zyre_node_destroy (&self);
 }
 

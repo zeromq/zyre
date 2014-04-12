@@ -63,6 +63,10 @@ CZMQ_EXPORT zyre_t *
 CZMQ_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
+//  Return our own UUID, after successful initialization.
+CZMQ_EXPORT const char *
+    zyre_uuid (zyre_t *self);
+
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
 CZMQ_EXPORT void
@@ -72,6 +76,12 @@ CZMQ_EXPORT void
 //  as all major events.
 CZMQ_EXPORT void
     zyre_set_verbose (zyre_t *self);
+
+//  Set ZRE discovery port; defaults to 5670, this call overrides that
+//  so you can create independent clusters on the same network, for e.g
+//  development vs. production. Has no effect after zyre_start().
+CZMQ_EXPORT void
+    zyre_set_port (zyre_t *self, int port_nbr);
 
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection.
@@ -109,13 +119,11 @@ CZMQ_EXPORT int
 CZMQ_EXPORT int
     zyre_shout (zyre_t *self, char *group, zmsg_t **msg_p);
 
-//  Send string to single peer specified as a UUID string.
-//  String is formatted using printf specifiers.
+//  Send formatted string to a single peer specified as UUID string
 CZMQ_EXPORT int
     zyre_whispers (zyre_t *self, char *peer, char *format, ...);
 
-//  Send message to a named group
-//  Destroys message after sending
+//  Send formatted string to a named group
 CZMQ_EXPORT int
     zyre_shouts (zyre_t *self, char *group, char *format, ...);
 
