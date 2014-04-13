@@ -170,6 +170,18 @@ zyre_set_port (zyre_t *self, int port_nbr)
 
 
 //  ---------------------------------------------------------------------
+//  Set ZRE discovery interval, in milliseconds. Default is instant
+//  beacon exploration followed by pinging every 1,000 msecs.
+
+void
+zyre_set_interval (zyre_t *self, size_t interval)
+{
+    zstr_sendm (self->pipe, "INTERVAL");
+    zstr_sendf (self->pipe, "%zd", interval);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection.
 

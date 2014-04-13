@@ -35,6 +35,7 @@ struct _zyre_node_t {
     bool terminated;            //  API shut us down
     bool verbose;               //  Log all traffic
     int beacon_port;            //  Beacon port number
+    size_t interval;            //  Beacon interval
     zpoller_t *poller;          //  Socket poller
     zbeacon_t *beacon;          //  Beacon object
     zyre_log_t *log;            //  Log object
@@ -72,6 +73,7 @@ zyre_node_new (zctx_t *ctx, void *pipe)
     }
     self->poller = zpoller_new (self->pipe, self->inbox, NULL);
     self->beacon_port = ZRE_DISCOVERY_PORT;
+    self->interval = 0;         //  Use default
     self->uuid = zuuid_new ();
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
@@ -128,6 +130,8 @@ zyre_node_start (zyre_node_t *self)
 {
     assert (!self->beacon);
     self->beacon = zbeacon_new (self->ctx, self->beacon_port);
+    if (self->interval)
+        zbeacon_set_interval (self->beacon, self->interval);
     zpoller_add (self->poller, zbeacon_socket (self->beacon));
     
     //  Set broadcast/listen beacon
@@ -211,6 +215,12 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "PORT")) {
         char *value = zmsg_popstr (request);
         self->beacon_port = atoi (value);
+        zstr_free (&value);
+    }
+    else
+    if (streq (command, "INTERVAL")) {
+        char *value = zmsg_popstr (request);
+        self->interval = atol (value);
         zstr_free (&value);
     }
     else
