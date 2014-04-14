@@ -342,8 +342,8 @@ zyre_test (bool verbose)
 
     //  Test ability to switch to different discovery port
     //  Both nodes have to be using same port, or test will fail.
-    zyre_set_port (node1, 9999);
-    zyre_set_port (node2, 9999);
+    zyre_set_port (node1, 5670);
+    zyre_set_port (node2, 5670);
     
 //     zyre_set_verbose (node1);
 //     zyre_set_verbose (node2);
