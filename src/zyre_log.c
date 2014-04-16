@@ -73,7 +73,7 @@ zyre_log_destroy (zyre_log_t **self_p)
     if (*self_p) {
         zyre_log_t *self = *self_p;
         zlist_t *subscribers = zhash_keys (self->subscribers);
-        char *subscriber = zlist_first (subscribers);
+        char *subscriber = (char *) zlist_first (subscribers);
         while (subscriber) {
             zhash_delete (self->subscribers, subscriber);
             zsocket_disconnect (self->publisher, "%s", subscriber);
