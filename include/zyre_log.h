@@ -44,7 +44,7 @@ CZMQ_EXPORT void
 
 //  Connect to single subscriber
 CZMQ_EXPORT void
-    zyre_log_disconnect_subscriber (zyre_log_t *self, char *endpoint);
+    zyre_log_connect_subscriber (zyre_log_t *self, char *endpoint);
 
 //  Disconnect to single subscriber
 CZMQ_EXPORT void
