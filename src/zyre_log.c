@@ -38,7 +38,7 @@
 
 struct _zyre_log_t {
     void *publisher;            //  Socket to send to
-    zlist_t *subscribers;       //  List of known subscribers
+    zhash_t *subscribers;       //  Known subscribers
     uint16_t nodeid;            //  Own correlation ID
 };
 
@@ -52,8 +52,7 @@ zyre_log_new (zctx_t *ctx, const char *sender)
     zyre_log_t *self = (zyre_log_t *) zmalloc (sizeof (zyre_log_t));
     //  If the system can't create new sockets, discard log data silently
     self->publisher = zsocket_new (ctx, ZMQ_PUB);
-    self->subscribers = zlist_new ();
-    zlist_autofree (self->subscribers);
+    self->subscribers = zhash_new ();
 
     //  We calculate a short node ID by hashing the full endpoint
     //  Use a modified Bernstein hashing function
@@ -73,55 +72,23 @@ zyre_log_destroy (zyre_log_t **self_p)
     assert (self_p);
     if (*self_p) {
         zyre_log_t *self = *self_p;
-        zyre_log_disconnect (self);
-        zlist_destroy (&self->subscribers);
+        zlist_t *subscribers = zhash_keys (self->subscribers);
+        char *subscriber = zlist_first (subscribers);
+        while (subscriber) {
+            zhash_delete (self->subscribers, subscriber);
+            zsocket_disconnect (self->publisher, "%s", subscriber);
+            subscriber = (char *) zlist_next (subscribers);
+        }
+        zlist_destroy (&subscribers);
+        zhash_destroy (&self->subscribers);
         free (self);
         *self_p = NULL;
     }
 }
 
-//  ---------------------------------------------------------------------
-//  Connect to single subscriber
-
-void
-zyre_log_connect_subscriber (zyre_log_t *self, char *endpoint)
-{
-    char *sub = (char *) zlist_first (self->subscribers);
-    while (sub) {
-        // Skipping existing subscriber (excluding multiple connections to publisher)
-        if (streq (sub, endpoint))
-            return;
-        sub = (char *) zlist_next (self->subscribers);
-    }
-
-    if (self->subscribers) {
-        int rc = zsocket_connect (self->publisher, "%s", endpoint);
-        assert (rc == 0);
-        zlist_append (self->subscribers, (char *) endpoint);
-    }
-}
 
 //  ---------------------------------------------------------------------
-//  Disconnect to single subscriber
-
-void
-zyre_log_disconnect_subscriber (zyre_log_t *self, char *endpoint)
-{
-    char *sub = (char *) zlist_first (self->subscribers);
-    while (sub) {
-        // Skipping existing subscriber (excluding multiple connections to publisher)
-        if (streq (sub, endpoint)) {
-            zlist_remove (self->subscribers, endpoint);
-            zsocket_disconnect (self->publisher, sub);
-            return;
-        }
-        sub = (char *) zlist_next (self->subscribers);
-    }
-}
-
-
-//  ---------------------------------------------------------------------
-//  Connect log to remote endpoint
+//  Connect log to remote subscriber endpoint
 
 void
 zyre_log_connect (zyre_log_t *self, const char *format, ...)
@@ -132,24 +99,17 @@ zyre_log_connect (zyre_log_t *self, const char *format, ...)
         va_start (argptr, format);
         char *endpoint = zsys_vprintf (format, argptr);
         va_end (argptr);
-        zyre_log_connect_subscriber (self, endpoint);
+
+        //  Only connect once to any given subscriber
+        if (!zhash_lookup (self->subscribers, endpoint)) {
+            int rc = zsocket_connect (self->publisher, "%s", endpoint);
+            assert (rc == 0);
+            zhash_insert (self->subscribers, endpoint, "TRUE");
+        }
         free (endpoint);
     }
 }
 
-//  ---------------------------------------------------------------------
-//  Disconnect to all subscribers
-
-void
-zyre_log_disconnect (zyre_log_t *self)
-{
-    char *sub = (char *) zlist_first (self->subscribers);
-    while (sub) {
-        zlist_remove (self->subscribers, sub);
-        zsocket_disconnect (self->publisher, sub);
-        sub = (char *) zlist_next (self->subscribers);
-    }
-}
 
 //  ---------------------------------------------------------------------
 //  Broadcast a log information message
