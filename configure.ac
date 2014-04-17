@@ -237,7 +237,7 @@ AC_CHECK_LIB([m], [pow])
 
 # These options are GNU compiler specific.
 if test "x$GCC" = "xyes"; then
-    CPPFLAGS="-pedantic -Werror -Wall -Wno-unused ${CPPFLAGS}"
+    CPPFLAGS="-pedantic -Werror -Wall ${CPPFLAGS}"
 fi
 
 AM_CONDITIONAL(ON_MINGW, test "x$zyre_on_mingw32" = "xyes")
