@@ -28,9 +28,6 @@
 
 #define MAX_GROUP 10
 
-//  List of active nodes
-static zhash_t *nodes;
-
 static void
 node_task (void *args, zctx_t *ctx, void *pipe)
 {

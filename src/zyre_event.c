@@ -232,6 +232,7 @@ zyre_event_test (bool verbose)
     zyre_event_t *event = zyre_event_new (node2);
     assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
     char *sender = zyre_event_sender (event);
+    assert (sender);
     char *address = zyre_event_address (event);
     assert (address);
     assert (streq (zyre_event_header (event, "X-HELLO"), "World"));

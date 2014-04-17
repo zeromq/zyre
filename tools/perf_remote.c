@@ -36,7 +36,6 @@ node_task (void *args, zctx_t *ctx, void *pipe)
 {
     zyre_t *node = zyre_new (ctx);
     zyre_start (node);
-    int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
     char *cookie = NULL;         //  received message

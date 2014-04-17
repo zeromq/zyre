@@ -100,6 +100,8 @@ int main (int argc, char *argv [])
             zmsg_t *msg = zyre_recv (node);
             if (!msg)
                 break;              //  Interrupted
+            zclock_log("===>");
+            zmsg_dump(msg);
             zmsg_destroy (&msg);
         }
         else
