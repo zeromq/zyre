@@ -187,6 +187,38 @@ zyre_node_send_peer (const char *key, void *item, void *argument)
     return 0;
 }
 
+//  Dump hash key to stdout
+static int
+zyre_node_hash_key_dump (const char *key, void *item, void *argument)
+{
+    printf ("        %s\n", key);
+    return 0;
+}
+
+//  Prints node information
+
+static void
+zyre_node_dump (zyre_node_t *self)
+{
+    fflush (stdout);
+    printf ("************** zyre_node_dump *************************\n");
+    printf ("node id : %s\n", zuuid_str (self->uuid));
+    printf ("    host:port = %s:%d\n", self->host, self->port);
+    printf ("    headers [%zu] { \n", zhash_size (self->headers));
+    zhash_foreach (self->headers, zyre_node_hash_key_dump, self);
+    printf ("    }\n");
+    printf ("    peers [%zu] {\n", zhash_size (self->peers));
+    zhash_foreach (self->peers, zyre_node_hash_key_dump, self);
+    printf ("    }\n");
+    printf ("    own groups [%zu] { \n", zhash_size (self->own_groups));
+    zhash_foreach (self->own_groups, zyre_node_hash_key_dump, self);
+    printf ("    }\n");
+    printf ("    peer groups [%zu] {\n", zhash_size (self->peer_groups));
+    zhash_foreach (self->peer_groups, zyre_node_hash_key_dump, self);
+    printf ("    }\n");
+    printf ("*******************************************************\n");
+    fflush (stdout);
+}
 
 //  Here we handle the different control messages from the front-end
 
@@ -231,6 +263,11 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "STOP")) {
         zyre_node_stop (self);
+        zsocket_signal (self->pipe);
+    }
+    else
+    if (streq (command, "DUMP")) {
+        zyre_node_dump (self);
         zsocket_signal (self->pipe);
     }
     else

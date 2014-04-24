@@ -336,6 +336,16 @@ zyre_socket (zyre_t *self)
 }
 
 
+//  ---------------------------------------------------------------------
+//  Prints zyre information
+
+void
+zyre_dump (zyre_t *self)
+{
+    zstr_send (self->pipe, "DUMP");
+    zsocket_wait (self->pipe);
+}
+
 //  --------------------------------------------------------------------------
 //  Self test of this class
 
