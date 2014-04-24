@@ -136,6 +136,10 @@ CZMQ_EXPORT int
 CZMQ_EXPORT void *
     zyre_socket (zyre_t *self);
 
+//  Prints zyre information
+CZMQ_EXPORT void
+    zyre_dump (zyre_t *self);
+
 //  Self test of this class
 CZMQ_EXPORT void
     zyre_test (bool verbose);
