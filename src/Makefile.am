@@ -25,7 +25,7 @@ libzyre_la_SOURCES = \
     zyre_event.c \
     zyre.c
 
-INCLUDES = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include
 bin_PROGRAMS = zyre_selftest 
 zyre_selftest_LDADD = libzyre.la
 
