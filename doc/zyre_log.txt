@@ -16,7 +16,7 @@ CZMQ_EXPORT zyre_log_t *
 CZMQ_EXPORT void
     zyre_log_destroy (zyre_log_t **self_p);
 
-//  Connect log to remote endpoint
+//  Connect log to remote subscriber endpoint
 CZMQ_EXPORT void
     zyre_log_connect (zyre_log_t *self, const char *format, ...);
 
