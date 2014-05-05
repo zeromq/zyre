@@ -26,7 +26,7 @@ libzyre_la_SOURCES = \
     zyre.c
 
 AM_CPPFLAGS = -I$(top_srcdir)/include
-bin_PROGRAMS = zyre_selftest 
+noinst_PROGRAMS = zyre_selftest 
 zyre_selftest_LDADD = libzyre.la
 
 if ON_MINGW
