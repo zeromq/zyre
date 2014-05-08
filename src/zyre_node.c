@@ -361,7 +361,11 @@ zyre_node_purge_peer (const char *key, void *item, void *argument)
 //  Find or create peer via its UUID
 
 static zyre_peer_t *
-zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *address, uint16_t port)
+zyre_node_require_peer (
+    zyre_node_t *self,
+    zuuid_t *uuid,
+    const char *address,
+    uint16_t port)
 {
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (!peer) {
@@ -486,15 +490,17 @@ zyre_node_recv_peer (zyre_node_t *self)
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         if (peer) {
-            // Remove fake peers
+            //  Remove fake peers
             if (zyre_peer_ready (peer)) {
+                //  TODO: temporary debugging for issue #179
+                zclock_log ("D: EXIT peer=%s reason=duplicate", zyre_peer_identity (peer));
                 zyre_node_remove_peer (self, peer);
                 assert (!(zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid)));
             }
             else {
                 char endpoint_node [30];
                 sprintf (endpoint_node, "tcp://%s:%d", self->host, self->port);
-                // We ignore HELLO, because peer has same host:port as current node
+                //  We ignore HELLO, because peer has same host:port as current node
                 if (streq (endpoint_node, zyre_peer_endpoint (peer))) {
                     zre_msg_destroy (&msg);
                     zuuid_destroy (&uuid);
@@ -505,6 +511,8 @@ zyre_node_recv_peer (zyre_node_t *self)
         peer = zyre_node_require_peer (
             self, uuid, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         assert (peer);
+        //  TODO: temporary debugging for issue #179
+        zclock_log ("D: new peer=%s route=HELLO", zyre_peer_identity (peer));
         zyre_peer_set_ready (peer, true);
     }
     //  Ignore command if peer isn't ready
@@ -514,15 +522,19 @@ zyre_node_recv_peer (zyre_node_t *self)
         return 0;
     }
     if (!zyre_peer_check_message (peer, msg)) {
-        zclock_log ("W: [%s] lost messages from %s", zuuid_str (self->uuid), zuuid_str (uuid));
+        zclock_log ("W: [%s] lost messages from %s",
+                    zuuid_str (self->uuid), zuuid_str (uuid));
         assert (false);
     }
 
     //  Now process each command
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         //  Tell the caller about the peer
+        //  TODO: temporary debugging for issue #179
+        zclock_log ("D: ENTER peer=%s (got HELLO)", zyre_peer_identity (peer));
+        
         zstr_sendm (self->pipe, "ENTER");
-        zstr_sendm (self->pipe, zuuid_str (uuid));
+        zstr_sendm (self->pipe, zyre_peer_identity (peer));
         zframe_t *headers = zhash_pack (zre_msg_headers (msg));
         zframe_send (&headers, self->pipe, ZFRAME_MORE);
         zstr_sendf (self->pipe, "%s:%d",
@@ -613,14 +625,19 @@ zyre_node_recv_beacon (zyre_node_t *self)
             zyre_peer_t *peer = zyre_node_require_peer (
                 self, uuid, ipaddress, ntohs (beacon.port));
             zyre_peer_refresh (peer);
+            //  TODO: temporary debugging for issue #179
+            zclock_log ("D: new peer=%s route=beacon", zyre_peer_identity (peer));
         }
         else {
             //  Zero port means peer is going away; remove it if
             //  we had any knowledge of it already
             zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (
                 self->peers, zuuid_str (uuid));
-            if (peer)
+            if (peer) {
+                //  TODO: temporary debugging for issue #179
+                zclock_log ("D: EXIT peer=%s reason=byebye", zyre_peer_identity (peer));
                 zyre_node_remove_peer (self, peer);
+            }
         }
         zuuid_destroy (&uuid);
     }
@@ -639,8 +656,11 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
 {
     zyre_peer_t *peer = (zyre_peer_t *) item;
     zyre_node_t *self = (zyre_node_t *) argument;
-    if (zclock_time () >= zyre_peer_expired_at (peer))
+    if (zclock_time () >= zyre_peer_expired_at (peer)) {
+        //  TODO: temporary debugging for issue #179
+        zclock_log ("D: EXIT peer=%s reason=expired", zyre_peer_identity (peer));
         zyre_node_remove_peer (self, peer);
+    }
     else
     if (zclock_time () >= zyre_peer_evasive_at (peer)) {
         //  If peer is being evasive, force a TCP ping.
