@@ -147,6 +147,7 @@ zyre_peer_disconnect (zyre_peer_t *self)
         self->mailbox = NULL;
         self->endpoint = NULL;
         self->connected = false;
+        self->ready = false;
     }
 }
 
