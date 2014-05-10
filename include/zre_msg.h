@@ -103,14 +103,14 @@ CZMQ_EXPORT void
 //  ZMQ_ROUTER, then parses the first frame as a routing_id. Destroys msg
 //  and nullifies the msg refernce.
 CZMQ_EXPORT zre_msg_t *
-    zre_msg_decode (zmsg_t **msg_p, int socket_type);
+    zre_msg_decode (zmsg_t **msg_p);
 
 //  Encode zre_msg into zmsg and destroy it. Returns a newly created
 //  object or NULL if error. Use when not in control of sending the message.
 //  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
 //  first frame of the resulting message.
 CZMQ_EXPORT zmsg_t *
-    zre_msg_encode (zre_msg_t *self, int socket_type);
+    zre_msg_encode (zre_msg_t **self_p);
 
 //  Receive and parse a zre_msg from the socket. Returns new object, 
 //  or NULL if error. Will block if there's no message waiting.
@@ -129,6 +129,54 @@ CZMQ_EXPORT int
 //  Send the zre_msg to the output, and do not destroy it
 CZMQ_EXPORT int
     zre_msg_send_again (zre_msg_t *self, void *output);
+
+//  Encode the HELLO 
+CZMQ_EXPORT zmsg_t *
+    zre_msg_encode_hello (
+        uint16_t sequence,
+        const char *ipaddress,
+        uint16_t mailbox,
+        zlist_t *groups,
+        byte status,
+        zhash_t *headers);
+
+//  Encode the WHISPER 
+CZMQ_EXPORT zmsg_t *
+    zre_msg_encode_whisper (
+        uint16_t sequence,
+        zmsg_t *content);
+
+//  Encode the SHOUT 
+CZMQ_EXPORT zmsg_t *
+    zre_msg_encode_shout (
+        uint16_t sequence,
+        const char *group,
+        zmsg_t *content);
+
+//  Encode the JOIN 
+CZMQ_EXPORT zmsg_t *
+    zre_msg_encode_join (
+        uint16_t sequence,
+        const char *group,
+        byte status);
+
+//  Encode the LEAVE 
+CZMQ_EXPORT zmsg_t *
+    zre_msg_encode_leave (
+        uint16_t sequence,
+        const char *group,
+        byte status);
+
+//  Encode the PING 
+CZMQ_EXPORT zmsg_t *
+    zre_msg_encode_ping (
+        uint16_t sequence);
+
+//  Encode the PING_OK 
+CZMQ_EXPORT zmsg_t *
+    zre_msg_encode_ping_ok (
+        uint16_t sequence);
+
 
 //  Send the HELLO to the output in one step
 CZMQ_EXPORT int
@@ -183,7 +231,7 @@ CZMQ_EXPORT zre_msg_t *
 
 //  Print contents of message to stdout
 CZMQ_EXPORT void
-    zre_msg_dump (zre_msg_t *self);
+    zre_msg_print (zre_msg_t *self);
 
 //  Get/set the message routing id
 CZMQ_EXPORT zframe_t *
@@ -286,6 +334,9 @@ CZMQ_EXPORT void
 CZMQ_EXPORT int
     zre_msg_test (bool verbose);
 //  @end
+
+//  For backwards compatibility with old codecs
+#define zre_msg_dump        zre_msg_print
 
 #ifdef __cplusplus
 }

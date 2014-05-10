@@ -81,14 +81,14 @@ CZMQ_EXPORT void
 //  ZMQ_ROUTER, then parses the first frame as a routing_id. Destroys msg
 //  and nullifies the msg refernce.
 CZMQ_EXPORT zre_log_msg_t *
-    zre_log_msg_decode (zmsg_t **msg_p, int socket_type);
+    zre_log_msg_decode (zmsg_t **msg_p);
 
 //  Encode zre_log_msg into zmsg and destroy it. Returns a newly created
 //  object or NULL if error. Use when not in control of sending the message.
 //  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
 //  first frame of the resulting message.
 CZMQ_EXPORT zmsg_t *
-    zre_log_msg_encode (zre_log_msg_t *self, int socket_type);
+    zre_log_msg_encode (zre_log_msg_t **self_p);
 
 //  Receive and parse a zre_log_msg from the socket. Returns new object, 
 //  or NULL if error. Will block if there's no message waiting.
@@ -108,6 +108,17 @@ CZMQ_EXPORT int
 CZMQ_EXPORT int
     zre_log_msg_send_again (zre_log_msg_t *self, void *output);
 
+//  Encode the LOG 
+CZMQ_EXPORT zmsg_t *
+    zre_log_msg_encode_log (
+        byte level,
+        byte event,
+        uint16_t node,
+        uint16_t peer,
+        uint64_t time,
+        const char *data);
+
+
 //  Send the LOG to the output in one step
 CZMQ_EXPORT int
     zre_log_msg_send_log (void *output,
@@ -124,7 +135,7 @@ CZMQ_EXPORT zre_log_msg_t *
 
 //  Print contents of message to stdout
 CZMQ_EXPORT void
-    zre_log_msg_dump (zre_log_msg_t *self);
+    zre_log_msg_print (zre_log_msg_t *self);
 
 //  Get/set the message routing id
 CZMQ_EXPORT zframe_t *
@@ -180,6 +191,9 @@ CZMQ_EXPORT void
 CZMQ_EXPORT int
     zre_log_msg_test (bool verbose);
 //  @end
+
+//  For backwards compatibility with old codecs
+#define zre_log_msg_dump    zre_log_msg_print
 
 #ifdef __cplusplus
 }
