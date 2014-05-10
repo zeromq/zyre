@@ -112,9 +112,15 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
     //  Null if shutting down
     if (self->mailbox) {
         //  Set our own identity on the socket so that receiving node
-        //  knows who each message came from.
-        zmq_setsockopt (self->mailbox, ZMQ_IDENTITY,
-                        zuuid_data (from), zuuid_size (from));
+        //  knows who each message came from. Note that we cannot use
+        //  the UUID directly as the identity since it may contain a
+        //  zero byte at the start, which libzmq does not like for
+        //  historical and arguably bogus reasons that it nonetheless
+        //  enforces.
+        byte routing_id [ZUUID_LEN + 1] = { 1 };
+        memcpy (routing_id + 1, zuuid_data (from), ZUUID_LEN);
+        int rc = zmq_setsockopt (self->mailbox, ZMQ_IDENTITY, routing_id, ZUUID_LEN + 1);
+        assert (rc == 0);
 
         //  Set a high-water mark that allows for reasonable activity
         zsocket_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
@@ -123,8 +129,9 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
         zsocket_set_sndtimeo (self->mailbox, 0);
 
         //  Connect through to peer node
-        int rc = zsocket_connect (self->mailbox, "%s", endpoint);
+        rc = zsocket_connect (self->mailbox, "%s", endpoint);
         assert (rc == 0);
+
         self->endpoint = strdup (endpoint);
         self->connected = true;
         self->ready = false;
