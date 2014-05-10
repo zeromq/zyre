@@ -192,7 +192,9 @@ int main (int argc, char *argv [])
         zclock_sleep (randof (500) + 500);
     }
     zclock_log ("I: Stopped tester (%d iterations)", nbr_iterations);
-    zctx_destroy (&ctx);
+    
+    //  Does not actually terminate properly... :-/
+    //  zctx_destroy (&ctx);
     free (pipes);
     return 0;
 }
