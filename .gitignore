@@ -48,3 +48,13 @@ src/zyre_perf_local
 src/zyre_perf_remote
 src/zyre_ping
 src/zyre_tester
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+cmake_install.cmake
+install_manifest.txt
+libzyre.so
+platform.h
+platform.h.in
+*.log
+

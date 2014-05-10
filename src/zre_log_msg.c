@@ -235,7 +235,7 @@ zre_log_msg_destroy (zre_log_msg_t **self_p)
 //  and nullifies the msg refernce.
 
 zre_log_msg_t *
-zre_log_msg_decode (zmsg_t **msg_p, int socket_type)
+zre_log_msg_decode (zmsg_t **msg_p)
 {
     assert (msg_p);
     zmsg_t *msg = *msg_p;
@@ -243,15 +243,6 @@ zre_log_msg_decode (zmsg_t **msg_p, int socket_type)
         return NULL;
         
     zre_log_msg_t *self = zre_log_msg_new (0);
-    //  If message came from a router socket, first frame is routing_id
-    if (socket_type == ZMQ_ROUTER) {
-        self->routing_id = zmsg_pop (msg);
-        //  If message was not valid, forget about it
-        if (!self->routing_id || !zmsg_next (msg)) {
-            zre_log_msg_destroy (&self);
-            return (NULL);      //  Malformed or empty
-        }
-    }
     //  Read and parse command in frame
     zframe_t *frame = zmsg_pop (msg);
     if (!frame) 
@@ -298,46 +289,20 @@ zre_log_msg_decode (zmsg_t **msg_p, int socket_type)
 
 
 //  --------------------------------------------------------------------------
-//  Receive and parse a zre_log_msg from the socket. Returns new object or
-//  NULL if error. Will block if there's no message waiting.
-
-zre_log_msg_t *
-zre_log_msg_recv (void *input)
-{
-    assert (input);
-    zmsg_t *msg = zmsg_recv (input);
-    return zre_log_msg_decode (&msg, zsocket_type (input));
-}
-
-
-//  --------------------------------------------------------------------------
-//  Receive and parse a zre_log_msg from the socket. Returns new object, 
-//  or NULL either if there was no input waiting, or the recv was interrupted.
-
-zre_log_msg_t *
-zre_log_msg_recv_nowait (void *input)
-{
-    assert (input);
-    zmsg_t *msg = zmsg_recv_nowait (input);
-    return zre_log_msg_decode (&msg, zsocket_type (input));
-}
-
-
 //  Encode zre_log_msg into zmsg and destroy it. Returns a newly created
 //  object or NULL if error. Use when not in control of sending the message.
 //  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
 //  first frame of the resulting message.
 
 zmsg_t *
-zre_log_msg_encode (zre_log_msg_t *self, int socket_type)
+zre_log_msg_encode (zre_log_msg_t **self_p)
 {
-    assert (self);
+    assert (self_p);
+    assert (*self_p);
+    
+    zre_log_msg_t *self = *self_p;
     zmsg_t *msg = zmsg_new ();
 
-    //  If we're sending to a ROUTER, send the routing_id first
-    if (socket_type == ZMQ_ROUTER)
-        zmsg_prepend (msg, &self->routing_id);
-        
     size_t frame_size = 2 + 1;          //  Signature and message ID
     switch (self->id) {
         case ZRE_LOG_MSG_LOG:
@@ -386,14 +351,64 @@ zre_log_msg_encode (zre_log_msg_t *self, int socket_type)
     //  Now send the data frame
     if (zmsg_append (msg, &frame)) {
         zmsg_destroy (&msg);
-        zre_log_msg_destroy (&self);
+        zre_log_msg_destroy (self_p);
         return NULL;
     }
     //  Destroy zre_log_msg object
-    zre_log_msg_destroy (&self);
+    zre_log_msg_destroy (self_p);
     return msg;
-
 }
+
+
+//  --------------------------------------------------------------------------
+//  Receive and parse a zre_log_msg from the socket. Returns new object or
+//  NULL if error. Will block if there's no message waiting.
+
+zre_log_msg_t *
+zre_log_msg_recv (void *input)
+{
+    assert (input);
+    zmsg_t *msg = zmsg_recv (input);
+    //  If message came from a router socket, first frame is routing_id
+    zframe_t *routing_id = NULL;
+    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER) {
+        routing_id = zmsg_pop (msg);
+        //  If message was not valid, forget about it
+        if (!routing_id || !zmsg_next (msg))
+            return NULL;        //  Malformed or empty
+    }
+    zre_log_msg_t * zre_log_msg = zre_log_msg_decode (&msg);
+    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
+        zre_log_msg->routing_id = routing_id;
+
+    return zre_log_msg;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Receive and parse a zre_log_msg from the socket. Returns new object,
+//  or NULL either if there was no input waiting, or the recv was interrupted.
+
+zre_log_msg_t *
+zre_log_msg_recv_nowait (void *input)
+{
+    assert (input);
+    zmsg_t *msg = zmsg_recv_nowait (input);
+    //  If message came from a router socket, first frame is routing_id
+    zframe_t *routing_id = NULL;
+    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER) {
+        routing_id = zmsg_pop (msg);
+        //  If message was not valid, forget about it
+        if (!routing_id || !zmsg_next (msg))
+            return NULL;        //  Malformed or empty
+    }
+    zre_log_msg_t * zre_log_msg = zre_log_msg_decode (&msg);
+    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
+        zre_log_msg->routing_id = routing_id;
+
+    return zre_log_msg;
+}
+
 
 //  --------------------------------------------------------------------------
 //  Send the zre_log_msg to the socket, and destroy it
@@ -406,8 +421,22 @@ zre_log_msg_send (zre_log_msg_t **self_p, void *output)
     assert (*self_p);
     assert (output);
 
+    //  Save routing_id if any, as encode will destroy it
     zre_log_msg_t *self = *self_p;
-    zmsg_t *msg = zre_log_msg_encode (self, zsocket_type (output));
+    zframe_t *routing_id = self->routing_id;
+    self->routing_id = NULL;
+
+    //  Encode zre_log_msg message to a single zmsg
+    zmsg_t *msg = zre_log_msg_encode (&self);
+    
+    //  If we're sending to a ROUTER, send the routing_id first
+    if (zsocket_type (zsock_resolve (output)) == ZMQ_ROUTER) {
+        assert (routing_id);
+        zmsg_prepend (msg, &routing_id);
+    }
+    else
+        zframe_destroy (&routing_id);
+        
     if (msg && zmsg_send (&msg, output) == 0)
         return 0;
     else
@@ -425,6 +454,29 @@ zre_log_msg_send_again (zre_log_msg_t *self, void *output)
     assert (output);
     self = zre_log_msg_dup (self);
     return zre_log_msg_send (&self, output);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Encode LOG message
+
+zmsg_t * 
+zre_log_msg_encode_log (
+    byte level,
+    byte event,
+    uint16_t node,
+    uint16_t peer,
+    uint64_t time,
+    const char *data)
+{
+    zre_log_msg_t *self = zre_log_msg_new (ZRE_LOG_MSG_LOG);
+    zre_log_msg_set_level (self, level);
+    zre_log_msg_set_event (self, event);
+    zre_log_msg_set_node (self, node);
+    zre_log_msg_set_peer (self, peer);
+    zre_log_msg_set_time (self, time);
+    zre_log_msg_set_data (self, data);
+    return zre_log_msg_encode (&self);
 }
 
 
@@ -484,7 +536,7 @@ zre_log_msg_dup (zre_log_msg_t *self)
 //  Print contents of message to stdout
 
 void
-zre_log_msg_dump (zre_log_msg_t *self)
+zre_log_msg_print (zre_log_msg_t *self)
 {
     assert (self);
     switch (self->id) {
@@ -684,17 +736,14 @@ zre_log_msg_test (bool verbose)
     zre_log_msg_destroy (&self);
 
     //  Create pair of sockets we can send through
-    zctx_t *ctx = zctx_new ();
-    assert (ctx);
-
-    void *output = zsocket_new (ctx, ZMQ_DEALER);
-    assert (output);
-    zsocket_bind (output, "inproc://selftest");
-
-    void *input = zsocket_new (ctx, ZMQ_ROUTER);
+    zsock_t *input = zsock_new (ZMQ_ROUTER);
     assert (input);
-    zsocket_connect (input, "inproc://selftest");
-    
+    zsock_connect (input, "inproc://selftest");
+
+    zsock_t *output = zsock_new (ZMQ_DEALER);
+    assert (output);
+    zsock_bind (output, "inproc://selftest");
+
     //  Encode/send/decode and verify each message type
     int instance;
     zre_log_msg_t *copy;
@@ -729,7 +778,8 @@ zre_log_msg_test (bool verbose)
         zre_log_msg_destroy (&self);
     }
 
-    zctx_destroy (&ctx);
+    zsock_destroy (&input);
+    zsock_destroy (&output);
     //  @end
 
     printf ("OK\n");

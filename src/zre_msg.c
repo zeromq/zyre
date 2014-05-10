@@ -243,7 +243,7 @@ zre_msg_destroy (zre_msg_t **self_p)
 //  and nullifies the msg refernce.
 
 zre_msg_t *
-zre_msg_decode (zmsg_t **msg_p, int socket_type)
+zre_msg_decode (zmsg_t **msg_p)
 {
     assert (msg_p);
     zmsg_t *msg = *msg_p;
@@ -251,15 +251,6 @@ zre_msg_decode (zmsg_t **msg_p, int socket_type)
         return NULL;
         
     zre_msg_t *self = zre_msg_new (0);
-    //  If message came from a router socket, first frame is routing_id
-    if (socket_type == ZMQ_ROUTER) {
-        self->routing_id = zmsg_pop (msg);
-        //  If message was not valid, forget about it
-        if (!self->routing_id || !zmsg_next (msg)) {
-            zre_msg_destroy (&self);
-            return (NULL);      //  Malformed or empty
-        }
-    }
     //  Read and parse command in frame
     zframe_t *frame = zmsg_pop (msg);
     if (!frame) 
@@ -367,33 +358,6 @@ zre_msg_decode (zmsg_t **msg_p, int socket_type)
         return (NULL);
 }
 
-
-//  --------------------------------------------------------------------------
-//  Receive and parse a zre_msg from the socket. Returns new object or
-//  NULL if error. Will block if there's no message waiting.
-
-zre_msg_t *
-zre_msg_recv (void *input)
-{
-    assert (input);
-    zmsg_t *msg = zmsg_recv (input);
-    return zre_msg_decode (&msg, zsocket_type (input));
-}
-
-
-//  --------------------------------------------------------------------------
-//  Receive and parse a zre_msg from the socket. Returns new object, 
-//  or NULL either if there was no input waiting, or the recv was interrupted.
-
-zre_msg_t *
-zre_msg_recv_nowait (void *input)
-{
-    assert (input);
-    zmsg_t *msg = zmsg_recv_nowait (input);
-    return zre_msg_decode (&msg, zsocket_type (input));
-}
-
-
 //  Count size of key/value pair for serialization
 //  Key is encoded as string, value as longstr
 static int
@@ -415,21 +379,21 @@ s_headers_write (const char *key, void *item, void *argument)
 }
 
 
+//  --------------------------------------------------------------------------
 //  Encode zre_msg into zmsg and destroy it. Returns a newly created
 //  object or NULL if error. Use when not in control of sending the message.
 //  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
 //  first frame of the resulting message.
 
 zmsg_t *
-zre_msg_encode (zre_msg_t *self, int socket_type)
+zre_msg_encode (zre_msg_t **self_p)
 {
-    assert (self);
+    assert (self_p);
+    assert (*self_p);
+    
+    zre_msg_t *self = *self_p;
     zmsg_t *msg = zmsg_new ();
 
-    //  If we're sending to a ROUTER, send the routing_id first
-    if (socket_type == ZMQ_ROUTER)
-        zmsg_prepend (msg, &self->routing_id);
-        
     size_t frame_size = 2 + 1;          //  Signature and message ID
     switch (self->id) {
         case ZRE_MSG_HELLO:
@@ -593,7 +557,7 @@ zre_msg_encode (zre_msg_t *self, int socket_type)
     //  Now send the data frame
     if (zmsg_append (msg, &frame)) {
         zmsg_destroy (&msg);
-        zre_msg_destroy (&self);
+        zre_msg_destroy (self_p);
         return NULL;
     }
     //  Now send the content field if set
@@ -613,10 +577,60 @@ zre_msg_encode (zre_msg_t *self, int socket_type)
         }
     }
     //  Destroy zre_msg object
-    zre_msg_destroy (&self);
+    zre_msg_destroy (self_p);
     return msg;
-
 }
+
+
+//  --------------------------------------------------------------------------
+//  Receive and parse a zre_msg from the socket. Returns new object or
+//  NULL if error. Will block if there's no message waiting.
+
+zre_msg_t *
+zre_msg_recv (void *input)
+{
+    assert (input);
+    zmsg_t *msg = zmsg_recv (input);
+    //  If message came from a router socket, first frame is routing_id
+    zframe_t *routing_id = NULL;
+    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER) {
+        routing_id = zmsg_pop (msg);
+        //  If message was not valid, forget about it
+        if (!routing_id || !zmsg_next (msg))
+            return NULL;        //  Malformed or empty
+    }
+    zre_msg_t * zre_msg = zre_msg_decode (&msg);
+    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
+        zre_msg->routing_id = routing_id;
+
+    return zre_msg;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Receive and parse a zre_msg from the socket. Returns new object,
+//  or NULL either if there was no input waiting, or the recv was interrupted.
+
+zre_msg_t *
+zre_msg_recv_nowait (void *input)
+{
+    assert (input);
+    zmsg_t *msg = zmsg_recv_nowait (input);
+    //  If message came from a router socket, first frame is routing_id
+    zframe_t *routing_id = NULL;
+    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER) {
+        routing_id = zmsg_pop (msg);
+        //  If message was not valid, forget about it
+        if (!routing_id || !zmsg_next (msg))
+            return NULL;        //  Malformed or empty
+    }
+    zre_msg_t * zre_msg = zre_msg_decode (&msg);
+    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
+        zre_msg->routing_id = routing_id;
+
+    return zre_msg;
+}
+
 
 //  --------------------------------------------------------------------------
 //  Send the zre_msg to the socket, and destroy it
@@ -629,8 +643,22 @@ zre_msg_send (zre_msg_t **self_p, void *output)
     assert (*self_p);
     assert (output);
 
+    //  Save routing_id if any, as encode will destroy it
     zre_msg_t *self = *self_p;
-    zmsg_t *msg = zre_msg_encode (self, zsocket_type (output));
+    zframe_t *routing_id = self->routing_id;
+    self->routing_id = NULL;
+
+    //  Encode zre_msg message to a single zmsg
+    zmsg_t *msg = zre_msg_encode (&self);
+    
+    //  If we're sending to a ROUTER, send the routing_id first
+    if (zsocket_type (zsock_resolve (output)) == ZMQ_ROUTER) {
+        assert (routing_id);
+        zmsg_prepend (msg, &routing_id);
+    }
+    else
+        zframe_destroy (&routing_id);
+        
     if (msg && zmsg_send (&msg, output) == 0)
         return 0;
     else
@@ -648,6 +676,125 @@ zre_msg_send_again (zre_msg_t *self, void *output)
     assert (output);
     self = zre_msg_dup (self);
     return zre_msg_send (&self, output);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Encode HELLO message
+
+zmsg_t * 
+zre_msg_encode_hello (
+    uint16_t sequence,
+    const char *ipaddress,
+    uint16_t mailbox,
+    zlist_t *groups,
+    byte status,
+    zhash_t *headers)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_HELLO);
+    zre_msg_set_sequence (self, sequence);
+    zre_msg_set_ipaddress (self, ipaddress);
+    zre_msg_set_mailbox (self, mailbox);
+    zlist_t *groups_copy = zlist_dup (groups);
+    zre_msg_set_groups (self, &groups_copy);
+    zre_msg_set_status (self, status);
+    zhash_t *headers_copy = zhash_dup (headers);
+    zre_msg_set_headers (self, &headers_copy);
+    return zre_msg_encode (&self);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Encode WHISPER message
+
+zmsg_t * 
+zre_msg_encode_whisper (
+    uint16_t sequence,
+    zmsg_t *content)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_WHISPER);
+    zre_msg_set_sequence (self, sequence);
+    zmsg_t *content_copy = zmsg_dup (content);
+    zre_msg_set_content (self, &content_copy);
+    return zre_msg_encode (&self);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Encode SHOUT message
+
+zmsg_t * 
+zre_msg_encode_shout (
+    uint16_t sequence,
+    const char *group,
+    zmsg_t *content)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_SHOUT);
+    zre_msg_set_sequence (self, sequence);
+    zre_msg_set_group (self, group);
+    zmsg_t *content_copy = zmsg_dup (content);
+    zre_msg_set_content (self, &content_copy);
+    return zre_msg_encode (&self);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Encode JOIN message
+
+zmsg_t * 
+zre_msg_encode_join (
+    uint16_t sequence,
+    const char *group,
+    byte status)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_JOIN);
+    zre_msg_set_sequence (self, sequence);
+    zre_msg_set_group (self, group);
+    zre_msg_set_status (self, status);
+    return zre_msg_encode (&self);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Encode LEAVE message
+
+zmsg_t * 
+zre_msg_encode_leave (
+    uint16_t sequence,
+    const char *group,
+    byte status)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_LEAVE);
+    zre_msg_set_sequence (self, sequence);
+    zre_msg_set_group (self, group);
+    zre_msg_set_status (self, status);
+    return zre_msg_encode (&self);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Encode PING message
+
+zmsg_t * 
+zre_msg_encode_ping (
+    uint16_t sequence)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_PING);
+    zre_msg_set_sequence (self, sequence);
+    return zre_msg_encode (&self);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Encode PING_OK message
+
+zmsg_t * 
+zre_msg_encode_ping_ok (
+    uint16_t sequence)
+{
+    zre_msg_t *self = zre_msg_new (ZRE_MSG_PING_OK);
+    zre_msg_set_sequence (self, sequence);
+    return zre_msg_encode (&self);
 }
 
 
@@ -837,7 +984,7 @@ zre_msg_dup (zre_msg_t *self)
 
 //  Dump headers key=value pair to stdout
 static int
-s_headers_dump (const char *key, void *item, void *argument)
+s_headers_print (const char *key, void *item, void *argument)
 {
     printf ("        %s=%s\n", key, (char *) item);
     return 0;
@@ -848,7 +995,7 @@ s_headers_dump (const char *key, void *item, void *argument)
 //  Print contents of message to stdout
 
 void
-zre_msg_dump (zre_msg_t *self)
+zre_msg_print (zre_msg_t *self)
 {
     assert (self);
     switch (self->id) {
@@ -872,7 +1019,7 @@ zre_msg_dump (zre_msg_t *self)
             printf ("    status=%ld\n", (long) self->status);
             printf ("    headers={\n");
             if (self->headers)
-                zhash_foreach (self->headers, s_headers_dump, self);
+                zhash_foreach (self->headers, s_headers_print, self);
             else
                 printf ("(NULL)\n");
             printf ("    }\n");
@@ -883,7 +1030,7 @@ zre_msg_dump (zre_msg_t *self)
             printf ("    sequence=%ld\n", (long) self->sequence);
             printf ("    content={\n");
             if (self->content)
-                zmsg_dump (self->content);
+                zmsg_print (self->content);
             else
                 printf ("(NULL)\n");
             printf ("    }\n");
@@ -898,7 +1045,7 @@ zre_msg_dump (zre_msg_t *self)
                 printf ("    group=\n");
             printf ("    content={\n");
             if (self->content)
-                zmsg_dump (self->content);
+                zmsg_print (self->content);
             else
                 printf ("(NULL)\n");
             printf ("    }\n");
@@ -1325,17 +1472,14 @@ zre_msg_test (bool verbose)
     zre_msg_destroy (&self);
 
     //  Create pair of sockets we can send through
-    zctx_t *ctx = zctx_new ();
-    assert (ctx);
-
-    void *output = zsocket_new (ctx, ZMQ_DEALER);
-    assert (output);
-    zsocket_bind (output, "inproc://selftest");
-
-    void *input = zsocket_new (ctx, ZMQ_ROUTER);
+    zsock_t *input = zsock_new (ZMQ_ROUTER);
     assert (input);
-    zsocket_connect (input, "inproc://selftest");
-    
+    zsock_connect (input, "inproc://selftest");
+
+    zsock_t *output = zsock_new (ZMQ_DEALER);
+    assert (output);
+    zsock_bind (output, "inproc://selftest");
+
     //  Encode/send/decode and verify each message type
     int instance;
     zre_msg_t *copy;
@@ -1514,7 +1658,8 @@ zre_msg_test (bool verbose)
         zre_msg_destroy (&self);
     }
 
-    zctx_destroy (&ctx);
+    zsock_destroy (&input);
+    zsock_destroy (&output);
     //  @end
 
     printf ("OK\n");
