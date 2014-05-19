@@ -340,9 +340,11 @@ zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg)
     uint16_t recd_sequence = zre_msg_sequence (msg);
 
     bool valid = (++(self->want_sequence) == recd_sequence);
-    if (!valid)
+    if (!valid) {
+        zclock_log ("E: expected=%d, got=%d",
+                    self->want_sequence, recd_sequence);
         --(self->want_sequence);    //  Rollback
-
+    }
     return valid;
 }
 
@@ -386,7 +388,7 @@ zyre_peer_test (bool verbose)
     msg = zre_msg_recv (mailbox);
     assert (msg);
     if (verbose)
-        zre_msg_dump (msg);
+        zre_msg_print (msg);
     zre_msg_destroy (&msg);
 
     //  Destroying container destroys all peers it contains
