@@ -179,6 +179,7 @@ CZMQ_EXPORT zmsg_t *
 
 
 //  Send the HELLO to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_msg_send_hello (void *output,
         uint16_t sequence,
@@ -189,12 +190,14 @@ CZMQ_EXPORT int
         zhash_t *headers);
     
 //  Send the WHISPER to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_msg_send_whisper (void *output,
         uint16_t sequence,
         zmsg_t *content);
     
 //  Send the SHOUT to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_msg_send_shout (void *output,
         uint16_t sequence,
@@ -202,6 +205,7 @@ CZMQ_EXPORT int
         zmsg_t *content);
     
 //  Send the JOIN to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_msg_send_join (void *output,
         uint16_t sequence,
@@ -209,6 +213,7 @@ CZMQ_EXPORT int
         byte status);
     
 //  Send the LEAVE to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_msg_send_leave (void *output,
         uint16_t sequence,
@@ -216,11 +221,13 @@ CZMQ_EXPORT int
         byte status);
     
 //  Send the PING to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_msg_send_ping (void *output,
         uint16_t sequence);
     
 //  Send the PING_OK to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_msg_send_ping_ok (void *output,
         uint16_t sequence);
@@ -334,9 +341,6 @@ CZMQ_EXPORT void
 CZMQ_EXPORT int
     zre_msg_test (bool verbose);
 //  @end
-
-//  For backwards compatibility with old codecs
-#define zre_msg_dump        zre_msg_print
 
 #ifdef __cplusplus
 }

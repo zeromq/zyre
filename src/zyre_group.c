@@ -160,7 +160,7 @@ zyre_group_test (bool verbose)
     msg = zre_msg_recv (mailbox);
     assert (msg);
     if (verbose)
-        zre_msg_dump (msg);
+        zre_msg_print (msg);
     zre_msg_destroy (&msg);
 
     zuuid_destroy (&me);

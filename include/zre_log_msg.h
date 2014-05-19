@@ -120,6 +120,7 @@ CZMQ_EXPORT zmsg_t *
 
 
 //  Send the LOG to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_log_msg_send_log (void *output,
         byte level,
@@ -191,9 +192,6 @@ CZMQ_EXPORT void
 CZMQ_EXPORT int
     zre_log_msg_test (bool verbose);
 //  @end
-
-//  For backwards compatibility with old codecs
-#define zre_log_msg_dump    zre_log_msg_print
 
 #ifdef __cplusplus
 }

@@ -234,7 +234,7 @@ zyre_log_test (bool verbose)
         zre_log_msg_t *msg = zre_log_msg_recv (collector);
         assert (msg);
         if (verbose)
-            zre_log_msg_dump (msg);
+            zre_log_msg_print (msg);
         zre_log_msg_destroy (&msg);
         count++;
     }
