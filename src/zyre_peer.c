@@ -30,8 +30,7 @@
 //  Structure of our class
 
 struct _zyre_peer_t {
-    zctx_t *ctx;                //  CZMQ context
-    void *mailbox;              //  Socket through to peer
+    zsock_t *mailbox;           //  Socket through to peer
     zuuid_t *uuid;              //  Identity object
     char *endpoint;             //  Endpoint connected to
     uint64_t evasive_at;        //  Peer is being evasive
@@ -60,10 +59,9 @@ s_delete_peer (void *argument)
 //  Construct new peer object
 
 zyre_peer_t *
-zyre_peer_new (zctx_t *ctx, zhash_t *container, zuuid_t *uuid)
+zyre_peer_new (zhash_t *container, zuuid_t *uuid)
 {
     zyre_peer_t *self = (zyre_peer_t *) zmalloc (sizeof (zyre_peer_t));
-    self->ctx = ctx;
     self->uuid = zuuid_dup (uuid);
     self->ready = false;
     self->connected = false;
@@ -108,7 +106,7 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
     assert (!self->connected);
 
     //  Create new outgoing socket (drop any messages in transit)
-    self->mailbox = zsocket_new (self->ctx, ZMQ_DEALER);
+    self->mailbox = zsock_new (ZMQ_DEALER);
     //  Null if shutting down
     if (self->mailbox) {
         //  Set our own identity on the socket so that receiving node
@@ -119,17 +117,18 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
         //  enforces.
         byte routing_id [ZUUID_LEN + 1] = { 1 };
         memcpy (routing_id + 1, zuuid_data (from), ZUUID_LEN);
-        int rc = zmq_setsockopt (self->mailbox, ZMQ_IDENTITY, routing_id, ZUUID_LEN + 1);
+        int rc = zmq_setsockopt (zsock_resolve (self->mailbox),
+                                 ZMQ_IDENTITY, routing_id, ZUUID_LEN + 1);
         assert (rc == 0);
 
         //  Set a high-water mark that allows for reasonable activity
-        zsocket_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
+        zsock_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
 
         //  Send messages immediately or return EAGAIN
-        zsocket_set_sndtimeo (self->mailbox, 0);
+        zsock_set_sndtimeo (self->mailbox, 0);
 
         //  Connect through to peer node
-        rc = zsocket_connect (self->mailbox, "%s", endpoint);
+        rc = zsock_connect (self->mailbox, "%s", endpoint);
         assert (rc == 0);
 
         self->endpoint = strdup (endpoint);
@@ -149,7 +148,7 @@ zyre_peer_disconnect (zyre_peer_t *self)
     //  If connected, destroy socket and drop all pending messages
     assert (self);
     if (self->connected) {
-        zsocket_destroy (self->ctx, self->mailbox);
+        zsock_destroy (&self->mailbox);
         free (self->endpoint);
         self->mailbox = NULL;
         self->endpoint = NULL;
@@ -172,9 +171,15 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
             zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_SEND,
                 zuuid_str (self->uuid), "seq=%d command=%s",
                 zre_msg_sequence (*msg_p), zre_msg_command (*msg_p));
-        if (zre_msg_send (msg_p, self->mailbox) && errno == EAGAIN) {
-            zyre_peer_disconnect (self);
-            return -1;
+        int rc = zre_msg_send (msg_p, self->mailbox);
+        if (rc == -1) {
+            if (errno == EAGAIN) {
+                zyre_peer_disconnect (self);
+                return -1;
+            }
+            else
+                //  Can't get any other error here
+                assert (false);
         }
     }
     else
@@ -368,16 +373,15 @@ zyre_peer_test (bool verbose)
 {
     printf (" * zyre_peer: ");
 
-    zctx_t *ctx = zctx_new ();
-    void *mailbox = zsocket_new (ctx, ZMQ_DEALER);
-    zsocket_bind (mailbox, "tcp://127.0.0.1:5555");
+    zsock_t *mailbox = zsock_new (ZMQ_DEALER);
+    zsock_bind (mailbox, "tcp://127.0.0.1:5551");
 
     zhash_t *peers = zhash_new ();
     zuuid_t *you = zuuid_new ();
     zuuid_t *me = zuuid_new ();
-    zyre_peer_t *peer = zyre_peer_new (ctx, peers, you);
+    zyre_peer_t *peer = zyre_peer_new (peers, you);
     assert (!zyre_peer_connected (peer));
-    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5555");
+    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5551");
     assert (zyre_peer_connected (peer));
 
     zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
@@ -392,10 +396,10 @@ zyre_peer_test (bool verbose)
     zre_msg_destroy (&msg);
 
     //  Destroying container destroys all peers it contains
+    zhash_destroy (&peers);
     zuuid_destroy (&me);
     zuuid_destroy (&you);
-    zhash_destroy (&peers);
-    zctx_destroy (&ctx);
+    zsock_destroy (&mailbox);
 
     printf ("OK\n");
 }

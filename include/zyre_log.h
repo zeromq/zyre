@@ -36,7 +36,7 @@ typedef struct _zyre_log_t zyre_log_t;
 // @interface
 //  Constructor
 CZMQ_EXPORT zyre_log_t *
-    zyre_log_new (zctx_t *ctx, const char *sender);
+    zyre_log_new (const char *sender);
 
 //  Destructor
 CZMQ_EXPORT void

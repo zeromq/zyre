@@ -73,25 +73,23 @@ s_print_log_msg (void *collector)
 
 int main (int argc, char *argv [])
 {
-    zctx_t *ctx = zctx_new ();
-
     //  Use the CZMQ zbeacon class to make sure we listen on the 
     //  same network interface as our peers
-    zbeacon_t *beacon = zbeacon_new (ctx, ZRE_DISCOVERY_PORT);
+    zbeacon_t *beacon = zbeacon_new (NULL, ZRE_DISCOVERY_PORT);
     char *host = zbeacon_hostname (beacon);
 
     //  Bind to an ephemeral port
-    void *collector = zsocket_new (ctx, ZMQ_SUB);
-    int port = zsocket_bind (collector, "tcp://%s:*", host);
-    zsocket_set_subscribe (collector, "");
+    zsock_t *collector = zsock_new (ZMQ_SUB);
+    int port = zsock_bind (collector, "tcp://%s:*", host);
+    zsock_set_subscribe (collector, "");
 
     //  Announce this to all peers we connect to
-    zyre_t *node = zyre_new (ctx);
+    zyre_t *node = zyre_new ();
     zyre_set_header (node, "X-ZRELOG", "tcp://%s:%d", host, port);
     zyre_start (node);
 
     zpoller_t *poller = zpoller_new (collector, zyre_socket (node), NULL);
-    while (!zctx_interrupted) {
+    while (!zsys_interrupted) {
         void *which = zpoller_wait (poller, -1);
         if (which == collector)
             s_print_log_msg (collector);
@@ -107,6 +105,6 @@ int main (int argc, char *argv [])
     }
     zyre_destroy (&node);
     zbeacon_destroy (&beacon);
-    zctx_destroy (&ctx);
+    zsock_destroy (&collector);
     return 0;
 }

@@ -29,9 +29,9 @@
 #define MAX_GROUP 10
 
 static void
-node_task (void *args, zctx_t *ctx, void *pipe)
+node_actor (zsock_t *pipe, void *args)
 {
-    zyre_t *node = zyre_new (ctx);
+    zyre_t *node = zyre_new ();
     if (!node)
         return;                 //  Could not create new node
     zyre_set_verbose (node);
@@ -44,11 +44,11 @@ node_task (void *args, zctx_t *ctx, void *pipe)
 
     zpoller_t *poller = zpoller_new (pipe, zyre_socket (node), NULL);
     int64_t trigger = zclock_time () + 1000;
-    while (!zctx_interrupted) {
+    while (!zsys_interrupted) {
         void *which = zpoller_wait (poller, randof (1000));
 
         //  Any command from parent means EXIT
-        if (which == pipe)
+        if (which == pipe || which == NULL)
             break;
 
         //  Process an event from node
@@ -152,10 +152,6 @@ node_task (void *args, zctx_t *ctx, void *pipe)
 
 int main (int argc, char *argv [])
 {
-    //  Initialize context for talking to tasks
-    zctx_t *ctx = zctx_new ();
-    zctx_set_linger (ctx, 100);
-    
     //  Get number of nodes N to simulate
     //  We need 3 x N x N + 3N file handles
     int max_nodes = 10;
@@ -168,21 +164,21 @@ int main (int argc, char *argv [])
     if (argc > 2)
         max_iterations = atoi (argv [2]);
 
-    //  We address nodes as an array of pipes
-    void **pipes = zmalloc (sizeof (void *) * max_nodes);
+    //  We address nodes as an array of actors
+    zactor_t **actors = zmalloc (sizeof (zactor_t *) * max_nodes);
 
     //  We will randomly start and stop node threads
-    while (!zctx_interrupted) {
-        uint index = randof (max_nodes);
+    uint index;
+    while (!zsys_interrupted) {
+        index = randof (max_nodes);
         //  Toggle node thread
-        if (pipes [index]) {
-            zstr_send (pipes [index], "STOP");
-            zsocket_destroy (ctx, pipes [index]);
-            pipes [index] = NULL;
+        if (actors [index]) {
+            zactor_destroy (&actors [index]);
+            actors [index] = NULL;
             zclock_log ("I: Stopped node (%d running)", --nbr_nodes);
         }
         else {
-            pipes [index] = zthread_fork (ctx, node_task, NULL);
+            actors [index] = zactor_new (node_actor, NULL);
             zclock_log ("I: Started node (%d running)", ++nbr_nodes);
         }
         nbr_iterations++;
@@ -192,9 +188,12 @@ int main (int argc, char *argv [])
         zclock_sleep (randof (500) + 500);
     }
     zclock_log ("I: Stopped tester (%d iterations)", nbr_iterations);
-    
-    //  Does not actually terminate properly... :-/
-    //  zctx_destroy (&ctx);
-    free (pipes);
+
+    //  Stop all remaining actors
+    for (index = 0; index < max_nodes; index++) {
+        if (actors [index])
+            zactor_destroy (&actors [index]);
+    }
+    free (actors);
     return 0;
 }

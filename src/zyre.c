@@ -66,8 +66,9 @@
 //  Structure of our class
 
 struct _zyre_t {
-    void *pipe;                 //  Pipe through to node
-    char *uuid;                 //  Our UUID as string
+    //  In fact a Zyre instance just wraps the actor instance
+    zactor_t *actor;
+    char *uuid;                 //  Copy of our UUID, if known
 };
 
 
@@ -76,20 +77,15 @@ struct _zyre_t {
 //  node it is silent and invisible to other nodes on the network.
 
 zyre_t *
-zyre_new (zctx_t *ctx)
+zyre_new (void)
 {
     zyre_t *self = (zyre_t *) zmalloc (sizeof (zyre_t));
     assert (self);
 
     //  Start node engine and wait for it to be ready
-    assert (ctx);
-    self->pipe = zthread_fork (ctx, zyre_node_engine, NULL);
-    if (self->pipe)
-        self->uuid = zstr_recv (self->pipe);
-    else {
-        free (self);
-        self = NULL;
-    }
+    self->actor = zactor_new (zyre_node_actor, NULL);
+    assert (self->actor);
+    
     return self;
 }
 
@@ -104,9 +100,8 @@ zyre_destroy (zyre_t **self_p)
     assert (self_p);
     if (*self_p) {
         zyre_t *self = *self_p;
-        zstr_send (self->pipe, "TERMINATE");
-        zsocket_wait (self->pipe);
-        zstr_free (&self->uuid);
+        zactor_destroy (&self->actor);
+        free (self->uuid);
         free (self);
         *self_p = NULL;
     }
@@ -120,6 +115,10 @@ const char *
 zyre_uuid (zyre_t *self)
 {
     assert (self);
+    if (!self->uuid) {
+        zstr_sendx (self->actor, "UUID", NULL);
+        self->uuid = zstr_recv (self->actor);
+    }
     return self->uuid;
 }
 
@@ -137,9 +136,7 @@ zyre_set_header (zyre_t *self, char *name, char *format, ...)
     char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
 
-    zstr_sendm (self->pipe, "SET");
-    zstr_sendm (self->pipe, name);
-    zstr_send  (self->pipe, string);
+    zstr_sendx (self->actor, "SET", name, string, NULL);
     free (string);
 }
 
@@ -151,8 +148,8 @@ zyre_set_header (zyre_t *self, char *name, char *format, ...)
 void
 zyre_set_verbose (zyre_t *self)
 {
-    zstr_send (self->pipe, "VERBOSE");
-    zsocket_wait (self->pipe);
+    assert (self);
+    zstr_sendx (self->actor, "VERBOSE", NULL);
 }
 
 
@@ -164,8 +161,9 @@ zyre_set_verbose (zyre_t *self)
 void
 zyre_set_port (zyre_t *self, int port_nbr)
 {
-    zstr_sendm (self->pipe, "PORT");
-    zstr_sendf (self->pipe, "%d", port_nbr);
+    assert (self);
+    zstr_sendm (self->actor, "PORT");
+    zstr_sendf (self->actor, "%d", port_nbr);
 }
 
 
@@ -176,8 +174,9 @@ zyre_set_port (zyre_t *self, int port_nbr)
 void
 zyre_set_interval (zyre_t *self, size_t interval)
 {
-    zstr_sendm (self->pipe, "INTERVAL");
-    zstr_sendf (self->pipe, "%zd", interval);
+    assert (self);
+    zstr_sendm (self->actor, "INTERVAL");
+    zstr_sendf (self->actor, "%zd", interval);
 }
 
 
@@ -188,8 +187,9 @@ zyre_set_interval (zyre_t *self, size_t interval)
 void
 zyre_start (zyre_t *self)
 {
-    zstr_send (self->pipe, "START");
-    zsocket_wait (self->pipe);
+    assert (self);
+    zstr_sendx (self->actor, "START", NULL);
+    zsock_wait (self->actor);
 }
 
 
@@ -201,8 +201,8 @@ zyre_start (zyre_t *self)
 void
 zyre_stop (zyre_t *self)
 {
-    zstr_send (self->pipe, "STOP");
-    zsocket_wait (self->pipe);
+    assert (self);
+    zstr_sendx (self->actor, "STOP", NULL);
 }
 
 
@@ -214,8 +214,7 @@ int
 zyre_join (zyre_t *self, const char *group)
 {
     assert (self);
-    zstr_sendm (self->pipe, "JOIN");
-    zstr_send  (self->pipe, group);
+    zstr_sendx (self->actor, "JOIN", group, NULL);
     return 0;
 }
 
@@ -227,8 +226,7 @@ int
 zyre_leave (zyre_t *self, const char *group)
 {
     assert (self);
-    zstr_sendm (self->pipe, "LEAVE");
-    zstr_send  (self->pipe, group);
+    zstr_sendx (self->actor, "LEAVE", group, NULL);
     return 0;
 }
 
@@ -242,8 +240,7 @@ zmsg_t *
 zyre_recv (zyre_t *self)
 {
     assert (self);
-    zmsg_t *msg = zmsg_recv (self->pipe);
-    return msg;
+    return zmsg_recv (self->actor);
 }
 
 
@@ -256,9 +253,9 @@ zyre_whisper (zyre_t *self, char *peer, zmsg_t **msg_p)
 {
     assert (self);
     assert (peer);
-    zstr_sendm (self->pipe, "WHISPER");
-    zstr_sendm (self->pipe, peer);
-    zmsg_send (msg_p, self->pipe);
+    zstr_sendm (self->actor, "WHISPER");
+    zstr_sendm (self->actor, peer);
+    zmsg_send (msg_p, self->actor);
     return 0;
 }
 
@@ -272,9 +269,9 @@ zyre_shout (zyre_t *self, char *group, zmsg_t **msg_p)
 {
     assert (self);
     assert (group);
-    zstr_sendm (self->pipe, "SHOUT");
-    zstr_sendm (self->pipe, group);
-    zmsg_send (msg_p, self->pipe);
+    zstr_sendm (self->actor, "SHOUT");
+    zstr_sendm (self->actor, group);
+    zmsg_send (msg_p, self->actor);
     return 0;
 }
 
@@ -294,9 +291,9 @@ zyre_whispers (zyre_t *self, char *peer, char *format, ...)
     char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
 
-    zstr_sendm (self->pipe, "WHISPER");
-    zstr_sendm (self->pipe, peer);
-    zstr_send  (self->pipe, string);
+    zstr_sendm (self->actor, "WHISPER");
+    zstr_sendm (self->actor, peer);
+    zstr_send  (self->actor, string);
     free (string);
     return 0;
 }
@@ -317,34 +314,34 @@ zyre_shouts (zyre_t *self, char *group, char *format, ...)
     char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
 
-    zstr_sendm (self->pipe, "SHOUT");
-    zstr_sendm (self->pipe, group);
-    zstr_send  (self->pipe, string);
+    zstr_sendm (self->actor, "SHOUT");
+    zstr_sendm (self->actor, group);
+    zstr_send  (self->actor, string);
     free (string);
     return 0;
 }
 
 
 //  ---------------------------------------------------------------------
-//  Return node handle, for polling
-
-void *
-zyre_socket (zyre_t *self)
-{
-    assert (self);    
-    return self->pipe;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Prints zyre information
+//  Prints zyre node information
 
 void
 zyre_dump (zyre_t *self)
 {
-    zstr_send (self->pipe, "DUMP");
-    zsocket_wait (self->pipe);
+    zstr_send (self->actor, "DUMP");
 }
+
+
+//  ---------------------------------------------------------------------
+//  Return node zsock_t socket, for direct polling of socket
+
+zsock_t *
+zyre_socket (zyre_t *self)
+{
+    assert (self);    
+    return zsock_resolve (self->actor);
+}
+
 
 //  --------------------------------------------------------------------------
 //  Self test of this class
@@ -355,10 +352,9 @@ zyre_test (bool verbose)
     printf (" * zyre: ");
 
     //  @selftest
-    zctx_t *ctx = zctx_new ();
     //  Create two nodes
-    zyre_t *node1 = zyre_new (ctx);
-    zyre_t *node2 = zyre_new (ctx);
+    zyre_t *node1 = zyre_new ();
+    zyre_t *node2 = zyre_new ();
     zyre_set_header (node1, "X-HELLO", "World");
     assert (strneq (zyre_uuid (node1), zyre_uuid (node2)));
 
@@ -367,8 +363,6 @@ zyre_test (bool verbose)
     zyre_set_port (node1, 5670);
     zyre_set_port (node2, 5670);
     
-//     zyre_set_verbose (node1);
-//     zyre_set_verbose (node2);
     zyre_start (node1);
     zyre_start (node2);
     zyre_join (node1, "GLOBAL");
@@ -421,7 +415,6 @@ zyre_test (bool verbose)
     
     zyre_destroy (&node1);
     zyre_destroy (&node2);
-    zctx_destroy (&ctx);
     //  @end
     printf ("OK\n");
 }

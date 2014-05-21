@@ -37,8 +37,8 @@
     ZYRE_MAKE_VERSION(ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
 
 #include <czmq.h>
-#if CZMQ_VERSION < 20200
-#   error "Zyre needs CZMQ/2.2.0 or later"
+#if CZMQ_VERSION < 30000
+#   error "Zyre needs CZMQ/3.0.0 or later"
 #endif
 
 //  IANA-assigned port for ZYRE discovery protocol
@@ -56,7 +56,7 @@ typedef struct _zyre_t zyre_t;
 //  Constructor, creates a new Zyre node. Note that until you start the
 //  node it is silent and invisible to other nodes on the network.
 CZMQ_EXPORT zyre_t *
-    zyre_new (zctx_t *ctx);
+    zyre_new (void);
 
 //  Destructor, destroys a Zyre node. When you destroy a node, any
 //  messages it is sending or receiving will be discarded.
@@ -132,8 +132,8 @@ CZMQ_EXPORT int
 CZMQ_EXPORT int
     zyre_shouts (zyre_t *self, char *group, char *format, ...);
 
-//  Return handle to the Zyre node, for polling
-CZMQ_EXPORT void *
+//  Return socket for talking to the Zyre node, for polling
+CZMQ_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
 //  Prints zyre information

@@ -30,8 +30,7 @@
 //  Structure of our class
 
 struct _zyre_node_t {
-    zctx_t *ctx;                //  CZMQ context
-    void *pipe;                 //  Pipe back to application
+    zsock_t *pipe;              //  Pipe back to application
     bool terminated;            //  API shut us down
     bool verbose;               //  Log all traffic
     int beacon_port;            //  Beacon port number
@@ -40,7 +39,7 @@ struct _zyre_node_t {
     zbeacon_t *beacon;          //  Beacon object
     zyre_log_t *log;            //  Log object
     zuuid_t *uuid;              //  Our UUID as object
-    void *inbox;                //  Our inbox socket (ROUTER)
+    zsock_t *inbox;             //  Our inbox socket (ROUTER)
     char *host;                 //  Our host IP address
     int port;                   //  Our inbox port number
     byte status;                //  Our own change counter
@@ -55,19 +54,18 @@ struct _zyre_node_t {
 //  Constructor
 
 static zyre_node_t *
-zyre_node_new (zctx_t *ctx, void *pipe)
+zyre_node_new (zsock_t *pipe)
 {
     zyre_node_t *self = (zyre_node_t *) zmalloc (sizeof (zyre_node_t));
-    self->ctx = ctx;
     self->pipe = pipe;
-    self->inbox = zsocket_new (ctx, ZMQ_ROUTER);
+    self->inbox = zsock_new (ZMQ_ROUTER);
     if (self->inbox == NULL) {
         free (self);
         return NULL;            //  Interrupted 0MQ call
     }
-    self->port = zsocket_bind (self->inbox, "tcp://*:*");
+    self->port = zsock_bind (self->inbox, "tcp://*:*");
     if (self->port < 0) {
-        zsocket_destroy (self->ctx, self->inbox);
+        zsock_destroy (&self->inbox);
         free (self);
         return NULL;            //  Interrupted 0MQ call
     }
@@ -100,7 +98,7 @@ zyre_node_destroy (zyre_node_t **self_p)
         zhash_destroy (&self->peer_groups);
         zhash_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
-        zsocket_destroy (self->ctx, self->inbox);
+        zsock_destroy (&self->inbox);
         zbeacon_destroy (&self->beacon);
         zyre_log_destroy (&self->log);
         free (self);
@@ -129,7 +127,7 @@ static void
 zyre_node_start (zyre_node_t *self)
 {
     assert (!self->beacon);
-    self->beacon = zbeacon_new (self->ctx, self->beacon_port);
+    self->beacon = zbeacon_new (NULL, self->beacon_port);
     if (self->interval)
         zbeacon_set_interval (self->beacon, self->interval);
     zpoller_add (self->poller, zbeacon_socket (self->beacon));
@@ -152,7 +150,7 @@ zyre_node_start (zyre_node_t *self)
     //  Set up log instance
     char sender [30];         //  ipaddress:port endpoint
     sprintf (sender, "%s:%d", self->host, self->port);
-    self->log = zyre_log_new (self->ctx, sender);
+    self->log = zyre_log_new (sender);
 }
 
 
@@ -231,6 +229,9 @@ zyre_node_recv_api (zyre_node_t *self)
     if (!command)
         return -1;                  //  Interrupted
 
+    if (streq (command, "UUID"))
+        zstr_send (self->pipe, zuuid_str (self->uuid));
+    else
     if (streq (command, "SET")) {
         char *name = zmsg_popstr (request);
         char *value = zmsg_popstr (request);
@@ -239,10 +240,8 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&value);
     }
     else
-    if (streq (command, "VERBOSE")) {
+    if (streq (command, "VERBOSE"))
         self->verbose = true;
-        zsocket_signal (self->pipe);
-    }
     else
     if (streq (command, "PORT")) {
         char *value = zmsg_popstr (request);
@@ -258,18 +257,11 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "START")) {
         zyre_node_start (self);
-        zsocket_signal (self->pipe);
+        zsock_signal (self->pipe);
     }
     else
-    if (streq (command, "STOP")) {
+    if (streq (command, "STOP"))
         zyre_node_stop (self);
-        zsocket_signal (self->pipe);
-    }
-    else
-    if (streq (command, "DUMP")) {
-        zyre_node_dump (self);
-        zsocket_signal (self->pipe);
-    }
     else
     if (streq (command, "WHISPER")) {
         //  Get peer to send message to
@@ -333,10 +325,11 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&name);
     }
     else
-    if (streq (command, "TERMINATE")) {
+    if (streq (command, "DUMP"))
+        zyre_node_dump (self);
+    else
+    if (streq (command, "$TERM"))
         self->terminated = true;
-        zsocket_signal (self->pipe);
-    }
     else {
         printf ("E: invalid command '%s'\n", command);
         assert (false);
@@ -374,7 +367,7 @@ zyre_node_require_peer (
         snprintf (endpoint, 100, "tcp://%s:%hu", address, port);
         zhash_foreach (self->peers, zyre_node_purge_peer, endpoint);
 
-        peer = zyre_peer_new (self->ctx, self->peers, uuid);
+        peer = zyre_peer_new (self->peers, uuid);
         zyre_peer_connect (peer, self->uuid, endpoint);
         if (self->verbose)
             zyre_peer_set_log (peer, self->log);
@@ -668,23 +661,22 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
 
 
 //  --------------------------------------------------------------------------
-//  This is the engine that runs a single node; it uses one thread, creates
+//  This is the actor that runs a single node; it uses one thread, creates
 //  a zyre_node object at start and destroys that when finishing.
 
 void
-zyre_node_engine (void *args, zctx_t *ctx, void *pipe)
+zyre_node_actor (zsock_t *pipe, void *args)
 {
     //  Create node instance to pass around
-    zyre_node_t *self = zyre_node_new (ctx, pipe);
+    zyre_node_t *self = zyre_node_new (pipe);
     if (!self)                  //  Interrupted
         return;
     
-    //  Signal success by returning our node ID to API
-    zstr_send (self->pipe, zuuid_str (self->uuid));
-
-    uint64_t reap_at = zclock_time () + REAP_INTERVAL;
+    //  Signal actor successfully initialized
+    zsock_signal (self->pipe);
 
     //  Loop until the agent is terminated one way or another
+    uint64_t reap_at = zclock_time () + REAP_INTERVAL;
     while (!self->terminated) {
         int timeout = (int) (reap_at - zclock_time ());
         assert (timeout <= REAP_INTERVAL);
@@ -724,10 +716,9 @@ void
 zyre_node_test (bool verbose)
 {
     printf (" * zyre_node: ");
-    zctx_t *ctx = zctx_new ();
-    void *pipe = zsocket_new (ctx, ZMQ_PAIR);
-    zyre_node_t *node = zyre_node_new (ctx, pipe);
+    zsock_t *pipe = zsock_new (ZMQ_PAIR);
+    zyre_node_t *node = zyre_node_new (pipe);
     zyre_node_destroy (&node);
-    zctx_destroy (&ctx);
+    zsock_destroy (&pipe);
     printf ("OK\n");
 }

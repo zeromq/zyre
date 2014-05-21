@@ -56,6 +56,7 @@ s_node_recv (zyre_t *node, char* command, char* expected)
     return result;
 }
 
+
 int
 main (int argc, char *argv [])
 {
@@ -74,8 +75,7 @@ main (int argc, char *argv [])
     if (argc > 2)
         max_message = atoi (argv [2]);
 
-    zctx_t *ctx = zctx_new ();
-    zyre_t *node = zyre_new (ctx);
+    zyre_t *node = zyre_new ();
     zyre_start (node);
     zyre_join (node, "GLOBAL");
 
@@ -93,12 +93,13 @@ main (int argc, char *argv [])
         char *event = zmsg_popstr (incoming);
         if (streq (event, "ENTER")) {
             char *peer = zmsg_popstr (incoming);
-            peers[nbr_node++] = peer;
+            peers [nbr_node++] = peer;
 
             if (nbr_node == max_node) {
                 // got HELLO from the all remote nodes
                 elapse = zclock_time () - start;
-                printf ("Took %ld ms to coordinate with all remote\n", (long)elapse);
+                printf ("Took %ld ms to coordinate with all remote\n",
+                        (long) elapse);
             }
         }
         else
@@ -110,7 +111,8 @@ main (int argc, char *argv [])
                 if (++nbr_hello_response == max_node) {
                     // got HELLO from the all remote nodes
                     elapse = zclock_time () - start;
-                    printf ("Took %ld ms to get greeting from all remote\n", (long)elapse);
+                    printf ("Took %ld ms to get greeting from all remote\n",
+                            (long) elapse);
                 }
             }
             free (peer);
@@ -122,25 +124,22 @@ main (int argc, char *argv [])
         if (nbr_node == max_node && nbr_hello_response == max_node)
             break;
     }
-    zmq_pollitem_t pollitems [] = {
-        { zyre_socket (node), 0, ZMQ_POLLIN, 0 }
-    };
 
-    //  send WHISPER message
+    //  Send WHISPER message
     start = zclock_time ();
+    zpoller_t *poller = zpoller_new (zyre_socket (node), NULL);
     for (nbr_message = 0; nbr_message < max_message; nbr_message++) {
         zyre_whispers (node, peers [nbr_message % max_node], "S:WHISPER");
-        while (zmq_poll (pollitems, 1, 0) > 0) {
+        while (zpoller_wait (poller, 1000))
             if (s_node_recv (node, "WHISPER", "R:WHISPER"))
                 nbr_message_response++;
-        }
     }
 
     while (nbr_message_response < max_message)
         if (s_node_recv (node, "WHISPER", "R:WHISPER"))
             nbr_message_response++;
 
-    // got WHISPER response from the all remote nodes
+    //  Got WHISPER response from the all remote nodes
     elapse = zclock_time () - start;
     printf ("Took %ld ms to send/receive %d message. %.2f msg/s \n", (long)elapse, max_message, (float) max_message * 1000 / elapse);
 
@@ -153,10 +152,9 @@ main (int argc, char *argv [])
 
     for (nbr_message = 0; nbr_message < max_message; nbr_message++) {
         zyre_shouts (node, "GLOBAL", "S:SHOUT");
-        while (zmq_poll (pollitems, 1, 0) > 0) {
+        while (zpoller_wait (poller, 1000))
             if (s_node_recv (node, "SHOUT", "R:SHOUT"))
                 nbr_message_response++;
-        }
     }
 
     while (nbr_message_response < max_message * max_node)
@@ -169,12 +167,11 @@ main (int argc, char *argv [])
             (long) elapse, max_message, max_node * max_message,
             (float) max_node * max_message * 1000 / elapse);
 
-
     zyre_destroy (&node);
     for (nbr_node = 0; nbr_node < max_node; nbr_node++) {
         free (peers[nbr_node]);
     }
+    zpoller_destroy (&poller);
     free (peers);
-    zctx_destroy (&ctx);
     return 0;
 }

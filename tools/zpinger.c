@@ -29,8 +29,7 @@
 
 int main (int argc, char *argv [])
 {
-    zctx_t *ctx = zctx_new ();
-    zyre_t *node = zyre_new (ctx);
+    zyre_t *node = zyre_new ();
     zyre_start (node);
     zyre_join (node, "GLOBAL");
 
@@ -72,6 +71,5 @@ int main (int argc, char *argv [])
         zmsg_destroy (&incoming);
     }
     zyre_destroy (&node);
-    zctx_destroy (&ctx);
     return 0;
 }

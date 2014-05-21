@@ -33,10 +33,10 @@ extern "C" {
 
 typedef struct _zyre_node_t zyre_node_t;
 
-//  This is the engine that runs a single node; it uses one thread, creates
+//  This is the actor that runs a single node; it uses one thread, creates
 //  a zyre_node object at start and destroys that when finishing.
 void
-    zyre_node_engine (void *args, zctx_t *ctx, void *pipe);
+    zyre_node_actor (zsock_t *pipe, void *args);
 
 //  Self test of this class
 CZMQ_EXPORT void
