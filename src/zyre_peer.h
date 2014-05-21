@@ -35,7 +35,7 @@ typedef struct _zyre_peer_t zyre_peer_t;
 
 //  Constructor
 zyre_peer_t *
-    zyre_peer_new (zctx_t *ctx, zhash_t *container, zuuid_t *uuid);
+    zyre_peer_new (zhash_t *container, zuuid_t *uuid);
 
 //  Destructor
 void

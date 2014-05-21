@@ -99,6 +99,9 @@ zyre_event_new (zyre_t *node)
         self->msg = msg;
         msg = NULL;
     }
+    else
+        printf ("???? %s\n", type);
+    
     free (type);
     zmsg_destroy (&msg);
     return self;
@@ -210,16 +213,16 @@ zyre_event_test (bool verbose)
     printf (" * zyre_event: ");
 
     //  @selftest
-    zctx_t *ctx = zctx_new ();
     //  Create two nodes
-    zyre_t *node1 = zyre_new (ctx);
-    zyre_t *node2 = zyre_new (ctx);
+    zyre_t *node1 = zyre_new ();
+    zyre_t *node2 = zyre_new ();
     zyre_set_header (node1, "X-HELLO", "World");
     zyre_start (node1);
     zyre_start (node2);
+    zyre_set_verbose (node1);
+    zyre_set_verbose (node2);
     zyre_join (node1, "GLOBAL");
     zyre_join (node2, "GLOBAL");
-
     //  Give time for them to interconnect
     zclock_sleep (250);
 
@@ -227,6 +230,7 @@ zyre_event_test (bool verbose)
     zmsg_t *msg = zmsg_new ();
     zmsg_addstr (msg, "Hello, World");
     zyre_shout (node1, "GLOBAL", &msg);
+    zclock_sleep (100);
 
     //  Parse ENTER
     zyre_event_t *event = zyre_event_new (node2);
@@ -235,8 +239,8 @@ zyre_event_test (bool verbose)
     assert (sender);
     char *address = zyre_event_address (event);
     assert (address);
-    assert (streq (zyre_event_header (event, "X-HELLO"), "World"));
-    msg = zyre_event_msg (event);
+    char *header = zyre_event_header (event, "X-HELLO");
+    assert (header);
     zyre_event_destroy (&event);
     
     //  Parse JOIN
@@ -256,7 +260,6 @@ zyre_event_test (bool verbose)
     
     zyre_destroy (&node1);
     zyre_destroy (&node2);
-    zctx_destroy (&ctx);
     //  @end
     printf ("OK\n");
 }

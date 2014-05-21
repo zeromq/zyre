@@ -37,7 +37,7 @@
 //  Structure of our class
 
 struct _zyre_log_t {
-    void *publisher;            //  Socket to send to
+    zsock_t *publisher;         //  Socket to send to
     zhash_t *subscribers;       //  Known subscribers
     uint16_t nodeid;            //  Own correlation ID
 };
@@ -47,11 +47,11 @@ struct _zyre_log_t {
 //  Construct new log object
 
 zyre_log_t *
-zyre_log_new (zctx_t *ctx, const char *sender)
+zyre_log_new (const char *sender)
 {
     zyre_log_t *self = (zyre_log_t *) zmalloc (sizeof (zyre_log_t));
     //  If the system can't create new sockets, discard log data silently
-    self->publisher = zsocket_new (ctx, ZMQ_PUB);
+    self->publisher = zsock_new (ZMQ_PUB);
     self->subscribers = zhash_new ();
 
     //  We calculate a short node ID by hashing the full endpoint
@@ -76,11 +76,12 @@ zyre_log_destroy (zyre_log_t **self_p)
         char *subscriber = (char *) zlist_first (subscribers);
         while (subscriber) {
             zhash_delete (self->subscribers, subscriber);
-            zsocket_disconnect (self->publisher, "%s", subscriber);
+            zsock_disconnect (self->publisher, "%s", subscriber);
             subscriber = (char *) zlist_next (subscribers);
         }
         zlist_destroy (&subscribers);
         zhash_destroy (&self->subscribers);
+        zsock_destroy (&self->publisher);
         free (self);
         *self_p = NULL;
     }
@@ -102,7 +103,7 @@ zyre_log_connect (zyre_log_t *self, const char *format, ...)
 
         //  Only connect once to any given subscriber
         if (!zhash_lookup (self->subscribers, endpoint)) {
-            int rc = zsocket_connect (self->publisher, "%s", endpoint);
+            int rc = zsock_connect (self->publisher, "%s", endpoint);
             assert (rc == 0);
             zhash_insert (self->subscribers, endpoint, "TRUE");
         }
@@ -207,15 +208,14 @@ zyre_log_test (bool verbose)
     printf (" * zyre_log: ");
 
     //  @selftest
-    zctx_t *ctx = zctx_new ();
     //  Get all incoming log messages
-    void *collector = zsocket_new (ctx, ZMQ_SUB);
-    zsocket_bind (collector, "tcp://127.0.0.1:5555");
-    zsocket_set_subscribe (collector, "");
+    zsock_t *collector = zsock_new (ZMQ_SUB);
+    zsock_bind (collector, "tcp://127.0.0.1:5550");
+    zsock_set_subscribe (collector, "");
 
     //  Create a log instance to send log messages
-    zyre_log_t *log = zyre_log_new (ctx, "this is me");
-    zyre_log_connect (log, "tcp://127.0.0.1:5555");
+    zyre_log_t *log = zyre_log_new ("this is me");
+    zyre_log_connect (log, "tcp://127.0.0.1:5550");
 
     //  Workaround for issue 270; give time for connect to
     //  happen and subscriptions to go to pub socket; 200
@@ -240,7 +240,7 @@ zyre_log_test (bool verbose)
     }
     zpoller_destroy (&poller);
     zyre_log_destroy (&log);
-    zctx_destroy (&ctx);
+    zsock_destroy (&collector);
     //  @end
     printf ("OK\n");
 }
