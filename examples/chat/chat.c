@@ -32,7 +32,7 @@
 static void
 chat_task (void *args, zctx_t *ctx, void *pipe) 
 {
-    zyre_t *node = zyre_new (ctx);
+    zyre_t *node = zyre_new ();
     zyre_start (node);
     zyre_join (node, "CHAT");
     
