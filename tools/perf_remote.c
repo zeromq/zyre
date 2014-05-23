@@ -36,7 +36,7 @@ node_actor (zsock_t *pipe, void *args)
 {
     zyre_t *node = zyre_new ();
     zyre_start (node);
-    zsock_signal (pipe);
+    zsock_signal (pipe, 0);
     
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message

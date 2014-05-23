@@ -12,6 +12,7 @@ AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
 AC_CONFIG_HEADERS([src/platform.h])
 AM_INIT_AUTOMAKE([tar-ustar foreign])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # This defines PACKAGE_VERSION_... in src/platform.h
 PV_MAJOR=`echo $PACKAGE_VERSION | cut -d . -f 1`

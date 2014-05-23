@@ -257,7 +257,7 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "START")) {
         zyre_node_start (self);
-        zsock_signal (self->pipe);
+        zsock_signal (self->pipe, 0);
     }
     else
     if (streq (command, "STOP"))
@@ -673,7 +673,7 @@ zyre_node_actor (zsock_t *pipe, void *args)
         return;
     
     //  Signal actor successfully initialized
-    zsock_signal (self->pipe);
+    zsock_signal (self->pipe, 0);
 
     //  Loop until the agent is terminated one way or another
     uint64_t reap_at = zclock_time () + REAP_INTERVAL;
