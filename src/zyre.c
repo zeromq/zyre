@@ -182,14 +182,15 @@ zyre_set_interval (zyre_t *self, size_t interval)
 
 //  ---------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
-//  begins discovery and connection.
+//  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
+//  possible to start the node.
 
-void
+int
 zyre_start (zyre_t *self)
 {
     assert (self);
     zstr_sendx (self->actor, "START", NULL);
-    zsock_wait (self->actor);
+    return zsock_wait (self->actor) == 0? 0: -1;
 }
 
 
@@ -354,19 +355,25 @@ zyre_test (bool verbose)
     //  @selftest
     //  Create two nodes
     zyre_t *node1 = zyre_new ();
-    zyre_t *node2 = zyre_new ();
+    assert (node1);
     zyre_set_header (node1, "X-HELLO", "World");
-    assert (strneq (zyre_uuid (node1), zyre_uuid (node2)));
-
-    //  Test ability to switch to different discovery port
-    //  Both nodes have to be using same port, or test will fail.
+    zyre_set_verbose (node1);
     zyre_set_port (node1, 5670);
-    zyre_set_port (node2, 5670);
-    
-    zyre_start (node1);
-    zyre_start (node2);
+    if (zyre_start (node1)) {
+        zyre_destroy (&node1);
+        printf ("OK (skipping test, no UDP discovery)\n");
+        return;
+    }
     zyre_join (node1, "GLOBAL");
+
+    zyre_t *node2 = zyre_new ();
+    assert (node2);
+    zyre_set_verbose (node2);
+    zyre_set_port (node2, 5670);
+    int rc = zyre_start (node2);
+    assert (rc == 0);
     zyre_join (node2, "GLOBAL");
+    assert (strneq (zyre_uuid (node1), zyre_uuid (node2)));
 
     //  Give time for them to interconnect
     zclock_sleep (250);
@@ -374,8 +381,6 @@ zyre_test (bool verbose)
     //  One node shouts to GLOBAL
     zyre_shouts (node1,"GLOBAL", "Hello, World");
 
-    //  TODO: should timeout and not hang if there's no networking
-    //  ALSO why doesn't this work with localhost? zbeacon?
     //  Second node should receive ENTER, JOIN, and SHOUT
     zmsg_t *msg = zyre_recv (node2);
     assert (msg);

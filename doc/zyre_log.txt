@@ -10,7 +10,7 @@ SYNOPSIS
 ----
 //  Constructor
 CZMQ_EXPORT zyre_log_t *
-    zyre_log_new (zctx_t *ctx, const char *sender);
+    zyre_log_new (const char *sender);
 
 //  Destructor
 CZMQ_EXPORT void
@@ -47,15 +47,14 @@ EXAMPLE
 -------
 .From zyre_log_test method
 ----
-    zctx_t *ctx = zctx_new ();
     //  Get all incoming log messages
-    void *collector = zsocket_new (ctx, ZMQ_SUB);
-    zsocket_bind (collector, "tcp://127.0.0.1:5555");
-    zsocket_set_subscribe (collector, "");
+    zsock_t *collector = zsock_new (ZMQ_SUB);
+    zsock_bind (collector, "tcp://127.0.0.1:5550");
+    zsock_set_subscribe (collector, "");
 
     //  Create a log instance to send log messages
-    zyre_log_t *log = zyre_log_new (ctx, "this is me");
-    zyre_log_connect (log, "tcp://127.0.0.1:5555");
+    zyre_log_t *log = zyre_log_new ("this is me");
+    zyre_log_connect (log, "tcp://127.0.0.1:5550");
 
     //  Workaround for issue 270; give time for connect to
     //  happen and subscriptions to go to pub socket; 200
@@ -74,12 +73,12 @@ EXAMPLE
         zre_log_msg_t *msg = zre_log_msg_recv (collector);
         assert (msg);
         if (verbose)
-            zre_log_msg_dump (msg);
+            zre_log_msg_print (msg);
         zre_log_msg_destroy (&msg);
         count++;
     }
     zpoller_destroy (&poller);
     zyre_log_destroy (&log);
-    zctx_destroy (&ctx);
+    zsock_destroy (&collector);
 ----
 

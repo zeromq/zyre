@@ -25,7 +25,7 @@ SUFFIXES=.txt .xml .1 .3 .7
 .txt.xml:
 	$(srcdir)/mkman $<
 	asciidoc -d manpage -b docbook -f  $(srcdir)/asciidoc.conf \
-		-azre_version=@PACKAGE_VERSION@ -o$@ $<
+		-azyre_version=@PACKAGE_VERSION@ -o$@ $<
 .xml.1:
 	xmlto man $<
 .xml.3:

@@ -89,8 +89,9 @@ CZMQ_EXPORT void
     zyre_set_interval (zyre_t *self, size_t interval);
 
 //  Start node, after setting header values. When you start a node it
-//  begins discovery and connection.
-CZMQ_EXPORT void
+//  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
+//  possible to start the node.
+CZMQ_EXPORT int
     zyre_start (zyre_t *self);
 
 //  Stop node; this signals to other peers that this node will go away.
