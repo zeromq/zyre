@@ -18,15 +18,19 @@ CZMQ_EXPORT zyre_t *
 CZMQ_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
-//  Set node name; this is provided to other nodes during discovery.
-//  If you do not set this, an automatically generated name is used.
-CZMQ_EXPORT void
-    zyre_set_name (zyre_t *self, const char *name);
+//  Return our node UUID, after successful initialization
+CZMQ_EXPORT const char *
+    zyre_uuid (zyre_t *self);
 
 //  Return our node name, after successful initialization. By default
-//  will be a string of random characters.
+//  is taken from the UUID and shortened.
 CZMQ_EXPORT const char *
     zyre_name (zyre_t *self);
+
+//  Set node name; this is provided to other nodes during discovery.
+//  If you do not set this, the UUID is used as a basis.
+CZMQ_EXPORT void
+    zyre_set_name (zyre_t *self, const char *name);
 
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
@@ -48,6 +52,13 @@ CZMQ_EXPORT void
 //  beacon exploration followed by pinging every 1,000 msecs.
 CZMQ_EXPORT void
     zyre_set_interval (zyre_t *self, size_t interval);
+
+//  Set network interface to use for beacons and interconnects. If you
+//  do not set this, CZMQ will choose an interface for you. On boxes
+//  with multiple interfaces you really should specify which one you
+//  want to use, or strange things can happen.
+CZMQ_EXPORT void
+    zyre_set_interface (zyre_t *self, const char *interface);
 
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
@@ -120,15 +131,15 @@ frames provide further values:
 
     ENTER fromnode name headers ipaddress:port
         a new peer has entered the network
-    EXIT fromnode
+    EXIT fromnode name
         a peer has left the network
-    JOIN fromnode groupname
+    JOIN fromnode name groupname
         a peer has joined a specific group
-    LEAVE fromnode groupname
+    LEAVE fromnode name groupname
         a peer has joined a specific group
-    WHISPER fromnode message
+    WHISPER fromnode name message
         a peer has sent this node a message
-    SHOUT fromnode groupname message
+    SHOUT fromnode name groupname message
         a peer has sent one of our groups a message
         
 In SHOUT and WHISPER the message is zero or more frames, and can hold
@@ -207,6 +218,7 @@ EXAMPLE
     command = zmsg_popstr (msg);
     assert (streq (command, "JOIN"));
     zstr_free (&command);
+    assert (zmsg_size (msg) == 3);
     zmsg_destroy (&msg);
     
     msg = zyre_recv (node2);

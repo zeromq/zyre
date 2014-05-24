@@ -211,6 +211,20 @@ zyre_set_interval (zyre_t *self, size_t interval)
 
 
 //  ---------------------------------------------------------------------
+//  Set network interface to use for beacons and interconnects. If you
+//  do not set this, CZMQ will choose an interface for you. On boxes
+//  with multiple interfaces you really should specify which one you
+//  want to use, or strange things can happen.
+
+void
+zyre_set_interface (zyre_t *self, const char *interface)
+{
+    //  Implemented by zsys global for now
+    zsys_set_interface (interface);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
 //  possible to start the node.
