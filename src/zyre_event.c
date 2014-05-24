@@ -41,6 +41,7 @@
 struct _zyre_event_t {
     zyre_event_type_t type; //  Event type
     char *sender;           //  Sender UUID as string
+    char *name;             //  Sender public name as string
     char *address;          //  Sender ipaddress as string, for an ENTER event
     zhash_t *headers;       //  Headers, for an ENTER event
     char *group;            //  Group name for a SHOUT event
@@ -65,12 +66,15 @@ zyre_event_new (zyre_t *node)
 
     char *type = zmsg_popstr (msg);
     self->sender = zmsg_popstr (msg);
+    self->name = zmsg_popstr (msg);
 
     if (streq (type, "ENTER")) {
         self->type = ZYRE_EVENT_ENTER;
         zframe_t *headers = zmsg_pop (msg);
-        self->headers = zhash_unpack (headers);
-        zframe_destroy (&headers);
+        if (headers) {
+            self->headers = zhash_unpack (headers);
+            zframe_destroy (&headers);
+        }
         self->address = zmsg_popstr (msg);
     }
     else
@@ -100,7 +104,7 @@ zyre_event_new (zyre_t *node)
         msg = NULL;
     }
     else
-        printf ("???? %s\n", type);
+        zclock_log ("W: bad message received from node: %s\n", type);
     
     free (type);
     zmsg_destroy (&msg);
@@ -117,11 +121,12 @@ zyre_event_destroy (zyre_event_t **self_p)
     assert (self_p);
     if (*self_p) {
         zyre_event_t *self = *self_p;
+        zhash_destroy (&self->headers);
+        zmsg_destroy (&self->msg);
         free (self->sender);
         free (self->address);
         free (self->group);
-        zhash_destroy (&self->headers);
-        zmsg_destroy (&self->msg);
+        free (self->name);
         free (self);
         *self_p = NULL;
     }
@@ -147,6 +152,17 @@ zyre_event_sender (zyre_event_t *self)
 {
     assert (self);
     return self->sender;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Return the sending peer's public name as a string
+
+char *
+zyre_event_name (zyre_event_t *self)
+{
+    assert (self);
+    return self->name;
 }
 
 
@@ -194,6 +210,7 @@ zyre_event_group (zyre_event_t *self)
     return self->group;
 }
 
+
 //  ---------------------------------------------------------------------
 //  Returns the incoming message payload (currently one frame)
 
@@ -203,6 +220,7 @@ zyre_event_msg (zyre_event_t *self)
     assert (self);
     return self->msg;
 }
+
 
 //  --------------------------------------------------------------------------
 //  Self test of this class
@@ -216,6 +234,7 @@ zyre_event_test (bool verbose)
     //  Create two nodes
     zyre_t *node1 = zyre_new ();
     assert (node1);
+    zyre_set_name (node1, "node1");
     zyre_set_header (node1, "X-HELLO", "World");
     zyre_set_verbose (node1);
     if (zyre_start (node1)) {
@@ -227,6 +246,7 @@ zyre_event_test (bool verbose)
     
     zyre_t *node2 = zyre_new ();
     assert (node2);
+    zyre_set_name (node2, "node2");
     zyre_set_verbose (node2);
     int rc = zyre_start (node2);
     assert (rc == 0);
@@ -246,6 +266,9 @@ zyre_event_test (bool verbose)
     assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
     char *sender = zyre_event_sender (event);
     assert (sender);
+    char *name = zyre_event_name (event);
+    assert (name);
+    assert (streq (name, "node1"));
     char *address = zyre_event_address (event);
     assert (address);
     char *header = zyre_event_header (event, "X-HELLO");

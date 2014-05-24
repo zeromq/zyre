@@ -77,6 +77,14 @@ int64_t
 int64_t
     zyre_peer_expired_at (zyre_peer_t *self);
 
+//  Return peer name
+char *
+    zyre_peer_name (zyre_peer_t *self);
+
+//  Set peer name
+void
+    zyre_peer_set_name (zyre_peer_t *self, const char *name);
+
 //  Return peer status
 byte
     zyre_peer_status (zyre_peer_t *self);
@@ -96,6 +104,10 @@ void
 //  Get peer header value
 char *
     zyre_peer_header (zyre_peer_t *self, char *key, char *default_value);
+
+//  Get peer headers table
+zhash_t *
+    zyre_peer_headers (zyre_peer_t *self);
 
 //  Set peer headers from provided dictionary
 void

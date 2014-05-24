@@ -58,26 +58,26 @@ node_actor (zsock_t *pipe, void *args)
                 break;              //  Interrupted
 
             char *event = zmsg_popstr (incoming);
-            if (streq (event, "ENTER")) {
+            char *peer = zmsg_popstr (incoming);
+            char *name = zmsg_popstr (incoming);
+            if (streq (event, "ENTER"))
                 //  Always say hello to new peer
-                to_peer = zmsg_popstr (incoming);
-            }
+                to_peer = peer;
             else
-            if (streq (event, "EXIT")) {
+            if (streq (event, "EXIT"))
                 //  Always try talk to departed peer
-                to_peer = zmsg_popstr (incoming);
-            }
+                to_peer = peer;
             else
             if (streq (event, "WHISPER")) {
                 //  Send back response 1/2 the time
                 if (randof (2) == 0) {
-                    to_peer = zmsg_popstr (incoming);
+                    to_peer = peer;
                     cookie = zmsg_popstr (incoming);
                 }
             }
             else
             if (streq (event, "SHOUT")) {
-                to_peer = zmsg_popstr (incoming);
+                to_peer = peer;
                 to_group = zmsg_popstr (incoming);
                 cookie = zmsg_popstr (incoming);
                 //  Send peer response 1/3rd the time
@@ -93,29 +93,19 @@ node_actor (zsock_t *pipe, void *args)
             }
             else
             if (streq (event, "JOIN")) {
-                char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
-                printf ("I: %s joined %s\n", from_peer, group);
-                free (from_peer);
+                printf ("I: %s joined %s\n", name, group);
                 free (group);
             }
             else
             if (streq (event, "LEAVE")) {
-                char *from_peer = zmsg_popstr (incoming);
                 char *group = zmsg_popstr (incoming);
-                printf ("I: %s left %s\n", from_peer, group);
-                free (from_peer);
+                printf ("I: %s left %s\n", name, group);
                 free (group);
             }
-            else
-            if (streq (event, "DELIVER")) {
-                char *filename = zmsg_popstr (incoming);
-                char *fullname = zmsg_popstr (incoming);
-                printf ("I: received file %s\n", fullname);
-                free (fullname);
-                free (filename);
-            }
             free (event);
+            free (peer);
+            free (name);
             zmsg_destroy (&incoming);
 
             //  Send outgoing messages if needed

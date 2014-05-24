@@ -40,6 +40,7 @@ struct _zyre_node_t {
     zyre_log_t *log;            //  Log object
     zuuid_t *uuid;              //  Our UUID as object
     zsock_t *inbox;             //  Our inbox socket (ROUTER)
+    char *name;                 //  Our public name
     char *host;                 //  Our host IP address
     int port;                   //  Our inbox port number
     byte status;                //  Our own change counter
@@ -78,6 +79,10 @@ zyre_node_new (zsock_t *pipe)
     self->own_groups = zhash_new ();
     self->headers = zhash_new ();
     zhash_autofree (self->headers);
+    
+    //  Default name for node is first 6 characters of UUID:
+    //  the shorter string is more readable in logs
+    self->name = strndup (zuuid_str (self->uuid), 6);
 
     return self;
 }
@@ -101,6 +106,7 @@ zyre_node_destroy (zyre_node_t **self_p)
         zsock_destroy (&self->inbox);
         zbeacon_destroy (&self->beacon);
         zyre_log_destroy (&self->log);
+        free (self->name);
         free (self);
         *self_p = NULL;
     }
@@ -236,10 +242,13 @@ zyre_node_recv_api (zyre_node_t *self)
     if (!command)
         return -1;                  //  Interrupted
 
-    if (streq (command, "UUID"))
-        zstr_send (self->pipe, zuuid_str (self->uuid));
+    if (streq (command, "SET NAME")) {
+        free (self->name);
+        self->name = zmsg_popstr (request);
+        assert (self->name);
+    }
     else
-    if (streq (command, "SET")) {
+    if (streq (command, "SET HEADER")) {
         char *name = zmsg_popstr (request);
         char *value = zmsg_popstr (request);
         zhash_update (self->headers, name, value);
@@ -247,20 +256,26 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&value);
     }
     else
-    if (streq (command, "VERBOSE"))
+    if (streq (command, "SET VERBOSE"))
         self->verbose = true;
     else
-    if (streq (command, "PORT")) {
+    if (streq (command, "SET PORT")) {
         char *value = zmsg_popstr (request);
         self->beacon_port = atoi (value);
         zstr_free (&value);
     }
     else
-    if (streq (command, "INTERVAL")) {
+    if (streq (command, "SET INTERVAL")) {
         char *value = zmsg_popstr (request);
         self->interval = atol (value);
         zstr_free (&value);
     }
+    else
+    if (streq (command, "UUID"))
+        zstr_send (self->pipe, zuuid_str (self->uuid));
+    else
+    if (streq (command, "NAME"))
+        zstr_send (self->pipe, self->name);
     else
     if (streq (command, "START"))
         zsock_signal (self->pipe, zyre_node_start (self));
@@ -386,6 +401,7 @@ zyre_node_require_peer (
         zre_msg_set_mailbox (msg, self->port);
         zre_msg_set_groups (msg, &groups);
         zre_msg_set_status (msg, self->status);
+        zre_msg_set_name (msg, self->name);
         zre_msg_set_headers (msg, &headers);
         zyre_peer_send (peer, &msg);
 
@@ -415,7 +431,8 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 {
     //  Tell the calling application the peer has gone
     zstr_sendm (self->pipe, "EXIT");
-    zstr_send (self->pipe, zyre_peer_identity (peer));
+    zstr_sendm (self->pipe, zyre_peer_identity (peer));
+    zstr_send (self->pipe, zyre_peer_name (peer));
     //  Send a log event
     zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
                    zyre_peer_endpoint (peer),
@@ -447,6 +464,7 @@ zyre_node_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *nam
     //  Now tell the caller about the peer joined group
     zstr_sendm (self->pipe, "JOIN");
     zstr_sendm (self->pipe, zyre_peer_identity (peer));
+    zstr_sendm (self->pipe, zyre_peer_name (peer));
     zstr_send (self->pipe, name);
 
     return group;
@@ -461,6 +479,7 @@ zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *na
     //  Now tell the caller about the peer left group
     zstr_sendm (self->pipe, "LEAVE");
     zstr_sendm (self->pipe, zyre_peer_identity (peer));
+    zstr_sendm (self->pipe, zyre_peer_name (peer));
     zstr_send (self->pipe, name);
 
     return group;
@@ -531,10 +550,16 @@ zyre_node_recv_peer (zyre_node_t *self)
 
     //  Now process each command
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
+        //  Store properties from HELLO command into peer
+        zyre_peer_set_name (peer, zre_msg_name (msg));
+        zyre_peer_set_status (peer, zre_msg_status (msg));
+        zyre_peer_set_headers (peer, zre_msg_headers (msg));
+
         //  Tell the caller about the peer
         zstr_sendm (self->pipe, "ENTER");
         zstr_sendm (self->pipe, zyre_peer_identity (peer));
-        zframe_t *headers = zhash_pack (zre_msg_headers (msg));
+        zstr_sendm (self->pipe, zyre_peer_name (peer));
+        zframe_t *headers = zhash_pack (zyre_peer_headers (peer));
         zframe_send (&headers, self->pipe, ZFRAME_MORE);
         zstr_sendf (self->pipe, "%s:%d",
                     zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
@@ -545,12 +570,6 @@ zyre_node_recv_peer (zyre_node_t *self)
             zyre_node_join_peer_group (self, peer, name);
             name = zre_msg_groups_next (msg);
         }
-        //  Hello command holds latest status of peer
-        zyre_peer_set_status (peer, zre_msg_status (msg));
-        
-        //  Store peer headers for future reference
-        zyre_peer_set_headers (peer, zre_msg_headers (msg));
-
         //  If peer is a ZRE/LOG collector, connect to it
         const char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
         if (collector)
@@ -561,6 +580,7 @@ zyre_node_recv_peer (zyre_node_t *self)
         //  Pass up to caller API as WHISPER event
         zstr_sendm (self->pipe, "WHISPER");
         zstr_sendm (self->pipe, zuuid_str (uuid));
+        zstr_sendm (self->pipe, zyre_peer_name (peer));
         zmsg_t *content = zmsg_dup (zre_msg_content (msg));
         zmsg_send (&content, self->pipe);
     }
@@ -569,6 +589,7 @@ zyre_node_recv_peer (zyre_node_t *self)
         //  Pass up to caller as SHOUT event
         zstr_sendm (self->pipe, "SHOUT");
         zstr_sendm (self->pipe, zuuid_str (uuid));
+        zstr_sendm (self->pipe, zyre_peer_name (peer));
         zstr_sendm (self->pipe, zre_msg_group (msg));
         zmsg_t *content = zmsg_dup (zre_msg_content (msg));
         zmsg_send (&content, self->pipe);

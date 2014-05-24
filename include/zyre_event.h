@@ -62,6 +62,10 @@ CZMQ_EXPORT zyre_event_type_t
 CZMQ_EXPORT char *
     zyre_event_sender (zyre_event_t *self);
 
+//  Return the sending peer's public name as a string
+CZMQ_EXPORT char *
+    zyre_event_name (zyre_event_t *self);
+
 //  Return the sending peer's ipaddress as a string
 CZMQ_EXPORT char *
     zyre_event_address (zyre_event_t *self);

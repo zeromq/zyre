@@ -34,17 +34,17 @@
     call. The first frame defines the type of the message, and following
     frames provide further values:
 
-        ENTER fromnode headers ipaddress:port
+        ENTER fromnode name headers ipaddress:port
             a new peer has entered the network
-        EXIT fromnode
+        EXIT fromnode name
             a peer has left the network
-        JOIN fromnode groupname
+        JOIN fromnode name groupname
             a peer has joined a specific group
-        LEAVE fromnode groupname
+        LEAVE fromnode name groupname
             a peer has joined a specific group
-        WHISPER fromnode message
+        WHISPER fromnode name message
             a peer has sent this node a message
-        SHOUT fromnode groupname message
+        SHOUT fromnode name groupname message
             a peer has sent one of our groups a message
             
     In SHOUT and WHISPER the message is zero or more frames, and can hold
@@ -68,7 +68,8 @@
 struct _zyre_t {
     //  In fact a Zyre instance just wraps the actor instance
     zactor_t *actor;
-    char *uuid;                 //  Copy of our UUID, if known
+    char *uuid;                 //  Copy of our UUID
+    char *name;                 //  Copy of our name
 };
 
 
@@ -102,6 +103,7 @@ zyre_destroy (zyre_t **self_p)
         zyre_t *self = *self_p;
         zactor_destroy (&self->actor);
         free (self->uuid);
+        free (self->name);
         free (self);
         *self_p = NULL;
     }
@@ -109,7 +111,7 @@ zyre_destroy (zyre_t **self_p)
 
 
 //  ---------------------------------------------------------------------
-//  Return our own UUID, after successful initialization.
+//  Return our node UUID, after successful initialization
 
 const char *
 zyre_uuid (zyre_t *self)
@@ -124,11 +126,39 @@ zyre_uuid (zyre_t *self)
 
 
 //  ---------------------------------------------------------------------
+//  Return our node name, after successful initialization. By default
+//  is taken from the UUID and shortened.
+
+const char *
+zyre_name (zyre_t *self)
+{
+    assert (self);
+    if (!self->name) {
+        zstr_sendx (self->actor, "NAME", NULL);
+        self->name = zstr_recv (self->actor);
+    }
+    return self->name;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Set node name; this is provided to other nodes during discovery.
+//  If you do not set this, the UUID is used as a basis.
+
+void
+zyre_set_name (zyre_t *self, const char *name)
+{
+    assert (self);
+    zstr_sendx (self->actor, "SET NAME", name, NULL);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
 
 void
-zyre_set_header (zyre_t *self, char *name, char *format, ...)
+zyre_set_header (zyre_t *self, const char *name, const char *format, ...)
 {
     assert (self);
     va_list argptr;
@@ -136,7 +166,7 @@ zyre_set_header (zyre_t *self, char *name, char *format, ...)
     char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
 
-    zstr_sendx (self->actor, "SET", name, string, NULL);
+    zstr_sendx (self->actor, "SET HEADER", name, string, NULL);
     free (string);
 }
 
@@ -149,7 +179,7 @@ void
 zyre_set_verbose (zyre_t *self)
 {
     assert (self);
-    zstr_sendx (self->actor, "VERBOSE", NULL);
+    zstr_sendx (self->actor, "SET VERBOSE", "1", NULL);
 }
 
 
@@ -162,7 +192,7 @@ void
 zyre_set_port (zyre_t *self, int port_nbr)
 {
     assert (self);
-    zstr_sendm (self->actor, "PORT");
+    zstr_sendm (self->actor, "SET PORT");
     zstr_sendf (self->actor, "%d", port_nbr);
 }
 
@@ -175,7 +205,7 @@ void
 zyre_set_interval (zyre_t *self, size_t interval)
 {
     assert (self);
-    zstr_sendm (self->actor, "INTERVAL");
+    zstr_sendm (self->actor, "SET INTERVAL");
     zstr_sendf (self->actor, "%zd", interval);
 }
 
@@ -250,7 +280,7 @@ zyre_recv (zyre_t *self)
 //  Destroys message after sending
 
 int
-zyre_whisper (zyre_t *self, char *peer, zmsg_t **msg_p)
+zyre_whisper (zyre_t *self, const char *peer, zmsg_t **msg_p)
 {
     assert (self);
     assert (peer);
@@ -266,7 +296,7 @@ zyre_whisper (zyre_t *self, char *peer, zmsg_t **msg_p)
 //  Destroys message after sending
 
 int
-zyre_shout (zyre_t *self, char *group, zmsg_t **msg_p)
+zyre_shout (zyre_t *self, const char *group, zmsg_t **msg_p)
 {
     assert (self);
     assert (group);
@@ -281,7 +311,7 @@ zyre_shout (zyre_t *self, char *group, zmsg_t **msg_p)
 //  Send formatted string to a single peer specified as UUID string
 
 int
-zyre_whispers (zyre_t *self, char *peer, char *format, ...)
+zyre_whispers (zyre_t *self, const char *peer, const char *format, ...)
 {
     assert (self);
     assert (peer);
@@ -304,7 +334,7 @@ zyre_whispers (zyre_t *self, char *peer, char *format, ...)
 //  Send formatted string to a named group
 
 int
-zyre_shouts (zyre_t *self, char *group, char *format, ...)
+zyre_shouts (zyre_t *self, const char *group, const char *format, ...)
 {
     assert (self);
     assert (group);
@@ -356,6 +386,8 @@ zyre_test (bool verbose)
     //  Create two nodes
     zyre_t *node1 = zyre_new ();
     assert (node1);
+    zyre_set_name (node1, "node1");
+    assert (streq (zyre_name (node1), "node1"));
     zyre_set_header (node1, "X-HELLO", "World");
     zyre_set_verbose (node1);
     zyre_set_port (node1, 5670);
@@ -368,6 +400,8 @@ zyre_test (bool verbose)
 
     zyre_t *node2 = zyre_new ();
     assert (node2);
+    zyre_set_name (node2, "node2");
+    assert (streq (zyre_name (node2), "node2"));
     zyre_set_verbose (node2);
     zyre_set_port (node2, 5670);
     int rc = zyre_start (node2);
@@ -379,7 +413,7 @@ zyre_test (bool verbose)
     zclock_sleep (250);
 
     //  One node shouts to GLOBAL
-    zyre_shouts (node1,"GLOBAL", "Hello, World");
+    zyre_shouts (node1, "GLOBAL", "Hello, World");
 
     //  Second node should receive ENTER, JOIN, and SHOUT
     zmsg_t *msg = zyre_recv (node2);
@@ -387,8 +421,12 @@ zyre_test (bool verbose)
     char *command = zmsg_popstr (msg);
     assert (streq (command, "ENTER"));
     zstr_free (&command);
+    assert (zmsg_size (msg) == 4);
     char *peerid = zmsg_popstr (msg);
     zstr_free (&peerid);
+    char *name = zmsg_popstr (msg);
+    assert (streq (name, "node1"));
+    zstr_free (&name);
     zframe_t *headers_packed = zmsg_pop (msg);
     char *peeraddress = zmsg_popstr (msg);
     zstr_free (&peeraddress);
@@ -406,6 +444,7 @@ zyre_test (bool verbose)
     command = zmsg_popstr (msg);
     assert (streq (command, "JOIN"));
     zstr_free (&command);
+    assert (zmsg_size (msg) == 3);
     zmsg_destroy (&msg);
     
     msg = zyre_recv (node2);
