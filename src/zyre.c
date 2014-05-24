@@ -401,7 +401,7 @@ zsock_t *
 zyre_socket (zyre_t *self)
 {
     assert (self);    
-    return zsock_resolve (self->actor);
+    return zsock_resolve (self->inbox);
 }
 
 
