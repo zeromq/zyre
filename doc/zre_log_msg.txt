@@ -21,14 +21,14 @@ CZMQ_EXPORT void
 //  ZMQ_ROUTER, then parses the first frame as a routing_id. Destroys msg
 //  and nullifies the msg refernce.
 CZMQ_EXPORT zre_log_msg_t *
-    zre_log_msg_decode (zmsg_t **msg_p, int socket_type);
+    zre_log_msg_decode (zmsg_t **msg_p);
 
 //  Encode zre_log_msg into zmsg and destroy it. Returns a newly created
 //  object or NULL if error. Use when not in control of sending the message.
 //  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
 //  first frame of the resulting message.
 CZMQ_EXPORT zmsg_t *
-    zre_log_msg_encode (zre_log_msg_t *self, int socket_type);
+    zre_log_msg_encode (zre_log_msg_t **self_p);
 
 //  Receive and parse a zre_log_msg from the socket. Returns new object, 
 //  or NULL if error. Will block if there's no message waiting.
@@ -48,7 +48,19 @@ CZMQ_EXPORT int
 CZMQ_EXPORT int
     zre_log_msg_send_again (zre_log_msg_t *self, void *output);
 
+//  Encode the LOG 
+CZMQ_EXPORT zmsg_t *
+    zre_log_msg_encode_log (
+        byte level,
+        byte event,
+        uint16_t node,
+        uint16_t peer,
+        uint64_t time,
+        const char *data);
+
+
 //  Send the LOG to the output in one step
+//  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 CZMQ_EXPORT int
     zre_log_msg_send_log (void *output,
         byte level,
@@ -64,7 +76,7 @@ CZMQ_EXPORT zre_log_msg_t *
 
 //  Print contents of message to stdout
 CZMQ_EXPORT void
-    zre_log_msg_dump (zre_log_msg_t *self);
+    zre_log_msg_print (zre_log_msg_t *self);
 
 //  Get/set the message routing id
 CZMQ_EXPORT zframe_t *
@@ -137,17 +149,14 @@ EXAMPLE
     zre_log_msg_destroy (&self);
 
     //  Create pair of sockets we can send through
-    zctx_t *ctx = zctx_new ();
-    assert (ctx);
-
-    void *output = zsocket_new (ctx, ZMQ_DEALER);
-    assert (output);
-    zsocket_bind (output, "inproc://selftest");
-
-    void *input = zsocket_new (ctx, ZMQ_ROUTER);
+    zsock_t *input = zsock_new (ZMQ_ROUTER);
     assert (input);
-    zsocket_connect (input, "inproc://selftest");
-    
+    zsock_connect (input, "inproc://selftest-zre_log_msg");
+
+    zsock_t *output = zsock_new (ZMQ_DEALER);
+    assert (output);
+    zsock_bind (output, "inproc://selftest-zre_log_msg");
+
     //  Encode/send/decode and verify each message type
     int instance;
     zre_log_msg_t *copy;
@@ -182,6 +191,7 @@ EXAMPLE
         zre_log_msg_destroy (&self);
     }
 
-    zctx_destroy (&ctx);
+    zsock_destroy (&input);
+    zsock_destroy (&output);
 ----
 

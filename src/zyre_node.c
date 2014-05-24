@@ -123,11 +123,16 @@ typedef struct {
 } beacon_t;
 
 
-static void
+//  Start node, return 0 if OK, 1 if not possible
+
+static int
 zyre_node_start (zyre_node_t *self)
 {
     assert (!self->beacon);
     self->beacon = zbeacon_new (NULL, self->beacon_port);
+    if (!self->beacon)
+        return 1;               //  Not possible to start beacon
+    
     if (self->interval)
         zbeacon_set_interval (self->beacon, self->interval);
     zpoller_add (self->poller, zbeacon_socket (self->beacon));
@@ -151,6 +156,8 @@ zyre_node_start (zyre_node_t *self)
     char sender [30];         //  ipaddress:port endpoint
     sprintf (sender, "%s:%d", self->host, self->port);
     self->log = zyre_log_new (sender);
+    
+    return 0;
 }
 
 
@@ -255,10 +262,8 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&value);
     }
     else
-    if (streq (command, "START")) {
-        zyre_node_start (self);
-        zsock_signal (self->pipe, 0);
-    }
+    if (streq (command, "START"))
+        zsock_signal (self->pipe, zyre_node_start (self));
     else
     if (streq (command, "STOP"))
         zyre_node_stop (self);

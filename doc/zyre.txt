@@ -11,7 +11,7 @@ SYNOPSIS
 //  Constructor, creates a new Zyre node. Note that until you start the
 //  node it is silent and invisible to other nodes on the network.
 CZMQ_EXPORT zyre_t *
-    zyre_new (zctx_t *ctx);
+    zyre_new (void);
 
 //  Destructor, destroys a Zyre node. When you destroy a node, any
 //  messages it is sending or receiving will be discarded.
@@ -87,8 +87,8 @@ CZMQ_EXPORT int
 CZMQ_EXPORT int
     zyre_shouts (zyre_t *self, char *group, char *format, ...);
 
-//  Return handle to the Zyre node, for polling
-CZMQ_EXPORT void *
+//  Return socket for talking to the Zyre node, for polling
+CZMQ_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
 //  Prints zyre information
@@ -139,10 +139,9 @@ EXAMPLE
 -------
 .From zyre_test method
 ----
-    zctx_t *ctx = zctx_new ();
     //  Create two nodes
-    zyre_t *node1 = zyre_new (ctx);
-    zyre_t *node2 = zyre_new (ctx);
+    zyre_t *node1 = zyre_new ();
+    zyre_t *node2 = zyre_new ();
     zyre_set_header (node1, "X-HELLO", "World");
     assert (strneq (zyre_uuid (node1), zyre_uuid (node2)));
 
@@ -151,8 +150,6 @@ EXAMPLE
     zyre_set_port (node1, 5670);
     zyre_set_port (node2, 5670);
     
-//     zyre_set_verbose (node1);
-//     zyre_set_verbose (node2);
     zyre_start (node1);
     zyre_start (node2);
     zyre_join (node1, "GLOBAL");
@@ -205,6 +202,5 @@ EXAMPLE
     
     zyre_destroy (&node1);
     zyre_destroy (&node2);
-    zctx_destroy (&ctx);
 ----
 
