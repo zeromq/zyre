@@ -66,8 +66,8 @@
 //  Structure of our class
 
 struct _zyre_t {
-    //  In fact a Zyre instance just wraps the actor instance
-    zactor_t *actor;
+    zactor_t *actor;            //  A Zyre instance wraps the actor instance
+    zsock_t *inbox;             //  Receives incoming cluster traffic
     char *uuid;                 //  Copy of our UUID
     char *name;                 //  Copy of our name
 };
@@ -83,8 +83,24 @@ zyre_new (void)
     zyre_t *self = (zyre_t *) zmalloc (sizeof (zyre_t));
     assert (self);
 
+    //  Create front-to-back pipe pair for data traffic
+    self->inbox = zsock_new (ZMQ_PAIR);
+    assert (self->inbox);
+    char endpoint [32];
+    while (true) {
+        sprintf (endpoint, "inproc://zyre-%04x-%04x\n",
+                 randof (0x10000), randof (0x10000));
+        if (zsock_bind (self->inbox, "%s", endpoint) == 0)
+            break;
+    }
+    //  Create other half of traffic pipe
+    zsock_t *outbox = zsock_new (ZMQ_PAIR);
+    assert (outbox);
+    int rc = zsock_connect (outbox, "%s", endpoint);
+    assert (rc != -1);
+    
     //  Start node engine and wait for it to be ready
-    self->actor = zactor_new (zyre_node_actor, NULL);
+    self->actor = zactor_new (zyre_node_actor, outbox);
     assert (self->actor);
     
     return self;
@@ -102,6 +118,7 @@ zyre_destroy (zyre_t **self_p)
     if (*self_p) {
         zyre_t *self = *self_p;
         zactor_destroy (&self->actor);
+        zsock_destroy (&self->inbox);
         free (self->uuid);
         free (self->name);
         free (self);
@@ -285,7 +302,7 @@ zmsg_t *
 zyre_recv (zyre_t *self)
 {
     assert (self);
-    return zmsg_recv (self->actor);
+    return zmsg_recv (self->inbox);
 }
 
 
@@ -338,7 +355,7 @@ zyre_whispers (zyre_t *self, const char *peer, const char *format, ...)
 
     zstr_sendm (self->actor, "WHISPER");
     zstr_sendm (self->actor, peer);
-    zstr_send  (self->actor, string);
+    zstr_send (self->actor, string);
     free (string);
     return 0;
 }
