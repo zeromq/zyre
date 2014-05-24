@@ -30,7 +30,10 @@
 //  Structure of our class
 
 struct _zyre_node_t {
+    //  We send command replies and signals to the pipe
     zsock_t *pipe;              //  Pipe back to application
+    //  We send all Zyre messages to the outbox
+    zsock_t *outbox;            //  Outbox back to application
     bool terminated;            //  API shut us down
     bool verbose;               //  Log all traffic
     int beacon_port;            //  Beacon port number
@@ -55,10 +58,11 @@ struct _zyre_node_t {
 //  Constructor
 
 static zyre_node_t *
-zyre_node_new (zsock_t *pipe)
+zyre_node_new (zsock_t *pipe, void *args)
 {
     zyre_node_t *self = (zyre_node_t *) zmalloc (sizeof (zyre_node_t));
     self->pipe = pipe;
+    self->outbox = (zsock_t *) args;
     self->inbox = zsock_new (ZMQ_ROUTER);
     if (self->inbox == NULL) {
         free (self);
@@ -104,6 +108,7 @@ zyre_node_destroy (zyre_node_t **self_p)
         zhash_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
         zsock_destroy (&self->inbox);
+        zsock_destroy (&self->outbox);
         zbeacon_destroy (&self->beacon);
         zyre_log_destroy (&self->log);
         free (self->name);
@@ -430,9 +435,9 @@ static void
 zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 {
     //  Tell the calling application the peer has gone
-    zstr_sendm (self->pipe, "EXIT");
-    zstr_sendm (self->pipe, zyre_peer_identity (peer));
-    zstr_send (self->pipe, zyre_peer_name (peer));
+    zstr_sendm (self->outbox, "EXIT");
+    zstr_sendm (self->outbox, zyre_peer_identity (peer));
+    zstr_send (self->outbox, zyre_peer_name (peer));
     //  Send a log event
     zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
                    zyre_peer_endpoint (peer),
@@ -462,10 +467,10 @@ zyre_node_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *nam
     zyre_group_join (group, peer);
 
     //  Now tell the caller about the peer joined group
-    zstr_sendm (self->pipe, "JOIN");
-    zstr_sendm (self->pipe, zyre_peer_identity (peer));
-    zstr_sendm (self->pipe, zyre_peer_name (peer));
-    zstr_send (self->pipe, name);
+    zstr_sendm (self->outbox, "JOIN");
+    zstr_sendm (self->outbox, zyre_peer_identity (peer));
+    zstr_sendm (self->outbox, zyre_peer_name (peer));
+    zstr_send (self->outbox, name);
 
     return group;
 }
@@ -477,10 +482,10 @@ zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *na
     zyre_group_leave (group, peer);
 
     //  Now tell the caller about the peer left group
-    zstr_sendm (self->pipe, "LEAVE");
-    zstr_sendm (self->pipe, zyre_peer_identity (peer));
-    zstr_sendm (self->pipe, zyre_peer_name (peer));
-    zstr_send (self->pipe, name);
+    zstr_sendm (self->outbox, "LEAVE");
+    zstr_sendm (self->outbox, zyre_peer_identity (peer));
+    zstr_sendm (self->outbox, zyre_peer_name (peer));
+    zstr_send (self->outbox, name);
 
     return group;
 }
@@ -556,12 +561,12 @@ zyre_node_recv_peer (zyre_node_t *self)
         zyre_peer_set_headers (peer, zre_msg_headers (msg));
 
         //  Tell the caller about the peer
-        zstr_sendm (self->pipe, "ENTER");
-        zstr_sendm (self->pipe, zyre_peer_identity (peer));
-        zstr_sendm (self->pipe, zyre_peer_name (peer));
+        zstr_sendm (self->outbox, "ENTER");
+        zstr_sendm (self->outbox, zyre_peer_identity (peer));
+        zstr_sendm (self->outbox, zyre_peer_name (peer));
         zframe_t *headers = zhash_pack (zyre_peer_headers (peer));
-        zframe_send (&headers, self->pipe, ZFRAME_MORE);
-        zstr_sendf (self->pipe, "%s:%d",
+        zframe_send (&headers, self->outbox, ZFRAME_MORE);
+        zstr_sendf (self->outbox, "%s:%d",
                     zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
         
         //  Join peer to listed groups
@@ -578,21 +583,21 @@ zyre_node_recv_peer (zyre_node_t *self)
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as WHISPER event
-        zstr_sendm (self->pipe, "WHISPER");
-        zstr_sendm (self->pipe, zuuid_str (uuid));
-        zstr_sendm (self->pipe, zyre_peer_name (peer));
+        zstr_sendm (self->outbox, "WHISPER");
+        zstr_sendm (self->outbox, zuuid_str (uuid));
+        zstr_sendm (self->outbox, zyre_peer_name (peer));
         zmsg_t *content = zmsg_dup (zre_msg_content (msg));
-        zmsg_send (&content, self->pipe);
+        zmsg_send (&content, self->outbox);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_SHOUT) {
         //  Pass up to caller as SHOUT event
-        zstr_sendm (self->pipe, "SHOUT");
-        zstr_sendm (self->pipe, zuuid_str (uuid));
-        zstr_sendm (self->pipe, zyre_peer_name (peer));
-        zstr_sendm (self->pipe, zre_msg_group (msg));
+        zstr_sendm (self->outbox, "SHOUT");
+        zstr_sendm (self->outbox, zuuid_str (uuid));
+        zstr_sendm (self->outbox, zyre_peer_name (peer));
+        zstr_sendm (self->outbox, zre_msg_group (msg));
         zmsg_t *content = zmsg_dup (zre_msg_content (msg));
-        zmsg_send (&content, self->pipe);
+        zmsg_send (&content, self->outbox);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_PING) {
@@ -694,7 +699,7 @@ void
 zyre_node_actor (zsock_t *pipe, void *args)
 {
     //  Create node instance to pass around
-    zyre_node_t *self = zyre_node_new (pipe);
+    zyre_node_t *self = zyre_node_new (pipe, args);
     if (!self)                  //  Interrupted
         return;
     
@@ -743,8 +748,10 @@ zyre_node_test (bool verbose)
 {
     printf (" * zyre_node: ");
     zsock_t *pipe = zsock_new (ZMQ_PAIR);
-    zyre_node_t *node = zyre_node_new (pipe);
+    zsock_t *outbox = zsock_new (ZMQ_PAIR);
+    zyre_node_t *node = zyre_node_new (pipe, outbox);
     zyre_node_destroy (&node);
     zsock_destroy (&pipe);
+    //  Node takes ownership of outbox and destroys it
     printf ("OK\n");
 }
