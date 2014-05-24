@@ -63,14 +63,24 @@ CZMQ_EXPORT zyre_t *
 CZMQ_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
-//  Return our own UUID, after successful initialization.
+//  Return our node UUID, after successful initialization
 CZMQ_EXPORT const char *
     zyre_uuid (zyre_t *self);
+
+//  Return our node name, after successful initialization. By default
+//  is taken from the UUID and shortened.
+CZMQ_EXPORT const char *
+    zyre_name (zyre_t *self);
+
+//  Set node name; this is provided to other nodes during discovery.
+//  If you do not set this, the UUID is used as a basis.
+CZMQ_EXPORT void
+    zyre_set_name (zyre_t *self, const char *name);
 
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
 CZMQ_EXPORT void
-    zyre_set_header (zyre_t *self, char *name, char *format, ...);
+    zyre_set_header (zyre_t *self, const char *name, const char *format, ...);
 
 //  Set verbose mode; this tells the node to log all traffic as well
 //  as all major events.
@@ -87,6 +97,13 @@ CZMQ_EXPORT void
 //  beacon exploration followed by pinging every 1,000 msecs.
 CZMQ_EXPORT void
     zyre_set_interval (zyre_t *self, size_t interval);
+
+//  Set network interface to use for beacons and interconnects. If you
+//  do not set this, CZMQ will choose an interface for you. On boxes
+//  with multiple interfaces you really should specify which one you
+//  want to use, or strange things can happen.
+CZMQ_EXPORT void
+    zyre_set_interface (zyre_t *self, const char *interface);
 
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
@@ -118,20 +135,20 @@ CZMQ_EXPORT zmsg_t *
 //  Send message to single peer, specified as a UUID string
 //  Destroys message after sending
 CZMQ_EXPORT int
-    zyre_whisper (zyre_t *self, char *peer, zmsg_t **msg_p);
+    zyre_whisper (zyre_t *self, const char *peer, zmsg_t **msg_p);
 
 //  Send message to a named group
 //  Destroys message after sending
 CZMQ_EXPORT int
-    zyre_shout (zyre_t *self, char *group, zmsg_t **msg_p);
+    zyre_shout (zyre_t *self, const char *group, zmsg_t **msg_p);
 
 //  Send formatted string to a single peer specified as UUID string
 CZMQ_EXPORT int
-    zyre_whispers (zyre_t *self, char *peer, char *format, ...);
+    zyre_whispers (zyre_t *self, const char *peer, const char *format, ...);
 
 //  Send formatted string to a named group
 CZMQ_EXPORT int
-    zyre_shouts (zyre_t *self, char *group, char *format, ...);
+    zyre_shouts (zyre_t *self, const char *group, const char *format, ...);
 
 //  Return socket for talking to the Zyre node, for polling
 CZMQ_EXPORT zsock_t *

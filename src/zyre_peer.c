@@ -33,6 +33,7 @@ struct _zyre_peer_t {
     zsock_t *mailbox;           //  Socket through to peer
     zuuid_t *uuid;              //  Identity object
     char *endpoint;             //  Endpoint connected to
+    char *name;                 //  Peer's public name
     uint64_t evasive_at;        //  Peer is being evasive
     uint64_t expired_at;        //  Peer has expired by now
     bool connected;             //  Peer will send messages
@@ -89,6 +90,7 @@ zyre_peer_destroy (zyre_peer_t **self_p)
         zyre_peer_disconnect (self);
         zhash_destroy (&self->headers);
         zuuid_destroy (&self->uuid);
+        free (self->name);
         free (self);
         *self_p = NULL;
     }
@@ -260,6 +262,29 @@ zyre_peer_expired_at (zyre_peer_t *self)
 
 
 //  ---------------------------------------------------------------------
+//  Return peer name
+
+char *
+zyre_peer_name (zyre_peer_t *self)
+{
+    assert (self);
+    return self->name;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Set peer name
+
+void
+zyre_peer_set_name (zyre_peer_t *self, const char *name)
+{
+    assert (self);
+    free (self->name);
+    self->name = strdup (name);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Return peer cycle
 //  This gives us a state change count for the peer, which we can
 //  check against its claimed status, to detect message loss.
@@ -319,6 +344,17 @@ zyre_peer_header (zyre_peer_t *self, char *key, char *default_value)
         value = default_value;
 
     return value;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Get peer headers table
+
+zhash_t *
+zyre_peer_headers (zyre_peer_t *self)
+{
+    assert (self);
+    return self->headers;
 }
 
 
@@ -383,6 +419,8 @@ zyre_peer_test (bool verbose)
     assert (!zyre_peer_connected (peer));
     zyre_peer_connect (peer, me, "tcp://127.0.0.1:5551");
     assert (zyre_peer_connected (peer));
+    zyre_peer_set_name (peer, "peer");
+    assert (streq (zyre_peer_name (peer), "peer"));
 
     zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
     zre_msg_set_ipaddress (msg, "127.0.0.1");

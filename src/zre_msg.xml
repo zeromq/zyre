@@ -29,6 +29,7 @@
         <field name = "mailbox" type = "number" size = "2">Sender mailbox port numer</field>
         <field name = "groups" type = "strings">List of groups sender is in</field>
         <field name = "status" type = "number" size = "1">Sender groups status sequence</field>
+        <field name = "name" type = "string">Sender public name</field>
         <field name = "headers" type = "dictionary">Sender header properties</field>
     Greet a peer so it can connect back to us
     </message>

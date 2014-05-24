@@ -40,34 +40,30 @@ int main (int argc, char *argv [])
 
         //  If new peer, say hello to it and wait for it to answer us
         char *event = zmsg_popstr (incoming);
+        char *peer = zmsg_popstr (incoming);
+        char *name = zmsg_popstr (incoming);
         if (streq (event, "ENTER")) {
-            char *peer = zmsg_popstr (incoming);
-            printf ("I: [%s] peer entered\n", peer);
+            printf ("I: [%s] peer entered\n", name);
             zyre_whispers (node, peer, "Hello");
-            free (peer);
         }
         else
         if (streq (event, "EXIT")) {
-            char *peer = zmsg_popstr (incoming);
-            printf ("I: [%s] peer exited\n", peer);
-            free (peer);
+            printf ("I: [%s] peer exited\n", name);
         }
         else
         if (streq (event, "WHISPER")) {
-            char *peer = zmsg_popstr (incoming);
-            printf ("I: [%s] received ping (WHISPER)\n", peer);
-            free (peer);
+            printf ("I: [%s] received ping (WHISPER)\n", name);
             zyre_shouts (node, "GLOBAL", "Hello");
         }
         else
         if (streq (event, "SHOUT")) {
-            char *peer = zmsg_popstr (incoming);
             char *group = zmsg_popstr (incoming);
-            printf ("I: [%s](%s) received ping (SHOUT)\n", peer, group);
-            free (peer);
+            printf ("I: [%s](%s) received ping (SHOUT)\n", name, group);
             free (group);
         }
         free (event);
+        free (peer);
+        free (name);
         zmsg_destroy (&incoming);
     }
     zyre_destroy (&node);

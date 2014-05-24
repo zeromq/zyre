@@ -56,6 +56,7 @@ struct _zre_msg_t {
     uint16_t mailbox;                   //  Sender mailbox port numer
     zlist_t *groups;                    //  List of groups sender is in
     byte status;                        //  Sender groups status sequence
+    char *name;                         //  Sender public name
     zhash_t *headers;                   //  Sender header properties
     size_t headers_bytes;               //  Size of dictionary content
     zmsg_t *content;                    //  Wrapped message content
@@ -225,6 +226,7 @@ zre_msg_destroy (zre_msg_t **self_p)
         free (self->ipaddress);
         if (self->groups)
             zlist_destroy (&self->groups);
+        free (self->name);
         zhash_destroy (&self->headers);
         zmsg_destroy (&self->content);
         free (self->group);
@@ -285,6 +287,7 @@ zre_msg_decode (zmsg_t **msg_p)
                 }
             }
             GET_NUMBER1 (self->status);
+            GET_STRING (self->name);
             {
                 size_t hash_size;
                 GET_NUMBER4 (hash_size);
@@ -417,6 +420,10 @@ zre_msg_encode (zre_msg_t **self_p)
             }
             //  status is a 1-byte integer
             frame_size += 1;
+            //  name is a string with 1-byte length
+            frame_size++;       //  Size is one octet
+            if (self->name)
+                frame_size += strlen (self->name);
             //  headers is an array of key=value strings
             frame_size += 4;    //  Size is 4 octets
             if (self->headers) {
@@ -504,6 +511,11 @@ zre_msg_encode (zre_msg_t **self_p)
             else
                 PUT_NUMBER4 (0);    //  Empty string array
             PUT_NUMBER1 (self->status);
+            if (self->name) {
+                PUT_STRING (self->name);
+            }
+            else
+                PUT_NUMBER1 (0);    //  Empty string
             if (self->headers) {
                 PUT_NUMBER4 (zhash_size (self->headers));
                 zhash_foreach (self->headers, s_headers_write, self);
@@ -689,6 +701,7 @@ zre_msg_encode_hello (
     uint16_t mailbox,
     zlist_t *groups,
     byte status,
+    const char *name,
     zhash_t *headers)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_HELLO);
@@ -698,6 +711,7 @@ zre_msg_encode_hello (
     zlist_t *groups_copy = zlist_dup (groups);
     zre_msg_set_groups (self, &groups_copy);
     zre_msg_set_status (self, status);
+    zre_msg_set_name (self, name);
     zhash_t *headers_copy = zhash_dup (headers);
     zre_msg_set_headers (self, &headers_copy);
     return zre_msg_encode (&self);
@@ -809,6 +823,7 @@ zre_msg_send_hello (
     uint16_t mailbox,
     zlist_t *groups,
     byte status,
+    const char *name,
     zhash_t *headers)
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_HELLO);
@@ -818,6 +833,7 @@ zre_msg_send_hello (
     zlist_t *groups_copy = zlist_dup (groups);
     zre_msg_set_groups (self, &groups_copy);
     zre_msg_set_status (self, status);
+    zre_msg_set_name (self, name);
     zhash_t *headers_copy = zhash_dup (headers);
     zre_msg_set_headers (self, &headers_copy);
     return zre_msg_send (&self, output);
@@ -943,6 +959,7 @@ zre_msg_dup (zre_msg_t *self)
             copy->mailbox = self->mailbox;
             copy->groups = self->groups? zlist_dup (self->groups): NULL;
             copy->status = self->status;
+            copy->name = self->name? strdup (self->name): NULL;
             copy->headers = self->headers? zhash_dup (self->headers): NULL;
             break;
 
@@ -1017,6 +1034,10 @@ zre_msg_print (zre_msg_t *self)
             }
             printf (" }\n");
             printf ("    status=%ld\n", (long) self->status);
+            if (self->name)
+                printf ("    name='%s'\n", self->name);
+            else
+                printf ("    name=\n");
             printf ("    headers={\n");
             if (self->headers)
                 zhash_foreach (self->headers, s_headers_print, self);
@@ -1313,6 +1334,29 @@ zre_msg_set_status (zre_msg_t *self, byte status)
 
 
 //  --------------------------------------------------------------------------
+//  Get/set the name field
+
+const char *
+zre_msg_name (zre_msg_t *self)
+{
+    assert (self);
+    return self->name;
+}
+
+void
+zre_msg_set_name (zre_msg_t *self, const char *format, ...)
+{
+    //  Format name from provided arguments
+    assert (self);
+    va_list argptr;
+    va_start (argptr, format);
+    free (self->name);
+    self->name = zsys_vprintf (format, argptr);
+    va_end (argptr);
+}
+
+
+//  --------------------------------------------------------------------------
 //  Get the headers field without transferring ownership
 
 zhash_t *
@@ -1496,6 +1540,7 @@ zre_msg_test (bool verbose)
     zre_msg_groups_append (self, "Name: %s", "Brutus");
     zre_msg_groups_append (self, "Age: %d", 43);
     zre_msg_set_status (self, 123);
+    zre_msg_set_name (self, "Life is short but Now lasts for ever");
     zre_msg_headers_insert (self, "Name", "Brutus");
     zre_msg_headers_insert (self, "Age", "%d", 43);
     //  Send twice from same object
@@ -1514,6 +1559,7 @@ zre_msg_test (bool verbose)
         assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
         assert (streq (zre_msg_groups_next (self), "Age: 43"));
         assert (zre_msg_status (self) == 123);
+        assert (streq (zre_msg_name (self), "Life is short but Now lasts for ever"));
         assert (zre_msg_headers_size (self) == 2);
         assert (streq (zre_msg_headers_string (self, "Name", "?"), "Brutus"));
         assert (zre_msg_headers_number (self, "Age", 0) == 43);

@@ -44,6 +44,7 @@
         mailbox             number 2    Sender mailbox port numer
         groups              strings     List of groups sender is in
         status              number 1    Sender groups status sequence
+        name                string      Sender public name
         headers             dictionary  Sender header properties
 
     WHISPER - Send a multi-part message to a peer
@@ -138,6 +139,7 @@ CZMQ_EXPORT zmsg_t *
         uint16_t mailbox,
         zlist_t *groups,
         byte status,
+        const char *name,
         zhash_t *headers);
 
 //  Encode the WHISPER 
@@ -187,6 +189,7 @@ CZMQ_EXPORT int
         uint16_t mailbox,
         zlist_t *groups,
         byte status,
+        const char *name,
         zhash_t *headers);
     
 //  Send the WHISPER to the output in one step
@@ -297,6 +300,12 @@ CZMQ_EXPORT byte
     zre_msg_status (zre_msg_t *self);
 CZMQ_EXPORT void
     zre_msg_set_status (zre_msg_t *self, byte status);
+
+//  Get/set the name field
+CZMQ_EXPORT const char *
+    zre_msg_name (zre_msg_t *self);
+CZMQ_EXPORT void
+    zre_msg_set_name (zre_msg_t *self, const char *format, ...);
 
 //  Get/set the headers field
 CZMQ_EXPORT zhash_t *
