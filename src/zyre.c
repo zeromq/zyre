@@ -234,10 +234,10 @@ zyre_set_interval (zyre_t *self, size_t interval)
 //  want to use, or strange things can happen.
 
 void
-zyre_set_interface (zyre_t *self, const char *interface)
+zyre_set_interface (zyre_t *self, const char *value)
 {
     //  Implemented by zsys global for now
-    zsys_set_interface (interface);
+    zsys_set_interface (value);
 }
 
 
