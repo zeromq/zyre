@@ -103,7 +103,7 @@ CZMQ_EXPORT void
 //  with multiple interfaces you really should specify which one you
 //  want to use, or strange things can happen.
 CZMQ_EXPORT void
-    zyre_set_interface (zyre_t *self, const char *interface);
+    zyre_set_interface (zyre_t *self, const char *value);
 
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
