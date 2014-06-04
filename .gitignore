@@ -58,3 +58,8 @@ platform.h
 platform.h.in
 *.log
 
+# config files for qtcreator
+zyre.config
+zyre.creator
+zyre.files
+zyre.includes
