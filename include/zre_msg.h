@@ -40,8 +40,7 @@
 
     HELLO - Greet a peer so it can connect back to us
         sequence            number 2    Incremental sequence number
-        ipaddress           string      Sender IP address
-        mailbox             number 2    Sender mailbox port numer
+        endpoint            string      Sender connect endpoint
         groups              strings     List of groups sender is in
         status              number 1    Sender groups status sequence
         name                string      Sender public name
@@ -135,8 +134,7 @@ CZMQ_EXPORT int
 CZMQ_EXPORT zmsg_t *
     zre_msg_encode_hello (
         uint16_t sequence,
-        const char *ipaddress,
-        uint16_t mailbox,
+        const char *endpoint,
         zlist_t *groups,
         byte status,
         const char *name,
@@ -185,8 +183,7 @@ CZMQ_EXPORT zmsg_t *
 CZMQ_EXPORT int
     zre_msg_send_hello (void *output,
         uint16_t sequence,
-        const char *ipaddress,
-        uint16_t mailbox,
+        const char *endpoint,
         zlist_t *groups,
         byte status,
         const char *name,
@@ -263,17 +260,11 @@ CZMQ_EXPORT uint16_t
 CZMQ_EXPORT void
     zre_msg_set_sequence (zre_msg_t *self, uint16_t sequence);
 
-//  Get/set the ipaddress field
+//  Get/set the endpoint field
 CZMQ_EXPORT const char *
-    zre_msg_ipaddress (zre_msg_t *self);
+    zre_msg_endpoint (zre_msg_t *self);
 CZMQ_EXPORT void
-    zre_msg_set_ipaddress (zre_msg_t *self, const char *format, ...);
-
-//  Get/set the mailbox field
-CZMQ_EXPORT uint16_t
-    zre_msg_mailbox (zre_msg_t *self);
-CZMQ_EXPORT void
-    zre_msg_set_mailbox (zre_msg_t *self, uint16_t mailbox);
+    zre_msg_set_endpoint (zre_msg_t *self, const char *format, ...);
 
 //  Get/set the groups field
 CZMQ_EXPORT zlist_t *
@@ -350,6 +341,9 @@ CZMQ_EXPORT void
 CZMQ_EXPORT int
     zre_msg_test (bool verbose);
 //  @end
+
+//  For backwards compatibility with old codecs
+#define zre_msg_dump        zre_msg_print
 
 #ifdef __cplusplus
 }

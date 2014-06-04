@@ -377,7 +377,7 @@ zre_log_msg_recv (void *input)
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
-    zre_log_msg_t * zre_log_msg = zre_log_msg_decode (&msg);
+    zre_log_msg_t *zre_log_msg = zre_log_msg_decode (&msg);
     if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_log_msg->routing_id = routing_id;
 
@@ -402,7 +402,7 @@ zre_log_msg_recv_nowait (void *input)
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
-    zre_log_msg_t * zre_log_msg = zre_log_msg_decode (&msg);
+    zre_log_msg_t *zre_log_msg = zre_log_msg_decode (&msg);
     if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_log_msg->routing_id = routing_id;
 

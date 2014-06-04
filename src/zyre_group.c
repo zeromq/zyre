@@ -153,7 +153,7 @@ zyre_group_test (bool verbose)
     zyre_group_join (group, peer);
     
     zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
-    zre_msg_set_ipaddress (msg, "127.0.0.1");
+    zre_msg_set_endpoint (msg, "tcp://127.0.0.1:5552");
     zyre_group_send (group, &msg);
 
     msg = zre_msg_recv (mailbox);
