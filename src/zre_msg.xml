@@ -5,15 +5,14 @@
     script = "zproto_codec_c"
     header = "../include"
     >
-    This is the ZRE protocol raw version.
-    
+    This is the ZRE protocol, version 2 draft, as defined by rfc.zeromq.org/spec:36/ZRE.
+
     <include filename = "license.xml" />
 
     <grammar>
-    ZRE             = N:greeting *traffic
-    greeting        = N:hello
-    traffic         = N:whisper / N:shout / N:join / N:leave
-                    / N:ping P:ping-ok
+    zre             = greeting *traffic
+    greeting        = hello
+    traffic         = whisper / shout / join / leave / ping / ping-ok
     </grammar>
 
     <!-- Protocol constants -->
@@ -25,8 +24,8 @@
     </header>
 
     <message name = "HELLO" id = "1">
-        <field name = "ipaddress" type = "string">Sender IP address</field>
-        <field name = "mailbox" type = "number" size = "2">Sender mailbox port numer</field>
+        <!-- endpoint includes transport, etc. "tcp://127.0.0.1:2225" -->
+        <field name = "endpoint" type = "string">Sender connect endpoint</field>
         <field name = "groups" type = "strings">List of groups sender is in</field>
         <field name = "status" type = "number" size = "1">Sender groups status sequence</field>
         <field name = "name" type = "string">Sender public name</field>

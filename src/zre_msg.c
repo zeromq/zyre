@@ -52,8 +52,7 @@ struct _zre_msg_t {
     byte *needle;                       //  Read/write pointer for serialization
     byte *ceiling;                      //  Valid upper limit for read pointer
     uint16_t sequence;                  //  Incremental sequence number
-    char *ipaddress;                    //  Sender IP address
-    uint16_t mailbox;                   //  Sender mailbox port numer
+    char *endpoint;                     //  Sender connect endpoint
     zlist_t *groups;                    //  List of groups sender is in
     byte status;                        //  Sender groups status sequence
     char *name;                         //  Sender public name
@@ -223,7 +222,7 @@ zre_msg_destroy (zre_msg_t **self_p)
 
         //  Free class properties
         zframe_destroy (&self->routing_id);
-        free (self->ipaddress);
+        free (self->endpoint);
         if (self->groups)
             zlist_destroy (&self->groups);
         free (self->name);
@@ -272,8 +271,7 @@ zre_msg_decode (zmsg_t **msg_p)
     switch (self->id) {
         case ZRE_MSG_HELLO:
             GET_NUMBER2 (self->sequence);
-            GET_STRING (self->ipaddress);
-            GET_NUMBER2 (self->mailbox);
+            GET_STRING (self->endpoint);
             {
                 size_t list_size;
                 GET_NUMBER4 (list_size);
@@ -402,12 +400,10 @@ zre_msg_encode (zre_msg_t **self_p)
         case ZRE_MSG_HELLO:
             //  sequence is a 2-byte integer
             frame_size += 2;
-            //  ipaddress is a string with 1-byte length
+            //  endpoint is a string with 1-byte length
             frame_size++;       //  Size is one octet
-            if (self->ipaddress)
-                frame_size += strlen (self->ipaddress);
-            //  mailbox is a 2-byte integer
-            frame_size += 2;
+            if (self->endpoint)
+                frame_size += strlen (self->endpoint);
             //  groups is an array of strings
             frame_size += 4;    //  Size is 4 octets
             if (self->groups) {
@@ -494,12 +490,11 @@ zre_msg_encode (zre_msg_t **self_p)
     switch (self->id) {
         case ZRE_MSG_HELLO:
             PUT_NUMBER2 (self->sequence);
-            if (self->ipaddress) {
-                PUT_STRING (self->ipaddress);
+            if (self->endpoint) {
+                PUT_STRING (self->endpoint);
             }
             else
                 PUT_NUMBER1 (0);    //  Empty string
-            PUT_NUMBER2 (self->mailbox);
             if (self->groups) {
                 PUT_NUMBER4 (zlist_size (self->groups));
                 char *groups = (char *) zlist_first (self->groups);
@@ -611,7 +606,7 @@ zre_msg_recv (void *input)
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
-    zre_msg_t * zre_msg = zre_msg_decode (&msg);
+    zre_msg_t *zre_msg = zre_msg_decode (&msg);
     if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_msg->routing_id = routing_id;
 
@@ -636,7 +631,7 @@ zre_msg_recv_nowait (void *input)
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
-    zre_msg_t * zre_msg = zre_msg_decode (&msg);
+    zre_msg_t *zre_msg = zre_msg_decode (&msg);
     if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_msg->routing_id = routing_id;
 
@@ -697,8 +692,7 @@ zre_msg_send_again (zre_msg_t *self, void *output)
 zmsg_t * 
 zre_msg_encode_hello (
     uint16_t sequence,
-    const char *ipaddress,
-    uint16_t mailbox,
+    const char *endpoint,
     zlist_t *groups,
     byte status,
     const char *name,
@@ -706,8 +700,7 @@ zre_msg_encode_hello (
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_HELLO);
     zre_msg_set_sequence (self, sequence);
-    zre_msg_set_ipaddress (self, ipaddress);
-    zre_msg_set_mailbox (self, mailbox);
+    zre_msg_set_endpoint (self, endpoint);
     zlist_t *groups_copy = zlist_dup (groups);
     zre_msg_set_groups (self, &groups_copy);
     zre_msg_set_status (self, status);
@@ -819,8 +812,7 @@ int
 zre_msg_send_hello (
     void *output,
     uint16_t sequence,
-    const char *ipaddress,
-    uint16_t mailbox,
+    const char *endpoint,
     zlist_t *groups,
     byte status,
     const char *name,
@@ -828,8 +820,7 @@ zre_msg_send_hello (
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_HELLO);
     zre_msg_set_sequence (self, sequence);
-    zre_msg_set_ipaddress (self, ipaddress);
-    zre_msg_set_mailbox (self, mailbox);
+    zre_msg_set_endpoint (self, endpoint);
     zlist_t *groups_copy = zlist_dup (groups);
     zre_msg_set_groups (self, &groups_copy);
     zre_msg_set_status (self, status);
@@ -955,8 +946,7 @@ zre_msg_dup (zre_msg_t *self)
     switch (self->id) {
         case ZRE_MSG_HELLO:
             copy->sequence = self->sequence;
-            copy->ipaddress = self->ipaddress? strdup (self->ipaddress): NULL;
-            copy->mailbox = self->mailbox;
+            copy->endpoint = self->endpoint? strdup (self->endpoint): NULL;
             copy->groups = self->groups? zlist_dup (self->groups): NULL;
             copy->status = self->status;
             copy->name = self->name? strdup (self->name): NULL;
@@ -1019,11 +1009,10 @@ zre_msg_print (zre_msg_t *self)
         case ZRE_MSG_HELLO:
             puts ("HELLO:");
             printf ("    sequence=%ld\n", (long) self->sequence);
-            if (self->ipaddress)
-                printf ("    ipaddress='%s'\n", self->ipaddress);
+            if (self->endpoint)
+                printf ("    endpoint='%s'\n", self->endpoint);
             else
-                printf ("    ipaddress=\n");
-            printf ("    mailbox=%ld\n", (long) self->mailbox);
+                printf ("    endpoint=\n");
             printf ("    groups={");
             if (self->groups) {
                 char *groups = (char *) zlist_first (self->groups);
@@ -1193,43 +1182,25 @@ zre_msg_set_sequence (zre_msg_t *self, uint16_t sequence)
 
 
 //  --------------------------------------------------------------------------
-//  Get/set the ipaddress field
+//  Get/set the endpoint field
 
 const char *
-zre_msg_ipaddress (zre_msg_t *self)
+zre_msg_endpoint (zre_msg_t *self)
 {
     assert (self);
-    return self->ipaddress;
+    return self->endpoint;
 }
 
 void
-zre_msg_set_ipaddress (zre_msg_t *self, const char *format, ...)
+zre_msg_set_endpoint (zre_msg_t *self, const char *format, ...)
 {
-    //  Format ipaddress from provided arguments
+    //  Format endpoint from provided arguments
     assert (self);
     va_list argptr;
     va_start (argptr, format);
-    free (self->ipaddress);
-    self->ipaddress = zsys_vprintf (format, argptr);
+    free (self->endpoint);
+    self->endpoint = zsys_vprintf (format, argptr);
     va_end (argptr);
-}
-
-
-//  --------------------------------------------------------------------------
-//  Get/set the mailbox field
-
-uint16_t
-zre_msg_mailbox (zre_msg_t *self)
-{
-    assert (self);
-    return self->mailbox;
-}
-
-void
-zre_msg_set_mailbox (zre_msg_t *self, uint16_t mailbox)
-{
-    assert (self);
-    self->mailbox = mailbox;
 }
 
 
@@ -1535,8 +1506,7 @@ zre_msg_test (bool verbose)
     zre_msg_destroy (&copy);
 
     zre_msg_set_sequence (self, 123);
-    zre_msg_set_ipaddress (self, "Life is short but Now lasts for ever");
-    zre_msg_set_mailbox (self, 123);
+    zre_msg_set_endpoint (self, "Life is short but Now lasts for ever");
     zre_msg_groups_append (self, "Name: %s", "Brutus");
     zre_msg_groups_append (self, "Age: %d", 43);
     zre_msg_set_status (self, 123);
@@ -1553,8 +1523,7 @@ zre_msg_test (bool verbose)
         assert (zre_msg_routing_id (self));
         
         assert (zre_msg_sequence (self) == 123);
-        assert (streq (zre_msg_ipaddress (self), "Life is short but Now lasts for ever"));
-        assert (zre_msg_mailbox (self) == 123);
+        assert (streq (zre_msg_endpoint (self), "Life is short but Now lasts for ever"));
         assert (zre_msg_groups_size (self) == 2);
         assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
         assert (streq (zre_msg_groups_next (self), "Age: 43"));

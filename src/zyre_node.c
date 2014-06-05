@@ -44,14 +44,31 @@ struct _zyre_node_t {
     zuuid_t *uuid;              //  Our UUID as object
     zsock_t *inbox;             //  Our inbox socket (ROUTER)
     char *name;                 //  Our public name
-    char *host;                 //  Our host IP address
-    int port;                   //  Our inbox port number
+    char *endpoint;             //  Our public endpoint
+    int port;                   //  Our inbox port, if any
+    bool bound;                 //  Did app bind node explicitly?
     byte status;                //  Our own change counter
     zhash_t *peers;             //  Hash of known peers, fast lookup
     zhash_t *peer_groups;       //  Groups that our peers are in
     zhash_t *own_groups;        //  Groups that we are in
     zhash_t *headers;           //  Our header values
 };
+
+//  Beacon frame has this format:
+//
+//  Z R E       3 bytes
+//  version     1 byte, %x01
+//  UUID        16 bytes
+//  port        2 bytes in network order
+
+#define BEACON_VERSION 0x01
+
+typedef struct {
+    byte protocol [3];
+    byte version;
+    byte uuid [ZUUID_LEN];
+    uint16_t port;
+} beacon_t;
 
 
 //  ---------------------------------------------------------------------
@@ -61,20 +78,14 @@ static zyre_node_t *
 zyre_node_new (zsock_t *pipe, void *args)
 {
     zyre_node_t *self = (zyre_node_t *) zmalloc (sizeof (zyre_node_t));
-    self->pipe = pipe;
-    self->outbox = (zsock_t *) args;
     self->inbox = zsock_new (ZMQ_ROUTER);
     if (self->inbox == NULL) {
         free (self);
-        return NULL;            //  Interrupted 0MQ call
+        return NULL;            //  Could not create new socket
     }
-    self->port = zsock_bind (self->inbox, "tcp://*:*");
-    if (self->port < 0) {
-        zsock_destroy (&self->inbox);
-        free (self);
-        return NULL;            //  Interrupted 0MQ call
-    }
-    self->poller = zpoller_new (self->pipe, self->inbox, NULL);
+    self->pipe = pipe;
+    self->outbox = (zsock_t *) args;
+    self->poller = zpoller_new (self->pipe, NULL);
     self->beacon_port = ZRE_DISCOVERY_PORT;
     self->interval = 0;         //  Use default
     self->uuid = zuuid_new ();
@@ -83,7 +94,7 @@ zyre_node_new (zsock_t *pipe, void *args)
     self->own_groups = zhash_new ();
     self->headers = zhash_new ();
     zhash_autofree (self->headers);
-    
+
     //  Default name for node is first 6 characters of UUID:
     //  the shorter string is more readable in logs
     self->name = strndup (zuuid_str (self->uuid), 6);
@@ -111,27 +122,37 @@ zyre_node_destroy (zyre_node_t **self_p)
         zsock_destroy (&self->outbox);
         zbeacon_destroy (&self->beacon);
         zyre_log_destroy (&self->log);
+        zstr_free (&self->endpoint);
         free (self->name);
         free (self);
         *self_p = NULL;
     }
 }
 
-//  Beacon frame has this format:
-//
-//  Z R E       3 bytes
-//  version     1 byte, %x01
-//  UUID        16 bytes
-//  port        2 bytes in network order
+//  Bind node to endpoint
 
-#define BEACON_VERSION 0x01
+static int
+zyre_node_bind (zyre_node_t *self, const char *endpoint)
+{
+    assert (!self->endpoint);
+    self->port = zsock_bind (self->inbox, "%s", endpoint);
+    if (self->port < 0)
+        return 1;               //  Endpoint is occupied, or invalid
 
-typedef struct {
-    byte protocol [3];
-    byte version;
-    byte uuid [ZUUID_LEN];
-    uint16_t port;
-} beacon_t;
+    //  Successful bind, save endpoint and disable beaconing
+    self->endpoint = strdup (endpoint);
+    self->bound = true;
+    self->beacon_port = 0;
+    return 0;
+}
+
+//  Connect node to endpoint explicitly
+
+static int
+zyre_node_connect (zyre_node_t *self, const char *endpoint)
+{
+    return 1;
+}
 
 
 //  Start node, return 0 if OK, 1 if not possible
@@ -139,56 +160,79 @@ typedef struct {
 static int
 zyre_node_start (zyre_node_t *self)
 {
-    assert (!self->beacon);
-    self->beacon = zbeacon_new (NULL, self->beacon_port);
-    if (!self->beacon)
-        return 1;               //  Not possible to start beacon
-    
-    if (self->interval)
-        zbeacon_set_interval (self->beacon, self->interval);
-    zpoller_add (self->poller, zbeacon_socket (self->beacon));
-    
-    //  Set broadcast/listen beacon
-    beacon_t beacon;
-    beacon.protocol [0] = 'Z';
-    beacon.protocol [1] = 'R';
-    beacon.protocol [2] = 'E';
-    beacon.version = BEACON_VERSION;
-    beacon.port = htons (self->port);
-    zuuid_export (self->uuid, beacon.uuid);
-    zbeacon_noecho (self->beacon);
-    zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
-    zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
+    //  If application didn't bind explicitly, we grab an ephemeral port
+    //  on all available network interfaces. This is orthogonal to
+    //  beaconing, since we can connect to other peers and they will
+    //  gossip our endpoint to others.
+    if (!self->bound) {
+        self->port = zsock_bind (self->inbox, "tcp://*:*");
+        if (self->port < 0)
+            return 1;           //  Could not get new port to bind to?
+        self->bound = true;
+    }
+    //  Start UDP beaconing, if the application didn't disable it
+    if (self->beacon_port) {
+        assert (!self->beacon);
+        self->beacon = zbeacon_new (NULL, self->beacon_port);
+        if (!self->beacon)
+            return 1;               //  Not possible to start beacon
 
-    //  Our own host endpoint is provided by the beacon
-    self->host = zbeacon_hostname (self->beacon);
+        if (self->interval)
+            zbeacon_set_interval (self->beacon, self->interval);
+        zpoller_add (self->poller, zbeacon_socket (self->beacon));
 
-    //  Set up log instance
-    char sender [30];         //  ipaddress:port endpoint
-    sprintf (sender, "%s:%d", self->host, self->port);
-    self->log = zyre_log_new (sender);
-    
+        //  Set broadcast/listen beacon
+        beacon_t beacon;
+        beacon.protocol [0] = 'Z';
+        beacon.protocol [1] = 'R';
+        beacon.protocol [2] = 'E';
+        beacon.version = BEACON_VERSION;
+        beacon.port = htons (self->port);
+        zuuid_export (self->uuid, beacon.uuid);
+        zbeacon_noecho (self->beacon);
+        zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
+        zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
+
+        //  Our own host endpoint is provided by the beacon
+        assert (!self->endpoint);
+        self->endpoint = zsys_sprintf ("tcp://%s:%d",
+            zbeacon_hostname (self->beacon), self->port);
+    }
+    else
+    if (!self->endpoint) {
+        char *hostname = zsys_hostname ();
+        self->endpoint = zsys_sprintf ("tcp://%s:%d", hostname, self->port);
+        zstr_free (&hostname);
+    }
+    //  Start polling on inbox
+    zpoller_add (self->poller, self->inbox);
+    self->log = zyre_log_new (self->endpoint);
     return 0;
 }
 
+//  Stop node discovery and interconnection
+//  TODO: clear peer tables
 
-static void
+static int
 zyre_node_stop (zyre_node_t *self)
 {
-    //  Set broadcast/listen beacon
-    beacon_t beacon;
-    beacon.protocol [0] = 'Z';
-    beacon.protocol [1] = 'R';
-    beacon.protocol [2] = 'E';
-    beacon.version = BEACON_VERSION;
-    beacon.port = 0;            //  Zero means we're stopping
-    zuuid_export (self->uuid, beacon.uuid);
-    zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
-    zclock_sleep (1);           //  Allow 1 msec for beacon to go out
-    
-    zbeacon_destroy (&self->beacon);
+    if (self->beacon) {
+        //  Stop broadcast/listen beacon
+        beacon_t beacon;
+        beacon.protocol [0] = 'Z';
+        beacon.protocol [1] = 'R';
+        beacon.protocol [2] = 'E';
+        beacon.version = BEACON_VERSION;
+        beacon.port = 0;            //  Zero means we're stopping
+        zuuid_export (self->uuid, beacon.uuid);
+        zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
+        zclock_sleep (1);           //  Allow 1 msec for beacon to go out
+        zbeacon_destroy (&self->beacon);
+    }
+    //  Stop polling on inbox
     zpoller_destroy (&self->poller);
-    self->poller = zpoller_new (self->pipe, self->inbox, NULL);
+    self->poller = zpoller_new (self->pipe, NULL);
+    return 0;
 }
 
 
@@ -219,7 +263,7 @@ zyre_node_dump (zyre_node_t *self)
     fflush (stdout);
     printf ("************** zyre_node_dump *************************\n");
     printf ("node id : %s\n", zuuid_str (self->uuid));
-    printf ("    host:port = %s:%d\n", self->host, self->port);
+    printf ("    endpoint = %s\n", self->endpoint);
     printf ("    headers [%zu] { \n", zhash_size (self->headers));
     zhash_foreach (self->headers, zyre_node_hash_key_dump, self);
     printf ("    }\n");
@@ -282,11 +326,23 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "NAME"))
         zstr_send (self->pipe, self->name);
     else
+    if (streq (command, "BIND")) {
+        char *endpoint = zmsg_popstr (request);
+        zsock_signal (self->pipe, zyre_node_bind (self, endpoint));
+        zstr_free (&endpoint);
+    }
+    else
+    if (streq (command, "CONNECT")) {
+        char *endpoint = zmsg_popstr (request);
+        zsock_signal (self->pipe, zyre_node_connect (self, endpoint));
+        zstr_free (&endpoint);
+    }
+    else
     if (streq (command, "START"))
         zsock_signal (self->pipe, zyre_node_start (self));
     else
     if (streq (command, "STOP"))
-        zyre_node_stop (self);
+        zsock_signal (self->pipe, zyre_node_stop (self));
     else
     if (streq (command, "WHISPER")) {
         //  Get peer to send message to
@@ -379,21 +435,18 @@ zyre_node_purge_peer (const char *key, void *item, void *argument)
 //  Find or create peer via its UUID
 
 static zyre_peer_t *
-zyre_node_require_peer (
-    zyre_node_t *self,
-    zuuid_t *uuid,
-    const char *address,
-    uint16_t port)
+zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
 {
+    assert (self);
+    assert (endpoint);
+
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (!peer) {
         //  Purge any previous peer on same endpoint
-        char endpoint [100];
-        snprintf (endpoint, 100, "tcp://%s:%hu", address, port);
-        zhash_foreach (self->peers, zyre_node_purge_peer, endpoint);
+        zhash_foreach (self->peers, zyre_node_purge_peer, (char *) endpoint);
 
         peer = zyre_peer_new (self->peers, uuid);
-        zyre_peer_connect (peer, self->uuid, endpoint);
+        zyre_peer_connect (peer, self->uuid, (char *) endpoint);
         if (self->verbose)
             zyre_peer_set_log (peer, self->log);
 
@@ -402,8 +455,7 @@ zyre_node_require_peer (
         zhash_t *headers = zhash_dup (self->headers);
         
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
-        zre_msg_set_ipaddress (msg, self->host);
-        zre_msg_set_mailbox (msg, self->port);
+        zre_msg_set_endpoint (msg, self->endpoint);
         zre_msg_set_groups (msg, &groups);
         zre_msg_set_status (msg, self->status);
         zre_msg_set_name (msg, self->name);
@@ -525,19 +577,15 @@ zyre_node_recv_peer (zyre_node_t *self)
                 zyre_node_remove_peer (self, peer);
                 assert (!(zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid)));
             }
-            else {
-                char endpoint_node [30];
-                sprintf (endpoint_node, "tcp://%s:%d", self->host, self->port);
-                //  We ignore HELLO, because peer has same host:port as current node
-                if (streq (endpoint_node, zyre_peer_endpoint (peer))) {
-                    zre_msg_destroy (&msg);
-                    zuuid_destroy (&uuid);
-                    return 0;
-                }
+            else
+            if (streq (zyre_peer_endpoint (peer), self->endpoint)) {
+                //  We ignore HELLO, if peer has same endpoint as current node
+                zre_msg_destroy (&msg);
+                zuuid_destroy (&uuid);
+                return 0;
             }
         }
-        peer = zyre_node_require_peer (
-            self, uuid, zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
+        peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg));
         assert (peer);
         zyre_peer_set_ready (peer, true);
     }
@@ -566,9 +614,8 @@ zyre_node_recv_peer (zyre_node_t *self)
         zstr_sendm (self->outbox, zyre_peer_name (peer));
         zframe_t *headers = zhash_pack (zyre_peer_headers (peer));
         zframe_send (&headers, self->outbox, ZFRAME_MORE);
-        zstr_sendf (self->outbox, "%s:%d",
-                    zre_msg_ipaddress (msg), zre_msg_mailbox (msg));
-        
+        zstr_send (self->outbox, zre_msg_endpoint (msg));
+
         //  Join peer to listed groups
         const char *name = zre_msg_groups_first (msg);
         while (name) {
@@ -647,8 +694,9 @@ zyre_node_recv_beacon (zyre_node_t *self)
         zuuid_t *uuid = zuuid_new ();
         zuuid_set (uuid, beacon.uuid);
         if (beacon.port) {
-            zyre_peer_t *peer = zyre_node_require_peer (
-                self, uuid, ipaddress, ntohs (beacon.port));
+            char endpoint [30];
+            sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
+            zyre_peer_t *peer = zyre_node_require_peer (self, uuid, endpoint);
             zyre_peer_refresh (peer);
         }
         else {

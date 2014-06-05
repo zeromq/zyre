@@ -423,7 +423,7 @@ zyre_peer_test (bool verbose)
     assert (streq (zyre_peer_name (peer), "peer"));
 
     zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
-    zre_msg_set_ipaddress (msg, "127.0.0.1");
+    zre_msg_set_endpoint (msg, "tcp://127.0.0.1:5552");
     int rc = zyre_peer_send (peer, &msg);
     assert (rc == 0);
 
