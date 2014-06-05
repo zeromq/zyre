@@ -384,7 +384,8 @@ zyre_node_recv_api (zyre_node_t *self)
             zre_msg_set_status (msg, ++(self->status));
             zhash_foreach (self->peers, zyre_node_send_peer, msg);
             zre_msg_destroy (&msg);
-            zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
+            if (self->log)
+                zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
         }
         zstr_free (&name);
     }
@@ -401,7 +402,8 @@ zyre_node_recv_api (zyre_node_t *self)
             zhash_foreach (self->peers, zyre_node_send_peer, msg);
             zre_msg_destroy (&msg);
             zhash_delete (self->own_groups, name);
-            zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
+            if (self->log)
+                zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
         }
         zstr_free (&name);
     }
