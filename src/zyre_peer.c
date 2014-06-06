@@ -268,7 +268,7 @@ char *
 zyre_peer_name (zyre_peer_t *self)
 {
     assert (self);
-    return self->name;
+    return self->name? self->name: "";
 }
 
 
