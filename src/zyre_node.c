@@ -83,6 +83,11 @@ zyre_node_new (zsock_t *pipe, void *args)
         free (self);
         return NULL;            //  Could not create new socket
     }
+    //  Use ZMQ_ROUTER_HANDOVER so that when a peer disconnects and
+    //  then reconnects, the new client connection is treated as the
+    //  canonical one, and any old trailing commands are discarded.
+    zsock_set_router_handover (self->inbox, 1);
+    
     self->pipe = pipe;
     self->outbox = (zsock_t *) args;
     self->poller = zpoller_new (self->pipe, NULL);
@@ -488,15 +493,14 @@ static void
 zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 {
     //  Tell the calling application the peer has gone
-    if (*zyre_peer_name (peer)) {
-        zstr_sendm (self->outbox, "EXIT");
-        zstr_sendm (self->outbox, zyre_peer_identity (peer));
-        zstr_send (self->outbox, zyre_peer_name (peer));
+    zstr_sendm (self->outbox, "EXIT");
+    zstr_sendm (self->outbox, zyre_peer_identity (peer));
+    zstr_send (self->outbox, zyre_peer_name (peer));
 
-        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
-                    zyre_peer_endpoint (peer),
-                    zyre_peer_endpoint (peer));
-    }
+    zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
+                zyre_peer_endpoint (peer),
+                zyre_peer_endpoint (peer));
+    
     //  Remove peer from any groups we've got it in
     zhash_foreach (self->peer_groups, zyre_node_delete_peer, peer);
     //  To destroy peer, we remove from peers hash table
@@ -594,8 +598,6 @@ zyre_node_recv_peer (zyre_node_t *self)
     }
     //  Ignore command if peer isn't ready
     if (peer == NULL || !zyre_peer_ready (peer)) {
-        if (peer)
-            zyre_node_remove_peer (self, peer);
         zre_msg_destroy (&msg);
         zuuid_destroy (&uuid);
         return 0;
