@@ -30,7 +30,6 @@
 #include "../include/zyre.h"
 #include "../include/zre_msg.h"
 #include "../include/zre_log_msg.h"
-#include "../include/zyre.h"
 #include "../include/zyre_event.h"
 #include "../include/zyre_log.h"
 #include "zyre_peer.h"
@@ -38,8 +37,8 @@
 #include "zyre_node.h"
 
 //  Constants, to be configured/reviewed
-#define PEER_EVASIVE     5000   //  Five seconds' silence is evasive
-#define PEER_EXPIRED    10000   //  Ten seconds' silence is expired
+#define PEER_EVASIVE     3000   //  3 seconds' silence is evasive
+#define PEER_EXPIRED     5000   //  5 seconds' silence is expired
 #define REAP_INTERVAL    1000   //  Once per second
 
 #endif

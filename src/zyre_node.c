@@ -455,7 +455,6 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         //  Handshake discovery by sending HELLO as first message
         zlist_t *groups = zhash_keys (self->own_groups);
         zhash_t *headers = zhash_dup (self->headers);
-        
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
         zre_msg_set_endpoint (msg, self->endpoint);
         zre_msg_set_groups (msg, &groups);
@@ -489,13 +488,15 @@ static void
 zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 {
     //  Tell the calling application the peer has gone
-    zstr_sendm (self->outbox, "EXIT");
-    zstr_sendm (self->outbox, zyre_peer_identity (peer));
-    zstr_send (self->outbox, zyre_peer_name (peer));
-    //  Send a log event
-    zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
-                   zyre_peer_endpoint (peer),
-                   zyre_peer_endpoint (peer));
+    if (*zyre_peer_name (peer)) {
+        zstr_sendm (self->outbox, "EXIT");
+        zstr_sendm (self->outbox, zyre_peer_identity (peer));
+        zstr_send (self->outbox, zyre_peer_name (peer));
+
+        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
+                    zyre_peer_endpoint (peer),
+                    zyre_peer_endpoint (peer));
+    }
     //  Remove peer from any groups we've got it in
     zhash_foreach (self->peer_groups, zyre_node_delete_peer, peer);
     //  To destroy peer, we remove from peers hash table
@@ -593,6 +594,8 @@ zyre_node_recv_peer (zyre_node_t *self)
     }
     //  Ignore command if peer isn't ready
     if (peer == NULL || !zyre_peer_ready (peer)) {
+        if (peer)
+            zyre_node_remove_peer (self, peer);
         zre_msg_destroy (&msg);
         zuuid_destroy (&uuid);
         return 0;
