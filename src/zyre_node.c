@@ -488,16 +488,15 @@ static void
 zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 {
     //  Tell the calling application the peer has gone
-    zstr_sendm (self->outbox, "EXIT");
-    zstr_sendm (self->outbox, zyre_peer_identity (peer));
-    zstr_send (self->outbox, zyre_peer_name (peer));
-    
-    //  Send a log event, if the peer got a name
-    if (*zyre_peer_name (peer))
+    if (*zyre_peer_name (peer)) {
+        zstr_sendm (self->outbox, "EXIT");
+        zstr_sendm (self->outbox, zyre_peer_identity (peer));
+        zstr_send (self->outbox, zyre_peer_name (peer));
+
         zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
                     zyre_peer_endpoint (peer),
                     zyre_peer_endpoint (peer));
-        
+    }
     //  Remove peer from any groups we've got it in
     zhash_foreach (self->peer_groups, zyre_node_delete_peer, peer);
     //  To destroy peer, we remove from peers hash table
