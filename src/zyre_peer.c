@@ -173,15 +173,14 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
             zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_SEND,
                 zuuid_str (self->uuid), "seq=%d command=%s",
                 zre_msg_sequence (*msg_p), zre_msg_command (*msg_p));
-        int rc = zre_msg_send (msg_p, self->mailbox);
-        if (rc == -1) {
+            
+        if (zre_msg_send (msg_p, self->mailbox)) {
             if (errno == EAGAIN) {
                 zyre_peer_disconnect (self);
                 return -1;
             }
-            else
-                //  Can't get any other error here
-                assert (false);
+            //  Can't get any other error here
+            assert (false);
         }
     }
     else
