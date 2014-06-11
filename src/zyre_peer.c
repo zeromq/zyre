@@ -34,6 +34,7 @@ struct _zyre_peer_t {
     zuuid_t *uuid;              //  Identity object
     char *endpoint;             //  Endpoint connected to
     char *name;                 //  Peer's public name
+    char *origin;               //  Origin node's public name
     uint64_t evasive_at;        //  Peer is being evasive
     uint64_t expired_at;        //  Peer has expired by now
     bool connected;             //  Peer will send messages
@@ -42,7 +43,7 @@ struct _zyre_peer_t {
     uint16_t sent_sequence;     //  Outgoing message sequence
     uint16_t want_sequence;     //  Incoming message sequence
     zhash_t *headers;           //  Peer headers
-    zyre_log_t *log;            //  Log publisher, if any
+    bool verbose;               //  Do we log traffic & failures?
 };
 
 
@@ -91,6 +92,7 @@ zyre_peer_destroy (zyre_peer_t **self_p)
         zhash_destroy (&self->headers);
         zuuid_destroy (&self->uuid);
         free (self->name);
+        free (self->origin);
         free (self);
         *self_p = NULL;
     }
@@ -109,34 +111,37 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
 
     //  Create new outgoing socket (drop any messages in transit)
     self->mailbox = zsock_new (ZMQ_DEALER);
-    //  Null if shutting down
-    if (self->mailbox) {
-        //  Set our own identity on the socket so that receiving node
-        //  knows who each message came from. Note that we cannot use
-        //  the UUID directly as the identity since it may contain a
-        //  zero byte at the start, which libzmq does not like for
-        //  historical and arguably bogus reasons that it nonetheless
-        //  enforces.
-        byte routing_id [ZUUID_LEN + 1] = { 1 };
-        memcpy (routing_id + 1, zuuid_data (from), ZUUID_LEN);
-        int rc = zmq_setsockopt (zsock_resolve (self->mailbox),
-                                 ZMQ_IDENTITY, routing_id, ZUUID_LEN + 1);
-        assert (rc == 0);
+    if (!self->mailbox)
+        return;             //  Null when we're shutting down
+    
+    //  Set our own identity on the socket so that receiving node
+    //  knows who each message came from. Note that we cannot use
+    //  the UUID directly as the identity since it may contain a
+    //  zero byte at the start, which libzmq does not like for
+    //  historical and arguably bogus reasons that it nonetheless
+    //  enforces.
+    byte routing_id [ZUUID_LEN + 1] = { 1 };
+    memcpy (routing_id + 1, zuuid_data (from), ZUUID_LEN);
+    int rc = zmq_setsockopt (zsock_resolve (self->mailbox),
+                             ZMQ_IDENTITY, routing_id, ZUUID_LEN + 1);
+    assert (rc == 0);
 
-        //  Set a high-water mark that allows for reasonable activity
-        zsock_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
+    //  Set a high-water mark that allows for reasonable activity
+    zsock_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
 
-        //  Send messages immediately or return EAGAIN
-        zsock_set_sndtimeo (self->mailbox, 0);
+    //  Send messages immediately or return EAGAIN
+    zsock_set_sndtimeo (self->mailbox, 0);
 
-        //  Connect through to peer node
-        rc = zsock_connect (self->mailbox, "%s", endpoint);
-        assert (rc == 0);
+    //  Connect through to peer node
+    rc = zsock_connect (self->mailbox, "%s", endpoint);
+    assert (rc == 0);
+    if (self->verbose)
+        zsys_info ("(%s) connect to peer: endpoint=%s",
+                   self->origin, endpoint);
 
-        self->endpoint = strdup (endpoint);
-        self->connected = true;
-        self->ready = false;
-    }
+    self->endpoint = strdup (endpoint);
+    self->connected = true;
+    self->ready = false;
 }
 
 
@@ -167,15 +172,20 @@ int
 zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
 {
     assert (self);
+    zre_msg_t *msg = *msg_p;
+    assert (msg);
     if (self->connected) {
-        zre_msg_set_sequence (*msg_p, ++(self->sent_sequence));
-        if (self->log)
-            zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_SEND,
-                zuuid_str (self->uuid), "seq=%d command=%s",
-                zre_msg_sequence (*msg_p), zre_msg_command (*msg_p));
+        zre_msg_set_sequence (msg, ++(self->sent_sequence));
+        if (self->verbose)
+            zsys_info ("(%s) send ZRE to peer: name=%s sequence=%d command=%s",
+                self->origin, self->name? self->name: "-",
+                zre_msg_sequence (msg), zre_msg_command (msg));
             
         if (zre_msg_send (msg_p, self->mailbox)) {
             if (errno == EAGAIN) {
+                if (self->verbose)
+                    zsys_info ("(%s) disconnect from peer (EAGAIN): name=%s",
+                        self->origin, self->name);
                 zyre_peer_disconnect (self);
                 return -1;
             }
@@ -284,6 +294,18 @@ zyre_peer_set_name (zyre_peer_t *self, const char *name)
 
 
 //  ---------------------------------------------------------------------
+//  Set current node name, for logging
+
+void
+zyre_peer_set_origin (zyre_peer_t *self, const char *origin)
+{
+    assert (self);
+    free (self->origin);
+    self->origin = strdup (origin);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Return peer cycle
 //  This gives us a state change count for the peer, which we can
 //  check against its claimed status, to detect message loss.
@@ -381,8 +403,8 @@ zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg)
 
     bool valid = (++(self->want_sequence) == recd_sequence);
     if (!valid) {
-        zclock_log ("E: expected=%d, got=%d",
-                    self->want_sequence, recd_sequence);
+        zsys_error ("expected=%d, got=%d",
+            self->want_sequence, recd_sequence);
         --(self->want_sequence);    //  Rollback
     }
     return valid;
@@ -390,13 +412,13 @@ zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg)
 
 
 //  ---------------------------------------------------------------------
-//  Ask peer to log all traffic via ZRE_LOG
+//  Ask peer to log all traffic via zsys
 
 void
-zyre_peer_set_log (zyre_peer_t *self, zyre_log_t *log)
+zyre_peer_set_verbose (zyre_peer_t *self, bool verbose)
 {
     assert (self);
-    self->log = log;
+    self->verbose = verbose;
 }
 
 

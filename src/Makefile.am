@@ -6,22 +6,18 @@ pkgconfig_DATA = libzyre.pc
 libzyre_la_includedir = $(includedir)
 libzyre_la_include_HEADERS = \
     ../include/zre_msg.h \
-    ../include/zre_log_msg.h \
     ../include/zyre_event.h \
-    ../include/zyre_log.h \
     ../include/zyre.h
 
 libzyre_la_SOURCES = \
+    zre_msg.c \
     zyre_peer.h \
     zyre_group.h \
     zyre_node.h \
     zyre_classes.h \
-    zyre_log.c \
     zyre_group.c \
     zyre_peer.c \
     zyre_node.c \
-    zre_msg.c \
-    zre_log_msg.c \
     zyre_event.c \
     zyre.c
 
@@ -39,4 +35,4 @@ TESTS = zyre_selftest
 
 # Produce generated models; do this manually in src directory
 code:
-	gsl -q zre_msg.xml zre_log_msg.xml
+	gsl -q zre_msg.xml 

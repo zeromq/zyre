@@ -351,32 +351,12 @@ zre_msg_decode (zmsg_t **msg_p)
 
     //  Error returns
     malformed:
-        printf ("E: malformed message '%d'\n", self->id);
+        zsys_error ("malformed message '%d'\n", self->id);
     empty:
         zframe_destroy (&frame);
         zmsg_destroy (msg_p);
         zre_msg_destroy (&self);
         return (NULL);
-}
-
-//  Count size of key/value pair for serialization
-//  Key is encoded as string, value as longstr
-static int
-s_headers_count (const char *key, void *item, void *argument)
-{
-    zre_msg_t *self = (zre_msg_t *) argument;
-    self->headers_bytes += 1 + strlen (key) + 4 + strlen ((char *) item);
-    return 0;
-}
-
-//  Serialize headers key=value pair
-static int
-s_headers_write (const char *key, void *item, void *argument)
-{
-    zre_msg_t *self = (zre_msg_t *) argument;
-    PUT_STRING (key);
-    PUT_LONGSTR ((char *) item);
-    return 0;
 }
 
 
@@ -425,7 +405,12 @@ zre_msg_encode (zre_msg_t **self_p)
             if (self->headers) {
                 self->headers_bytes = 0;
                 //  Add up size of dictionary contents
-                zhash_foreach (self->headers, s_headers_count, self);
+                char *item = (char *) zhash_first (self->headers);
+                while (item) {
+                    self->headers_bytes += 1 + strlen (zhash_cursor (self->headers));
+                    self->headers_bytes += 4 + strlen (item);
+                    item = (char *) zhash_next (self->headers);
+                }
             }
             frame_size += self->headers_bytes;
             break;
@@ -477,7 +462,7 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
             
         default:
-            printf ("E: bad message type '%d', not sent\n", self->id);
+            zsys_error ("bad message type '%d', not sent\n", self->id);
             //  No recovery, this is a fatal application error
             assert (false);
     }
@@ -513,7 +498,12 @@ zre_msg_encode (zre_msg_t **self_p)
                 PUT_NUMBER1 (0);    //  Empty string
             if (self->headers) {
                 PUT_NUMBER4 (zhash_size (self->headers));
-                zhash_foreach (self->headers, s_headers_write, self);
+                char *item = (char *) zhash_first (self->headers);
+                while (item) {
+                    PUT_STRING (zhash_cursor (self->headers));
+                    PUT_LONGSTR (item);
+                    item = (char *) zhash_next (self->headers);
+                }
             }
             else
                 PUT_NUMBER4 (0);    //  Empty dictionary
@@ -606,7 +596,7 @@ zre_msg_recv (void *input)
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
-    zre_msg_t *zre_msg = zre_msg_decode (&msg);
+    zre_msg_t * zre_msg = zre_msg_decode (&msg);
     if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_msg->routing_id = routing_id;
 
@@ -631,7 +621,7 @@ zre_msg_recv_nowait (void *input)
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
-    zre_msg_t *zre_msg = zre_msg_decode (&msg);
+    zre_msg_t * zre_msg = zre_msg_decode (&msg);
     if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_msg->routing_id = routing_id;
 
@@ -989,15 +979,6 @@ zre_msg_dup (zre_msg_t *self)
 }
 
 
-//  Dump headers key=value pair to stdout
-static int
-s_headers_print (const char *key, void *item, void *argument)
-{
-    printf ("        %s=%s\n", key, (char *) item);
-    return 0;
-}
-
-
 //  --------------------------------------------------------------------------
 //  Print contents of message to stdout
 
@@ -1007,88 +988,89 @@ zre_msg_print (zre_msg_t *self)
     assert (self);
     switch (self->id) {
         case ZRE_MSG_HELLO:
-            puts ("HELLO:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
+            zsys_debug ("ZRE_MSG_HELLO:");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
             if (self->endpoint)
-                printf ("    endpoint='%s'\n", self->endpoint);
+                zsys_debug ("    endpoint='%s'", self->endpoint);
             else
-                printf ("    endpoint=\n");
-            printf ("    groups={");
+                zsys_debug ("    endpoint=");
+            zsys_debug ("    groups=");
             if (self->groups) {
                 char *groups = (char *) zlist_first (self->groups);
                 while (groups) {
-                    printf (" '%s'", groups);
+                    zsys_debug ("        '%s'", groups);
                     groups = (char *) zlist_next (self->groups);
                 }
             }
-            printf (" }\n");
-            printf ("    status=%ld\n", (long) self->status);
+            zsys_debug ("    status=%ld", (long) self->status);
             if (self->name)
-                printf ("    name='%s'\n", self->name);
+                zsys_debug ("    name='%s'", self->name);
             else
-                printf ("    name=\n");
-            printf ("    headers={\n");
-            if (self->headers)
-                zhash_foreach (self->headers, s_headers_print, self);
+                zsys_debug ("    name=");
+            zsys_debug ("    headers=");
+            if (self->headers) {
+                char *item = (char *) zhash_first (self->headers);
+                while (item) {
+                    zsys_debug ("        %s=%s", zhash_cursor (self->headers), item);
+                    item = (char *) zhash_next (self->headers);
+                }
+            }
             else
-                printf ("(NULL)\n");
-            printf ("    }\n");
+                zsys_debug ("(NULL)");
             break;
             
         case ZRE_MSG_WHISPER:
-            puts ("WHISPER:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
-            printf ("    content={\n");
+            zsys_debug ("ZRE_MSG_WHISPER:");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
+            zsys_debug ("    content=");
             if (self->content)
                 zmsg_print (self->content);
             else
-                printf ("(NULL)\n");
-            printf ("    }\n");
+                zsys_debug ("(NULL)");
             break;
             
         case ZRE_MSG_SHOUT:
-            puts ("SHOUT:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
+            zsys_debug ("ZRE_MSG_SHOUT:");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
             if (self->group)
-                printf ("    group='%s'\n", self->group);
+                zsys_debug ("    group='%s'", self->group);
             else
-                printf ("    group=\n");
-            printf ("    content={\n");
+                zsys_debug ("    group=");
+            zsys_debug ("    content=");
             if (self->content)
                 zmsg_print (self->content);
             else
-                printf ("(NULL)\n");
-            printf ("    }\n");
+                zsys_debug ("(NULL)");
             break;
             
         case ZRE_MSG_JOIN:
-            puts ("JOIN:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
+            zsys_debug ("ZRE_MSG_JOIN:");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
             if (self->group)
-                printf ("    group='%s'\n", self->group);
+                zsys_debug ("    group='%s'", self->group);
             else
-                printf ("    group=\n");
-            printf ("    status=%ld\n", (long) self->status);
+                zsys_debug ("    group=");
+            zsys_debug ("    status=%ld", (long) self->status);
             break;
             
         case ZRE_MSG_LEAVE:
-            puts ("LEAVE:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
+            zsys_debug ("ZRE_MSG_LEAVE:");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
             if (self->group)
-                printf ("    group='%s'\n", self->group);
+                zsys_debug ("    group='%s'", self->group);
             else
-                printf ("    group=\n");
-            printf ("    status=%ld\n", (long) self->status);
+                zsys_debug ("    group=");
+            zsys_debug ("    status=%ld", (long) self->status);
             break;
             
         case ZRE_MSG_PING:
-            puts ("PING:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
+            zsys_debug ("ZRE_MSG_PING:");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
             break;
             
         case ZRE_MSG_PING_OK:
-            puts ("PING_OK:");
-            printf ("    sequence=%ld\n", (long) self->sequence);
+            zsys_debug ("ZRE_MSG_PING_OK:");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
             break;
             
     }

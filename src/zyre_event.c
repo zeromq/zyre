@@ -104,7 +104,7 @@ zyre_event_new (zyre_t *node)
         msg = NULL;
     }
     else
-        zclock_log ("W: bad message received from node: %s\n", type);
+        zsys_warning ("bad message received from node: %s\n", type);
     
     free (type);
     zmsg_destroy (&msg);

@@ -342,9 +342,6 @@ CZMQ_EXPORT int
     zre_msg_test (bool verbose);
 //  @end
 
-//  For backwards compatibility with old codecs
-#define zre_msg_dump        zre_msg_print
-
 #ifdef __cplusplus
 }
 #endif
