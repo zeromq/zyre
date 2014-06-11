@@ -29,9 +29,7 @@
 
 #include "../include/zyre.h"
 #include "../include/zre_msg.h"
-#include "../include/zre_log_msg.h"
 #include "../include/zyre_event.h"
-#include "../include/zyre_log.h"
 #include "zyre_peer.h"
 #include "zyre_group.h"
 #include "zyre_node.h"
