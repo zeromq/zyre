@@ -72,8 +72,6 @@ find_package(CZMQ REQUIRED)
 set (zyre_headers
     include/zyre.h
     include/zyre_event.h
-    include/zyre_log.h
-    include/zre_log_msg.h
     include/zre_msg.h
 )
 source_group ("Header Files" FILES ${zyre_headers})
@@ -87,12 +85,10 @@ include_directories(${ZYRE_SOURCE_DIR}/include)
 include_directories(${CZMQ_INCLUDE_DIRS})
 include_directories(${ZEROMQ_INCLUDE_DIRS})
 set (zyre_sources
-    src/zre_log_msg.c
     src/zre_msg.c
     src/zyre.c
     src/zyre_event.c
     src/zyre_group.c
-    src/zyre_log.c
     src/zyre_node.c
     src/zyre_peer.c
     src/zyre_selftest.c

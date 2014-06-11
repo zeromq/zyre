@@ -40,7 +40,6 @@ struct _zyre_node_t {
     size_t interval;            //  Beacon interval
     zpoller_t *poller;          //  Socket poller
     zbeacon_t *beacon;          //  Beacon object
-    zyre_log_t *log;            //  Log object
     zuuid_t *uuid;              //  Our UUID as object
     zsock_t *inbox;             //  Our inbox socket (ROUTER)
     char *name;                 //  Our public name
@@ -126,7 +125,6 @@ zyre_node_destroy (zyre_node_t **self_p)
         zsock_destroy (&self->inbox);
         zsock_destroy (&self->outbox);
         zbeacon_destroy (&self->beacon);
-        zyre_log_destroy (&self->log);
         zstr_free (&self->endpoint);
         free (self->name);
         free (self);
@@ -211,7 +209,6 @@ zyre_node_start (zyre_node_t *self)
     }
     //  Start polling on inbox
     zpoller_add (self->poller, self->inbox);
-    self->log = zyre_log_new (self->endpoint);
     return 0;
 }
 
@@ -389,8 +386,8 @@ zyre_node_recv_api (zyre_node_t *self)
             zre_msg_set_status (msg, ++(self->status));
             zhash_foreach (self->peers, zyre_node_send_peer, msg);
             zre_msg_destroy (&msg);
-            if (self->log)
-                zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_JOIN, NULL, name);
+            if (self->verbose)
+                zsys_info ("(%s) JOIN group=%s", self->name, name);
         }
         zstr_free (&name);
     }
@@ -407,8 +404,8 @@ zyre_node_recv_api (zyre_node_t *self)
             zhash_foreach (self->peers, zyre_node_send_peer, msg);
             zre_msg_destroy (&msg);
             zhash_delete (self->own_groups, name);
-            if (self->log)
-                zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_LEAVE, NULL, name);
+            if (self->verbose)
+                zsys_info ("(%s) LEAVE group=%s", self->name, name);
         }
         zstr_free (&name);
     }
@@ -419,7 +416,7 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "$TERM"))
         self->terminated = true;
     else {
-        printf ("E: invalid command '%s'\n", command);
+        zsys_error ("invalid command '%s'\n", command);
         assert (false);
     }
     zstr_free (&command);
@@ -453,9 +450,9 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         zhash_foreach (self->peers, zyre_node_purge_peer, (char *) endpoint);
 
         peer = zyre_peer_new (self->peers, uuid);
+        zyre_peer_set_origin (peer, self->name);
+        zyre_peer_set_verbose (peer, self->verbose);
         zyre_peer_connect (peer, self->uuid, (char *) endpoint);
-        if (self->verbose)
-            zyre_peer_set_log (peer, self->log);
 
         //  Handshake discovery by sending HELLO as first message
         zlist_t *groups = zhash_keys (self->own_groups);
@@ -467,10 +464,6 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         zre_msg_set_name (msg, self->name);
         zre_msg_set_headers (msg, &headers);
         zyre_peer_send (peer, &msg);
-
-        //  Send new peer event to logger, if any
-        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_ENTER,
-                      zyre_peer_endpoint (peer), endpoint);
     }
     return peer;
 }
@@ -497,9 +490,9 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
     zstr_sendm (self->outbox, zyre_peer_identity (peer));
     zstr_send (self->outbox, zyre_peer_name (peer));
 
-    zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_EXIT,
-                zyre_peer_endpoint (peer),
-                zyre_peer_endpoint (peer));
+    if (self->verbose)
+        zsys_info ("(%s) EXIT name=%s endpoint=%s",
+                self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
     
     //  Remove peer from any groups we've got it in
     zhash_foreach (self->peer_groups, zyre_node_delete_peer, peer);
@@ -530,6 +523,10 @@ zyre_node_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *nam
     zstr_sendm (self->outbox, zyre_peer_identity (peer));
     zstr_sendm (self->outbox, zyre_peer_name (peer));
     zstr_send (self->outbox, name);
+    
+    if (self->verbose)
+        zsys_info ("(%s) JOIN name=%s group=%s",
+                self->name, zyre_peer_name (peer), name);
 
     return group;
 }
@@ -546,6 +543,10 @@ zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *na
     zstr_sendm (self->outbox, zyre_peer_name (peer));
     zstr_send (self->outbox, name);
 
+    if (self->verbose)
+        zsys_info ("(%s) LEAVE name=%s group=%s",
+                self->name, zyre_peer_name (peer), name);
+        
     return group;
 }
 
@@ -559,6 +560,9 @@ zyre_node_recv_peer (zyre_node_t *self)
     if (msg == NULL)
         return 0;               //  Interrupted
 
+    if (self->verbose)
+        zre_msg_print (msg);
+    
     //  First frame is sender identity
     byte *peerid_data = zframe_data (zre_msg_routing_id (msg));
     size_t peerid_size = zframe_size (zre_msg_routing_id (msg));
@@ -570,9 +574,6 @@ zyre_node_recv_peer (zyre_node_t *self)
     }
     zuuid_t *uuid = zuuid_new ();
     zuuid_set (uuid, peerid_data + 1);
-    if (self->verbose)
-        zyre_log_info (self->log, ZRE_LOG_MSG_EVENT_RECV,
-                       zuuid_str (self->uuid), zuuid_str (uuid));
 
     //  On HELLO we may create the peer if it's unknown
     //  On other commands the peer must already exist
@@ -603,8 +604,7 @@ zyre_node_recv_peer (zyre_node_t *self)
         return 0;
     }
     if (!zyre_peer_check_message (peer, msg)) {
-        zclock_log ("W: [%s] lost messages from %s",
-                    zuuid_str (self->uuid), zuuid_str (uuid));
+        zsys_warning ("(%s) lost messages from %s", self->name, zyre_peer_name (peer));
         assert (false);
     }
 
@@ -623,16 +623,16 @@ zyre_node_recv_peer (zyre_node_t *self)
         zframe_send (&headers, self->outbox, ZFRAME_MORE);
         zstr_send (self->outbox, zre_msg_endpoint (msg));
 
+        if (self->verbose)
+            zsys_info ("(%s) ENTER name=%s endpoint=%s",
+                self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
+        
         //  Join peer to listed groups
         const char *name = zre_msg_groups_first (msg);
         while (name) {
             zyre_node_join_peer_group (self, peer, name);
             name = zre_msg_groups_next (msg);
         }
-        //  If peer is a ZRE/LOG collector, connect to it
-        const char *collector = zre_msg_headers_string (msg, "X-ZRELOG", NULL);
-        if (collector)
-            zyre_log_connect (self->log, collector);
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
@@ -731,14 +731,21 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
 {
     zyre_peer_t *peer = (zyre_peer_t *) item;
     zyre_node_t *self = (zyre_node_t *) argument;
-    if (zclock_time () >= zyre_peer_expired_at (peer))
+    if (zclock_time () >= zyre_peer_expired_at (peer)) {
+        if (self->verbose)
+            zsys_info ("(%s) peer expired name=%s endpoint=%s",
+                self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
         zyre_node_remove_peer (self, peer);
+    }
     else
     if (zclock_time () >= zyre_peer_evasive_at (peer)) {
         //  If peer is being evasive, force a TCP ping.
         //  TODO: do this only once for a peer in this state;
         //  it would be nicer to use a proper state machine
         //  for peer management.
+        if (self->verbose)
+            zsys_info ("(%s) peer seems dead/slow name=%s endpoint=%s",
+                self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING);
         zyre_peer_send (peer, &msg);
     }

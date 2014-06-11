@@ -85,6 +85,10 @@ char *
 void
     zyre_peer_set_name (zyre_peer_t *self, const char *name);
 
+//  Set current node name, for logging
+void
+    zyre_peer_set_origin (zyre_peer_t *self, const char *origin);
+
 //  Return peer status
 byte
     zyre_peer_status (zyre_peer_t *self);
@@ -117,9 +121,9 @@ void
 bool
     zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg);
 
-//  Ask peer to log all traffic via ZRE_LOG
+//  Ask peer to log all traffic via zsys
 void
-    zyre_peer_set_log (zyre_peer_t *self, zyre_log_t *log);
+    zyre_peer_set_verbose (zyre_peer_t *self, bool verbose);
 
 //  Self test of this class
 CZMQ_EXPORT void
