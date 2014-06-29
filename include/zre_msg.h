@@ -39,6 +39,7 @@
 /*  These are the zre_msg messages:
 
     HELLO - Greet a peer so it can connect back to us
+        version             number 1    Version number (2)
         sequence            number 2    Incremental sequence number
         endpoint            string      Sender connect endpoint
         groups              strings     List of groups sender is in
@@ -47,32 +48,37 @@
         headers             dictionary  Sender header properties
 
     WHISPER - Send a multi-part message to a peer
+        version             number 1    Version number (2)
         sequence            number 2    Incremental sequence number
         content             msg         Wrapped message content
 
     SHOUT - Send a multi-part message to a group
+        version             number 1    Version number (2)
         sequence            number 2    Incremental sequence number
         group               string      Group to send to
         content             msg         Wrapped message content
 
     JOIN - Join a group
+        version             number 1    Version number (2)
         sequence            number 2    Incremental sequence number
         group               string      Name of group
         status              number 1    Sender groups status sequence
 
     LEAVE - Leave a group
+        version             number 1    Version number (2)
         sequence            number 2    Incremental sequence number
         group               string      Name of group
         status              number 1    Sender groups status sequence
 
     PING - Ping a peer that has gone silent
+        version             number 1    Version number (2)
         sequence            number 2    Incremental sequence number
 
     PING_OK - Reply to a peer's ping
+        version             number 1    Version number (2)
         sequence            number 2    Incremental sequence number
 */
 
-#define ZRE_MSG_VERSION                     2
 
 #define ZRE_MSG_HELLO                       1
 #define ZRE_MSG_WHISPER                     2
