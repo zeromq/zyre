@@ -4,6 +4,7 @@
     title = "work with ZRE messages"
     script = "zproto_codec_c"
     header = "../include"
+    signature = "0"
     >
     This is the ZRE protocol, version 2 draft, as defined by rfc.zeromq.org/spec:36/ZRE.
 
@@ -15,11 +16,9 @@
     traffic         = whisper / shout / join / leave / ping / ping-ok
     </grammar>
 
-    <!-- Protocol constants -->
-    <define name = "VERSION" value = "2" />
-
     <!-- Header for all messages -->
     <header>
+        <field name = "version" type = "number" size = "1" value = "2">Version number (2)</field>
         <field name = "sequence" type = "number" size = "2">Incremental sequence number</field>
     </header>
 

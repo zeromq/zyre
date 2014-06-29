@@ -51,6 +51,7 @@ struct _zre_msg_t {
     int id;                             //  zre_msg message ID
     byte *needle;                       //  Read/write pointer for serialization
     byte *ceiling;                      //  Valid upper limit for read pointer
+    byte version;                       //  Version number (2)
     uint16_t sequence;                  //  Incremental sequence number
     char *endpoint;                     //  Sender connect endpoint
     zlist_t *groups;                    //  List of groups sender is in
@@ -262,7 +263,7 @@ zre_msg_decode (zmsg_t **msg_p)
     self->ceiling = self->needle + zframe_size (frame);
     uint16_t signature;
     GET_NUMBER2 (signature);
-    if (signature != (0xAAA0 | 1))
+    if (signature != (0xAAA0 | 0))
         goto empty;             //  Invalid signature
 
     //  Get message id and parse per message type
@@ -270,6 +271,9 @@ zre_msg_decode (zmsg_t **msg_p)
 
     switch (self->id) {
         case ZRE_MSG_HELLO:
+            GET_NUMBER1 (self->version);
+            if (self->version != 2)
+                goto malformed;
             GET_NUMBER2 (self->sequence);
             GET_STRING (self->endpoint);
             {
@@ -303,6 +307,9 @@ zre_msg_decode (zmsg_t **msg_p)
             break;
 
         case ZRE_MSG_WHISPER:
+            GET_NUMBER1 (self->version);
+            if (self->version != 2)
+                goto malformed;
             GET_NUMBER2 (self->sequence);
             //  Get zero or more remaining frames, leaving current
             //  frame untouched
@@ -312,6 +319,9 @@ zre_msg_decode (zmsg_t **msg_p)
             break;
 
         case ZRE_MSG_SHOUT:
+            GET_NUMBER1 (self->version);
+            if (self->version != 2)
+                goto malformed;
             GET_NUMBER2 (self->sequence);
             GET_STRING (self->group);
             //  Get zero or more remaining frames, leaving current
@@ -322,22 +332,34 @@ zre_msg_decode (zmsg_t **msg_p)
             break;
 
         case ZRE_MSG_JOIN:
+            GET_NUMBER1 (self->version);
+            if (self->version != 2)
+                goto malformed;
             GET_NUMBER2 (self->sequence);
             GET_STRING (self->group);
             GET_NUMBER1 (self->status);
             break;
 
         case ZRE_MSG_LEAVE:
+            GET_NUMBER1 (self->version);
+            if (self->version != 2)
+                goto malformed;
             GET_NUMBER2 (self->sequence);
             GET_STRING (self->group);
             GET_NUMBER1 (self->status);
             break;
 
         case ZRE_MSG_PING:
+            GET_NUMBER1 (self->version);
+            if (self->version != 2)
+                goto malformed;
             GET_NUMBER2 (self->sequence);
             break;
 
         case ZRE_MSG_PING_OK:
+            GET_NUMBER1 (self->version);
+            if (self->version != 2)
+                goto malformed;
             GET_NUMBER2 (self->sequence);
             break;
 
@@ -378,6 +400,8 @@ zre_msg_encode (zre_msg_t **self_p)
     size_t frame_size = 2 + 1;          //  Signature and message ID
     switch (self->id) {
         case ZRE_MSG_HELLO:
+            //  version is a 1-byte integer
+            frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             //  endpoint is a string with 1-byte length
@@ -416,11 +440,15 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
             
         case ZRE_MSG_WHISPER:
+            //  version is a 1-byte integer
+            frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             break;
             
         case ZRE_MSG_SHOUT:
+            //  version is a 1-byte integer
+            frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             //  group is a string with 1-byte length
@@ -430,6 +458,8 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
             
         case ZRE_MSG_JOIN:
+            //  version is a 1-byte integer
+            frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             //  group is a string with 1-byte length
@@ -441,6 +471,8 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
             
         case ZRE_MSG_LEAVE:
+            //  version is a 1-byte integer
+            frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             //  group is a string with 1-byte length
@@ -452,11 +484,15 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
             
         case ZRE_MSG_PING:
+            //  version is a 1-byte integer
+            frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             break;
             
         case ZRE_MSG_PING_OK:
+            //  version is a 1-byte integer
+            frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             break;
@@ -469,11 +505,12 @@ zre_msg_encode (zre_msg_t **self_p)
     //  Now serialize message into the frame
     zframe_t *frame = zframe_new (NULL, frame_size);
     self->needle = zframe_data (frame);
-    PUT_NUMBER2 (0xAAA0 | 1);
+    PUT_NUMBER2 (0xAAA0 | 0);
     PUT_NUMBER1 (self->id);
 
     switch (self->id) {
         case ZRE_MSG_HELLO:
+            PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             if (self->endpoint) {
                 PUT_STRING (self->endpoint);
@@ -510,10 +547,12 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
 
         case ZRE_MSG_WHISPER:
+            PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             break;
 
         case ZRE_MSG_SHOUT:
+            PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             if (self->group) {
                 PUT_STRING (self->group);
@@ -523,6 +562,7 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
 
         case ZRE_MSG_JOIN:
+            PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             if (self->group) {
                 PUT_STRING (self->group);
@@ -533,6 +573,7 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
 
         case ZRE_MSG_LEAVE:
+            PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             if (self->group) {
                 PUT_STRING (self->group);
@@ -543,10 +584,12 @@ zre_msg_encode (zre_msg_t **self_p)
             break;
 
         case ZRE_MSG_PING:
+            PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             break;
 
         case ZRE_MSG_PING_OK:
+            PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             break;
 
@@ -935,6 +978,7 @@ zre_msg_dup (zre_msg_t *self)
         copy->routing_id = zframe_dup (self->routing_id);
     switch (self->id) {
         case ZRE_MSG_HELLO:
+            copy->version = self->version;
             copy->sequence = self->sequence;
             copy->endpoint = self->endpoint? strdup (self->endpoint): NULL;
             copy->groups = self->groups? zlist_dup (self->groups): NULL;
@@ -944,33 +988,39 @@ zre_msg_dup (zre_msg_t *self)
             break;
 
         case ZRE_MSG_WHISPER:
+            copy->version = self->version;
             copy->sequence = self->sequence;
             copy->content = self->content? zmsg_dup (self->content): NULL;
             break;
 
         case ZRE_MSG_SHOUT:
+            copy->version = self->version;
             copy->sequence = self->sequence;
             copy->group = self->group? strdup (self->group): NULL;
             copy->content = self->content? zmsg_dup (self->content): NULL;
             break;
 
         case ZRE_MSG_JOIN:
+            copy->version = self->version;
             copy->sequence = self->sequence;
             copy->group = self->group? strdup (self->group): NULL;
             copy->status = self->status;
             break;
 
         case ZRE_MSG_LEAVE:
+            copy->version = self->version;
             copy->sequence = self->sequence;
             copy->group = self->group? strdup (self->group): NULL;
             copy->status = self->status;
             break;
 
         case ZRE_MSG_PING:
+            copy->version = self->version;
             copy->sequence = self->sequence;
             break;
 
         case ZRE_MSG_PING_OK:
+            copy->version = self->version;
             copy->sequence = self->sequence;
             break;
 
@@ -989,6 +1039,7 @@ zre_msg_print (zre_msg_t *self)
     switch (self->id) {
         case ZRE_MSG_HELLO:
             zsys_debug ("ZRE_MSG_HELLO:");
+            zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             if (self->endpoint)
                 zsys_debug ("    endpoint='%s'", self->endpoint);
@@ -1021,6 +1072,7 @@ zre_msg_print (zre_msg_t *self)
             
         case ZRE_MSG_WHISPER:
             zsys_debug ("ZRE_MSG_WHISPER:");
+            zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             zsys_debug ("    content=");
             if (self->content)
@@ -1031,6 +1083,7 @@ zre_msg_print (zre_msg_t *self)
             
         case ZRE_MSG_SHOUT:
             zsys_debug ("ZRE_MSG_SHOUT:");
+            zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             if (self->group)
                 zsys_debug ("    group='%s'", self->group);
@@ -1045,6 +1098,7 @@ zre_msg_print (zre_msg_t *self)
             
         case ZRE_MSG_JOIN:
             zsys_debug ("ZRE_MSG_JOIN:");
+            zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             if (self->group)
                 zsys_debug ("    group='%s'", self->group);
@@ -1055,6 +1109,7 @@ zre_msg_print (zre_msg_t *self)
             
         case ZRE_MSG_LEAVE:
             zsys_debug ("ZRE_MSG_LEAVE:");
+            zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             if (self->group)
                 zsys_debug ("    group='%s'", self->group);
@@ -1065,11 +1120,13 @@ zre_msg_print (zre_msg_t *self)
             
         case ZRE_MSG_PING:
             zsys_debug ("ZRE_MSG_PING:");
+            zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             break;
             
         case ZRE_MSG_PING_OK:
             zsys_debug ("ZRE_MSG_PING_OK:");
+            zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             break;
             

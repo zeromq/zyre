@@ -5,8 +5,9 @@ The following ABNF grammar defines the work with ZRE messages:
     traffic         = whisper / shout / join / leave / ping / ping-ok
 
     ;     Greet a peer so it can connect back to us
-    hello           = signature %d1 sequence endpoint groups status name headers
-    signature       = %xAA %xA1             ; two octets
+    hello           = signature %d1 version sequence endpoint groups status name headers
+    signature       = %xAA %xA0             ; two octets
+    version         = number-1              ; Version number (2)
     sequence        = number-2              ; Incremental sequence number
     endpoint        = string                ; Sender connect endpoint
     groups          = strings               ; List of groups sender is in
@@ -15,34 +16,40 @@ The following ABNF grammar defines the work with ZRE messages:
     headers         = dictionary            ; Sender header properties
 
     ;     Send a multi-part message to a peer
-    whisper         = signature %d2 sequence content
+    whisper         = signature %d2 version sequence content
+    version         = number-1              ; Version number (2)
     sequence        = number-2              ; Incremental sequence number
     content         = msg                   ; Wrapped message content
 
     ;     Send a multi-part message to a group
-    shout           = signature %d3 sequence group content
+    shout           = signature %d3 version sequence group content
+    version         = number-1              ; Version number (2)
     sequence        = number-2              ; Incremental sequence number
     group           = string                ; Group to send to
     content         = msg                   ; Wrapped message content
 
     ;     Join a group
-    join            = signature %d4 sequence group status
+    join            = signature %d4 version sequence group status
+    version         = number-1              ; Version number (2)
     sequence        = number-2              ; Incremental sequence number
     group           = string                ; Name of group
     status          = number-1              ; Sender groups status sequence
 
     ;     Leave a group
-    leave           = signature %d5 sequence group status
+    leave           = signature %d5 version sequence group status
+    version         = number-1              ; Version number (2)
     sequence        = number-2              ; Incremental sequence number
     group           = string                ; Name of group
     status          = number-1              ; Sender groups status sequence
 
     ;     Ping a peer that has gone silent
-    ping            = signature %d6 sequence
+    ping            = signature %d6 version sequence
+    version         = number-1              ; Version number (2)
     sequence        = number-2              ; Incremental sequence number
 
     ;     Reply to a peer's ping
-    ping_ok         = signature %d7 sequence
+    ping_ok         = signature %d7 version sequence
+    version         = number-1              ; Version number (2)
     sequence        = number-2              ; Incremental sequence number
 
     ; A list of string values
