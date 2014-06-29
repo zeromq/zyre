@@ -3,23 +3,23 @@
 //
 //  --------------------------------------------------------------------------
 //  Copyright (c) 2010-2014 iMatix Corporation and Contributors
-//  
-//  Permission is hereby granted, free of charge, to any person obtaining a 
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
-//  to deal in the Software without restriction, including without limitation 
-//  the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-//  and/or sell copies of the Software, and to permit persons to whom the 
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
 //  Software is furnished to do so, subject to the following conditions:
-//  
-//  The above copyright notice and this permission notice shall be included in 
+//
+//  The above copyright notice and this permission notice shall be included in
 //  all copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 //  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  --------------------------------------------------------------------------
 
@@ -30,12 +30,12 @@
 //  on the CHAT group
 
 static void
-chat_task (void *args, zctx_t *ctx, void *pipe) 
+chat_task (void *args, zctx_t *ctx, void *pipe)
 {
     zyre_t *node = zyre_new ();
     zyre_start (node);
     zyre_join (node, "CHAT");
-    
+
     zmq_pollitem_t items [] = {
         { pipe, 0, ZMQ_POLLIN, 0 },
         { zyre_socket (node), 0, ZMQ_POLLIN, 0 }
@@ -43,7 +43,7 @@ chat_task (void *args, zctx_t *ctx, void *pipe)
     while (true) {
         if (zmq_poll (items, 2, -1) == -1)
             break;              //  Interrupted
-            
+
         //  Activity on my pipe
         if (items [0].revents & ZMQ_POLLIN) {
             zmsg_t *msg = zmsg_recv (pipe);
@@ -66,10 +66,15 @@ chat_task (void *args, zctx_t *ctx, void *pipe)
             zmsg_destroy (&msg);
         }
     }
+    // Notify peers that this peer is shutting down. Provide
+    // a brief interval to ensure message is emitted.
+    zyre_stop(node);
+    zclock_sleep(100);
+
     zyre_destroy (&node);
 }
 
-int main (int argn, char *argv []) 
+int main (int argn, char *argv [])
 {
     if (argn < 2) {
         puts ("syntax: ./zyrechat myname");
