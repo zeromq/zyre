@@ -104,7 +104,7 @@ if test "x$search_libczmq" = "xyes"; then
     fi
 fi
 
-AC_CHECK_LIB(czmq, zctx_test, 
+AC_CHECK_LIB(czmq, zctx_test,
         LIBS="-lczmq $LIBS",
         [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
 
@@ -151,7 +151,7 @@ case "${host_os}" in
         # Define on Linux to enable all library features
         CPPFLAGS="-D_GNU_SOURCE -DLINUX $CPPFLAGS"
         AC_DEFINE(LIBZYRE_HAVE_LINUX, 1, [Have Linux OS])
-        
+
         case "${host_os}" in
             *android*)
                 AC_DEFINE(LIBZYRE_HAVE_ANDROID, 1, [Have Android OS])
@@ -250,4 +250,4 @@ AM_CONDITIONAL(BUILD_DOC, test "x$zyre_build_doc" = "xyes")
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(perror gettimeofday memset)
 
-AC_OUTPUT(Makefile src/Makefile tools/Makefile doc/Makefile src/libzyre.pc)
+AC_OUTPUT(Makefile src/Makefile tools/Makefile examples/chat/Makefile doc/Makefile src/libzyre.pc)
