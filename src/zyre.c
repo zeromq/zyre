@@ -401,7 +401,7 @@ zsock_t *
 zyre_socket (zyre_t *self)
 {
     assert (self);    
-    return zsock_resolve (self->inbox);
+    return (zsock_t*)zsock_resolve (self->inbox);
 }
 
 
@@ -466,7 +466,7 @@ zyre_test (bool verbose)
     zhash_t *headers = zhash_unpack (headers_packed);
     assert (headers);
     zframe_destroy (&headers_packed);
-    assert (streq (zhash_lookup (headers, "X-HELLO"), "World"));
+    assert (streq ((char*)zhash_lookup (headers, "X-HELLO"), "World"));
     zhash_destroy (&headers);
     zmsg_destroy (&msg);
     

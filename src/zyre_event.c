@@ -196,7 +196,7 @@ char *
 zyre_event_header (zyre_event_t *self, char *name)
 {
     assert (self);
-    return zhash_lookup (self->headers, name);
+    return (char*) zhash_lookup (self->headers, name);
 }
 
 
