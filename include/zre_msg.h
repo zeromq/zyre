@@ -36,6 +36,8 @@
 #ifndef __ZRE_MSG_H_INCLUDED__
 #define __ZRE_MSG_H_INCLUDED__
 
+#include "zyre.h"
+
 /*  These are the zre_msg messages:
 
     HELLO - Greet a peer so it can connect back to us
@@ -97,47 +99,47 @@ typedef struct _zre_msg_t zre_msg_t;
 
 //  @interface
 //  Create a new zre_msg
-CZMQ_EXPORT zre_msg_t *
+ZYRE_EXPORT zre_msg_t *
     zre_msg_new (int id);
 
 //  Destroy the zre_msg
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_destroy (zre_msg_t **self_p);
 
 //  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
 //  the message could not be parsed, or was NULL. If the socket type is
 //  ZMQ_ROUTER, then parses the first frame as a routing_id. Destroys msg
 //  and nullifies the msg refernce.
-CZMQ_EXPORT zre_msg_t *
+ZYRE_EXPORT zre_msg_t *
     zre_msg_decode (zmsg_t **msg_p);
 
 //  Encode zre_msg into zmsg and destroy it. Returns a newly created
 //  object or NULL if error. Use when not in control of sending the message.
 //  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
 //  first frame of the resulting message.
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_encode (zre_msg_t **self_p);
 
 //  Receive and parse a zre_msg from the socket. Returns new object, 
 //  or NULL if error. Will block if there's no message waiting.
-CZMQ_EXPORT zre_msg_t *
+ZYRE_EXPORT zre_msg_t *
     zre_msg_recv (void *input);
 
 //  Receive and parse a zre_msg from the socket. Returns new object, 
 //  or NULL either if there was no input waiting, or the recv was interrupted.
-CZMQ_EXPORT zre_msg_t *
+ZYRE_EXPORT zre_msg_t *
     zre_msg_recv_nowait (void *input);
 
 //  Send the zre_msg to the output, and destroy it
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send (zre_msg_t **self_p, void *output);
 
 //  Send the zre_msg to the output, and do not destroy it
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send_again (zre_msg_t *self, void *output);
 
 //  Encode the HELLO 
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_encode_hello (
         uint16_t sequence,
         const char *endpoint,
@@ -147,46 +149,46 @@ CZMQ_EXPORT zmsg_t *
         zhash_t *headers);
 
 //  Encode the WHISPER 
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_encode_whisper (
         uint16_t sequence,
         zmsg_t *content);
 
 //  Encode the SHOUT 
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_encode_shout (
         uint16_t sequence,
         const char *group,
         zmsg_t *content);
 
 //  Encode the JOIN 
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_encode_join (
         uint16_t sequence,
         const char *group,
         byte status);
 
 //  Encode the LEAVE 
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_encode_leave (
         uint16_t sequence,
         const char *group,
         byte status);
 
 //  Encode the PING 
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_encode_ping (
         uint16_t sequence);
 
 //  Encode the PING_OK 
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_encode_ping_ok (
         uint16_t sequence);
 
 
 //  Send the HELLO to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send_hello (void *output,
         uint16_t sequence,
         const char *endpoint,
@@ -197,14 +199,14 @@ CZMQ_EXPORT int
     
 //  Send the WHISPER to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send_whisper (void *output,
         uint16_t sequence,
         zmsg_t *content);
     
 //  Send the SHOUT to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send_shout (void *output,
         uint16_t sequence,
         const char *group,
@@ -212,7 +214,7 @@ CZMQ_EXPORT int
     
 //  Send the JOIN to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send_join (void *output,
         uint16_t sequence,
         const char *group,
@@ -220,7 +222,7 @@ CZMQ_EXPORT int
     
 //  Send the LEAVE to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send_leave (void *output,
         uint16_t sequence,
         const char *group,
@@ -228,123 +230,123 @@ CZMQ_EXPORT int
     
 //  Send the PING to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send_ping (void *output,
         uint16_t sequence);
     
 //  Send the PING_OK to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_send_ping_ok (void *output,
         uint16_t sequence);
     
 //  Duplicate the zre_msg message
-CZMQ_EXPORT zre_msg_t *
+ZYRE_EXPORT zre_msg_t *
     zre_msg_dup (zre_msg_t *self);
 
 //  Print contents of message to stdout
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_print (zre_msg_t *self);
 
 //  Get/set the message routing id
-CZMQ_EXPORT zframe_t *
+ZYRE_EXPORT zframe_t *
     zre_msg_routing_id (zre_msg_t *self);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_routing_id (zre_msg_t *self, zframe_t *routing_id);
 
 //  Get the zre_msg id and printable command
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_id (zre_msg_t *self);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_id (zre_msg_t *self, int id);
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zre_msg_command (zre_msg_t *self);
 
 //  Get/set the sequence field
-CZMQ_EXPORT uint16_t
+ZYRE_EXPORT uint16_t
     zre_msg_sequence (zre_msg_t *self);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_sequence (zre_msg_t *self, uint16_t sequence);
 
 //  Get/set the endpoint field
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zre_msg_endpoint (zre_msg_t *self);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_endpoint (zre_msg_t *self, const char *format, ...);
 
 //  Get/set the groups field
-CZMQ_EXPORT zlist_t *
+ZYRE_EXPORT zlist_t *
     zre_msg_groups (zre_msg_t *self);
 //  Get the groups field and transfer ownership to caller
-CZMQ_EXPORT zlist_t *
+ZYRE_EXPORT zlist_t *
     zre_msg_get_groups (zre_msg_t *self);
 //  Set the groups field, transferring ownership from caller
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_groups (zre_msg_t *self, zlist_t **groups_p);
 
 //  Iterate through the groups field, and append a groups value
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zre_msg_groups_first (zre_msg_t *self);
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zre_msg_groups_next (zre_msg_t *self);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_groups_append (zre_msg_t *self, const char *format, ...);
-CZMQ_EXPORT size_t
+ZYRE_EXPORT size_t
     zre_msg_groups_size (zre_msg_t *self);
 
 //  Get/set the status field
-CZMQ_EXPORT byte
+ZYRE_EXPORT byte
     zre_msg_status (zre_msg_t *self);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_status (zre_msg_t *self, byte status);
 
 //  Get/set the name field
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zre_msg_name (zre_msg_t *self);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_name (zre_msg_t *self, const char *format, ...);
 
 //  Get/set the headers field
-CZMQ_EXPORT zhash_t *
+ZYRE_EXPORT zhash_t *
     zre_msg_headers (zre_msg_t *self);
 //  Get the headers field and transfer ownership to caller
-CZMQ_EXPORT zhash_t *
+ZYRE_EXPORT zhash_t *
     zre_msg_get_headers (zre_msg_t *self);
 //  Set the headers field, transferring ownership from caller
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_headers (zre_msg_t *self, zhash_t **headers_p);
     
 //  Get/set a value in the headers dictionary
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zre_msg_headers_string (zre_msg_t *self,
         const char *key, const char *default_value);
-CZMQ_EXPORT uint64_t
+ZYRE_EXPORT uint64_t
     zre_msg_headers_number (zre_msg_t *self,
         const char *key, uint64_t default_value);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_headers_insert (zre_msg_t *self,
         const char *key, const char *format, ...);
-CZMQ_EXPORT size_t
+ZYRE_EXPORT size_t
     zre_msg_headers_size (zre_msg_t *self);
 
 //  Get a copy of the content field
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_content (zre_msg_t *self);
 //  Get the content field and transfer ownership to caller
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zre_msg_get_content (zre_msg_t *self);
 //  Set the content field, transferring ownership from caller
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_content (zre_msg_t *self, zmsg_t **msg_p);
 
 //  Get/set the group field
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zre_msg_group (zre_msg_t *self);
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zre_msg_set_group (zre_msg_t *self, const char *format, ...);
 
 //  Self test of this class
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zre_msg_test (bool verbose);
 //  @end
 

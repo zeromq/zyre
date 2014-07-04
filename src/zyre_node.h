@@ -39,7 +39,7 @@ void
     zyre_node_actor (zsock_t *pipe, void *args);
 
 //  Self test of this class
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_node_test (bool verbose);
 
 #ifdef __cplusplus
