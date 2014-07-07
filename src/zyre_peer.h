@@ -126,7 +126,7 @@ void
     zyre_peer_set_verbose (zyre_peer_t *self, bool verbose);
 
 //  Self test of this class
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_peer_test (bool verbose);
 
 #ifdef __cplusplus

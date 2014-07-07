@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zyre", "zyre\zyre.vcxproj", "{6492268B-4C01-4B1C-A95D-F11E50075572}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zyre_selftest", "zyre_selftest\zyre_selftest.vcxproj", "{A4850465-6DE2-423E-A605-67F73CD4BA34}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6492268B-4C01-4B1C-A95D-F11E50075572}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6492268B-4C01-4B1C-A95D-F11E50075572}.Debug|Win32.Build.0 = Debug|Win32
+		{6492268B-4C01-4B1C-A95D-F11E50075572}.Release|Win32.ActiveCfg = Release|Win32
+		{6492268B-4C01-4B1C-A95D-F11E50075572}.Release|Win32.Build.0 = Release|Win32
+		{A4850465-6DE2-423E-A605-67F73CD4BA34}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A4850465-6DE2-423E-A605-67F73CD4BA34}.Debug|Win32.Build.0 = Debug|Win32
+		{A4850465-6DE2-423E-A605-67F73CD4BA34}.Release|Win32.ActiveCfg = Release|Win32
+		{A4850465-6DE2-423E-A605-67F73CD4BA34}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

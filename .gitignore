@@ -62,3 +62,11 @@ zyre.config
 zyre.creator
 zyre.files
 zyre.includes
+
+# Windows build intermediate files
+*.suo
+*.sdf
+*.user
+*.opensdf
+bin/
+obj/

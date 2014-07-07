@@ -47,48 +47,48 @@ typedef enum {
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.
 //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
 //  data (WHISPER, SHOUT).
-CZMQ_EXPORT zyre_event_t *
+ZYRE_EXPORT zyre_event_t *
     zyre_event_new (zyre_t *self);
 
 //  Destructor; destroys an event instance
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_event_destroy (zyre_event_t **self_p);
 
 //  Returns event type, which is a zyre_event_type_t
-CZMQ_EXPORT zyre_event_type_t
+ZYRE_EXPORT zyre_event_type_t
     zyre_event_type (zyre_event_t *self);
 
 //  Return the sending peer's id as a string
-CZMQ_EXPORT char *
+ZYRE_EXPORT char *
     zyre_event_sender (zyre_event_t *self);
 
 //  Return the sending peer's public name as a string
-CZMQ_EXPORT char *
+ZYRE_EXPORT char *
     zyre_event_name (zyre_event_t *self);
 
 //  Return the sending peer's ipaddress as a string
-CZMQ_EXPORT char *
+ZYRE_EXPORT char *
     zyre_event_address (zyre_event_t *self);
 
 //  Returns the event headers, or NULL if there are none
-CZMQ_EXPORT zhash_t *
+ZYRE_EXPORT zhash_t *
     zyre_event_headers (zyre_event_t *self);
 
 //  Returns value of a header from the message headers
 //  obtained by ENTER. Return NULL if no value was found.
-CZMQ_EXPORT char *
+ZYRE_EXPORT char *
     zyre_event_header (zyre_event_t *self, char *name);
 
 //  Returns the group name that a SHOUT event was sent to
-CZMQ_EXPORT char *
+ZYRE_EXPORT char *
     zyre_event_group (zyre_event_t *self);
 
 //  Returns the incoming message payload (currently one frame)
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zyre_event_msg (zyre_event_t *self);
 
 // Self test of this class
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_event_test (bool verbose);
 // @end
 
