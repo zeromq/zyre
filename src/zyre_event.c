@@ -232,9 +232,8 @@ zyre_event_test (bool verbose)
 
     //  @selftest
     //  Create two nodes
-    zyre_t *node1 = zyre_new ();
+    zyre_t *node1 = zyre_new ("node1");
     assert (node1);
-    zyre_set_name (node1, "node1");
     zyre_set_header (node1, "X-HELLO", "World");
     zyre_set_verbose (node1);
     if (zyre_start (node1)) {
@@ -244,9 +243,8 @@ zyre_event_test (bool verbose)
     }
     zyre_join (node1, "GLOBAL");
     
-    zyre_t *node2 = zyre_new ();
+    zyre_t *node2 = zyre_new ("node2");
     assert (node2);
-    zyre_set_name (node2, "node2");
     zyre_set_verbose (node2);
     int rc = zyre_start (node2);
     assert (rc == 0);

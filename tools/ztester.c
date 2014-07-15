@@ -31,7 +31,7 @@
 static void
 node_actor (zsock_t *pipe, void *args)
 {
-    zyre_t *node = zyre_new ();
+    zyre_t *node = zyre_new (NULL);
     if (!node)
         return;                 //  Could not create new node
     zyre_set_verbose (node);

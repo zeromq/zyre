@@ -76,9 +76,11 @@ struct _zyre_t {
 //  ---------------------------------------------------------------------
 //  Constructor, creates a new Zyre node. Note that until you start the
 //  node it is silent and invisible to other nodes on the network.
+//  The node name is provided to other nodes during discovery. If you
+//  specify NULL, Zyre generates a randomized node name from the UUID.
 
 zyre_t *
-zyre_new (void)
+zyre_new (const char *name)
 {
     zyre_t *self = (zyre_t *) zmalloc (sizeof (zyre_t));
     assert (self);
@@ -102,6 +104,10 @@ zyre_new (void)
     //  Start node engine and wait for it to be ready
     self->actor = zactor_new (zyre_node_actor, outbox);
     assert (self->actor);
+
+    //  Send name, if any, to node ending
+    if (name)
+        zstr_sendx (self->actor, "SET NAME", name, NULL);
     
     return self;
 }
@@ -159,8 +165,6 @@ zyre_name (zyre_t *self)
 
 
 //  ---------------------------------------------------------------------
-//  Set node name; this is provided to other nodes during discovery.
-//  If you do not set this, the UUID is used as a basis.
 
 void
 zyre_set_name (zyre_t *self, const char *name)
@@ -415,9 +419,8 @@ zyre_test (bool verbose)
 
     //  @selftest
     //  Create two nodes
-    zyre_t *node1 = zyre_new ();
+    zyre_t *node1 = zyre_new ("node1");
     assert (node1);
-    zyre_set_name (node1, "node1");
     assert (streq (zyre_name (node1), "node1"));
     zyre_set_header (node1, "X-HELLO", "World");
     zyre_set_verbose (node1);
@@ -429,9 +432,8 @@ zyre_test (bool verbose)
     }
     zyre_join (node1, "GLOBAL");
 
-    zyre_t *node2 = zyre_new ();
+    zyre_t *node2 = zyre_new ("node2");
     assert (node2);
-    zyre_set_name (node2, "node2");
     assert (streq (zyre_name (node2), "node2"));
     zyre_set_verbose (node2);
     zyre_set_port (node2, 5670);
