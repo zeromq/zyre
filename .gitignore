@@ -70,3 +70,8 @@ zyre.includes
 *.opensdf
 bin/
 obj/
+
+# eclipse setting
+.cproject
+.project
+
