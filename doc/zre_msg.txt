@@ -52,8 +52,7 @@ CZMQ_EXPORT int
 CZMQ_EXPORT zmsg_t *
     zre_msg_encode_hello (
         uint16_t sequence,
-        const char *ipaddress,
-        uint16_t mailbox,
+        const char *endpoint,
         zlist_t *groups,
         byte status,
         const char *name,
@@ -102,8 +101,7 @@ CZMQ_EXPORT zmsg_t *
 CZMQ_EXPORT int
     zre_msg_send_hello (void *output,
         uint16_t sequence,
-        const char *ipaddress,
-        uint16_t mailbox,
+        const char *endpoint,
         zlist_t *groups,
         byte status,
         const char *name,
@@ -180,17 +178,11 @@ CZMQ_EXPORT uint16_t
 CZMQ_EXPORT void
     zre_msg_set_sequence (zre_msg_t *self, uint16_t sequence);
 
-//  Get/set the ipaddress field
+//  Get/set the endpoint field
 CZMQ_EXPORT const char *
-    zre_msg_ipaddress (zre_msg_t *self);
+    zre_msg_endpoint (zre_msg_t *self);
 CZMQ_EXPORT void
-    zre_msg_set_ipaddress (zre_msg_t *self, const char *format, ...);
-
-//  Get/set the mailbox field
-CZMQ_EXPORT uint16_t
-    zre_msg_mailbox (zre_msg_t *self);
-CZMQ_EXPORT void
-    zre_msg_set_mailbox (zre_msg_t *self, uint16_t mailbox);
+    zre_msg_set_endpoint (zre_msg_t *self, const char *format, ...);
 
 //  Get/set the groups field
 CZMQ_EXPORT zlist_t *
@@ -303,8 +295,7 @@ EXAMPLE
     zre_msg_destroy (&copy);
 
     zre_msg_set_sequence (self, 123);
-    zre_msg_set_ipaddress (self, "Life is short but Now lasts for ever");
-    zre_msg_set_mailbox (self, 123);
+    zre_msg_set_endpoint (self, "Life is short but Now lasts for ever");
     zre_msg_groups_append (self, "Name: %s", "Brutus");
     zre_msg_groups_append (self, "Age: %d", 43);
     zre_msg_set_status (self, 123);
@@ -321,8 +312,7 @@ EXAMPLE
         assert (zre_msg_routing_id (self));
         
         assert (zre_msg_sequence (self) == 123);
-        assert (streq (zre_msg_ipaddress (self), "Life is short but Now lasts for ever"));
-        assert (zre_msg_mailbox (self) == 123);
+        assert (streq (zre_msg_endpoint (self), "Life is short but Now lasts for ever"));
         assert (zre_msg_groups_size (self) == 2);
         assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
         assert (streq (zre_msg_groups_next (self), "Age: 43"));

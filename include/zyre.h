@@ -67,8 +67,10 @@ typedef struct _zyre_t zyre_t;
 //  @interface
 //  Constructor, creates a new Zyre node. Note that until you start the
 //  node it is silent and invisible to other nodes on the network.
-ZYRE_EXPORT zyre_t *
-    zyre_new (void);
+//  The node name is provided to other nodes during discovery. If you
+//  specify NULL, Zyre generates a randomized node name from the UUID.
+CZMQ_EXPORT zyre_t *
+    zyre_new (const char *name);
 
 //  Destructor, destroys a Zyre node. When you destroy a node, any
 //  messages it is sending or receiving will be discarded.
@@ -79,15 +81,9 @@ ZYRE_EXPORT void
 ZYRE_EXPORT const char *
     zyre_uuid (zyre_t *self);
 
-//  Return our node name, after successful initialization. By default
-//  is taken from the UUID and shortened.
-ZYRE_EXPORT const char *
+//  Return our node name, after successful initialization
+CZMQ_EXPORT const char *
     zyre_name (zyre_t *self);
-
-//  Set node name; this is provided to other nodes during discovery.
-//  If you do not set this, the UUID is used as a basis.
-ZYRE_EXPORT void
-    zyre_set_name (zyre_t *self, const char *name);
 
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.

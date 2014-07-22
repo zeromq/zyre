@@ -75,7 +75,7 @@ main (int argc, char *argv [])
     if (argc > 2)
         max_message = atoi (argv [2]);
 
-    zyre_t *node = zyre_new ();
+    zyre_t *node = zyre_new (NULL);
     zyre_start (node);
     zyre_join (node, "GLOBAL");
 

@@ -29,7 +29,7 @@
 
 int main (int argc, char *argv [])
 {
-    zyre_t *node = zyre_new ();
+    zyre_t *node = zyre_new (NULL);
     zyre_start (node);
     zyre_join (node, "GLOBAL");
 
