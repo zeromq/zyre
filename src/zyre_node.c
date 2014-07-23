@@ -615,7 +615,6 @@ zyre_node_recv_peer (zyre_node_t *self)
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         //  Store properties from HELLO command into peer
         zyre_peer_set_name (peer, zre_msg_name (msg));
-        zyre_peer_set_status (peer, zre_msg_status (msg));
         zyre_peer_set_headers (peer, zre_msg_headers (msg));
 
         //  Tell the caller about the peer
@@ -636,6 +635,7 @@ zyre_node_recv_peer (zyre_node_t *self)
             zyre_node_join_peer_group (self, peer, name);
             name = zre_msg_groups_next (msg);
         }
+        zyre_peer_set_status (peer, zre_msg_status (msg));
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
