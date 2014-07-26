@@ -283,14 +283,14 @@ zyre_node_dump (zyre_node_t *self)
 
 //  Here we handle the different control messages from the front-end
 
-static int
+static void
 zyre_node_recv_api (zyre_node_t *self)
 {
     //  Get the whole message off the pipe in one go
     zmsg_t *request = zmsg_recv (self->pipe);
     char *command = zmsg_popstr (request);
     if (!command)
-        return -1;                  //  Interrupted
+        return;                 //  Interrupted
 
     if (streq (command, "UUID"))
         zstr_send (self->pipe, zuuid_str (self->uuid));
@@ -432,7 +432,6 @@ zyre_node_recv_api (zyre_node_t *self)
     }
     zstr_free (&command);
     zmsg_destroy (&request);
-    return 0;
 }
 
 //  Delete peer for a given endpoint
@@ -563,13 +562,13 @@ zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *na
 
 //  Here we handle messages coming from other peers
 
-static int
+static void
 zyre_node_recv_peer (zyre_node_t *self)
 {
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_recv (self->inbox);
     if (msg == NULL)
-        return 0;               //  Interrupted
+        return;                 //  Interrupted
 
     if (self->verbose)
         zre_msg_print (msg);
@@ -581,7 +580,7 @@ zyre_node_recv_peer (zyre_node_t *self)
     //  Identity must be [1] followed by 16-byte UUID
     if (peerid_size != ZUUID_LEN + 1) {
         zre_msg_destroy (&msg);
-        return -1;
+        return;
     }
     zuuid_t *uuid = zuuid_new ();
     zuuid_set (uuid, peerid_data + 1);
@@ -601,7 +600,7 @@ zyre_node_recv_peer (zyre_node_t *self)
                 //  We ignore HELLO, if peer has same endpoint as current node
                 zre_msg_destroy (&msg);
                 zuuid_destroy (&uuid);
-                return 0;
+                return;
             }
         }
         peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg));
@@ -612,7 +611,7 @@ zyre_node_recv_peer (zyre_node_t *self)
     if (peer == NULL || !zyre_peer_ready (peer)) {
         zre_msg_destroy (&msg);
         zuuid_destroy (&uuid);
-        return 0;
+        return;
     }
     if (!zyre_peer_check_message (peer, msg)) {
         zsys_warning ("(%s) lost messages from %s", self->name, zyre_peer_name (peer));
@@ -643,6 +642,7 @@ zyre_node_recv_peer (zyre_node_t *self)
             zyre_node_join_peer_group (self, peer, name);
             name = zre_msg_groups_next (msg);
         }
+        //  Now take peer's status from HELLO, after joining groups
         zyre_peer_set_status (peer, zre_msg_status (msg));
     }
     else
@@ -684,69 +684,70 @@ zyre_node_recv_peer (zyre_node_t *self)
     
     //  Activity from peer resets peer timers
     zyre_peer_refresh (peer);
-    return 0;
 }
 
 //  Handle beacon data
 
-static int
+static void
 zyre_node_recv_beacon (zyre_node_t *self)
 {
     //  Get IP address and beacon of peer
     char *ipaddress = zstr_recv (zbeacon_socket (self->beacon));
     zframe_t *frame = zframe_recv (zbeacon_socket (self->beacon));
+    if (ipaddress == NULL)
+        return;                 //  Interrupted
 
     //  Ignore anything that isn't a valid beacon
-    bool is_valid = true;
-    beacon_t beacon;
-    if (zframe_size (frame) == sizeof (beacon_t)) {
+    beacon_t beacon = { { 0 } };
+    if (zframe_size (frame) == sizeof (beacon_t))
         memcpy (&beacon, zframe_data (frame), zframe_size (frame));
-        if (beacon.version != BEACON_VERSION)
-            is_valid = false;
-    }
-    else
-        is_valid = false;
-
-    //  Check that the peer, identified by its UUID, exists
-    if (is_valid) {
-        zuuid_t *uuid = zuuid_new ();
-        zuuid_set (uuid, beacon.uuid);
-        if (beacon.port) {
-            char endpoint [30];
-            sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
-            zyre_peer_t *peer = zyre_node_require_peer (self, uuid, endpoint);
-            zyre_peer_refresh (peer);
-        }
-        else {
-            //  Zero port means peer is going away; remove it if
-            //  we had any knowledge of it already
-            zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (
-                self->peers, zuuid_str (uuid));
-            if (peer)
-                zyre_node_remove_peer (self, peer);
-        }
-        zuuid_destroy (&uuid);
-    }
-    zstr_free (&ipaddress);
     zframe_destroy (&frame);
-    return 0;
+    if (beacon.version != BEACON_VERSION)
+        return;                 //  Garbage beacon, ignore it
+
+    zuuid_t *uuid = zuuid_new ();
+    zuuid_set (uuid, beacon.uuid);
+    if (beacon.port) {
+        char endpoint [30];
+        sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
+        zyre_peer_t *peer = zyre_node_require_peer (self, uuid, endpoint);
+        zyre_peer_refresh (peer);
+    }
+    else {
+        //  Zero port means peer is going away; remove it if
+        //  we had any knowledge of it already
+        zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (
+            self->peers, zuuid_str (uuid));
+        if (peer)
+            zyre_node_remove_peer (self, peer);
+    }
+    zuuid_destroy (&uuid);
+    zstr_free (&ipaddress);
 }
 
 
 //  Handle gossip data
 
-static int
+static void
 zyre_node_recv_gossip (zyre_node_t *self)
 {
     //  Get IP address and beacon of peer
-    char *command, *uuidstr, *endpoint;
+    char *command = NULL, *uuidstr, *endpoint;
     zstr_recvx (self->gossip, &command, &uuidstr, &endpoint, NULL);
-    //  We don't expect any other replies except DELIVER
+    if (command == NULL)
+        return;                 //  Interrupted
+    
+    //  Any replies except DELIVER would signify an internal error; these
+    //  messages come from zgossip, not an external source
     assert (streq (command, "DELIVER"));
+    
+    zuuid_t *uuid = zuuid_new ();
+    zuuid_set_str (uuid, uuidstr);
+    zyre_node_require_peer (self, uuid, endpoint);
+    zuuid_destroy (&uuid);
     zstr_free (&command);
     zstr_free (&uuidstr);
     zstr_free (&endpoint);
-    return 0;
 }
 
 

@@ -513,44 +513,44 @@ zyre_test (bool verbose)
     //  One node shouts to GLOBAL
     zyre_shouts (node1, "GLOBAL", "Hello, World");
 
-//     //  Second node should receive ENTER, JOIN, and SHOUT
-//     zmsg_t *msg = zyre_recv (node2);
-//     assert (msg);
-//     char *command = zmsg_popstr (msg);
-//     assert (streq (command, "ENTER"));
-//     zstr_free (&command);
-//     assert (zmsg_size (msg) == 4);
-//     char *peerid = zmsg_popstr (msg);
-//     zstr_free (&peerid);
-//     char *name = zmsg_popstr (msg);
-//     assert (streq (name, "node1"));
-//     zstr_free (&name);
-//     zframe_t *headers_packed = zmsg_pop (msg);
-//     char *peeraddress = zmsg_popstr (msg);
-//     zstr_free (&peeraddress);
-// 
-//     assert (headers_packed);
-//     zhash_t *headers = zhash_unpack (headers_packed);
-//     assert (headers);
-//     zframe_destroy (&headers_packed);
-//     assert (streq ((char*)zhash_lookup (headers, "X-HELLO"), "World"));
-//     zhash_destroy (&headers);
-//     zmsg_destroy (&msg);
-//     
-//     msg = zyre_recv (node2);
-//     assert (msg);
-//     command = zmsg_popstr (msg);
-//     assert (streq (command, "JOIN"));
-//     zstr_free (&command);
-//     assert (zmsg_size (msg) == 3);
-//     zmsg_destroy (&msg);
-//     
-//     msg = zyre_recv (node2);
-//     assert (msg);
-//     command = zmsg_popstr (msg);
-//     assert (streq (command, "SHOUT"));
-//     zstr_free (&command);
-//     zmsg_destroy (&msg);
+    //  Second node should receive ENTER, JOIN, and SHOUT
+    zmsg_t *msg = zyre_recv (node2);
+    assert (msg);
+    char *command = zmsg_popstr (msg);
+    assert (streq (command, "ENTER"));
+    zstr_free (&command);
+    assert (zmsg_size (msg) == 4);
+    char *peerid = zmsg_popstr (msg);
+    zstr_free (&peerid);
+    char *name = zmsg_popstr (msg);
+    assert (streq (name, "node1"));
+    zstr_free (&name);
+    zframe_t *headers_packed = zmsg_pop (msg);
+    char *peeraddress = zmsg_popstr (msg);
+    zstr_free (&peeraddress);
+
+    assert (headers_packed);
+    zhash_t *headers = zhash_unpack (headers_packed);
+    assert (headers);
+    zframe_destroy (&headers_packed);
+    assert (streq ((char*)zhash_lookup (headers, "X-HELLO"), "World"));
+    zhash_destroy (&headers);
+    zmsg_destroy (&msg);
+
+    msg = zyre_recv (node2);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "JOIN"));
+    zstr_free (&command);
+    assert (zmsg_size (msg) == 3);
+    zmsg_destroy (&msg);
+
+    msg = zyre_recv (node2);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "SHOUT"));
+    zstr_free (&command);
+    zmsg_destroy (&msg);
     
     zyre_stop (node1);
     zyre_stop (node2);
