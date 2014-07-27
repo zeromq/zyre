@@ -68,8 +68,9 @@
 struct _zyre_t {
     zactor_t *actor;            //  A Zyre instance wraps the actor instance
     zsock_t *inbox;             //  Receives incoming cluster traffic
-    char *uuid;                 //  Copy of our UUID
-    char *name;                 //  Copy of our name
+    char *uuid;                 //  Copy of node UUID string
+    char *name;                 //  Copy of node name
+    char *endpoint;             //  Copy of last endpoint bound to
 };
 
 
@@ -123,8 +124,9 @@ zyre_destroy (zyre_t **self_p)
         zyre_t *self = *self_p;
         zactor_destroy (&self->actor);
         zsock_destroy (&self->inbox);
-        free (self->uuid);
-        free (self->name);
+        zstr_free (&self->uuid);
+        zstr_free (&self->name);
+        zstr_free (&self->endpoint);
         free (self);
         *self_p = NULL;
     }
@@ -132,16 +134,16 @@ zyre_destroy (zyre_t **self_p)
 
 
 //  ---------------------------------------------------------------------
-//  Return our node UUID, after successful initialization
+//  Return our node UUID string, after successful initialization
 
 const char *
 zyre_uuid (zyre_t *self)
 {
     assert (self);
-    if (!self->uuid) {
-        zstr_sendx (self->actor, "UUID", NULL);
-        self->uuid = zstr_recv (self->actor);
-    }
+    //  Hold uuid string in zyre object so caller gets a safe reference
+    zstr_free (&self->uuid);
+    zstr_sendx (self->actor, "UUID", NULL);
+    self->uuid = zstr_recv (self->actor);
     return self->uuid;
 }
 
@@ -154,11 +156,26 @@ const char *
 zyre_name (zyre_t *self)
 {
     assert (self);
-    if (!self->name) {
-        zstr_sendx (self->actor, "NAME", NULL);
-        self->name = zstr_recv (self->actor);
-    }
+    //  Hold name in zyre object so caller gets a safe reference
+    zstr_free (&self->name);
+    zstr_sendx (self->actor, "NAME", NULL);
+    self->name = zstr_recv (self->actor);
     return self->name;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Return our endpoint, after successful bind to endpoint
+
+const char *
+zyre_endpoint (zyre_t *self)
+{
+    assert (self);
+    //  Hold endpoint in zyre object so caller gets a safe reference
+    zstr_free (&self->endpoint);
+    zstr_sendx (self->actor, "ENDPOINT", NULL);
+    self->endpoint = zstr_recv (self->actor);
+    return self->endpoint;
 }
 
 
@@ -251,10 +268,16 @@ zyre_set_interface (zyre_t *self, const char *value)
 //  this method more than once.
 
 void
-zyre_set_endpoint (zyre_t *self, const char *endpoint)
+zyre_set_endpoint (zyre_t *self, const char *format, ...)
 {
     assert (self);
-    zstr_sendx (self->actor, "SET ENDPOINT", endpoint, NULL);
+    va_list argptr;
+    va_start (argptr, format);
+    char *string = zsys_vprintf (format, argptr);
+    va_end (argptr);
+    
+    zstr_sendx (self->actor, "SET ENDPOINT", string, NULL);
+    free (string);
 }
 
 
@@ -497,7 +520,13 @@ zyre_test (bool verbose)
     assert (streq (zyre_name (node2), "node2"));
     zyre_set_verbose (node2);
     //  Set inproc endpoint for this node
+    //  First, try to use existing name, it'll fail
+    zyre_set_endpoint (node2, "inproc://zyre-node1");
+    assert (streq (zyre_endpoint (node2), ""));
+    //  Now use available name and confirm that it succeeds
     zyre_set_endpoint (node2, "inproc://zyre-node2");
+    assert (streq (zyre_endpoint (node2), "inproc://zyre-node2"));
+   
     //  Set up gossip network for this node
     zyre_gossip_connect (node2, "inproc://gossip-hub");
     rc = zyre_start (node2);

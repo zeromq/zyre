@@ -72,7 +72,8 @@ zyre_peer_new (zhash_t *container, zuuid_t *uuid)
 
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, zuuid_str (self->uuid), self);
+        int rc = zhash_insert (container, zuuid_str (self->uuid), self);
+        assert (rc == 0);
         zhash_freefn (container, zuuid_str (self->uuid), s_delete_peer);
     }
     return self;

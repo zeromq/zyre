@@ -33,7 +33,8 @@ testit
 *.pc
 zpinger
 zlogger
-ztester
+ztester_beacon
+ztester_gossip
 perf_local
 perf_remote
 zyre_selftest
@@ -42,11 +43,6 @@ src/test-suite.log
 src/zyre_selftest.log
 src/zyre_selftest.trs
 
-src/zyre_logger
-src/zyre_perf_local
-src/zyre_perf_remote
-src/zyre_ping
-src/zyre_tester
 CMakeCache.txt
 CMakeFiles/
 CTestTestfile.cmake

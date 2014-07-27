@@ -1,5 +1,8 @@
 /*  =========================================================================
-    tester - bulk test tool
+    ztester_gossip - bulk test tool using gossip discovery
+
+    This tool starts many nodes, each as a thread (zactor), which discover
+    each other using gossip discovery (zgossip) and interconnect over inproc:
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -34,8 +37,15 @@ node_actor (zsock_t *pipe, void *args)
     zyre_t *node = zyre_new (NULL);
     if (!node)
         return;                 //  Could not create new node
-    zyre_set_verbose (node);
+//     zyre_set_verbose (node);
+
+    zyre_set_endpoint (node, "inproc://%s", (char *) args);
+    free (args);
+
+    //  Connect to test hub
+    zyre_gossip_connect (node, "inproc://zyre-hub");
     zyre_start (node);
+    zsock_signal (pipe, 0);     //  Signal "ready" to caller
 
     int64_t counter = 0;
     char *to_peer = NULL;        //  Either of these set,
@@ -44,40 +54,46 @@ node_actor (zsock_t *pipe, void *args)
 
     zpoller_t *poller = zpoller_new (pipe, zyre_socket (node), NULL);
     int64_t trigger = zclock_time () + 1000;
-    while (!zsys_interrupted) {
+    while (true) {
         void *which = zpoller_wait (poller, randof (1000));
+        if (!which)
+            break;              //  Interrupted
 
-        //  Any command from parent means EXIT
-        if (which == pipe || which == NULL)
-            break;
-
+        //  $TERM from parent means exit; anything else is breach of
+        //  contract so we should assert
+        if (which == pipe) {
+            char *command = zstr_recv (pipe);
+            assert (streq (command, "$TERM"));
+            zstr_free (&command);
+            break;              //  Finished
+        }
         //  Process an event from node
         if (which == zyre_socket (node)) {
             zmsg_t *incoming = zyre_recv (node);
             if (!incoming)
-                break;              //  Interrupted
+                break;          //  Interrupted
 
             char *event = zmsg_popstr (incoming);
             char *peer = zmsg_popstr (incoming);
             char *name = zmsg_popstr (incoming);
             if (streq (event, "ENTER"))
                 //  Always say hello to new peer
-                to_peer = peer;
+                to_peer = strdup (peer);
             else
             if (streq (event, "EXIT"))
                 //  Always try talk to departed peer
-                to_peer = peer;
+                to_peer = strdup (peer);
             else
             if (streq (event, "WHISPER")) {
                 //  Send back response 1/2 the time
                 if (randof (2) == 0) {
-                    to_peer = peer;
+                    to_peer = strdup (peer);
                     cookie = zmsg_popstr (incoming);
                 }
             }
             else
             if (streq (event, "SHOUT")) {
-                to_peer = peer;
+                to_peer = strdup (peer);
                 to_group = zmsg_popstr (incoming);
                 cookie = zmsg_popstr (incoming);
                 //  Send peer response 1/3rd the time
@@ -148,12 +164,18 @@ int main (int argc, char *argv [])
     int nbr_nodes = 0;
     if (argc > 1)
         max_nodes = atoi (argv [1]);
+    assert (max_nodes);
 
     int max_iterations = -1;
     int nbr_iterations = 0;
     if (argc > 2)
         max_iterations = atoi (argv [2]);
 
+    //  Our gossip network will use one fixed hub (not a Zyre node),
+    //  to which all nodes will connect
+    zactor_t *hub = zactor_new (zgossip, "hub");
+    zstr_sendx (hub, "BIND", "inproc://zyre-hub", NULL);
+        
     //  We address nodes as an array of actors
     zactor_t **actors = zmalloc (sizeof (zactor_t *) * max_nodes);
 
@@ -168,14 +190,16 @@ int main (int argc, char *argv [])
             zclock_log ("I: Stopped node (%d running)", --nbr_nodes);
         }
         else {
-            actors [index] = zactor_new (node_actor, NULL);
+            char node_name [10];
+            sprintf (node_name, "node-%d", index);
+            actors [index] = zactor_new (node_actor, strdup (node_name));
             zclock_log ("I: Started node (%d running)", ++nbr_nodes);
         }
         nbr_iterations++;
         if (max_iterations > 0 && nbr_iterations >= max_iterations)
             break;
-        //  Sleep ~750 msecs randomly so we smooth out activity
-        zclock_sleep (randof (500) + 500);
+        //  Sleep ~100 msecs randomly so we smooth out activity
+        zclock_sleep (randof (100) + 100);
     }
     zclock_log ("I: Stopped tester (%d iterations)", nbr_iterations);
 
@@ -185,5 +209,7 @@ int main (int argc, char *argv [])
             zactor_destroy (&actors [index]);
     }
     free (actors);
+    
+    zactor_destroy (&hub);
     return 0;
 }
