@@ -96,10 +96,8 @@ zyre_new (const char *name)
             break;
     }
     //  Create other half of traffic pipe
-    zsock_t *outbox = zsock_new (ZMQ_PAIR);
+    zsock_t *outbox = zsock_new_pair (endpoint);
     assert (outbox);
-    int rc = zsock_connect (outbox, "%s", endpoint);
-    assert (rc != -1);
     
     //  Start node engine and wait for it to be ready
     self->actor = zactor_new (zyre_node_actor, outbox);
@@ -246,9 +244,53 @@ zyre_set_interface (zyre_t *self, const char *value)
 
 
 //  ---------------------------------------------------------------------
+//  Acquire gossip discovery endpoint, which can be inproc, IPC, TCP, or any
+//  other point to point ZeroMQ transport. When you set an endpoint via this
+//  method, beaconing is disabled. The endpoint MUST be accessible to all
+//  Zyre nodes in the cluster (i.e. do not mix inproc and TCP). Do not call
+//  this method more than once.
+
+void
+zyre_set_endpoint (zyre_t *self, const char *endpoint)
+{
+    assert (self);
+    zstr_sendx (self->actor, "SET ENDPOINT", endpoint, NULL);
+}
+
+
+//  ---------------------------------------------------------------------
+//  Set-up gossip discovery of other nodes. At least one node in the cluster
+//  must bind to a well-known gossip endpoint, so other nodes can connect to
+//  it. Note that gossip endpoints are completely distinct from Zyre node
+//  endpoints, and should not overlap (they can use the same transport).
+
+void
+zyre_gossip_bind (zyre_t *self, const char *endpoint)
+{
+    assert (self);
+    zstr_sendx (self->actor, "GOSSIP BIND", endpoint, NULL);
+}
+
+
+//  ---------------------------------------------------------------------
+//  Set-up gossip discovery of other nodes. A node may connect to multiple
+//  other nodes, for redundancy paths. For details of the gossip network
+//  design, see the CZMQ zgossip class.
+
+void
+zyre_gossip_connect (zyre_t *self, const char *endpoint)
+{
+    assert (self);
+    zstr_sendx (self->actor, "GOSSIP CONNECT", endpoint, NULL);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
-//  possible to start the node.
+//  possible to start the node. If you want to use gossip discovery, set
+//  the endpoint (optionally), then bind/connect the gossip network, and
+//  only then start the node.
 
 int
 zyre_start (zyre_t *self)
@@ -389,6 +431,17 @@ zyre_shouts (zyre_t *self, const char *group, const char *format, ...)
 
 
 //  ---------------------------------------------------------------------
+//  Return node zsock_t socket, for direct polling of socket
+
+zsock_t *
+zyre_socket (zyre_t *self)
+{
+    assert (self);
+    return zsock_resolve (self->inbox);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Prints zyre node information
 
 void
@@ -398,14 +451,14 @@ zyre_dump (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
-//  Return node zsock_t socket, for direct polling of socket
+//  --------------------------------------------------------------------------
+//  Return the Zyre version for run-time API detection
 
-zsock_t *
-zyre_socket (zyre_t *self)
+void zyre_version (int *major, int *minor, int *patch)
 {
-    assert (self);    
-    return (zsock_t*)zsock_resolve (self->inbox);
+    *major = ZYRE_VERSION_MAJOR;
+    *minor = ZYRE_VERSION_MINOR;
+    *patch = ZYRE_VERSION_PATCH;
 }
 
 
@@ -418,32 +471,44 @@ zyre_test (bool verbose)
     printf (" * zyre: ");
 
     //  @selftest
+    //  We'll use inproc gossip discovery so that this works without networking
+    
+    int major, minor, patch;
+    zyre_version (&major, &minor, &patch);
+    assert (major == ZYRE_VERSION_MAJOR);
+    assert (minor == ZYRE_VERSION_MINOR);
+    assert (patch == ZYRE_VERSION_PATCH);
+    
     //  Create two nodes
     zyre_t *node1 = zyre_new ("node1");
     assert (node1);
     assert (streq (zyre_name (node1), "node1"));
     zyre_set_header (node1, "X-HELLO", "World");
     zyre_set_verbose (node1);
-    zyre_set_port (node1, 5670);
-    if (zyre_start (node1)) {
-        zyre_destroy (&node1);
-        printf ("OK (skipping test, no UDP discovery)\n");
-        return;
-    }
-    zyre_join (node1, "GLOBAL");
+    //  Set inproc endpoint for this node
+    zyre_set_endpoint (node1, "inproc://zyre-node1");
+    //  Set up gossip network for this node
+    zyre_gossip_bind (node1, "inproc://gossip-hub");
+    int rc = zyre_start (node1);
+    assert (rc == 0);
 
     zyre_t *node2 = zyre_new ("node2");
     assert (node2);
     assert (streq (zyre_name (node2), "node2"));
     zyre_set_verbose (node2);
-    zyre_set_port (node2, 5670);
-    int rc = zyre_start (node2);
+    //  Set inproc endpoint for this node
+    zyre_set_endpoint (node2, "inproc://zyre-node2");
+    //  Set up gossip network for this node
+    zyre_gossip_connect (node2, "inproc://gossip-hub");
+    rc = zyre_start (node2);
     assert (rc == 0);
-    zyre_join (node2, "GLOBAL");
     assert (strneq (zyre_uuid (node1), zyre_uuid (node2)));
+    
+    zyre_join (node1, "GLOBAL");
+    zyre_join (node2, "GLOBAL");
 
     //  Give time for them to interconnect
-    zclock_sleep (250);
+    zclock_sleep (100);
 
     //  One node shouts to GLOBAL
     zyre_shouts (node1, "GLOBAL", "Hello, World");
@@ -471,7 +536,7 @@ zyre_test (bool verbose)
     assert (streq ((char*)zhash_lookup (headers, "X-HELLO"), "World"));
     zhash_destroy (&headers);
     zmsg_destroy (&msg);
-    
+
     msg = zyre_recv (node2);
     assert (msg);
     command = zmsg_popstr (msg);
@@ -479,7 +544,7 @@ zyre_test (bool verbose)
     zstr_free (&command);
     assert (zmsg_size (msg) == 3);
     zmsg_destroy (&msg);
-    
+
     msg = zyre_recv (node2);
     assert (msg);
     command = zmsg_popstr (msg);
@@ -495,4 +560,3 @@ zyre_test (bool verbose)
     //  @end
     printf ("OK\n");
 }
-

@@ -69,7 +69,7 @@ typedef struct _zyre_t zyre_t;
 //  node it is silent and invisible to other nodes on the network.
 //  The node name is provided to other nodes during discovery. If you
 //  specify NULL, Zyre generates a randomized node name from the UUID.
-CZMQ_EXPORT zyre_t *
+ZYRE_EXPORT zyre_t *
     zyre_new (const char *name);
 
 //  Destructor, destroys a Zyre node. When you destroy a node, any
@@ -82,7 +82,7 @@ ZYRE_EXPORT const char *
     zyre_uuid (zyre_t *self);
 
 //  Return our node name, after successful initialization
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zyre_name (zyre_t *self);
 
 //  Set node header; these are provided to other nodes during discovery
@@ -112,6 +112,27 @@ ZYRE_EXPORT void
 //  want to use, or strange things can happen.
 ZYRE_EXPORT void
     zyre_set_interface (zyre_t *self, const char *value);
+
+//  Acquire gossip discovery endpoint, which can be inproc, IPC, TCP, or any
+//  other point to point ZeroMQ transport. When you set an endpoint via this
+//  method, beaconing is disabled. The endpoint MUST be accessible to all
+//  Zyre nodes in the cluster (i.e. do not mix inproc and TCP). Do not call
+//  this method more than once.
+ZYRE_EXPORT void
+    zyre_set_endpoint (zyre_t *self, const char *endpoint);
+
+//  Set-up gossip discovery of other nodes. At least one node in the cluster
+//  must bind to a well-known gossip endpoint, so other nodes can connect to
+//  it. Note that gossip endpoints are completely distinct from Zyre node
+//  endpoints, and should not overlap (they can use the same transport).
+ZYRE_EXPORT void
+    zyre_gossip_bind (zyre_t *self, const char *endpoint);
+
+//  Set-up gossip discovery of other nodes. A node may connect to multiple
+//  other nodes, for redundancy paths. For details of the gossip network
+//  design, see the CZMQ zgossip class. 
+ZYRE_EXPORT void
+    zyre_gossip_connect (zyre_t *self, const char *endpoint);
 
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
@@ -162,9 +183,13 @@ ZYRE_EXPORT int
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
-//  Prints zyre information
+//  Prints Zyre node information
 ZYRE_EXPORT void
     zyre_dump (zyre_t *self);
+
+//  Return the Zyre version for run-time API detection
+ZYRE_EXPORT void
+    zyre_version (int *major, int *minor, int *patch);
 
 //  Self test of this class
 ZYRE_EXPORT void

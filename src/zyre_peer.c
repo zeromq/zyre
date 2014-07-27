@@ -430,9 +430,7 @@ zyre_peer_test (bool verbose)
 {
     printf (" * zyre_peer: ");
 
-    zsock_t *mailbox = zsock_new (ZMQ_DEALER);
-    zsock_bind (mailbox, "tcp://127.0.0.1:5551");
-
+    zsock_t *mailbox = zsock_new_dealer ("@tcp://127.0.0.1:5551");
     zhash_t *peers = zhash_new ();
     zuuid_t *you = zuuid_new ();
     zuuid_t *me = zuuid_new ();
