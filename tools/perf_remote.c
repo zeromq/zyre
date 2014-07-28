@@ -105,12 +105,12 @@ node_actor (zsock_t *pipe, void *args)
 
         //  Send outgoing messages if needed
         if (to_peer) {
-            zyre_whispers (node, to_peer, sending_cookie);
+            zyre_whispers (node, to_peer, "%s", sending_cookie);
             free (to_peer);
             to_peer = NULL;
         }
         if (to_group) {
-            zyre_shouts (node, to_group, sending_cookie);
+            zyre_shouts (node, to_group, "%s", sending_cookie);
             free (to_group);
             to_group = NULL;
         }

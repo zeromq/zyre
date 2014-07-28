@@ -45,7 +45,6 @@ struct _zyre_node_t {
     char *name;                 //  Our public name
     char *endpoint;             //  Our public endpoint
     int port;                   //  Our inbox port, if any
-    bool bound;                 //  Did app bind node explicitly?
     byte status;                //  Our own change counter
     zhash_t *peers;             //  Hash of known peers, fast lookup
     zhash_t *peer_groups;       //  Groups that our peers are in
@@ -190,8 +189,7 @@ zyre_node_start (zyre_node_t *self)
         //  If application didn't set an endpoint explicitly, grab ephemeral
         //  port on all available network interfaces. TODO: can we perhaps 
         //  use zsys_interface if defined?
-        if (!self->bound) {
-            self->bound = true;
+        if (!self->endpoint) {
             self->port = zsock_bind (self->inbox, "tcp://*:*");
             if (self->port < 0)
                 return 1;       //  Can't get an ephemeral port
@@ -298,6 +296,9 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "NAME"))
         zstr_send (self->pipe, self->name);
     else
+    if (streq (command, "ENDPOINT"))
+        zstr_send (self->pipe, self->endpoint);
+    else
     if (streq (command, "SET NAME")) {
         free (self->name);
         self->name = zmsg_popstr (request);
@@ -330,11 +331,13 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "SET ENDPOINT")) {
         //  Get endpoint and bind to it
         zyre_node_gossip_start (self);
-        assert (!self->endpoint);
-        self->endpoint = zmsg_popstr (request);
-        int rc = zsock_bind (self->inbox, "%s", self->endpoint);
-        assert (rc != -1);
-        self->bound = true;
+        char *endpoint = zmsg_popstr (request);
+        if (zsock_bind (self->inbox, "%s", endpoint) != -1) {
+            zstr_free (&self->endpoint);
+            self->endpoint = endpoint;
+        }
+        else
+            zstr_free (&endpoint);
     }
     else
     if (streq (command, "GOSSIP BIND")) {
@@ -613,10 +616,8 @@ zyre_node_recv_peer (zyre_node_t *self)
         zuuid_destroy (&uuid);
         return;
     }
-    if (!zyre_peer_check_message (peer, msg)) {
+    if (!zyre_peer_check_message (peer, msg))
         zsys_warning ("(%s) lost messages from %s", self->name, zyre_peer_name (peer));
-        assert (false);
-    }
 
     //  Now process each command
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
@@ -740,11 +741,13 @@ zyre_node_recv_gossip (zyre_node_t *self)
     //  Any replies except DELIVER would signify an internal error; these
     //  messages come from zgossip, not an external source
     assert (streq (command, "DELIVER"));
-    
-    zuuid_t *uuid = zuuid_new ();
-    zuuid_set_str (uuid, uuidstr);
-    zyre_node_require_peer (self, uuid, endpoint);
-    zuuid_destroy (&uuid);
+    //  Require peer, if it's not us
+    if (strneq (endpoint, self->endpoint)) {
+        zuuid_t *uuid = zuuid_new ();
+        zuuid_set_str (uuid, uuidstr);
+        zyre_node_require_peer (self, uuid, endpoint);
+        zuuid_destroy (&uuid);
+    }
     zstr_free (&command);
     zstr_free (&uuidstr);
     zstr_free (&endpoint);

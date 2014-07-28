@@ -77,13 +77,17 @@ ZYRE_EXPORT zyre_t *
 ZYRE_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
-//  Return our node UUID, after successful initialization
+//  Return our node UUID string, after successful initialization
 ZYRE_EXPORT const char *
     zyre_uuid (zyre_t *self);
 
 //  Return our node name, after successful initialization
 ZYRE_EXPORT const char *
     zyre_name (zyre_t *self);
+
+//  Return our endpoint, after successful bind to endpoint
+ZYRE_EXPORT const char *
+    zyre_endpoint (zyre_t *self);
 
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
@@ -119,7 +123,7 @@ ZYRE_EXPORT void
 //  Zyre nodes in the cluster (i.e. do not mix inproc and TCP). Do not call
 //  this method more than once.
 ZYRE_EXPORT void
-    zyre_set_endpoint (zyre_t *self, const char *endpoint);
+    zyre_set_endpoint (zyre_t *self, const char *format, ...);
 
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
@@ -195,6 +199,12 @@ ZYRE_EXPORT void
 ZYRE_EXPORT void
     zyre_test (bool verbose);
 //  @end
+
+//  Compiler hints
+ZYRE_EXPORT void zyre_set_header (zyre_t *self, const char *name, const char *format, ...) CHECK_PRINTF (3);
+ZYRE_EXPORT void zyre_set_endpoint (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
+ZYRE_EXPORT int zyre_whispers (zyre_t *self, const char *peer, const char *format, ...) CHECK_PRINTF (3);
+ZYRE_EXPORT int zyre_shouts (zyre_t *self, const char *group, const char *format, ...) CHECK_PRINTF (3);
 
 #ifdef __cplusplus
 }
