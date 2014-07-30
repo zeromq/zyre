@@ -117,9 +117,9 @@ zhash_t *
 void
     zyre_peer_set_headers (zyre_peer_t *self, zhash_t *headers);
 
-//  Check peer message sequence
+//  Check if messages were lost from peer, returns true if they were.
 bool
-    zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg);
+    zyre_peer_messages_lost (zyre_peer_t *self, zre_msg_t *msg);
 
 //  Ask peer to log all traffic via zsys
 void

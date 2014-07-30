@@ -19,14 +19,14 @@
     <!-- Header for all messages -->
     <header>
         <field name = "version" type = "number" size = "1" value = "2">Version number (2)</field>
-        <field name = "sequence" type = "number" size = "2">Incremental sequence number</field>
+        <field name = "sequence" type = "number" size = "2">Cyclic sequence number</field>
     </header>
 
     <message name = "HELLO" id = "1">
         <!-- endpoint includes transport, etc. "tcp://127.0.0.1:2225" -->
         <field name = "endpoint" type = "string">Sender connect endpoint</field>
         <field name = "groups" type = "strings">List of groups sender is in</field>
-        <field name = "status" type = "number" size = "1">Sender groups status sequence</field>
+        <field name = "status" type = "number" size = "1">Sender groups status value</field>
         <field name = "name" type = "string">Sender public name</field>
         <field name = "headers" type = "dictionary">Sender header properties</field>
     Greet a peer so it can connect back to us
@@ -45,13 +45,13 @@
 
     <message name = "JOIN" id = "4">
         <field name = "group" type = "string">Name of group</field>
-        <field name = "status" type = "number" size = "1">Sender groups status sequence</field>
+        <field name = "status" type = "number" size = "1">Sender groups status value</field>
     Join a group
     </message>
 
     <message name = "LEAVE" id = "5">
         <field name = "group" type = "string">Name of group</field>
-        <field name = "status" type = "number" size = "1">Sender groups status sequence</field>
+        <field name = "status" type = "number" size = "1">Sender groups status value</field>
     Leave a group
     </message>
 

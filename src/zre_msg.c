@@ -52,10 +52,10 @@ struct _zre_msg_t {
     byte *needle;                       //  Read/write pointer for serialization
     byte *ceiling;                      //  Valid upper limit for read pointer
     byte version;                       //  Version number (2)
-    uint16_t sequence;                  //  Incremental sequence number
+    uint16_t sequence;                  //  Cyclic sequence number
     char *endpoint;                     //  Sender connect endpoint
     zlist_t *groups;                    //  List of groups sender is in
-    byte status;                        //  Sender groups status sequence
+    byte status;                        //  Sender groups status value
     char *name;                         //  Sender public name
     zhash_t *headers;                   //  Sender header properties
     size_t headers_bytes;               //  Size of dictionary content
@@ -240,9 +240,8 @@ zre_msg_destroy (zre_msg_t **self_p)
 
 //  --------------------------------------------------------------------------
 //  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
-//  the message could not be parsed, or was NULL. If the socket type is
-//  ZMQ_ROUTER, then parses the first frame as a routing_id. Destroys msg
-//  and nullifies the msg refernce.
+//  the message could not be parsed, or was NULL. Destroys msg and 
+//  nullifies the msg reference.
 
 zre_msg_t *
 zre_msg_decode (zmsg_t **msg_p)
@@ -385,8 +384,6 @@ zre_msg_decode (zmsg_t **msg_p)
 //  --------------------------------------------------------------------------
 //  Encode zre_msg into zmsg and destroy it. Returns a newly created
 //  object or NULL if error. Use when not in control of sending the message.
-//  If the socket_type is ZMQ_ROUTER, then stores the routing_id as the
-//  first frame of the resulting message.
 
 zmsg_t *
 zre_msg_encode (zre_msg_t **self_p)
@@ -639,8 +636,8 @@ zre_msg_recv (void *input)
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
-    zre_msg_t * zre_msg = zre_msg_decode (&msg);
-    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
+    zre_msg_t *zre_msg = zre_msg_decode (&msg);
+    if (zre_msg && zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_msg->routing_id = routing_id;
 
     return zre_msg;
@@ -664,8 +661,8 @@ zre_msg_recv_nowait (void *input)
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
-    zre_msg_t * zre_msg = zre_msg_decode (&msg);
-    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
+    zre_msg_t *zre_msg = zre_msg_decode (&msg);
+    if (zre_msg && zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_msg->routing_id = routing_id;
 
     return zre_msg;

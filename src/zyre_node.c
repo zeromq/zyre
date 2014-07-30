@@ -573,9 +573,6 @@ zyre_node_recv_peer (zyre_node_t *self)
     if (msg == NULL)
         return;                 //  Interrupted
 
-    if (self->verbose)
-        zre_msg_print (msg);
-    
     //  First frame is sender identity
     byte *peerid_data = zframe_data (zre_msg_routing_id (msg));
     size_t peerid_size = zframe_size (zre_msg_routing_id (msg));
@@ -616,9 +613,13 @@ zyre_node_recv_peer (zyre_node_t *self)
         zuuid_destroy (&uuid);
         return;
     }
-    if (!zyre_peer_check_message (peer, msg))
-        zsys_warning ("(%s) lost messages from %s", self->name, zyre_peer_name (peer));
-
+    if (zyre_peer_messages_lost (peer, msg)) {
+        zsys_warning ("(%s) messages lost from %s", self->name, zyre_peer_name (peer));
+        zyre_node_remove_peer (self, peer);
+        zre_msg_destroy (&msg);
+        zuuid_destroy (&uuid);
+        return;
+    }
     //  Now process each command
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         //  Store properties from HELLO command into peer
@@ -646,7 +647,7 @@ zyre_node_recv_peer (zyre_node_t *self)
         //  Now take peer's status from HELLO, after joining groups
         zyre_peer_set_status (peer, zre_msg_status (msg));
     }
-    else
+    else 
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as WHISPER event
         zstr_sendm (self->outbox, "WHISPER");
