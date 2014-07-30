@@ -12,48 +12,52 @@ SYNOPSIS
 //  node it is silent and invisible to other nodes on the network.
 //  The node name is provided to other nodes during discovery. If you
 //  specify NULL, Zyre generates a randomized node name from the UUID.
-CZMQ_EXPORT zyre_t *
+ZYRE_EXPORT zyre_t *
     zyre_new (const char *name);
 
 //  Destructor, destroys a Zyre node. When you destroy a node, any
 //  messages it is sending or receiving will be discarded.
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
-//  Return our node UUID, after successful initialization
-CZMQ_EXPORT const char *
+//  Return our node UUID string, after successful initialization
+ZYRE_EXPORT const char *
     zyre_uuid (zyre_t *self);
 
 //  Return our node name, after successful initialization
-CZMQ_EXPORT const char *
+ZYRE_EXPORT const char *
     zyre_name (zyre_t *self);
+
+//  Return our endpoint, after successful bind to endpoint
+ZYRE_EXPORT const char *
+    zyre_endpoint (zyre_t *self);
 
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_set_header (zyre_t *self, const char *name, const char *format, ...);
 
 //  Set verbose mode; this tells the node to log all traffic as well
 //  as all major events.
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_set_verbose (zyre_t *self);
 
 //  Set ZRE discovery port; defaults to 5670, this call overrides that
 //  so you can create independent clusters on the same network, for e.g
 //  development vs. production. Has no effect after zyre_start().
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_set_port (zyre_t *self, int port_nbr);
 
 //  Set ZRE discovery interval, in milliseconds. Default is instant
 //  beacon exploration followed by pinging every 1,000 msecs.
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_set_interval (zyre_t *self, size_t interval);
 
 //  Set network interface to use for beacons and interconnects. If you
 //  do not set this, CZMQ will choose an interface for you. On boxes
 //  with multiple interfaces you really should specify which one you
 //  want to use, or strange things can happen.
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_set_interface (zyre_t *self, const char *value);
 
 //  Acquire gossip discovery endpoint, which can be inproc, IPC, TCP, or any
@@ -61,83 +65,81 @@ CZMQ_EXPORT void
 //  method, beaconing is disabled. The endpoint MUST be accessible to all
 //  Zyre nodes in the cluster (i.e. do not mix inproc and TCP). Do not call
 //  this method more than once.
-CZMQ_EXPORT void
-    zyre_set_endpoint (zyre_t *self, const char *endpoint);
+ZYRE_EXPORT void
+    zyre_set_endpoint (zyre_t *self, const char *format, ...);
 
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
 //  it. Note that gossip endpoints are completely distinct from Zyre node
 //  endpoints, and should not overlap (they can use the same transport).
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_gossip_bind (zyre_t *self, const char *endpoint);
 
 //  Set-up gossip discovery of other nodes. A node may connect to multiple
 //  other nodes, for redundancy paths. For details of the gossip network
 //  design, see the CZMQ zgossip class. 
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_gossip_connect (zyre_t *self, const char *endpoint);
 
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
-//  possible to start the node. If you want to use gossip discovery, set
-//  the endpoint (optionally), then bind/connect the gossip network, and
-//  only then start the node.
-CZMQ_EXPORT int
+//  possible to start the node.
+ZYRE_EXPORT int
     zyre_start (zyre_t *self);
 
 //  Stop node; this signals to other peers that this node will go away.
 //  This is polite; however you can also just destroy the node without
 //  stopping it.
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_stop (zyre_t *self);
 
 //  Join a named group; after joining a group you can send messages to
 //  the group and all Zyre nodes in that group will receive them.
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zyre_join (zyre_t *self, const char *group);
 
 //  Leave a group
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zyre_leave (zyre_t *self, const char *group);
 
 //  Receive next message from network; the message may be a control
 //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
 //  Returns zmsg_t object, or NULL if interrupted
-CZMQ_EXPORT zmsg_t *
+ZYRE_EXPORT zmsg_t *
     zyre_recv (zyre_t *self);
 
 //  Send message to single peer, specified as a UUID string
 //  Destroys message after sending
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zyre_whisper (zyre_t *self, const char *peer, zmsg_t **msg_p);
 
 //  Send message to a named group
 //  Destroys message after sending
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zyre_shout (zyre_t *self, const char *group, zmsg_t **msg_p);
 
 //  Send formatted string to a single peer specified as UUID string
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zyre_whispers (zyre_t *self, const char *peer, const char *format, ...);
 
 //  Send formatted string to a named group
-CZMQ_EXPORT int
+ZYRE_EXPORT int
     zyre_shouts (zyre_t *self, const char *group, const char *format, ...);
 
 //  Return socket for talking to the Zyre node, for polling
-CZMQ_EXPORT zsock_t *
+ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
 //  Prints Zyre node information
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_dump (zyre_t *self);
 
 //  Return the Zyre version for run-time API detection
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_version (int *major, int *minor, int *patch);
 
 //  Self test of this class
-CZMQ_EXPORT void
+ZYRE_EXPORT void
     zyre_test (bool verbose);
 ----
 
@@ -206,7 +208,13 @@ EXAMPLE
     assert (streq (zyre_name (node2), "node2"));
     zyre_set_verbose (node2);
     //  Set inproc endpoint for this node
+    //  First, try to use existing name, it'll fail
+    zyre_set_endpoint (node2, "inproc://zyre-node1");
+    assert (streq (zyre_endpoint (node2), ""));
+    //  Now use available name and confirm that it succeeds
     zyre_set_endpoint (node2, "inproc://zyre-node2");
+    assert (streq (zyre_endpoint (node2), "inproc://zyre-node2"));
+   
     //  Set up gossip network for this node
     zyre_gossip_connect (node2, "inproc://gossip-hub");
     rc = zyre_start (node2);
@@ -242,10 +250,10 @@ EXAMPLE
     zhash_t *headers = zhash_unpack (headers_packed);
     assert (headers);
     zframe_destroy (&headers_packed);
-    assert (streq (zhash_lookup (headers, "X-HELLO"), "World"));
+    assert (streq ((char*)zhash_lookup (headers, "X-HELLO"), "World"));
     zhash_destroy (&headers);
     zmsg_destroy (&msg);
-    
+
     msg = zyre_recv (node2);
     assert (msg);
     command = zmsg_popstr (msg);
@@ -253,7 +261,7 @@ EXAMPLE
     zstr_free (&command);
     assert (zmsg_size (msg) == 3);
     zmsg_destroy (&msg);
-    
+
     msg = zyre_recv (node2);
     assert (msg);
     command = zmsg_popstr (msg);
