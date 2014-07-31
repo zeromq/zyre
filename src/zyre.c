@@ -165,21 +165,8 @@ zyre_name (zyre_t *self)
 
 
 //  ---------------------------------------------------------------------
-//  Return our endpoint, after successful bind to endpoint
-
-const char *
-zyre_endpoint (zyre_t *self)
-{
-    assert (self);
-    //  Hold endpoint in zyre object so caller gets a safe reference
-    zstr_free (&self->endpoint);
-    zstr_sendx (self->actor, "ENDPOINT", NULL);
-    self->endpoint = zstr_recv (self->actor);
-    return self->endpoint;
-}
-
-
-//  ---------------------------------------------------------------------
+//  Set node header; these are provided to other nodes during discovery
+//  and come in each ENTER message.
 
 void
 zyre_set_name (zyre_t *self, const char *name)
@@ -208,8 +195,8 @@ zyre_set_header (zyre_t *self, const char *name, const char *format, ...)
 
 
 //  ---------------------------------------------------------------------
-//  Set verbose mode; this tells the node to log all traffic as well
-//  as all major events.
+//  Set verbose mode; this tells the node to log all traffic as well as
+//  all major events.
 
 void
 zyre_set_verbose (zyre_t *self)
@@ -220,9 +207,9 @@ zyre_set_verbose (zyre_t *self)
 
 
 //  ---------------------------------------------------------------------
-//  Set ZRE discovery port; defaults to 5670, this call overrides that
-//  so you can create independent clusters on the same network, for e.g
-//  development vs. production.
+//  Set UDP beacon discovery port; defaults to 5670, this call overrides
+//  that so you can create independent clusters on the same network, for
+//  e.g. development vs. production. Has no effect after zyre_start().
 
 void
 zyre_set_port (zyre_t *self, int port_nbr)
@@ -234,7 +221,7 @@ zyre_set_port (zyre_t *self, int port_nbr)
 
 
 //  ---------------------------------------------------------------------
-//  Set ZRE discovery interval, in milliseconds. Default is instant
+//  Set UDP beacon discovery interval, in milliseconds. Default is instant
 //  beacon exploration followed by pinging every 1,000 msecs.
 
 void
@@ -247,10 +234,9 @@ zyre_set_interval (zyre_t *self, size_t interval)
 
 
 //  ---------------------------------------------------------------------
-//  Set network interface to use for beacons and interconnects. If you
-//  do not set this, CZMQ will choose an interface for you. On boxes
-//  with multiple interfaces you really should specify which one you
-//  want to use, or strange things can happen.
+//  Set network interface for UDP beacons. If you do not set this, CZMQ will
+//  choose an interface for you. On boxes with several interfaces you should
+//  specify which one you want to use, or strange things can happen.
 
 void
 zyre_set_interface (zyre_t *self, const char *value)
@@ -261,11 +247,16 @@ zyre_set_interface (zyre_t *self, const char *value)
 
 
 //  ---------------------------------------------------------------------
-//  Acquire gossip discovery endpoint, which can be inproc, IPC, TCP, or any
-//  other point to point ZeroMQ transport. When you set an endpoint via this
-//  method, beaconing is disabled. The endpoint MUST be accessible to all
-//  Zyre nodes in the cluster (i.e. do not mix inproc and TCP). Do not call
-//  this method more than once.
+//  Specify Zyre endpoint. This is used to bind the Zyre service, so that
+//  other Zyre nodes can connect to it. You can use any point-to-point
+//  transport, e.g. ipc://, inproc://, or tcp://. When you call this method,
+//  Zyre will use gossip discovery instead of UDP beaconing. You MUST set-up
+//  the gossip service separately using zyre_gossip_bind() and _connect().
+//  By default, the endpoint you specify here will be announced on the gossip
+//  network. However for TCP endpoints you may have to announce a different
+//  endpoint that is reachable for other peers. Use zyre_announce() for that.
+//  If you do not specify an endpoint, Zyre binds an ephemeral TCP port on
+//  all interfaces, and announces the local host name to peers.
 
 void
 zyre_set_endpoint (zyre_t *self, const char *format, ...)
@@ -282,16 +273,54 @@ zyre_set_endpoint (zyre_t *self, const char *format, ...)
 
 
 //  ---------------------------------------------------------------------
+//  Return our endpoint, after a successful zyre_set_endpoint ()
+
+const char *
+zyre_endpoint (zyre_t *self)
+{
+    assert (self);
+    //  Hold endpoint in zyre object so caller gets a safe reference
+    zstr_free (&self->endpoint);
+    zstr_sendx (self->actor, "ENDPOINT", NULL);
+    self->endpoint = zstr_recv (self->actor);
+    return self->endpoint;
+}
+
+
+//  ---------------------------------------------------------------------
+//  Specify Zyre endpoint for other nodes to connect to.
+
+void
+zyre_set_announce (zyre_t *self, const char *format, ...)
+{
+    assert (self);
+    va_list argptr;
+    va_start (argptr, format);
+    char *string = zsys_vprintf (format, argptr);
+    va_end (argptr);
+
+    zstr_sendx (self->actor, "SET ANNOUNCE", string, NULL);
+    free (string);
+}
+
+
+//  ---------------------------------------------------------------------
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
 //  it. Note that gossip endpoints are completely distinct from Zyre node
 //  endpoints, and should not overlap (they can use the same transport).
 
 void
-zyre_gossip_bind (zyre_t *self, const char *endpoint)
+zyre_gossip_bind (zyre_t *self, const char *format, ...)
 {
     assert (self);
-    zstr_sendx (self->actor, "GOSSIP BIND", endpoint, NULL);
+    va_list argptr;
+    va_start (argptr, format);
+    char *string = zsys_vprintf (format, argptr);
+    va_end (argptr);
+
+    zstr_sendx (self->actor, "GOSSIP BIND", string, NULL);
+    free (string);
 }
 
 
@@ -301,10 +330,16 @@ zyre_gossip_bind (zyre_t *self, const char *endpoint)
 //  design, see the CZMQ zgossip class.
 
 void
-zyre_gossip_connect (zyre_t *self, const char *endpoint)
+zyre_gossip_connect (zyre_t *self, const char *format, ...)
 {
     assert (self);
-    zstr_sendx (self->actor, "GOSSIP CONNECT", endpoint, NULL);
+    va_list argptr;
+    va_start (argptr, format);
+    char *string = zsys_vprintf (format, argptr);
+    va_end (argptr);
+
+    zstr_sendx (self->actor, "GOSSIP CONNECT", string, NULL);
+    free (string);
 }
 
 
