@@ -102,8 +102,8 @@ zyre_node_new (zsock_t *pipe, void *args)
 
     //  Default name for node is first 6 characters of UUID:
     //  the shorter string is more readable in logs
-    self->name = strndup (zuuid_str (self->uuid), 6);
-
+    self->name = zmalloc (7);
+    memcpy (self->name, zuuid_str (self->uuid), 6);
     return self;
 }
 
@@ -818,7 +818,7 @@ zyre_node_actor (zsock_t *pipe, void *args)
     zsock_signal (self->pipe, 0);
 
     //  Loop until the agent is terminated one way or another
-    uint64_t reap_at = zclock_time () + REAP_INTERVAL;
+    int64_t reap_at = zclock_time () + REAP_INTERVAL;
     while (!self->terminated) {
         int timeout = (int) (reap_at - zclock_time ());
         assert (timeout <= REAP_INTERVAL);
