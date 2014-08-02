@@ -176,11 +176,14 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
     zre_msg_t *msg = *msg_p;
     assert (msg);
     if (self->connected) {
-        zre_msg_set_sequence (msg, ++(self->sent_sequence));
+        self->sent_sequence += 1;
+        zre_msg_set_sequence (msg, self->sent_sequence);
         if (self->verbose)
-            zsys_info ("(%s) send ZRE to peer: name=%s sequence=%d command=%s",
-                self->origin, self->name? self->name: "-",
-                zre_msg_sequence (msg), zre_msg_command (msg));
+            zsys_info ("(%s) send %s to peer=%s sequence=%d",
+                self->origin,
+                zre_msg_command (msg),
+                self->name? self->name: "-",
+                zre_msg_sequence (msg));
             
         if (zre_msg_send (msg_p, self->mailbox)) {
             if (errno == EAGAIN) {
@@ -393,22 +396,38 @@ zyre_peer_set_headers (zyre_peer_t *self, zhash_t *headers)
 
 
 //  ---------------------------------------------------------------------
-//  Check peer message sequence
+//  Check if messages were lost from peer, returns true if they were
 
 bool
-zyre_peer_check_message (zyre_peer_t *self, zre_msg_t *msg)
+zyre_peer_messages_lost (zyre_peer_t *self, zre_msg_t *msg)
 {
     assert (self);
     assert (msg);
-    uint16_t recd_sequence = zre_msg_sequence (msg);
 
-    bool valid = (++(self->want_sequence) == recd_sequence);
-    if (!valid) {
-        zsys_error ("expected=%d, got=%d",
-            self->want_sequence, recd_sequence);
-        --(self->want_sequence);    //  Rollback
+    //  The sequence number set by the peer, and our own calculated
+    //  sequence number should be the same.
+    if (self->verbose)
+        zsys_info ("(%s) recv %s from peer=%s sequence=%d",
+            self->origin,
+            zre_msg_command (msg),
+            self->name? self->name: "-",
+            zre_msg_sequence (msg));
+
+    //  HELLO always MUST have sequence = 1
+    if (zre_msg_id (msg) == ZRE_MSG_HELLO)
+        self->want_sequence = 1;
+    else
+        self->want_sequence += 1;
+        
+    if (self->want_sequence != zre_msg_sequence (msg)) {
+        zsys_info ("(%s) seq error from peer=%s expect=%d, got=%d",
+            self->origin,
+            self->name? self->name: "-",
+            self->want_sequence,
+            zre_msg_sequence (msg));
+        return true;
     }
-    return valid;
+    return false;
 }
 
 

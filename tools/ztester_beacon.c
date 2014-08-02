@@ -175,11 +175,11 @@ int main (int argc, char *argv [])
         if (actors [index]) {
             zactor_destroy (&actors [index]);
             actors [index] = NULL;
-            zclock_log ("I: Stopped node (%d running)", --nbr_nodes);
+            zsys_info ("stopped node (%d running)", --nbr_nodes);
         }
         else {
             actors [index] = zactor_new (node_actor, NULL);
-            zclock_log ("I: Started node (%d running)", ++nbr_nodes);
+            zsys_info ("started node (%d running)", ++nbr_nodes);
         }
         nbr_iterations++;
         if (max_iterations > 0 && nbr_iterations >= max_iterations)
@@ -187,7 +187,7 @@ int main (int argc, char *argv [])
         //  Sleep ~750 msecs randomly so we smooth out activity
         zclock_sleep (randof (500) + 500);
     }
-    zclock_log ("I: Stopped tester (%d iterations)", nbr_iterations);
+    zsys_info ("stopped tester (%d iterations)", nbr_iterations);
 
     //  Stop all remaining actors
     for (index = 0; index < max_nodes; index++) {
