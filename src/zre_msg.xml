@@ -5,6 +5,7 @@
     script = "zproto_codec_c"
     header = "../include"
     signature = "0"
+    export = "ZYRE_EXPORT"
     >
     This is the ZRE protocol, version 2 draft, as defined by rfc.zeromq.org/spec:36/ZRE.
 
