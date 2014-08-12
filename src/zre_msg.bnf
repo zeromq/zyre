@@ -6,7 +6,7 @@ The following ABNF grammar defines the work with ZRE messages:
 
     ;     Greet a peer so it can connect back to us
     hello           = signature %d1 version sequence endpoint groups status name headers
-    signature       = %xAA %xA0             ; two octets
+    signature       = %xAA %xA1             ; two octets
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
     endpoint        = string                ; Sender connect endpoint
