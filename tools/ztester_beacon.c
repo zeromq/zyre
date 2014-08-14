@@ -120,12 +120,12 @@ node_actor (zsock_t *pipe, void *args)
 
             //  Send outgoing messages if needed
             if (to_peer) {
-                zyre_whispers (node, to_peer, "%lu", counter++);
+                zyre_whispers (node, to_peer, "%lld", counter++);
                 free (to_peer);
                 to_peer = NULL;
             }
             if (to_group) {
-                zyre_shouts (node, to_group, "%lu", counter++);
+                zyre_shouts (node, to_group, "%lld", counter++);
                 free (to_group);
                 to_group = NULL;
             }
