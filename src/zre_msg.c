@@ -41,7 +41,7 @@
 @end
 */
 
-#include <czmq.h>
+#include "../include/zyre.h"
 #include "../include/zre_msg.h"
 
 //  Structure of our class
@@ -262,7 +262,7 @@ zre_msg_decode (zmsg_t **msg_p)
     self->ceiling = self->needle + zframe_size (frame);
     uint16_t signature;
     GET_NUMBER2 (signature);
-    if (signature != (0xAAA0 | 0))
+    if (signature != (0xAAA0 | 1))
         goto empty;             //  Invalid signature
 
     //  Get message id and parse per message type
@@ -502,7 +502,7 @@ zre_msg_encode (zre_msg_t **self_p)
     //  Now serialize message into the frame
     zframe_t *frame = zframe_new (NULL, frame_size);
     self->needle = zframe_data (frame);
-    PUT_NUMBER2 (0xAAA0 | 0);
+    PUT_NUMBER2 (0xAAA0 | 1);
     PUT_NUMBER1 (self->id);
 
     switch (self->id) {

@@ -135,6 +135,13 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
 
     //  Connect through to peer node
     rc = zsock_connect (self->mailbox, "%s", endpoint);
+    if (rc != 0) {
+        zsys_error ("(%s) cannot connect to endpoint=%s",
+                    self->origin, endpoint);
+        //  Don't really have any error handling yet; if connect
+        //  fails, there's something wrong with connect endpoint?
+        assert (false);
+    }
     assert (rc == 0);
     if (self->verbose)
         zsys_info ("(%s) connect to peer: endpoint=%s",

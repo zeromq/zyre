@@ -479,6 +479,7 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         zhash_foreach (self->peers, zyre_node_purge_peer, (char *) endpoint);
 
         peer = zyre_peer_new (self->peers, uuid);
+        assert (peer);
         zyre_peer_set_origin (peer, self->name);
         zyre_peer_set_verbose (peer, self->verbose);
         zyre_peer_connect (peer, self->uuid, (char *) endpoint);
