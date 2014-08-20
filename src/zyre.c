@@ -247,18 +247,16 @@ zyre_set_interface (zyre_t *self, const char *value)
 
 
 //  ---------------------------------------------------------------------
-//  Specify Zyre endpoint. This is used to bind the Zyre service, so that
-//  other Zyre nodes can connect to it. You can use any point-to-point
-//  transport, e.g. ipc://, inproc://, or tcp://. When you call this method,
-//  Zyre will use gossip discovery instead of UDP beaconing. You MUST set-up
-//  the gossip service separately using zyre_gossip_bind() and _connect().
-//  By default, the endpoint you specify here will be announced on the gossip
-//  network. However for TCP endpoints you may have to announce a different
-//  endpoint that is reachable for other peers. Use zyre_announce() for that.
-//  If you do not specify an endpoint, Zyre binds an ephemeral TCP port on
-//  all interfaces, and announces the local host name to peers.
+//  By default, Zyre binds to an ephemeral TCP port and broadcasts the local
+//  host name using UDP beaconing. When you call this method, Zyre will use
+//  gossip discovery instead of UDP beaconing. You MUST set-up the gossip
+//  service separately using zyre_gossip_bind() and _connect(). Note that the
+//  endpoint MUST be valid for both bind and connect operations. You can use
+//  inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address
+//  that is meaningful to remote as well as local nodes). Returns 0 if
+//  the bind was successful, else -1.
 
-void
+int
 zyre_set_endpoint (zyre_t *self, const char *format, ...)
 {
     assert (self);
@@ -269,38 +267,7 @@ zyre_set_endpoint (zyre_t *self, const char *format, ...)
     
     zstr_sendx (self->actor, "SET ENDPOINT", string, NULL);
     free (string);
-}
-
-
-//  ---------------------------------------------------------------------
-//  Return our endpoint, after a successful zyre_set_endpoint ()
-
-const char *
-zyre_endpoint (zyre_t *self)
-{
-    assert (self);
-    //  Hold endpoint in zyre object so caller gets a safe reference
-    zstr_free (&self->endpoint);
-    zstr_sendx (self->actor, "ENDPOINT", NULL);
-    self->endpoint = zstr_recv (self->actor);
-    return self->endpoint;
-}
-
-
-//  ---------------------------------------------------------------------
-//  Specify Zyre endpoint for other nodes to connect to.
-
-void
-zyre_set_announce (zyre_t *self, const char *format, ...)
-{
-    assert (self);
-    va_list argptr;
-    va_start (argptr, format);
-    char *string = zsys_vprintf (format, argptr);
-    va_end (argptr);
-
-    zstr_sendx (self->actor, "SET ANNOUNCE", string, NULL);
-    free (string);
+    return zsock_wait (self->actor) == 0? 0: -1;
 }
 
 
@@ -544,10 +511,11 @@ zyre_test (bool verbose)
     zyre_set_header (node1, "X-HELLO", "World");
     zyre_set_verbose (node1);
     //  Set inproc endpoint for this node
-    zyre_set_endpoint (node1, "inproc://zyre-node1");
+    int rc = zyre_set_endpoint (node1, "inproc://zyre-node1");
+    assert (rc == 0);
     //  Set up gossip network for this node
     zyre_gossip_bind (node1, "inproc://gossip-hub");
-    int rc = zyre_start (node1);
+    rc = zyre_start (node1);
     assert (rc == 0);
 
     zyre_t *node2 = zyre_new ("node2");
@@ -556,11 +524,11 @@ zyre_test (bool verbose)
     zyre_set_verbose (node2);
     //  Set inproc endpoint for this node
     //  First, try to use existing name, it'll fail
-    zyre_set_endpoint (node2, "inproc://zyre-node1");
-    assert (streq (zyre_endpoint (node2), ""));
+    rc = zyre_set_endpoint (node2, "inproc://zyre-node1");
+    assert (rc == -1);
     //  Now use available name and confirm that it succeeds
-    zyre_set_endpoint (node2, "inproc://zyre-node2");
-    assert (streq (zyre_endpoint (node2), "inproc://zyre-node2"));
+    rc = zyre_set_endpoint (node2, "inproc://zyre-node2");
+    assert (rc == 0);
    
     //  Set up gossip network for this node
     zyre_gossip_connect (node2, "inproc://gossip-hub");
