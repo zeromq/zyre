@@ -47,7 +47,7 @@ node_actor (zsock_t *pipe, void *args)
     zyre_start (node);
     zsock_signal (pipe, 0);     //  Signal "ready" to caller
 
-    int64_t counter = 0;
+    int counter = 0;
     char *to_peer = NULL;        //  Either of these set,
     char *to_group = NULL;       //    and we set a message
     char *cookie = NULL;
@@ -126,12 +126,12 @@ node_actor (zsock_t *pipe, void *args)
 
             //  Send outgoing messages if needed
             if (to_peer) {
-                zyre_whispers (node, to_peer, "%lld", counter++);
+                zyre_whispers (node, to_peer, "%d", counter++);
                 free (to_peer);
                 to_peer = NULL;
             }
             if (to_group) {
-                zyre_shouts (node, to_group, "%lld", counter++);
+                zyre_shouts (node, to_group, "%d", counter++);
                 free (to_group);
                 to_group = NULL;
             }

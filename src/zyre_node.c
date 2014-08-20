@@ -43,8 +43,7 @@ struct _zyre_node_t {
     zuuid_t *uuid;              //  Our UUID as object
     zsock_t *inbox;             //  Our inbox socket (ROUTER)
     char *name;                 //  Our public name
-    char *endpoint;             //  Our private endpoint (for binds)
-    char *announce;             //  Our public endpoint (for connects)
+    char *endpoint;             //  Our public endpoint
     int port;                   //  Our inbox port, if any
     byte status;                //  Our own change counter
     zhash_t *peers;             //  Hash of known peers, fast lookup
@@ -128,7 +127,6 @@ zyre_node_destroy (zyre_node_t **self_p)
         zbeacon_destroy (&self->beacon);
         zactor_destroy (&self->gossip);
         zstr_free (&self->endpoint);
-        zstr_free (&self->announce);
         free (self->name);
         free (self);
         *self_p = NULL;
@@ -191,23 +189,20 @@ zyre_node_start (zyre_node_t *self)
         //  If application didn't set an endpoint explicitly, grab ephemeral
         //  port on all available network interfaces.
         if (!self->endpoint) {
-            char *hostname = zsys_hostname ();
             const char *interface = zsys_interface ();
             if (streq (interface, ""))
                 interface = "*";
             self->port = zsock_bind (self->inbox, "tcp://%s:*", interface);
             assert (self->port > 0);    //  Die on bad interface or port exhaustion
 
-            //  Record our actual endpoint for posterity
-            self->endpoint = zsys_sprintf ("tcp://%s:%d", interface, self->port);
-            //  This is the value we'll send out over the gossip network
-            self->announce = zsys_sprintf ("tcp://%s:%d", hostname, self->port);
+            char *hostname = zsys_hostname ();
+            self->endpoint = zsys_sprintf ("tcp://%s:%d", hostname, self->port);
             zstr_free (&hostname);
             
-            zsys_info ("Zyre node endpoint=%s announce=%s", self->endpoint, self->announce);
+            zsys_info ("Zyre starting gossip discovery, endpoint=%s", self->endpoint);
         }
         assert (self->gossip);
-        zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->announce, NULL);
+        zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->endpoint, NULL);
         //  Start polling on zgossip
         zpoller_add (self->poller, self->gossip);
     }
@@ -271,7 +266,6 @@ zyre_node_dump (zyre_node_t *self)
     printf ("************** zyre_node_dump *************************\n");
     printf ("node id : %s\n", zuuid_str (self->uuid));
     printf ("    endpoint = %s\n", self->endpoint);
-    printf ("    announce = %s\n", self->announce);
     printf ("    headers [%zu] { \n", zhash_size (self->headers));
     zhash_foreach (self->headers, zyre_node_hash_key_dump, self);
     printf ("    }\n");
@@ -295,10 +289,10 @@ zyre_node_recv_api (zyre_node_t *self)
 {
     //  Get the whole message off the pipe in one go
     zmsg_t *request = zmsg_recv (self->pipe);
-    char *command = zmsg_popstr (request);
-    if (!command)
+    if (!request)
         return;                 //  Interrupted
-
+        
+    char *command = zmsg_popstr (request);
     if (streq (command, "UUID"))
         zstr_send (self->pipe, zuuid_str (self->uuid));
     else
@@ -335,25 +329,17 @@ zyre_node_recv_api (zyre_node_t *self)
     }
     else
     if (streq (command, "SET ENDPOINT")) {
-        //  Get endpoint and bind to it
         zyre_node_gossip_start (self);
         char *endpoint = zmsg_popstr (request);
         if (zsock_bind (self->inbox, "%s", endpoint) != -1) {
             zstr_free (&self->endpoint);
-            zstr_free (&self->announce);
             self->endpoint = endpoint;
-            self->announce = strdup (endpoint);
+            zsock_signal (self->pipe, 0);
         }
-        else
+        else {
             zstr_free (&endpoint);
-    }
-    else
-    if (streq (command, "ENDPOINT"))
-        zstr_send (self->pipe, self->endpoint);
-    else
-    if (streq (command, "SET ANNOUNCE")) {
-        zstr_free (&self->announce);
-        self->announce = zmsg_popstr (request);
+            zsock_signal (self->pipe, 1);
+        }
     }
     else
     if (streq (command, "GOSSIP BIND")) {
@@ -446,7 +432,7 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "$TERM"))
         self->terminated = true;
     else {
-        zsys_error ("invalid command '%s'\n", command);
+        zsys_error ("invalid command '%s'", command);
         assert (false);
     }
     zstr_free (&command);
@@ -587,7 +573,7 @@ zyre_node_recv_peer (zyre_node_t *self)
 {
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_recv (self->inbox);
-    if (msg == NULL)
+    if (!msg)
         return;                 //  Interrupted
 
     //  First frame is sender identity
@@ -826,7 +812,7 @@ zyre_node_actor (zsock_t *pipe, void *args)
         if (timeout < 0)
             timeout = 0;
         
-        void *which = zpoller_wait (self->poller, timeout);
+        zsock_t *which = (zsock_t *) zpoller_wait (self->poller, timeout);
         if (which == self->pipe)
             zyre_node_recv_api (self);
         else
@@ -834,10 +820,11 @@ zyre_node_actor (zsock_t *pipe, void *args)
             zyre_node_recv_peer (self);
         else
         if (self->beacon
-        && which == zbeacon_socket (self->beacon))
+        && (void *) which == zbeacon_socket (self->beacon))
             zyre_node_recv_beacon (self);
         else
-        if (which == self->gossip)
+        if (self->gossip
+        && (zactor_t *) which == self->gossip)
             zyre_node_recv_gossip (self);
         else
         if (zpoller_expired (self->poller)) {

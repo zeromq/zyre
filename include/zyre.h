@@ -112,27 +112,17 @@ ZYRE_EXPORT void
 ZYRE_EXPORT void
     zyre_set_interface (zyre_t *self, const char *value);
 
-//  Specify Zyre endpoint. This is used to bind the Zyre service, so that
-//  other Zyre nodes can connect to it. You can use any point-to-point
-//  transport, e.g. ipc://, inproc://, or tcp://. When you call this method,
-//  Zyre will use gossip discovery instead of UDP beaconing. You MUST set-up
-//  the gossip service separately using zyre_gossip_bind() and _connect().
-//  By default, the endpoint you specify here will be announced on the gossip
-//  network. However for TCP endpoints you may have to announce a different
-//  endpoint that is reachable for other peers. Use zyre_announce() for that.
-//  If you do not specify an endpoint, Zyre binds an ephemeral TCP port on
-//  all interfaces, and announces the local host name to peers.
-ZYRE_EXPORT void
+//  By default, Zyre binds to an ephemeral TCP port and broadcasts the local
+//  host name using UDP beaconing. When you call this method, Zyre will use
+//  gossip discovery instead of UDP beaconing. You MUST set-up the gossip
+//  service separately using zyre_gossip_bind() and _connect(). Note that the
+//  endpoint MUST be valid for both bind and connect operations. You can use
+//  inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address
+//  that is meaningful to remote as well as local nodes). Returns 0 if
+//  the bind was successful, else -1.
+ZYRE_EXPORT int
     zyre_set_endpoint (zyre_t *self, const char *format, ...);
 
-//  Return our endpoint, after a successful zyre_set_endpoint ()
-ZYRE_EXPORT const char *
-    zyre_endpoint (zyre_t *self);
-
-//  Specify Zyre public endpoint for other nodes to connect to.
-ZYRE_EXPORT void
-    zyre_set_announce (zyre_t *self, const char *format, ...);
-    
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
 //  it. Note that gossip endpoints are completely distinct from Zyre node
@@ -210,8 +200,7 @@ ZYRE_EXPORT void
 
 //  Compiler hints
 ZYRE_EXPORT void zyre_set_header (zyre_t *self, const char *name, const char *format, ...) CHECK_PRINTF (3);
-ZYRE_EXPORT void zyre_set_endpoint (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
-ZYRE_EXPORT void zyre_set_announce (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
+ZYRE_EXPORT int zyre_set_endpoint (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 ZYRE_EXPORT void zyre_gossip_bind (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 ZYRE_EXPORT void zyre_gossip_connect (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 ZYRE_EXPORT int zyre_whispers (zyre_t *self, const char *peer, const char *format, ...) CHECK_PRINTF (3);
