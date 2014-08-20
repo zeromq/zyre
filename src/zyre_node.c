@@ -823,7 +823,8 @@ zyre_node_actor (zsock_t *pipe, void *args)
         && (void *) which == zbeacon_socket (self->beacon))
             zyre_node_recv_beacon (self);
         else
-        if ((zactor_t *) which == self->gossip)
+        if (self->gossip
+        && (zactor_t *) which == self->gossip)
             zyre_node_recv_gossip (self);
         else
         if (zpoller_expired (self->poller)) {
