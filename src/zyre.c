@@ -62,7 +62,7 @@
 
 #include "zyre_classes.h"
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Structure of our class
 
 struct _zyre_t {
@@ -74,7 +74,7 @@ struct _zyre_t {
 };
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Constructor, creates a new Zyre node. Note that until you start the
 //  node it is silent and invisible to other nodes on the network.
 //  The node name is provided to other nodes during discovery. If you
@@ -112,7 +112,7 @@ zyre_new (const char *name)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Destructor, destroys a Zyre node. When you destroy a node, any
 //  messages it is sending or receiving will be discarded.
 
@@ -133,7 +133,7 @@ zyre_destroy (zyre_t **self_p)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Return our node UUID string, after successful initialization
 
 const char *
@@ -148,7 +148,7 @@ zyre_uuid (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Return our node name, after successful initialization. By default
 //  is taken from the UUID and shortened.
 
@@ -164,7 +164,7 @@ zyre_name (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
 
@@ -176,7 +176,7 @@ zyre_set_name (zyre_t *self, const char *name)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.
 
@@ -194,7 +194,7 @@ zyre_set_header (zyre_t *self, const char *name, const char *format, ...)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Set verbose mode; this tells the node to log all traffic as well as
 //  all major events.
 
@@ -206,7 +206,7 @@ zyre_set_verbose (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Set UDP beacon discovery port; defaults to 5670, this call overrides
 //  that so you can create independent clusters on the same network, for
 //  e.g. development vs. production. Has no effect after zyre_start().
@@ -220,7 +220,7 @@ zyre_set_port (zyre_t *self, int port_nbr)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Set UDP beacon discovery interval, in milliseconds. Default is instant
 //  beacon exploration followed by pinging every 1,000 msecs.
 
@@ -233,7 +233,7 @@ zyre_set_interval (zyre_t *self, size_t interval)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Set network interface for UDP beacons. If you do not set this, CZMQ will
 //  choose an interface for you. On boxes with several interfaces you should
 //  specify which one you want to use, or strange things can happen.
@@ -246,7 +246,7 @@ zyre_set_interface (zyre_t *self, const char *value)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  By default, Zyre binds to an ephemeral TCP port and broadcasts the local
 //  host name using UDP beaconing. When you call this method, Zyre will use
 //  gossip discovery instead of UDP beaconing. You MUST set-up the gossip
@@ -271,7 +271,7 @@ zyre_set_endpoint (zyre_t *self, const char *format, ...)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
 //  it. Note that gossip endpoints are completely distinct from Zyre node
@@ -291,7 +291,7 @@ zyre_gossip_bind (zyre_t *self, const char *format, ...)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Set-up gossip discovery of other nodes. A node may connect to multiple
 //  other nodes, for redundancy paths. For details of the gossip network
 //  design, see the CZMQ zgossip class.
@@ -310,7 +310,7 @@ zyre_gossip_connect (zyre_t *self, const char *format, ...)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
 //  possible to start the node. If you want to use gossip discovery, set
@@ -326,7 +326,7 @@ zyre_start (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Stop node; this signals to other peers that this node will go away.
 //  This is polite; however you can also just destroy the node without
 //  stopping it.
@@ -339,7 +339,7 @@ zyre_stop (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Join a named group; after joining a group you can send messages to
 //  the group and all Zyre nodes in that group will receive them.
 
@@ -352,7 +352,7 @@ zyre_join (zyre_t *self, const char *group)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Leave a group
 
 int
@@ -364,7 +364,7 @@ zyre_leave (zyre_t *self, const char *group)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Receive next message from network; the message may be a control
 //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
 //  Returns zmsg_t object, or NULL if interrupted
@@ -377,7 +377,7 @@ zyre_recv (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Send message to single peer, specified as a UUID string
 //  Destroys message after sending
 
@@ -393,7 +393,7 @@ zyre_whisper (zyre_t *self, const char *peer, zmsg_t **msg_p)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Send message to a named group
 //  Destroys message after sending
 
@@ -409,7 +409,7 @@ zyre_shout (zyre_t *self, const char *group, zmsg_t **msg_p)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Send formatted string to a single peer specified as UUID string
 
 int
@@ -432,7 +432,7 @@ zyre_whispers (zyre_t *self, const char *peer, const char *format, ...)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Send formatted string to a named group
 
 int
@@ -455,7 +455,7 @@ zyre_shouts (zyre_t *self, const char *group, const char *format, ...)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Return node zsock_t socket, for direct polling of socket
 
 zsock_t *
@@ -466,7 +466,7 @@ zyre_socket (zyre_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Prints zyre node information
 
 void
