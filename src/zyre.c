@@ -494,7 +494,9 @@ void
 zyre_test (bool verbose)
 {
     printf (" * zyre: ");
-
+    if (verbose)
+        printf ("\n");
+    
     //  @selftest
     //  We'll use inproc gossip discovery so that this works without networking
     
@@ -509,7 +511,9 @@ zyre_test (bool verbose)
     assert (node1);
     assert (streq (zyre_name (node1), "node1"));
     zyre_set_header (node1, "X-HELLO", "World");
-    zyre_set_verbose (node1);
+    if (verbose)
+        zyre_set_verbose (node1);
+    
     //  Set inproc endpoint for this node
     int rc = zyre_set_endpoint (node1, "inproc://zyre-node1");
     assert (rc == 0);
@@ -521,7 +525,9 @@ zyre_test (bool verbose)
     zyre_t *node2 = zyre_new ("node2");
     assert (node2);
     assert (streq (zyre_name (node2), "node2"));
-    zyre_set_verbose (node2);
+    if (verbose)
+        zyre_set_verbose (node2);
+    
     //  Set inproc endpoint for this node
     //  First, try to use existing name, it'll fail
     rc = zyre_set_endpoint (node2, "inproc://zyre-node1");
@@ -541,7 +547,9 @@ zyre_test (bool verbose)
 
     //  Give time for them to interconnect
     zclock_sleep (100);
-
+    if (verbose)
+        zyre_dump (node1);
+    
     //  One node shouts to GLOBAL
     zyre_shouts (node1, "GLOBAL", "Hello, World");
 

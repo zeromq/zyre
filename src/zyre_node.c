@@ -51,6 +51,8 @@ struct _zyre_node_t {
     zhash_t *own_groups;        //  Groups that we are in
     zhash_t *headers;           //  Our header values
     zactor_t *gossip;           //  Gossip discovery service, if any
+    char *gossip_bind;          //  Gossip bind endpoint, if any
+    char *gossip_connect;       //  Gossip connect endpoint, if any
 };
 
 //  Beacon frame has this format:
@@ -127,6 +129,8 @@ zyre_node_destroy (zyre_node_t **self_p)
         zbeacon_destroy (&self->beacon);
         zactor_destroy (&self->gossip);
         zstr_free (&self->endpoint);
+        zstr_free (&self->gossip_bind);
+        zstr_free (&self->gossip_connect);
         free (self->name);
         free (self);
         *self_p = NULL;
@@ -249,11 +253,12 @@ zyre_node_send_peer (const char *key, void *item, void *argument)
     return 0;
 }
 
-//  Dump hash key to stdout
+//  Print hash key to log
+
 static int
-zyre_node_hash_key_dump (const char *key, void *item, void *argument)
+zyre_node_log_item (const char *key, void *item, void *argument)
 {
-    printf ("        %s\n", key);
+    zsys_info ("   - %s", key);
     return 0;
 }
 
@@ -262,25 +267,29 @@ zyre_node_hash_key_dump (const char *key, void *item, void *argument)
 static void
 zyre_node_dump (zyre_node_t *self)
 {
-    fflush (stdout);
-    printf ("************** zyre_node_dump *************************\n");
-    printf ("node id : %s\n", zuuid_str (self->uuid));
-    printf ("    endpoint = %s\n", self->endpoint);
-    printf ("    headers [%zu] { \n", zhash_size (self->headers));
-    zhash_foreach (self->headers, zyre_node_hash_key_dump, self);
-    printf ("    }\n");
-    printf ("    peers [%zu] {\n", zhash_size (self->peers));
-    zhash_foreach (self->peers, zyre_node_hash_key_dump, self);
-    printf ("    }\n");
-    printf ("    own groups [%zu] { \n", zhash_size (self->own_groups));
-    zhash_foreach (self->own_groups, zyre_node_hash_key_dump, self);
-    printf ("    }\n");
-    printf ("    peer groups [%zu] {\n", zhash_size (self->peer_groups));
-    zhash_foreach (self->peer_groups, zyre_node_hash_key_dump, self);
-    printf ("    }\n");
-    printf ("*******************************************************\n");
-    fflush (stdout);
+    zsys_info ("zyre_node: dump state");
+    zsys_info (" - name=%s uuid=%s", self->name, zuuid_str (self->uuid));
+    zsys_info (" - endpoint=%s", self->endpoint);
+    if (self->beacon_port) 
+        zsys_info (" - discovery=beacon port=%d interval=%zu",
+                   self->beacon_port, self->interval);
+    else {
+        zsys_info (" - discovery=gossip");
+        if (self->gossip_bind)
+            zsys_info ("   - bind endpoint=%s", self->gossip_bind);
+        if (self->gossip_connect)
+            zsys_info ("   - connect endpoint=%s", self->gossip_connect);
+    }
+    zsys_info (" - headers=%zu:", zhash_size (self->headers));
+    zhash_foreach (self->headers, zyre_node_log_item, self);
+    
+    zsys_info (" - peers=%zu:", zhash_size (self->peers));
+    zhash_foreach (self->peers, zyre_node_log_item, self);
+
+    zsys_info (" - groups=%zu:", zhash_size (self->own_groups));
+    zhash_foreach (self->own_groups, zyre_node_log_item, self);
 }
+
 
 //  Here we handle the different control messages from the front-end
 
@@ -344,16 +353,16 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "GOSSIP BIND")) {
         zyre_node_gossip_start (self);
-        char *endpoint = zmsg_popstr (request);
-        zstr_sendx (self->gossip, "BIND", endpoint, NULL);
-        zstr_free (&endpoint);
+        zstr_free (&self->gossip_bind);
+        self->gossip_bind = zmsg_popstr (request);
+        zstr_sendx (self->gossip, "BIND", self->gossip_bind, NULL);
     }
     else
     if (streq (command, "GOSSIP CONNECT")) {
         zyre_node_gossip_start (self);
-        char *endpoint = zmsg_popstr (request);
-        zstr_sendx (self->gossip, "CONNECT", endpoint, NULL);
-        zstr_free (&endpoint);
+        zstr_free (&self->gossip_connect);
+        self->gossip_connect = zmsg_popstr (request);
+        zstr_sendx (self->gossip, "CONNECT", self->gossip_connect, NULL);
     }
     else
     if (streq (command, "START"))
