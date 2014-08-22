@@ -233,8 +233,8 @@ zyre_node_stop (zyre_node_t *self)
         zuuid_export (self->uuid, beacon.uuid);
         zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
         zclock_sleep (1);           //  Allow 1 msec for beacon to go out
-        zbeacon_destroy (&self->beacon);
         zpoller_remove (self->poller, zbeacon_socket (self->beacon));
+        zbeacon_destroy (&self->beacon);
     }
     //  Stop polling on inbox
     zpoller_remove (self->poller, self->inbox);
