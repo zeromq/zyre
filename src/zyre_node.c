@@ -103,7 +103,7 @@ zyre_node_new (zsock_t *pipe, void *args)
 
     //  Default name for node is first 6 characters of UUID:
     //  the shorter string is more readable in logs
-    self->name = zmalloc (7);
+    self->name = (char*)zmalloc (7);
     memcpy (self->name, zuuid_str (self->uuid), 6);
     return self;
 }
@@ -193,10 +193,10 @@ zyre_node_start (zyre_node_t *self)
         //  If application didn't set an endpoint explicitly, grab ephemeral
         //  port on all available network interfaces.
         if (!self->endpoint) {
-            const char *interface = zsys_interface ();
-            if (streq (interface, ""))
-                interface = "*";
-            self->port = zsock_bind (self->inbox, "tcp://%s:*", interface);
+            const char *iface = zsys_interface ();
+            if (streq (iface, ""))
+                iface = "*";
+            self->port = zsock_bind (self->inbox, "tcp://%s:*", iface);
             assert (self->port > 0);    //  Die on bad interface or port exhaustion
 
             char *hostname = zsys_hostname ();
