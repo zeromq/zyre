@@ -35,7 +35,7 @@
 
 #include "zyre_classes.h"
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Structure of zyre_event class
 
 struct _zyre_event_t {
@@ -49,7 +49,7 @@ struct _zyre_event_t {
 };
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.
 //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
 //  data (WHISPER, SHOUT).
@@ -112,7 +112,7 @@ zyre_event_new (zyre_t *node)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Destructor; destroys an event instance
 
 void
@@ -133,7 +133,7 @@ zyre_event_destroy (zyre_event_t **self_p)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Returns event type, which is a zyre_event_type_t
 
 zyre_event_type_t
@@ -144,7 +144,7 @@ zyre_event_type (zyre_event_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Return the sending peer's id as a string
 
 char *
@@ -155,7 +155,7 @@ zyre_event_sender (zyre_event_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Return the sending peer's public name as a string
 
 char *
@@ -166,7 +166,7 @@ zyre_event_name (zyre_event_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Return the sending peer's ipaddress as a string
 
 char *
@@ -177,7 +177,7 @@ zyre_event_address (zyre_event_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Returns the event headers, or NULL if there are none
 
 zhash_t *
@@ -188,7 +188,7 @@ zyre_event_headers (zyre_event_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Returns value of a header from the message headers
 //  obtained by ENTER. Return NULL if no value was found.
 
@@ -200,7 +200,7 @@ zyre_event_header (zyre_event_t *self, char *name)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Returns the group name that a SHOUT event was sent to
 
 char *
@@ -211,7 +211,7 @@ zyre_event_group (zyre_event_t *self)
 }
 
 
-//  ---------------------------------------------------------------------
+//  --------------------------------------------------------------------------
 //  Returns the incoming message payload (currently one frame)
 
 zmsg_t *
