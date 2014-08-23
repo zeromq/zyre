@@ -190,7 +190,7 @@ zyre_set_header (zyre_t *self, const char *name, const char *format, ...)
     va_end (argptr);
 
     zstr_sendx (self->actor, "SET HEADER", name, string, NULL);
-    free (string);
+    zstr_free (&string);
 }
 
 
