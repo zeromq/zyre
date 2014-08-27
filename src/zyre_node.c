@@ -162,16 +162,14 @@ zyre_node_start (zyre_node_t *self)
         self->beacon = zbeacon_new (NULL, self->beacon_port);
         if (!self->beacon)
             return 1;               //  Not possible to start beacon
-
         if (self->interval)
             zbeacon_set_interval (self->beacon, self->interval);
 
-        //  Our own host endpoint is provided by the beacon
-        assert (!self->endpoint);
-        self->port = zsock_bind (self->inbox, "tcp://%s:*", zbeacon_hostname(self->beacon));
+        //  Our hostname is provided by zbeacon
+        self->port = zsock_bind (self->inbox, "tcp://%s:*", zbeacon_hostname (self->beacon));
         assert (self->port > 0);    //  Die on bad interface or port exhaustion
-        self->endpoint = zsys_sprintf ("tcp://%s:%d",
-            zbeacon_hostname (self->beacon), self->port);
+        assert (!self->endpoint);   //  If caller set this, we'd be using gossip
+        self->endpoint = strdup (zsock_endpoint (self->inbox));
 
         //  Set broadcast/listen beacon
         beacon_t beacon;
@@ -204,8 +202,6 @@ zyre_node_start (zyre_node_t *self)
             char *hostname = zsys_hostname ();
             self->endpoint = zsys_sprintf ("tcp://%s:%d", hostname, self->port);
             zstr_free (&hostname);
-            
-            zsys_info ("Zyre starting gossip discovery, endpoint=%s", self->endpoint);
         }
         assert (self->gossip);
         zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->endpoint, NULL);
