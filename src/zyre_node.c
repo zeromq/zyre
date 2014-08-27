@@ -103,7 +103,7 @@ zyre_node_new (zsock_t *pipe, void *args)
 
     //  Default name for node is first 6 characters of UUID:
     //  the shorter string is more readable in logs
-    self->name = (char*)zmalloc (7);
+    self->name = (char *) zmalloc (7);
     memcpy (self->name, zuuid_str (self->uuid), 6);
     return self;
 }
