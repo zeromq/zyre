@@ -166,6 +166,13 @@ zyre_node_start (zyre_node_t *self)
         if (self->interval)
             zbeacon_set_interval (self->beacon, self->interval);
 
+        //  Our own host endpoint is provided by the beacon
+        assert (!self->endpoint);
+        self->port = zsock_bind (self->inbox, "tcp://%s:*", zbeacon_hostname(self->beacon));
+        assert (self->port > 0);    //  Die on bad interface or port exhaustion
+        self->endpoint = zsys_sprintf ("tcp://%s:%d",
+            zbeacon_hostname (self->beacon), self->port);
+
         //  Set broadcast/listen beacon
         beacon_t beacon;
         beacon.protocol [0] = 'Z';
@@ -177,11 +184,6 @@ zyre_node_start (zyre_node_t *self)
         zbeacon_noecho (self->beacon);
         zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
         zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
-
-        //  Our own host endpoint is provided by the beacon
-        assert (!self->endpoint);
-        self->endpoint = zsys_sprintf ("tcp://%s:%d",
-            zbeacon_hostname (self->beacon), self->port);
         
         //  TODO: zbeacon should be a zactor, in which case we can poll
         //  it directly, rather than via its socket
