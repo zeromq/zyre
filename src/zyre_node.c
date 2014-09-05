@@ -30,6 +30,7 @@
 //  Structure of our class
 
 struct _zyre_node_t {
+    zctx_t *ctx;                //  ... until we use zbeacon actor
     //  We send command replies and signals to the pipe
     zsock_t *pipe;              //  Pipe back to application
     //  We send all Zyre messages to the outbox
@@ -89,6 +90,7 @@ zyre_node_new (zsock_t *pipe, void *args)
     //  canonical one, and any old trailing commands are discarded.
     zsock_set_router_handover (self->inbox, 1);
     
+    self->ctx = zctx_new ();
     self->pipe = pipe;
     self->outbox = (zsock_t *) args;
     self->poller = zpoller_new (self->pipe, NULL);
@@ -131,6 +133,7 @@ zyre_node_destroy (zyre_node_t **self_p)
         zstr_free (&self->endpoint);
         zstr_free (&self->gossip_bind);
         zstr_free (&self->gossip_connect);
+        zctx_destroy (&self->ctx);
         free (self->name);
         free (self);
         *self_p = NULL;
@@ -159,7 +162,7 @@ zyre_node_start (zyre_node_t *self)
         //  Start beacon discovery
         //  ------------------------------------------------------------------
         assert (!self->beacon);
-        self->beacon = zbeacon_new (NULL, self->beacon_port);
+        self->beacon = zbeacon_new (self->ctx, self->beacon_port);
         if (!self->beacon)
             return 1;               //  Not possible to start beacon
         if (self->interval)
