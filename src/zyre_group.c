@@ -57,8 +57,8 @@ zyre_group_new (const char *name, zhash_t *container)
     
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, name, self);
-        zhash_freefn (container, name, s_delete_group);
+        zhash_insert (container, (void *) name, self);
+        zhash_freefn (container, (void *) name, s_delete_group);
     }
     return self;
 }
@@ -124,7 +124,7 @@ void
 zyre_group_send (zyre_group_t *self, zre_msg_t **msg_p)
 {
     assert (self);
-    zhash_foreach (self->peers, s_peer_send, *msg_p);
+    zhash_foreach (self->peers, (zhash_foreach_fn *) s_peer_send, *msg_p);
     zre_msg_destroy (msg_p);
 }
 
