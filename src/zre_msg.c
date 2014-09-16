@@ -1404,7 +1404,7 @@ zre_msg_headers_string (zre_msg_t *self, const char *key, const char *default_va
     assert (self);
     const char *value = NULL;
     if (self->headers)
-        value = (const char *) (zhash_lookup (self->headers, key));
+        value = (const char *) (zhash_lookup (self->headers, (void *) key));
     if (!value)
         value = default_value;
 
@@ -1418,7 +1418,7 @@ zre_msg_headers_number (zre_msg_t *self, const char *key, uint64_t default_value
     uint64_t value = default_value;
     char *string = NULL;
     if (self->headers)
-        string = (char *) (zhash_lookup (self->headers, key));
+        string = (char *) (zhash_lookup (self->headers, (void *) key));
     if (string)
         value = atol (string);
 
@@ -1440,7 +1440,7 @@ zre_msg_headers_insert (zre_msg_t *self, const char *key, const char *format, ..
         self->headers = zhash_new ();
         zhash_autofree (self->headers);
     }
-    zhash_update (self->headers, key, string);
+    zhash_update (self->headers, (void *) key, string);
     free (string);
 }
 
