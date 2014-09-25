@@ -597,20 +597,32 @@ zre_msg_encode (zre_msg_t **self_p)
         zre_msg_destroy (self_p);
         return NULL;
     }
-    //  Now send the content field if set
+    //  Now send the message field if there is any
     if (self->id == ZRE_MSG_WHISPER) {
-        zframe_t *content_part = zmsg_pop (self->content);
-        while (content_part) {
-            zmsg_append (msg, &content_part);
-            content_part = zmsg_pop (self->content);
+        if (self->content) {
+            zframe_t *frame = zmsg_pop (self->content);
+            while (frame) {
+                zmsg_append (msg, &frame);
+                frame = zmsg_pop (self->content);
+            }
+        }
+        else {
+            zframe_t *frame = zframe_new (NULL, 0);
+            zmsg_append (msg, &frame);
         }
     }
-    //  Now send the content field if set
+    //  Now send the message field if there is any
     if (self->id == ZRE_MSG_SHOUT) {
-        zframe_t *content_part = zmsg_pop (self->content);
-        while (content_part) {
-            zmsg_append (msg, &content_part);
-            content_part = zmsg_pop (self->content);
+        if (self->content) {
+            zframe_t *frame = zmsg_pop (self->content);
+            while (frame) {
+                zmsg_append (msg, &frame);
+                frame = zmsg_pop (self->content);
+            }
+        }
+        else {
+            zframe_t *frame = zframe_new (NULL, 0);
+            zmsg_append (msg, &frame);
         }
     }
     //  Destroy zre_msg object
