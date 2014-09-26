@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup Label="Globals">
+    <_PropertySheetDisplayName>ZYRE Import Settings</_PropertySheetDisplayName>
+  </PropertyGroup>
+  
+  <!-- User Interface -->
+
+  <ItemGroup Label="BuildOptionsExtension">
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)zyre.import.xml" />
+  </ItemGroup>
+
+  <!-- Linkage -->
+  
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\zyre\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Linkage-zyre)' == 'static' Or '$(Linkage-zyre)' == 'ltcg'">LIBZYRE_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies Condition="'$(Linkage-zyre)' != ''">zyre.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories Condition="$(Configuration.IndexOf('Debug')) != -1">$(ProjectDir)..\..\..\..\..\zyre\bin\$(PlatformName)\Debug\$(PlatformToolset)\$(Linkage-zyre)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories Condition="$(Configuration.IndexOf('Release')) != -1">$(ProjectDir)..\..\..\..\..\zyre\bin\$(PlatformName)\Release\$(PlatformToolset)\$(Linkage-zyre)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>  
+
+  <!-- Copy -->
+
+  <Target Name="Linkage-zyre-dynamic" AfterTargets="AfterBuild" Condition="'$(Linkage-zyre)' == 'dynamic'">
+    <Copy Condition="$(Configuration.IndexOf('Debug')) != -1"
+          SourceFiles="$(ProjectDir)..\..\..\..\..\zyre\bin\$(PlatformName)\Debug\$(PlatformToolset)\dynamic\zyre.dll"
+          DestinationFiles="$(TargetDir)zyre.dll"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="$(Configuration.IndexOf('Debug')) != -1"
+          SourceFiles="$(ProjectDir)..\..\..\..\..\zyre\bin\$(PlatformName)\Debug\$(PlatformToolset)\dynamic\zyre.pdb"
+          DestinationFiles="$(TargetDir)zyre.pdb"
+          SkipUnchangedFiles="true" />
+    <Copy Condition="$(Configuration.IndexOf('Release')) != -1"
+          SourceFiles="$(ProjectDir)..\..\..\..\..\zyre\bin\$(PlatformName)\Release\$(PlatformToolset)\dynamic\zyre.dll"
+          DestinationFiles="$(TargetDir)zyre.dll"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Messages -->
+
+  <Target Name="zyre-info" BeforeTargets="AfterBuild" Condition="'$(Linkage-zyre)' == 'dynamic'">
+    <Message Text="Copying zyre.dll -&gt; $(TargetDir)zyre.dll" Importance="high"/>
+    <Message Text="Copying zyre.pdb -&gt; $(TargetDir)zyre.pdb" Importance="high" Condition="$(Configuration.IndexOf('Debug')) != -1" />
+  </Target>
+
+</Project>
