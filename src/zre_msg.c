@@ -428,7 +428,7 @@ zre_msg_encode (zre_msg_t **self_p)
                 //  Add up size of dictionary contents
                 char *item = (char *) zhash_first (self->headers);
                 while (item) {
-                    self->headers_bytes += 1 + strlen (zhash_cursor (self->headers));
+                    self->headers_bytes += 1 + strlen ((const char *) zhash_cursor (self->headers));
                     self->headers_bytes += 4 + strlen (item);
                     item = (char *) zhash_next (self->headers);
                 }
@@ -534,7 +534,7 @@ zre_msg_encode (zre_msg_t **self_p)
                 PUT_NUMBER4 (zhash_size (self->headers));
                 char *item = (char *) zhash_first (self->headers);
                 while (item) {
-                    PUT_STRING (zhash_cursor (self->headers));
+                    PUT_STRING ((const char *) zhash_cursor ((zhash_t *) self->headers));
                     PUT_LONGSTR (item);
                     item = (char *) zhash_next (self->headers);
                 }
