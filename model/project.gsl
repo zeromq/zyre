@@ -3,3 +3,6 @@
 .#  is licensed under MIT/X11.
 .#
 .include "build-cmake.gsl"
+.include "build-vs2010.gsl"
+.include "build-vs2012.gsl"
+.include "build-vs2013.gsl"
