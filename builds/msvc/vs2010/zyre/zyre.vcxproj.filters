@@ -49,7 +49,7 @@
     <ClInclude Include="..\..\resource.h">
       <Filter>resource</Filter>
     </ClInclude>
-  </ItemGroup>
+  </ItemGroup>  
   <ItemGroup>
     <ResourceCompile Include="..\..\zyre.rc">
       <Filter>resource</Filter>
@@ -90,12 +90,12 @@
     </None>
     <None Include="..\..\..\..\packaging\nuget\package.xml">
       <Filter>packaging</Filter>
-    </None>
+    </None>    
   </ItemGroup>
 <!--
 #################################################################
 #   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
 #   Please read the README.txt file in the model directory.     #
 #################################################################
--->
+-->  
 </Project>

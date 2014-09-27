@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
 #################################################################
 #   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
@@ -72,29 +72,48 @@
     <Import Project="$(ProjectDir)..\..\properties\Output.props" />
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
-    <Linkage-czmq>dynamic</Linkage-czmq>
-  </PropertyGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\include\zre_msg.h" />
+    <ClInclude Include="..\..\..\..\builds\msvc\platform.h" />
+    <ClInclude Include="..\..\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="..\..\..\..\include\zyre.h" />
     <ClInclude Include="..\..\..\..\include\zyre_event.h" />
-    <ClInclude Include="..\..\..\..\src\zyre_classes.h" />
-    <ClInclude Include="..\..\..\..\src\zyre_group.h" />
-    <ClInclude Include="..\..\..\..\src\zyre_node.h" />
-    <ClInclude Include="..\..\..\..\src\zyre_peer.h" />
-    <ClInclude Include="..\..\resource.h" />
+    <ClInclude Include="..\..\..\..\include\zre_msg.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\zre_msg.c">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zyre.c">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zyre_event.c">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zyre_group.c">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zyre_node.c">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zyre_peer.c">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zyre_selftest.c">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\zyre.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\zre_msg.c" />
-    <ClCompile Include="..\..\..\..\src\zyre.c" />
-    <ClCompile Include="..\..\..\..\src\zyre_event.c" />
-    <ClCompile Include="..\..\..\..\src\zyre_group.c" />
-    <ClCompile Include="..\..\..\..\src\zyre_node.c" />
-    <ClCompile Include="..\..\..\..\src\zyre_peer.c" />
+    <None Include="..\..\..\..\packaging\nuget\package.bat" />
+    <None Include="..\..\..\..\packaging\nuget\package.config" />
+    <None Include="..\..\..\..\packaging\nuget\package.gsl" />
+    <None Include="..\..\..\..\packaging\nuget\package.nuspec" />
+    <None Include="..\..\..\..\packaging\nuget\package.targets" />
+    <None Include="..\..\..\..\packaging\nuget\package.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!--
