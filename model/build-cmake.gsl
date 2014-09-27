@@ -19,36 +19,41 @@ project($(project.name))
 enable_language(C)
 enable_testing()
 
-set(ZYRE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(ZYRE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 ########################################################################
 # determine version
 ########################################################################
 foreach(which MAJOR MINOR PATCH)
-    file(STRINGS "${ZYRE_SOURCE_DIR}/include/zyre.h" ZYRE_VERSION_STRING REGEX "#define ZYRE_VERSION_${which}")
-    string(REGEX MATCH "#define ZYRE_VERSION_${which} ([0-9_]+)" ZYRE_REGEX_MATCH "${ZYRE_VERSION_STRING}")
-    if (NOT ZYRE_REGEX_MATCH)
-        message(FATAL_ERROR "failed to parse ZYRE_VERSION_${which} from zyre.h")
+    file(STRINGS "${SOURCE_DIR}/include/$(project.name).h" $(PROJECT.NAME)_VERSION_STRING REGEX "#define $(PROJECT.NAME)_VERSION_${which}")
+    string(REGEX MATCH "#define $(PROJECT.NAME)_VERSION_${which} ([0-9_]+)" $(PROJECT.NAME)_REGEX_MATCH "${$(PROJECT.NAME)_VERSION_STRING}")
+    if (NOT $(PROJECT.NAME)_REGEX_MATCH)
+        message(FATAL_ERROR "failed to parse $(PROJECT.NAME)_VERSION_${which} from $(project.name).h")
     endif()
-    set(ZYRE_${which}_VERSION ${CMAKE_MATCH_1})
+    set($(PROJECT.NAME)_${which}_VERSION ${CMAKE_MATCH_1})
 endforeach(which)
 
-set(ZYRE_VERSION ${ZYRE_MAJOR_VERSION}.${ZYRE_MINOR_VERSION}.${ZYRE_PATCH_VERSION})
+set($(PROJECT.NAME)_VERSION ${$(PROJECT.NAME)_MAJOR_VERSION}.${$(PROJECT.NAME)_MINOR_VERSION}.${$(PROJECT.NAME)_PATCH_VERSION})
 
 ########################################################################
 # platform.h
 ########################################################################
 include(CheckIncludeFile)
 CHECK_INCLUDE_FILE("linux/wireless.h" HAVE_LINUX_WIRELESS_H)
-CHECK_INCLUDE_FILE("net/if.h" HAVE_NET_IF_H)
 CHECK_INCLUDE_FILE("net/if_media.h" HAVE_NET_IF_MEDIA_H)
 
 include(CheckFunctionExists)
 CHECK_FUNCTION_EXISTS("getifaddrs" HAVE_GETIFADDRS)
 CHECK_FUNCTION_EXISTS("freeifaddrs" HAVE_FREEIFADDRS)
 
-file(WRITE ${ZYRE_BINARY_DIR}/platform.h.in "
+include(CheckIncludeFiles)
+check_include_files("sys/socket.h;net/if.h" HAVE_NET_IF_H)
+if (NOT HAVE_NET_IF_H)
+    CHECK_INCLUDE_FILE("net/if.h" HAVE_NET_IF_H)
+endif()
+
+file(WRITE ${BINARY_DIR}/platform.h.in "
 #cmakedefine HAVE_LINUX_WIRELESS_H
 #cmakedefine HAVE_NET_IF_H
 #cmakedefine HAVE_NET_IF_MEDIA_H
@@ -56,50 +61,58 @@ file(WRITE ${ZYRE_BINARY_DIR}/platform.h.in "
 #cmakedefine HAVE_FREEIFADDRS
 ")
 
-configure_file(${ZYRE_BINARY_DIR}/platform.h.in ${ZYRE_BINARY_DIR}/platform.h)
+configure_file(${BINARY_DIR}/platform.h.in ${BINARY_DIR}/platform.h)
 
 #The MSVC C compiler is too out of date,
 #so the sources have to be compiled as c++
 if (MSVC)
     enable_language(CXX)
-    file(GLOB sources ${ZYRE_SOURCE_DIR}/src/*.c)
+    file(GLOB sources ${SOURCE_DIR}/src/*.c)
     set_source_files_properties(${sources} PROPERTIES LANGUAGE CXX)
     set(MORE_LIBRARIES ws2_32 Rpcrt4 Iphlpapi)
 endif()
 
+# required libraries for mingw
+if (MINGW)
+    set(MORE_LIBRARIES -lws2_32 -lrpcrt4 -liphlpapi)
+endif()
+
 ########################################################################
-# zeromq depedency
+# ZeroMQ depedency
 ########################################################################
-list(APPEND CMAKE_MODULE_PATH ${ZYRE_SOURCE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${SOURCE_DIR})
 find_package(ZeroMQ REQUIRED)
 find_package(CZMQ REQUIRED)
 
 ########################################################################
 # includes
 ########################################################################
-set (zyre_headers
+set ($(project.name)_headers
 .for header
     include/$(name).h
 .endfor
+.for extra
+    src/$(name)
+.endfor
 )
-source_group ("Header Files" FILES ${zyre_headers})
-install(FILES ${zyre_headers} DESTINATION include)
+source_group ("Header Files" FILES ${$(project.name)_headers})
+install(FILES ${$(project.name)_headers} DESTINATION include)
 
 ########################################################################
 # library
 ########################################################################
-include_directories(${ZYRE_BINARY_DIR})
-include_directories(${ZYRE_SOURCE_DIR}/include)
+include_directories(${BINARY_DIR})
+include_directories(${SOURCE_DIR}/include)
 include_directories(${CZMQ_INCLUDE_DIRS})
 include_directories(${ZEROMQ_INCLUDE_DIRS})
-set (zyre_sources
+set ($(project.name)_sources
 .for class
     src/$(name).c
 .endfor
 )
-source_group ("Source Files" FILES ${zyre_sources})
-add_library($(project.name) SHARED ${zyre_sources})
-set_target_properties($(project.name) PROPERTIES DEFINE_SYMBOL "LIBCZMQ_EXPORTS")
+source_group ("Source Files" FILES ${$(project.name)_sources})
+add_library($(project.name) SHARED ${$(project.name)_sources})
+set_target_properties($(project.name) PROPERTIES DEFINE_SYMBOL "LIB$(PROJECT.NAME)_EXPORTS")
 target_link_libraries($(project.name) ${CZMQ_LIBRARIES} ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES})
 
 install(TARGETS $(project.name)
@@ -111,32 +124,32 @@ install(TARGETS $(project.name)
 ########################################################################
 # pkgconfig
 ########################################################################
-set(VERSION "${ZYRE_VERSION}")
+set(VERSION "${$(PROJECT.NAME)_VERSION}")
 set(prefix "${CMAKE_INSTALL_PREFIX}")
 set(exec_prefix "\\${prefix}")
 set(libdir "\\${prefix}/lib${LIB_SUFFIX}")
 set(includedir "\\${prefix}/include")
 configure_file(
-    ${ZYRE_SOURCE_DIR}/src/libzyre.pc.in
-    ${ZYRE_BINARY_DIR}/libzyre.pc
+    ${SOURCE_DIR}/src/lib$(project.name).pc.in
+    ${BINARY_DIR}/lib$(project.name).pc
 @ONLY)
 
 install(
-    FILES ${ZYRE_BINARY_DIR}/libzyre.pc
+    FILES ${BINARY_DIR}/lib$(project.name).pc
     DESTINATION lib${LIB_SUFFIX}/pkgconfig
 )
 
 ########################################################################
 # tests
 ########################################################################
-add_executable(zyre_selftest ${ZYRE_SOURCE_DIR}/src/zyre_selftest.c)
-target_link_libraries(zyre_selftest zyre ${CZMQ_LIBRARIES} ${ZEROMQ_LIBRARIES})
-add_test(zyre_selftest zyre_selftest)
+add_executable($(project.name)_selftest ${SOURCE_DIR}/src/$(project.name)_selftest.c)
+target_link_libraries($(project.name)_selftest $(project.name) ${CZMQ_LIBRARIES} ${ZEROMQ_LIBRARIES})
+add_test($(project.name)_selftest $(project.name)_selftest)
 
 ########################################################################
 # summary
 ########################################################################
-message(STATUS "version: ${ZYRE_VERSION}")
+message(STATUS "version: ${$(PROJECT.NAME)_VERSION}")
 message(STATUS "install: ${CMAKE_INSTALL_PREFIX}")
 
 #################################################################
