@@ -89,17 +89,17 @@ zyre_new (const char *name)
     //  Create front-to-back pipe pair for data traffic
     self->inbox = zsock_new (ZMQ_PAIR);
     assert (self->inbox);
-    char endpoint [32];
-    while (true) {
-        sprintf (endpoint, "inproc://zyre-%04x-%04x\n",
-                 randof (0x10000), randof (0x10000));
-        if (zsock_bind (self->inbox, "%s", endpoint) == 0)
-            break;
-    }
+
+    // Use the unique address of the node to identify the inproc endpoint.
+    char endpoint [40];
+    sprintf (endpoint, "inproc://zyre-%p\n", self);
+    int errcode = zsock_bind (self->inbox, "%s", endpoint);
+    assert (errcode == 0);
+
     //  Create other half of traffic pipe
     zsock_t *outbox = zsock_new_pair (endpoint);
     assert (outbox);
-    
+
     //  Start node engine and wait for it to be ready
     self->actor = zactor_new (zyre_node_actor, outbox);
     assert (self->actor);
