@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
 #################################################################
 #   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
@@ -72,8 +72,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\zyre_selftest.c" />
   </ItemGroup>
+    <ItemGroup>
+    <ProjectReference Include="..\zyre\zyre.vcxproj">
+      <Project>{D0C728B7-0586-43DF-9A42-67562C4746EB}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <!--
+<!--
 #################################################################
 #   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
 #   Please read the README.txt file in the model directory.     #
