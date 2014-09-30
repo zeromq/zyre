@@ -49,7 +49,7 @@ CTestTestfile.cmake
 cmake_install.cmake
 install_manifest.txt
 libzyre.so
-platform.h
+include/platform.h
 platform.h.in
 *.log
 
