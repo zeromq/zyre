@@ -456,6 +456,20 @@ zyre_shouts (zyre_t *self, const char *group, const char *format, ...)
 
 
 //  --------------------------------------------------------------------------
+//  Return zhash of current peers. The caller owns this hash and should
+//  destroy it when finished with it.
+
+zhash_t *
+zyre_peers (zyre_t *self)
+{
+    zhash_t *peers;
+    zstr_send (self->actor, "PEERS");
+    zsock_recv (self->actor, "h", &peers);
+    return peers;
+}
+
+
+//  --------------------------------------------------------------------------
 //  Return node zsock_t socket, for direct polling of socket
 
 zsock_t *
@@ -549,7 +563,12 @@ zyre_test (bool verbose)
     zclock_sleep (100);
     if (verbose)
         zyre_dump (node1);
-    
+
+    zhash_t *peers = zyre_peers (node1);
+    assert (peers);
+    assert (zhash_size (peers) == 1);
+    zhash_destroy (&peers);
+
     //  One node shouts to GLOBAL
     zyre_shouts (node1, "GLOBAL", "Hello, World");
 

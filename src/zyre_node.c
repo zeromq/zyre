@@ -436,6 +436,9 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&name);
     }
     else
+    if (streq (command, "PEERS"))
+        zsock_send (self->pipe, "h", self->peers);
+    else
     if (streq (command, "DUMP"))
         zyre_node_dump (self);
     else
