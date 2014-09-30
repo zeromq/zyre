@@ -181,6 +181,11 @@ ZYRE_EXPORT int
 ZYRE_EXPORT int
     zyre_shouts (zyre_t *self, const char *group, const char *format, ...);
 
+//  Return zhash of current peers. The caller owns this hash and should
+//  destroy it when finished with it.
+ZYRE_EXPORT zhash_t *
+    zyre_peers (zyre_t *self);
+
 //  Return socket for talking to the Zyre node, for polling
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
