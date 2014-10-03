@@ -43,7 +43,7 @@ void
 
 //  Connect peer mailbox
 void
-    zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint);
+    zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint);
 
 //  Connect peer mailbox
 void

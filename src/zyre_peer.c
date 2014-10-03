@@ -105,7 +105,7 @@ zyre_peer_destroy (zyre_peer_t **self_p)
 //  Configures mailbox and connects to peer's router endpoint
 
 void
-zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, char *endpoint)
+zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint)
 {
     assert (self);
     assert (!self->connected);

@@ -481,7 +481,7 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         assert (peer);
         zyre_peer_set_origin (peer, self->name);
         zyre_peer_set_verbose (peer, self->verbose);
-        zyre_peer_connect (peer, self->uuid, (char *) endpoint);
+        zyre_peer_connect (peer, self->uuid, endpoint);
 
         //  Handshake discovery by sending HELLO as first message
         zlist_t *groups = zhash_keys (self->own_groups);
