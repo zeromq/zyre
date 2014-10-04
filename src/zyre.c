@@ -470,6 +470,34 @@ zyre_peers (zyre_t *self)
 
 
 //  --------------------------------------------------------------------------
+//  Return zlist of currently joined groups. The caller owns this list and
+//  should destroy it when finished with it.
+
+zlist_t *
+zyre_own_groups (zyre_t *self)
+{
+    zlist_t *groups;
+    zstr_send (self->actor, "OWN GROUPS");
+    zsock_recv (self->actor, "p", &groups);
+    return groups;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Return zlist of groups known through connected peers. The caller owns this
+//  list and should destroy it when finished with it.
+
+zlist_t *
+zyre_peer_groups (zyre_t *self)
+{
+    zlist_t *groups;
+    zstr_send (self->actor, "PEER GROUPS");
+    zsock_recv (self->actor, "p", &groups);
+    return groups;
+}
+
+
+//  --------------------------------------------------------------------------
 //  Return node zsock_t socket, for direct polling of socket
 
 zsock_t *
@@ -569,6 +597,36 @@ zyre_test (bool verbose)
     assert (zlist_size (peers) == 1);
     zlist_destroy (&peers);
 
+    zyre_join (node1, "node1 group of one");
+    zyre_join (node2, "node2 group of one");
+
+    // Give them time to join their groups
+    zclock_sleep (100);
+
+    zlist_t *own_groups = zyre_own_groups (node1);
+    assert (own_groups);
+    assert (zlist_size (own_groups) == 2);
+    if (verbose)
+    {
+        for (const char *grp = zlist_first (own_groups) ; grp ; grp = zlist_next (own_groups))
+        {
+            printf("own group: %s\n", grp);
+        }
+    }
+    zlist_destroy(&own_groups);
+
+    zlist_t *peer_groups = zyre_peer_groups (node1);
+    assert (peer_groups);
+    assert (zlist_size (peer_groups) == 2);
+    if (verbose)
+    {
+        for (const char *grp = zlist_first (peer_groups) ; grp ; grp = zlist_next (peer_groups))
+        {
+            printf("peer group: %s\n", grp);
+        }
+    }
+    zlist_destroy(&peer_groups);
+
     //  One node shouts to GLOBAL
     zyre_shouts (node1, "GLOBAL", "Hello, World");
 
@@ -594,6 +652,14 @@ zyre_test (bool verbose)
     zframe_destroy (&headers_packed);
     assert (streq ((char*)zhash_lookup (headers, "X-HELLO"), "World"));
     zhash_destroy (&headers);
+    zmsg_destroy (&msg);
+
+    msg = zyre_recv (node2);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "JOIN"));
+    zstr_free (&command);
+    assert (zmsg_size (msg) == 3);
     zmsg_destroy (&msg);
 
     msg = zyre_recv (node2);
