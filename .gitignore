@@ -33,11 +33,12 @@ testit
 *.pc
 zpinger
 zlogger
-ztester_beacon
-ztester_gossip
-perf_local
-perf_remote
-zyre_selftest
+tools/ztester
+tools/ztester_beacon
+tools/ztester_gossip
+tools/perf_local
+tools/perf_remote
+src/zyre_selftest
 doit
 src/test-suite.log
 src/zyre_selftest.log
