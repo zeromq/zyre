@@ -92,7 +92,7 @@ zyre_new (const char *name)
 
     // Use the unique address of the node to identify the inproc endpoint.
     char endpoint [40];
-    sprintf (endpoint, "inproc://zyre-%p\n", self);
+    sprintf (endpoint, "inproc://zyre-%p\n", (void*)self);
     int errcode = zsock_bind (self->inbox, "%s", endpoint);
     assert (errcode == 0);
 
