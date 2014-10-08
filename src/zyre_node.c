@@ -439,6 +439,14 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "PEERS"))
         zsock_send (self->pipe, "p", zhash_keys (self->peers));
     else
+	if (streq (command, "PEER ENDPOINT")) {
+		char *uuid = zmsg_popstr (request);
+		zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, (void *) uuid);
+		assert (peer);
+		zsock_send (self->pipe, "s", zyre_peer_endpoint (peer));
+		zstr_free (&uuid);
+	}
+	else
     if (streq (command, "DUMP"))
         zyre_node_dump (self);
     else
