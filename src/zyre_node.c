@@ -447,6 +447,12 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&uuid);
     }
     else
+    if (streq (command, "PEER GROUPS"))
+        zsock_send (self->pipe, "p", zhash_keys (self->peer_groups));
+    else
+    if (streq (command, "OWN GROUPS"))
+        zsock_send (self->pipe, "p", zhash_keys (self->own_groups));
+    else
     if (streq (command, "DUMP"))
         zyre_node_dump (self);
     else

@@ -186,6 +186,16 @@ ZYRE_EXPORT int
 ZYRE_EXPORT zlist_t *
     zyre_peers (zyre_t *self);
 
+//  Return zlist of currently joined groups. The caller owns this list and
+//  should destroy it when finished with it.
+ZYRE_EXPORT zlist_t *
+    zyre_own_groups (zyre_t *self);
+
+//  Return zlist of groups known through connected peers. The caller owns this
+//  list and should destroy it when finished with it.
+ZYRE_EXPORT zlist_t *
+    zyre_peer_groups (zyre_t *self);
+
 //  Return the endpoint of a connected peer. Caller owns the
 //  string.
 ZYRE_EXPORT char *
