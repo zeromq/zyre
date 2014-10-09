@@ -447,6 +447,18 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&uuid);
     }
     else
+    if (streq (command, "PEER HEADER")) {
+        char *uuid = zmsg_popstr (request);
+        char *key = zmsg_popstr (request);
+        zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, (void *) uuid);
+        if (!peer)
+            zstr_send (self->pipe, "");
+        else
+            zstr_send (self->pipe, zyre_peer_header (peer, key, NULL));
+        zstr_free (&uuid);
+        zstr_free (&key);
+    }
+    else
     if (streq (command, "PEER GROUPS"))
         zsock_send (self->pipe, "p", zhash_keys (self->peer_groups));
     else

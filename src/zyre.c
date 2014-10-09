@@ -483,6 +483,23 @@ zyre_peer_address(zyre_t *self, const char *peer)
     return address;
 }
 
+//  --------------------------------------------------------------------------
+//  Return the value of a header of a conected peer. 
+//  Returns null if peer or key doesn't exits. Caller
+//  owns the string
+char *
+zyre_peer_header_value (zyre_t *self, const char *peer, const char *name)
+{
+    assert (self);
+    assert (peer);
+    assert (name);
+    char *value;
+    zstr_sendm (self->actor, "PEER HEADER");
+    zstr_sendm (self->actor, peer);
+    zstr_send (self->actor, name);
+    value = zstr_recv (self->actor);
+    return value;
+}
 
 //  --------------------------------------------------------------------------
 //  Return zlist of currently joined groups. The caller owns this list and
@@ -641,6 +658,10 @@ zyre_test (bool verbose)
         }
     }
     zlist_destroy(&peer_groups);
+
+    char *value = zyre_peer_header_value (node2, zyre_uuid (node1), "X-HELLO");
+    assert (streq (value, "World"));
+    zstr_free (&value);
 
     //  One node shouts to GLOBAL
     zyre_shouts (node1, "GLOBAL", "Hello, World");
