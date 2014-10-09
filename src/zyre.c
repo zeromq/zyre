@@ -475,12 +475,12 @@ zyre_peers (zyre_t *self)
 char *
 zyre_peer_address(zyre_t *self, const char *peer)
 {
-	assert (self);
-	char *address;
-	zstr_sendm (self->actor, "PEER ENDPOINT");
-	zstr_send (self->actor, peer);
-	zsock_recv (self->actor, "s", &address);
-	return address;
+    assert (self);
+    char *address;
+    zstr_sendm (self->actor, "PEER ENDPOINT");
+    zstr_send (self->actor, peer);
+    zsock_recv (self->actor, "s", &address);
+    return address;
 }
 
 
@@ -599,14 +599,14 @@ zyre_test (bool verbose)
     assert (streq (name, "node1"));
     zstr_free (&name);
     zframe_t *headers_packed = zmsg_pop (msg);
-	char *peeraddress = zmsg_popstr(msg);
+    char *peeraddress = zmsg_popstr(msg);
 
-	char* peerendpoint = zyre_peer_address(node2, peerid);
-	assert (streq (peeraddress, peerendpoint));
+    char* peerendpoint = zyre_peer_address(node2, peerid);
+    assert (streq (peeraddress, peerendpoint));
 
-	zstr_free(&peerid);
-	zstr_free (&peerendpoint);
-	zstr_free(&peeraddress);
+    zstr_free(&peerid);
+    zstr_free (&peerendpoint);
+    zstr_free(&peeraddress);
 
     assert (headers_packed);
     zhash_t *headers = zhash_unpack (headers_packed);
