@@ -623,7 +623,7 @@ zyre_test (bool verbose)
     assert (zlist_size (own_groups) == 2);
     if (verbose)
     {
-        for (const char *grp = zlist_first (own_groups) ; grp ; grp = zlist_next (own_groups))
+        for (const char *grp = (const char *) zlist_first (own_groups) ; grp ; grp = (const char *) zlist_next (own_groups))
         {
             printf("own group: %s\n", grp);
         }
@@ -635,7 +635,7 @@ zyre_test (bool verbose)
     assert (zlist_size (peer_groups) == 2);
     if (verbose)
     {
-        for (const char *grp = zlist_first (peer_groups) ; grp ; grp = zlist_next (peer_groups))
+        for (const char *grp = (const char *) zlist_first (peer_groups) ; grp ; grp = (const char *) zlist_next (peer_groups))
         {
             printf("peer group: %s\n", grp);
         }
