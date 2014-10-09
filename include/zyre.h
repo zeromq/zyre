@@ -189,7 +189,7 @@ ZYRE_EXPORT zlist_t *
 //  Return the endpoint of a connected peer. Caller owns the
 //  string.
 ZYRE_EXPORT char *
-	zyre_peer_address(zyre_t *self, const char *peer);
+    zyre_peer_address(zyre_t *self, const char *peer);
 
 //  Return socket for talking to the Zyre node, for polling
 ZYRE_EXPORT zsock_t *
