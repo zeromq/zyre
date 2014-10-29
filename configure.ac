@@ -1,3 +1,8 @@
+#################################################################
+#   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
+#   Please read the README.txt file in the model directory.     #
+#################################################################
+
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.61)
@@ -6,12 +11,12 @@ AC_PREREQ(2.61)
 # the version.sh script. Hence, it should be updated there.
 # The version in git should reflect the *next* version planned.
 #
-AC_INIT([libzyre],[m4_esyscmd([./version.sh zyre])],[zeromq-dev@lists.zeromq.org])
+AC_INIT([zyre],[m4_esyscmd([./version.sh zyre])],[zeromq-dev@lists.zeromq.org])
 
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
 AC_CONFIG_HEADERS([src/platform.h])
-AM_INIT_AUTOMAKE([tar-ustar foreign])
+AM_INIT_AUTOMAKE([subdir-objects tar-ustar foreign])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # This defines PACKAGE_VERSION_... in src/platform.h
@@ -19,29 +24,29 @@ PV_MAJOR=`echo $PACKAGE_VERSION | cut -d . -f 1`
 PV_MINOR=`echo $PACKAGE_VERSION | cut -d . -f 2`
 PV_PATCH=`echo $PACKAGE_VERSION | cut -d . -f 3`
 AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MAJOR],[$PV_MAJOR],
-    [LIBZYRE major version])
+    [ZYRE major version])
 AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MINOR],[$PV_MINOR],
-    [LIBZYRE minor version])
+    [ZYRE minor version])
 AC_DEFINE_UNQUOTED([PACKAGE_VERSION_PATCH],[$PV_PATCH],
-    [LIBZYRE patchlevel])
+    [ZYRE patchlevel])
 # This lets us use PACKAGE_VERSION in Makefiles
 AC_SUBST(PACKAGE_VERSION)
 
 #
 # Libtool -version-info (ABI version)
 #
-# Currently 1.0.0 ("stable"). Don't change this unless you
+# Currently 2.0.1 ("stable"). Don't change this unless you
 # know exactly what you're doing and have read and understand
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 #
 # libzyre -version-info
-LTVER="1:0:0"
+LTVER="2:0:1"
 AC_SUBST(LTVER)
 
 # Capture c flags
-LIBZYRE_ORIG_CFLAGS="${CFLAGS:-none}"
+ZYRE_ORIG_CFLAGS="${CFLAGS:-none}"
 
-# Checks for programs.
+# Checks for programs
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
@@ -49,17 +54,28 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_SED
 AC_PROG_AWK
+PKG_PROG_PKG_CONFIG
 
-# Checks for libraries.
+# 
+AC_ARG_ENABLE([labs],
+    [AS_HELP_STRING([--disable-labs], [Enable Labs support @<:@check@:>@])],
+    [:],
+    [enable_labs=check])
+
+# Checks for libraries
+AC_CHECK_LIB([pthread], [pthread_create])
+AC_CHECK_LIB([uuid], [uuid_generate])
+
+# Code coverage
 AC_ARG_WITH(gcov, [AS_HELP_STRING([--with-gcov=yes/no],
                   [With GCC Code Coverage reporting.])],
-                  [LIBZYRE_GCOV="$withval"])
+                  [ZYRE_GCOV="$withval"])
 
-if test "x${LIBZYRE_GCOV}" == "xyes"; then
+if test "x${ZYRE_GCOV}" == "xyes"; then
     CFLAGS="-O0 -g -fprofile-arcs -ftest-coverage"
 
-    if test "x${LIBZYRE_ORIG_CFLAGS}" != "xnone"; then
-        CFLAGS="${CFLAGS} ${LIBZYRE_ORIG_CFLAGS}"
+    if test "x${ZYRE_ORIG_CFLAGS}" != "xnone"; then
+        CFLAGS="${CFLAGS} ${ZYRE_ORIG_CFLAGS}"
     fi
 fi
 
@@ -84,16 +100,13 @@ AC_CHECK_LIB(zmq, zmq_init,
     [AC_MSG_ERROR([cannot link with -lzmq, install libzmq.])])
 
 AC_MSG_CHECKING([whether libzmq installation works])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <zmq.h>],
-    [zmq_init(1);]) ],
-    [AC_MSG_RESULT([yes])],
-    [AC_MSG_ERROR([no. Please specify libzmq installation prefix using --with-libzmq])])
 
 # libczmq integration
 AC_ARG_WITH([libczmq],
-    [AS_HELP_STRING([--with-libczmq],
-        [Specify libczmq prefix])],
-    [search_libczmq="yes"], [])
+            [AS_HELP_STRING([--with-libczmq],
+                            [Specify libczmq prefix])],
+            [search_libczmq="yes"],
+            [])
 
 if test "x$search_libczmq" = "xyes"; then
     if test -r "${with_libczmq}/include/czmq.h"; then
@@ -105,20 +118,17 @@ if test "x$search_libczmq" = "xyes"; then
 fi
 
 AC_CHECK_LIB(czmq, zctx_test,
-        LIBS="-lczmq $LIBS",
-        [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
+    LIBS="-lczmq $LIBS",
+    [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
 
 AC_MSG_CHECKING([whether libczmq installation works])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <czmq.h>],
-    [zctx_test (0);]) ],
-    [AC_MSG_RESULT([yes])],
-    [AC_MSG_ERROR([no. Please specify libczmq installation prefix using --with-czmq])])
+
 
 # Platform specific checks
 zyre_on_mingw32="no"
 zyre_on_android="no"
 
-# Host specific checks
+# Host speciffic checks
 AC_CANONICAL_HOST
 
 # Determine whether or not documentation should be built and installed.
@@ -133,7 +143,7 @@ if test "x$zyre_have_asciidoc" = "xno" -o "x$zyre_have_xmlto" = "xno"; then
     # Tarballs built with 'make dist' ship with prebuilt documentation.
     if ! test -f doc/zyre.7; then
         zyre_install_man="no"
-        AC_MSG_WARN([You are building an unreleased version of libzyre and asciidoc or xmlto are not installed.])
+        AC_MSG_WARN([You are building an unreleased version of ZYRE and asciidoc or xmlto are not installed.])
         AC_MSG_WARN([Documentation will not be built and manual pages will not be installed.])
     fi
 fi
@@ -143,18 +153,18 @@ AC_MSG_CHECKING([whether to install manpages])
 AC_MSG_RESULT([$zyre_install_man])
 
 # Set some default features required by libzyre code.
-CPPFLAGS="-D_REENTRANT -D_THREAD_SAFE -fPIC $CPPFLAGS"
+CPPFLAGS="-D_REENTRANT -D_THREAD_SAFE $CPPFLAGS"
 
 # OS-specific tests
 case "${host_os}" in
     *linux*)
         # Define on Linux to enable all library features
         CPPFLAGS="-D_GNU_SOURCE -DLINUX $CPPFLAGS"
-        AC_DEFINE(LIBZYRE_HAVE_LINUX, 1, [Have Linux OS])
-
+        AC_DEFINE(ZYRE_HAVE_LINUX, 1, [Have Linux OS])
+        
         case "${host_os}" in
             *android*)
-                AC_DEFINE(LIBZYRE_HAVE_ANDROID, 1, [Have Android OS])
+                AC_DEFINE(ZYRE_HAVE_ANDROID, 1, [Have Android OS])
                 zyre_on_android="yes"
             ;;
         esac
@@ -162,42 +172,43 @@ case "${host_os}" in
     *solaris*)
         # Define on Solaris to enable all library features
         CPPFLAGS="-D_PTHREADS $CPPFLAGS"
-        AC_DEFINE(LIBZYRE_HAVE_SOLARIS, 1, [Have Solaris OS])
+        AC_DEFINE(ZYRE_HAVE_SOLARIS, 1, [Have Solaris OS])
+        CFLAGS="${CFLAGS} -lsocket -lssp"
         ;;
     *freebsd*)
         # Define on FreeBSD to enable all library features
         CPPFLAGS="-D__BSD_VISIBLE $CPPFLAGS"
-        AC_DEFINE(LIBZYRE_HAVE_FREEBSD, 1, [Have FreeBSD OS])
+        AC_DEFINE(ZYRE_HAVE_FREEBSD, 1, [Have FreeBSD OS])
         ;;
     *darwin*)
         # Define on Darwin to enable all library features
         CPPFLAGS="-D_DARWIN_C_SOURCE $CPPFLAGS"
-        AC_DEFINE(LIBZYRE_HAVE_OSX, 1, [Have DarwinOSX OS])
+        AC_DEFINE(ZYRE_HAVE_OSX, 1, [Have DarwinOSX OS])
         ;;
     *netbsd*)
         # Define on NetBSD to enable all library features
         CPPFLAGS="-D_NETBSD_SOURCE $CPPFLAGS"
-        AC_DEFINE(LIBZYRE_HAVE_NETBSD, 1, [Have NetBSD OS])
+        AC_DEFINE(ZYRE_HAVE_NETBSD, 1, [Have NetBSD OS])
         ;;
     *openbsd*)
         # Define on OpenBSD to enable all library features
         CPPFLAGS="-D_BSD_SOURCE $CPPFLAGS"
-        AC_DEFINE(LIBZYRE_HAVE_OPENBSD, 1, [Have OpenBSD OS])
+        AC_DEFINE(ZYRE_HAVE_OPENBSD, 1, [Have OpenBSD OS])
         ;;
     *nto-qnx*)
-        AC_DEFINE(LIBZYRE_HAVE_QNXNTO, 1, [Have QNX Neutrino OS])
+        AC_DEFINE(ZYRE_HAVE_QNXNTO, 1, [Have QNX Neutrino OS])
         ;;
     *aix*)
-        AC_DEFINE(LIBZYRE_HAVE_AIX, 1, [Have AIX OS])
+        AC_DEFINE(ZYRE_HAVE_AIX, 1, [Have AIX OS])
         ;;
     *hpux*)
         # Define on HP-UX to enable all library features
         CPPFLAGS="-D_POSIX_C_SOURCE=200112L"
-        AC_DEFINE(LIBZYRE_HAVE_HPUX, 1, [Have HPUX OS])
+        AC_DEFINE(ZYRE_HAVE_HPUX, 1, [Have HPUX OS])
         ;;
     *mingw32*)
-        AC_DEFINE(LIBZYRE_HAVE_WINDOWS, 1, [Have Windows OS])
-        AC_DEFINE(LIBZYRE_HAVE_MINGW32, 1, [Have MinGW32])
+        AC_DEFINE(ZYRE_HAVE_WINDOWS, 1, [Have Windows OS])
+        AC_DEFINE(ZYRE_HAVE_MINGW32, 1, [Have MinGW32])
         AC_CHECK_HEADERS(windows.h)
         zyre_on_mingw32="yes"
         zyre_install_man="no"
@@ -205,7 +216,7 @@ case "${host_os}" in
     *cygwin*)
         # Define on Cygwin to enable all library features
         CPPFLAGS="-D_GNU_SOURCE $CPPFLAGS"
-        AC_DEFINE(LIBZYRE_HAVE_CYGWIN, 1, [Have Cygwin])
+        AC_DEFINE(ZYRE_HAVE_CYGWIN, 1, [Have Cygwin])
         ;;
     *)
         AC_MSG_ERROR([unsupported system: ${host_os}.])
@@ -214,13 +225,13 @@ esac
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(errno.h arpa/inet.h netinet/tcp.h netinet/in.h stddef.h \
-stdlib.h string.h sys/socket.h sys/time.h unistd.h limits.h)
+AC_CHECK_HEADERS(errno.h arpa/inet.h netinet/tcp.h netinet/in.h stddef.h   stdlib.h string.h sys/socket.h sys/time.h unistd.h   limits.h ifaddrs.h)
 AC_CHECK_HEADERS([net/if.h net/if_media.h linux/wireless.h], [], [],
 [
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
+#include <stdint.h>
 ])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -233,21 +244,32 @@ AC_HEADER_TIME
 AC_TYPE_UINT32_T
 AC_C_VOLATILE
 
-# Math libraries
-AC_CHECK_LIB([m], [pow])
-
 # These options are GNU compiler specific.
 if test "x$GCC" = "xyes"; then
-    CPPFLAGS="-pedantic -Werror -Wall ${CPPFLAGS}"
+    CPPFLAGS="-pedantic -Werror -Wall -Wc++-compat ${CPPFLAGS}"
 fi
 
 AM_CONDITIONAL(ON_MINGW, test "x$zyre_on_mingw32" = "xyes")
 AM_CONDITIONAL(ON_ANDROID, test "x$zyre_on_android" = "xyes")
 AM_CONDITIONAL(INSTALL_MAN, test "x$zyre_install_man" = "xyes")
 AM_CONDITIONAL(BUILD_DOC, test "x$zyre_build_doc" = "xyes")
+AM_CONDITIONAL([ENABLE_LABS], [test "x$enable_labs" = "xyes"])
 
 # Checks for library functions.
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(perror gettimeofday memset)
+AC_CHECK_FUNCS(perror gettimeofday memset getifaddrs)
 
-AC_OUTPUT(Makefile src/Makefile tools/Makefile examples/chat/Makefile doc/Makefile src/libzyre.pc)
+# Set pkgconfigdir
+AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
+    [Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
+    [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
+AC_SUBST([pkgconfigdir])
+
+# Specify output files
+AC_CONFIG_FILES([Makefile doc/Makefile src/libzyre.pc])
+AC_OUTPUT
+
+#################################################################
+#   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
+#   Please read the README.txt file in the model directory.     #
+#################################################################

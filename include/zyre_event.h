@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-typedef struct _zyre_event_t zyre_event_t;
-
 // @interface
 typedef enum {
     ZYRE_EVENT_ENTER = 1,

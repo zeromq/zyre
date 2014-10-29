@@ -25,18 +25,9 @@
     <ClCompile Include="..\..\..\..\src\zyre_peer.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\zyre_selftest.c">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\include\zyre.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\zyre_event.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\zre_msg.h">
+    <ClInclude Include="..\..\..\..\include\zyre_api.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -49,7 +40,7 @@
     <ClInclude Include="..\..\resource.h">
       <Filter>resource</Filter>
     </ClInclude>
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\zyre.rc">
       <Filter>resource</Filter>
@@ -90,12 +81,12 @@
     </None>
     <None Include="..\..\..\..\packaging\nuget\package.xml">
       <Filter>packaging</Filter>
-    </None>    
+    </None>
   </ItemGroup>
 <!--
 #################################################################
 #   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
 #   Please read the README.txt file in the model directory.     #
 #################################################################
--->  
+-->
 </Project>

@@ -1,0 +1,32 @@
+#################################################################
+#   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
+#   Please read the README.txt file in the model directory.     #
+#################################################################
+
+CC=gcc
+# replace the following with wherever you have installed libzmq
+PREFIX=c:/mingw/msys/1.0/local
+INCDIR=-I$(PREFIX)/include -I.
+LIBDIR=-L$(PREFIX)/lib
+CFLAGS=-Wall -Os -g -DLIBZYRE_EXPORTS $(INCDIR)
+
+OBJS = zre_msg.o zyre.o zyre_event.o zyre_group.o zyre_node.o zyre_peer.o
+%.o: ../../src/%.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+all: libzyre.dll zyre_selftest.exe
+
+libzyre.dll: $(OBJS)
+	$(CC) -shared -o $@ $(OBJS) -Wl,--out-implib,$@.a $(LIBDIR) -lzmq -lws2_32 -liphlpapi -lrpcrt4
+
+# the test functions are not exported into the DLL
+zyre_selftest.exe: zyre_selftest.o $(OBJS)
+	$(CC) -o $@ $^ $(LIBDIR) -lzmq -lws2_32 -liphlpapi -lrpcrt4
+
+clean:
+	del *.o *.a *.dll *.exe
+
+#################################################################
+#   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
+#   Please read the README.txt file in the model directory.     #
+#################################################################
