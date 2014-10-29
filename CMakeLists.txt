@@ -74,15 +74,18 @@ endif()
 ########################################################################
 list(APPEND CMAKE_MODULE_PATH ${SOURCE_DIR})
 find_package(ZeroMQ REQUIRED)
-find_package(CZMQ REQUIRED)
 
 ########################################################################
 # includes
 ########################################################################
 set (zyre_headers
+    include/zyre_api.h
+    src/zre_msg.h
     include/zyre.h
     include/zyre_event.h
-    include/zre_msg.h
+    src/zyre_group.h
+    src/zyre_node.h
+    src/zyre_peer.h
 )
 source_group ("Header Files" FILES ${zyre_headers})
 install(FILES ${zyre_headers} DESTINATION include)
@@ -92,7 +95,6 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 include_directories(${BINARY_DIR})
 include_directories(${SOURCE_DIR}/include)
-include_directories(${CZMQ_INCLUDE_DIRS})
 include_directories(${ZEROMQ_INCLUDE_DIRS})
 set (zyre_sources
     src/zre_msg.c
@@ -101,12 +103,11 @@ set (zyre_sources
     src/zyre_group.c
     src/zyre_node.c
     src/zyre_peer.c
-    src/zyre_selftest.c
 )
 source_group ("Source Files" FILES ${zyre_sources})
 add_library(zyre SHARED ${zyre_sources})
 set_target_properties(zyre PROPERTIES DEFINE_SYMBOL "LIBZYRE_EXPORTS")
-target_link_libraries(zyre ${CZMQ_LIBRARIES} ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES})
+target_link_libraries(zyre ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES})
 
 install(TARGETS zyre
     LIBRARY DESTINATION lib${LIB_SUFFIX} # .so file
@@ -136,7 +137,7 @@ install(
 # tests
 ########################################################################
 add_executable(zyre_selftest ${SOURCE_DIR}/src/zyre_selftest.c)
-target_link_libraries(zyre_selftest zyre ${CZMQ_LIBRARIES} ${ZEROMQ_LIBRARIES})
+target_link_libraries(zyre_selftest zyre ${ZEROMQ_LIBRARIES})
 add_test(zyre_selftest zyre_selftest)
 
 ########################################################################

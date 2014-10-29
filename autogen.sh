@@ -1,20 +1,7 @@
-#!/bin/sh
-#   Copyright (c) 1991-2012 iMatix Corporation and contributors
-#
-#   This file is part of the FileMQ project.
-#
-#   This is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; either version 3 of the License, or
-#   (at your option) any later version.
-#
-#   This software is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#################################################################
+#   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
+#   Please read the README.txt file in the model directory.     #
+#################################################################
 
 #   Script to generate all required files from fresh git checkout.
 
@@ -30,6 +17,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+command -v pkg-config >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "autogen.sh: error: could not find pkg-config.  pkg-config is required to run autogen.sh." 1>&2
+    exit 1
+fi
+
 mkdir -p ./config
 if [ $? -ne 0 ]; then
     echo "autogen.sh: error: could not create directory: ./config." 1>&2
@@ -41,3 +34,8 @@ if [ $? -ne 0 ]; then
     echo "autogen.sh: error: autoreconf exited with status $?" 1>&2
     exit 1
 fi
+
+#################################################################
+#   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
+#   Please read the README.txt file in the model directory.     #
+#################################################################

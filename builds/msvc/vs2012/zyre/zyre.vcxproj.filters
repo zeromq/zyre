@@ -25,18 +25,9 @@
     <ClCompile Include="..\..\..\..\src\zyre_peer.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\zyre_selftest.c">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\include\zyre.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\zyre_event.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\zre_msg.h">
+    <ClInclude Include="..\..\..\..\include\zyre_api.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,7 +7,7 @@
 -->
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{CECD12E8-DB5A-42A8-9D28-FA26D6D3D1E9}</ProjectGuid>
+    <ProjectGuid>{A5497C4B-1CD1-4779-9458-2CF7908E7E26}</ProjectGuid>
     <ProjectName>zyre_selftest</ProjectName>
     <PlatformToolset>v100</PlatformToolset>
     <ConfigurationType>Application</ConfigurationType>
@@ -74,7 +74,7 @@
   </ItemGroup>
     <ItemGroup>
     <ProjectReference Include="..\zyre\zyre.vcxproj">
-      <Project>{D0C728B7-0586-43DF-9A42-67562C4746EB}</Project>
+      <Project>{0C4A2E28-8C9E-4B27-85D9-BB679AD84AC7}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

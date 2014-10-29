@@ -7,7 +7,7 @@
 -->
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{D0C728B7-0586-43DF-9A42-67562C4746EB}</ProjectGuid>
+    <ProjectGuid>{0C4A2E28-8C9E-4B27-85D9-BB679AD84AC7}</ProjectGuid>
     <ProjectName>zyre</ProjectName>
     <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
@@ -77,9 +77,7 @@
     <ClInclude Include="..\..\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\include\zyre.h" />
-    <ClInclude Include="..\..\..\..\include\zyre_event.h" />
-    <ClInclude Include="..\..\..\..\include\zre_msg.h" />
+    <ClInclude Include="..\..\..\..\include\zyre_api.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\zre_msg.c">
@@ -98,9 +96,6 @@
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\zyre_peer.c">
-      <CompileAs>CompileAsCpp</CompileAs>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\zyre_selftest.c">
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
   </ItemGroup>
