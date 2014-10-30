@@ -92,9 +92,6 @@
 extern "C" {
 #endif
 
-//  Opaque class structure
-typedef struct _zre_msg_t zre_msg_t;
-
 //  @interface
 //  Create a new zre_msg
 ZYRE_EXPORT zre_msg_t *

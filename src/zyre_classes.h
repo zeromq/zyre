@@ -25,7 +25,6 @@
 #ifndef __ZYRE_CLASSES_H_INCLUDED__
 #define __ZYRE_CLASSES_H_INCLUDED__
 
-#include "zre_msg.h"
 #include "zyre_peer.h"
 #include "zyre_group.h"
 #include "zyre_node.h"

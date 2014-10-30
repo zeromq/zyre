@@ -82,7 +82,7 @@ set (zyre_headers
     include/zyre_api.h
     include/zyre.h
     include/zyre_event.h
-    src/zre_msg.h
+    include/zre_msg.h
     src/zyre_peer.h
     src/zyre_group.h
     src/zyre_node.h

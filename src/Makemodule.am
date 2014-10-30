@@ -9,7 +9,8 @@ pkgconfig_DATA = src/libzyre.pc
 include_HEADERS = \
     include/zyre_api.h \
     include/zyre.h \
-    include/zyre_event.h
+    include/zyre_event.h \
+    include/zre_msg.h
 
 src_libzyre_la_SOURCES = \
     src/platform.h \

@@ -395,7 +395,7 @@
       <File RelativePath="..\..\..\..\builds\msvc\platform.h" />
       <File RelativePath="..\..\..\..\include\zyre.h" />
       <File RelativePath="..\..\..\..\include\zyre_event.h" />
-      <File RelativePath="..\..\..\..\src\zre_msg.h" />
+      <File RelativePath="..\..\..\..\include\zre_msg.h" />
       <File RelativePath="..\..\..\..\src\zyre_peer.h" />
       <File RelativePath="..\..\..\..\src\zyre_group.h" />
       <File RelativePath="..\..\..\..\src\zyre_node.h" />
