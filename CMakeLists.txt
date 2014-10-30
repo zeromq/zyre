@@ -80,12 +80,12 @@ find_package(ZeroMQ REQUIRED)
 ########################################################################
 set (zyre_headers
     include/zyre_api.h
-    src/zre_msg.h
     include/zyre.h
     include/zyre_event.h
+    src/zre_msg.h
+    src/zyre_peer.h
     src/zyre_group.h
     src/zyre_node.h
-    src/zyre_peer.h
 )
 source_group ("Header Files" FILES ${zyre_headers})
 install(FILES ${zyre_headers} DESTINATION include)
@@ -97,12 +97,12 @@ include_directories(${BINARY_DIR})
 include_directories(${SOURCE_DIR}/include)
 include_directories(${ZEROMQ_INCLUDE_DIRS})
 set (zyre_sources
-    src/zre_msg.c
     src/zyre.c
     src/zyre_event.c
+    src/zre_msg.c
+    src/zyre_peer.c
     src/zyre_group.c
     src/zyre_node.c
-    src/zyre_peer.c
 )
 source_group ("Source Files" FILES ${zyre_sources})
 add_library(zyre SHARED ${zyre_sources})

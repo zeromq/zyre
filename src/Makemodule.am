@@ -13,12 +13,12 @@ include_HEADERS = \
 
 src_libzyre_la_SOURCES = \
     src/platform.h \
-    src/zre_msg.c \
     src/zyre.c \
     src/zyre_event.c \
+    src/zre_msg.c \
+    src/zyre_peer.c \
     src/zyre_group.c \
-    src/zyre_node.c \
-    src/zyre_peer.c
+    src/zyre_node.c
 
 src_libzyre_la_LDFLAGS = \
     -version-info @LTVER@

@@ -198,38 +198,6 @@
   <References />
   <Files>
     <Filter Name="Source Files" Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
-      <File RelativePath="..\..\..\..\src\zre_msg.c">
-        <FileConfiguration Name="Release|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="Release|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="Debug|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="Debug|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="DebugDLL|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="DebugDLL|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="ReleaseDLL|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="ReleaseDLL|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="RelWithDebInfo|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="RelWithDebInfo|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-      </File>
       <File RelativePath="..\..\..\..\src\zyre.c">
         <FileConfiguration Name="Release|Win32">
           <Tool Name="VCCLCompilerTool" CompileAs="2" />
@@ -263,6 +231,70 @@
         </FileConfiguration>
       </File>
       <File RelativePath="..\..\..\..\src\zyre_event.c">
+        <FileConfiguration Name="Release|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="Release|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="Debug|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="Debug|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="DebugDLL|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="DebugDLL|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="ReleaseDLL|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="ReleaseDLL|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="RelWithDebInfo|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="RelWithDebInfo|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+      </File>
+      <File RelativePath="..\..\..\..\src\zre_msg.c">
+        <FileConfiguration Name="Release|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="Release|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="Debug|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="Debug|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="DebugDLL|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="DebugDLL|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="ReleaseDLL|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="ReleaseDLL|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="RelWithDebInfo|Win32">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+        <FileConfiguration Name="RelWithDebInfo|x64">
+          <Tool Name="VCCLCompilerTool" CompileAs="2" />
+        </FileConfiguration>
+      </File>
+      <File RelativePath="..\..\..\..\src\zyre_peer.c">
         <FileConfiguration Name="Release|Win32">
           <Tool Name="VCCLCompilerTool" CompileAs="2" />
         </FileConfiguration>
@@ -358,47 +390,15 @@
           <Tool Name="VCCLCompilerTool" CompileAs="2" />
         </FileConfiguration>
       </File>
-      <File RelativePath="..\..\..\..\src\zyre_peer.c">
-        <FileConfiguration Name="Release|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="Release|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="Debug|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="Debug|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="DebugDLL|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="DebugDLL|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="ReleaseDLL|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="ReleaseDLL|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="RelWithDebInfo|Win32">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-        <FileConfiguration Name="RelWithDebInfo|x64">
-          <Tool Name="VCCLCompilerTool" CompileAs="2" />
-        </FileConfiguration>
-      </File>
     </Filter>
     <Filter Name="Header Files">
       <File RelativePath="..\..\..\..\builds\msvc\platform.h" />
-      <File RelativePath="..\..\..\..\src\zre_msg.h" />
       <File RelativePath="..\..\..\..\include\zyre.h" />
       <File RelativePath="..\..\..\..\include\zyre_event.h" />
+      <File RelativePath="..\..\..\..\src\zre_msg.h" />
+      <File RelativePath="..\..\..\..\src\zyre_peer.h" />
       <File RelativePath="..\..\..\..\src\zyre_group.h" />
       <File RelativePath="..\..\..\..\src\zyre_node.h" />
-      <File RelativePath="..\..\..\..\src\zyre_peer.h" />
       <File RelativePath="..\..\..\..\include\zyre_api.h" />
     </Filter>
   </Files>

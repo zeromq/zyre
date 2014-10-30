@@ -30,8 +30,8 @@
 #include "zyre_group.h"
 #include "zyre_node.h"
 
-//  Private Constants    
-#define PEER_EVASIVE	3000	//                             3 seconds' silence is evasive
-#define PEER_EXPIRED	5000	//                             5 seconds' silence is expired
-#define REAP_INTERVAL	1000	//                            Once per second
+//  Private constants    
+#define PEER_EVASIVE	3000 //                    3 seconds' silence is evasive
+#define PEER_EXPIRED	5000 //                    5 seconds' silence is expired
+#define REAP_INTERVAL	1000 //                   Once per second
 #endif
