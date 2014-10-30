@@ -52,6 +52,9 @@
 typedef struct _zyre_t zyre_t;
 typedef struct _zyre_event_t zyre_event_t;
 
+//  Public constants
+#define ZRE_DISCOVERY_PORT	5670 //              IANA-assigned port for ZYRE discovery protocol
+
 //  Public API classes
 
 #include "zyre_api.h"

@@ -20,7 +20,7 @@ include $(PREBUILT_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := zyre
 LOCAL_C_INCLUDES := ../../include $(LIBZMQ)/include
-LOCAL_SRC_FILES := zre_msg.c zyre.c zyre_event.c zyre_group.c zyre_node.c zyre_peer.c
+LOCAL_SRC_FILES := zyre.c zyre_event.c zre_msg.c zyre_peer.c zyre_group.c zyre_node.c
 LOCAL_SHARED_LIBRARIES := zmq
 include $(BUILD_SHARED_LIBRARY)
 

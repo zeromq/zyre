@@ -27,9 +27,6 @@
 #ifndef __ZYRE_API_H_INCLUDED__
 #define __ZYRE_API_H_INCLUDED__
 
-//  IANA-assigned port for ZYRE discovery protocol
-#define ZRE_DISCOVERY_PORT  5670
-
 #ifdef __cplusplus
 extern "C" {
 #endif
