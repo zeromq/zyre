@@ -27,6 +27,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\include\zyre_prelude.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\zyre_api.h">
       <Filter>include</Filter>
     </ClInclude>
