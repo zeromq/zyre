@@ -19,7 +19,6 @@
                                                                             
     You should have received a copy of the GNU Lesser General Public License
     along with this program. If not, see http://www.gnu.org/licenses/.      
-
     #################################################################
     #   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
     #   Please read the README.txt file in the model directory.     #
@@ -39,7 +38,3 @@
 #define PEER_EXPIRED	5000 //                    5 seconds' silence is expired
 #define REAP_INTERVAL	1000 //                   Once per second
 #endif
-//  #################################################################
-//  #   GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY    #
-//  #   Please read the README.txt file in the model directory.     #
-//  #################################################################
