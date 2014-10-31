@@ -9,7 +9,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: libzyre
-Description: an open-source framework for proximity-based peer-to-peer applications
+Description: an open-source framework for proximity-based p2p apps
 Version: @VERSION@
 Requires: libzmq
 Libs: -L${libdir} -lzyre
