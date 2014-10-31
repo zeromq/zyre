@@ -46,7 +46,7 @@
 #define ZYRE_MAKE_VERSION(major, minor, patch) \
     ((major) * 10000 + (minor) * 100 + (patch))
 #define ZYRE_VERSION \
-    ZYRE_MAKE_VERSION((ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
+    ZYRE_MAKE_VERSION(ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
 
 //  Opaque class structures to allow forward references
 typedef struct _zyre_t zyre_t;
