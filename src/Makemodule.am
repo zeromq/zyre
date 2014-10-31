@@ -7,7 +7,6 @@ lib_LTLIBRARIES += src/libzyre.la
 pkgconfig_DATA = src/libzyre.pc
 
 include_HEADERS = \
-    include/zyre_prelude.h \
     include/zyre_api.h \
     include/zyre.h \
     include/zyre_event.h \
