@@ -34,8 +34,6 @@
 #include <zmq.h>
 #include <czmq.h>
 
-//  Set up environment for the application
-
 //  ZYRE version macros for compile-time API detection
 
 #define ZYRE_VERSION_MAJOR 1
