@@ -124,11 +124,12 @@ AC_CHECK_LIB(czmq, zctx_test,
 AC_MSG_CHECKING([whether libczmq installation works])
 
 
+
 # Platform specific checks
 zyre_on_mingw32="no"
 zyre_on_android="no"
 
-# Host speciffic checks
+# Host specific checks
 AC_CANONICAL_HOST
 
 # Determine whether or not documentation should be built and installed.
