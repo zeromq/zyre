@@ -24,7 +24,6 @@ src_libzyre_la_SOURCES = \
 src_libzyre_la_CPPFLAGS = \
     ${AM_CPPFLAGS}
 
-
 src_libzyre_la_LDFLAGS = \
     -version-info @LTVER@ \
     $(LIBTOOL_EXTRA_LDFLAGS)

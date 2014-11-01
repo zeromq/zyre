@@ -4,12 +4,9 @@
     script = "project.gsl"
     email = "zeromq-dev@lists.zeromq.org"
     >
-    <include filename = "src/license.xml" />
-
+    <include filename = "license.xml" />
     <version major = "1" minor = "1" patch = "0" />
-    
-    <dependency name = "zmq" header = "zmq.h" test = "zmq_init" />
-    <dependency name = "czmq" header = "czmq.h" test = "zctx_test" />
+    <use project = "czmq" />
 
     <!-- The order of the classes is NOT important -->
     <header name = "zyre_api" />
