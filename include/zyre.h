@@ -31,10 +31,7 @@
 #define __ZYRE_H_INCLUDED__
 
 //  External dependencies
-#include <zmq.h>
 #include <czmq.h>
-
-//  Set up environment for the application
 
 //  ZYRE version macros for compile-time API detection
 
@@ -46,8 +43,6 @@
     ((major) * 10000 + (minor) * 100 + (patch))
 #define ZYRE_VERSION \
     ZYRE_MAKE_VERSION(ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
-
-//  Non-portable declaration specifiers
 
 #if defined (__WINDOWS__)
 #   if defined LIBZYRE_STATIC
@@ -62,14 +57,15 @@
 #endif
 
 //  Opaque class structures to allow forward references
-
 typedef struct _zyre_t zyre_t;
+#define ZYRE_T_DEFINED
 typedef struct _zyre_event_t zyre_event_t;
+#define ZYRE_EVENT_T_DEFINED
 typedef struct _zre_msg_t zre_msg_t;
+#define ZRE_MSG_T_DEFINED
 
 //  Public constants
-
-#define ZRE_DISCOVERY_PORT	5670 //              IANA-assigned port for ZYRE discovery protocol
+#define ZRE_DISCOVERY_PORT	5670 //              IANA-assigned UDP port for ZRE
 
 //  Public API classes
 

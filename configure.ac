@@ -99,8 +99,6 @@ AC_CHECK_LIB(zmq, zmq_init,
     LIBS="-lzmq $LIBS",
     [AC_MSG_ERROR([cannot link with -lzmq, install libzmq.])])
 
-AC_MSG_CHECKING([whether libzmq installation works])
-
 # libczmq integration
 AC_ARG_WITH([libczmq],
             [AS_HELP_STRING([--with-libczmq],
@@ -120,10 +118,6 @@ fi
 AC_CHECK_LIB(czmq, zctx_test,
     LIBS="-lczmq $LIBS",
     [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
-
-AC_MSG_CHECKING([whether libczmq installation works])
-
-
 
 # Platform specific checks
 zyre_on_mingw32="no"

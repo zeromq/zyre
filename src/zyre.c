@@ -639,26 +639,12 @@ zyre_test (bool verbose)
     zlist_t *own_groups = zyre_own_groups (node1);
     assert (own_groups);
     assert (zlist_size (own_groups) == 2);
-    if (verbose)
-    {
-        for (const char *grp = (const char *) zlist_first (own_groups) ; grp ; grp = (const char *) zlist_next (own_groups))
-        {
-            printf("own group: %s\n", grp);
-        }
-    }
-    zlist_destroy(&own_groups);
+    zlist_destroy (&own_groups);
 
     zlist_t *peer_groups = zyre_peer_groups (node1);
     assert (peer_groups);
     assert (zlist_size (peer_groups) == 2);
-    if (verbose)
-    {
-        for (const char *grp = (const char *) zlist_first (peer_groups) ; grp ; grp = (const char *) zlist_next (peer_groups))
-        {
-            printf("peer group: %s\n", grp);
-        }
-    }
-    zlist_destroy(&peer_groups);
+    zlist_destroy (&peer_groups);
 
     char *value = zyre_peer_header_value (node2, zyre_uuid (node1), "X-HELLO");
     assert (streq (value, "World"));
@@ -679,20 +665,19 @@ zyre_test (bool verbose)
     assert (streq (name, "node1"));
     zstr_free (&name);
     zframe_t *headers_packed = zmsg_pop (msg);
-    char *peeraddress = zmsg_popstr(msg);
-
-    char* peerendpoint = zyre_peer_address(node2, peerid);
+    char *peeraddress = zmsg_popstr (msg);
+    char *peerendpoint = zyre_peer_address (node2, peerid);
     assert (streq (peeraddress, peerendpoint));
 
-    zstr_free(&peerid);
+    zstr_free (&peerid);
     zstr_free (&peerendpoint);
-    zstr_free(&peeraddress);
+    zstr_free (&peeraddress);
 
     assert (headers_packed);
     zhash_t *headers = zhash_unpack (headers_packed);
     assert (headers);
     zframe_destroy (&headers_packed);
-    assert (streq ((char*)zhash_lookup (headers, "X-HELLO"), "World"));
+    assert (streq ((char*) zhash_lookup (headers, "X-HELLO"), "World"));
     zhash_destroy (&headers);
     zmsg_destroy (&msg);
 

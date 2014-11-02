@@ -1,20 +1,15 @@
 <project 
     name = "zyre"
-    description = "an open-source framework for proximity-based peer-to-peer applications"
+    description = "an open-source framework for proximity-based P2P apps"
     script = "project.gsl"
     email = "zeromq-dev@lists.zeromq.org"
     >
+    <include filename = "license.xml" />
+    <version major = "1" minor = "1" patch = "0" />
+    <use project = "czmq" />
 
-    <include filename = "src/license.xml" />
-
-    <version major="1" minor="1" patch="0" />
-
-    <dependency name="zmq" header="zmq.h" test="zmq_init" />
-    <dependency name="czmq" header="czmq.h" test="zctx_test" />
-
-    <header name = "zyre_api" placement = "post" />
-
-    <!-- The order of the classes is important -->
+    <!-- The order of the classes is NOT important -->
+    <header name = "zyre_api" />
     <class name = "zyre" />
     <class name = "zyre_event" />
     <class name = "zre_msg" />
@@ -22,9 +17,8 @@
     <class name = "zyre_group" private = "1" />
     <class name = "zyre_node" private = "1" />
 
-    <constant name = "ZRE_DISCOVERY_PORT" value = "5670">IANA-assigned port for ZYRE discovery protocol</constant>
+    <constant name = "ZRE_DISCOVERY_PORT" value = "5670">IANA-assigned UDP port for ZRE</constant>
     <constant name = "PEER_EVASIVE" value = "3000" private = "1" >3 seconds' silence is evasive</constant>
     <constant name = "PEER_EXPIRED" value = "5000" private = "1" >5 seconds' silence is expired</constant>
     <constant name = "REAP_INTERVAL" value = "1000" private = "1" >Once per second</constant>
-
 </project>

@@ -77,7 +77,6 @@
     <ClInclude Include="..\..\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\include\zyre_prelude.h" />
     <ClInclude Include="..\..\..\..\include\zyre_api.h" />
   </ItemGroup>
   <ItemGroup>

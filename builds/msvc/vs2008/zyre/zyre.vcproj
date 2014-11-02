@@ -399,7 +399,6 @@
       <File RelativePath="..\..\..\..\src\zyre_peer.h" />
       <File RelativePath="..\..\..\..\src\zyre_group.h" />
       <File RelativePath="..\..\..\..\src\zyre_node.h" />
-      <File RelativePath="..\..\..\..\include\zyre_prelude.h" />
       <File RelativePath="..\..\..\..\include\zyre_api.h" />
     </Filter>
   </Files>
