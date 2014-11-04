@@ -72,3 +72,5 @@ obj/
 .cproject
 .project
 
+# qt-android build results
+builds/qt-android/prefix/

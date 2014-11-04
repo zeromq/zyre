@@ -2,23 +2,12 @@
 
 language: c
 
-#   Build-check-install all subprojects
+env:
+- BUILD_TYPE=default
+- BUILD_TYPE=qt-android
+
 before_script:
 - sudo apt-get install uuid-dev
 
-#   libsodium
-- git clone git://github.com/jedisct1/libsodium.git
-- ( cd libsodium; ./autogen.sh; ./configure; make check; sudo make install; sudo ldconfig )
-
-#   libzmq
-- git clone git://github.com/zeromq/libzmq.git
-- ( cd libzmq; ./autogen.sh; ./configure; make check; sudo make install; sudo ldconfig )
-
-#   CZMQ
-- git clone git://github.com/zeromq/czmq.git
-- ( cd czmq; ./autogen.sh; ./configure; make check; sudo make install; sudo ldconfig )
-
-#   Build and check this project
-script:
-- ./autogen.sh && ./configure && make && make check
-- sudo make install
+# Build and check this project according to the BUILD_TYPE
+script: ./ci_build.sh
