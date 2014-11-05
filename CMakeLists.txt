@@ -79,7 +79,6 @@ find_package(ZeroMQ REQUIRED)
 # includes
 ########################################################################
 set (zyre_headers
-    include/zyre_api.h
     include/zyre.h
     include/zyre_event.h
     include/zre_msg.h

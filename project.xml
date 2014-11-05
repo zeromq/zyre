@@ -9,7 +9,6 @@
     <use project = "czmq" />
 
     <!-- The order of the classes is NOT important -->
-    <header name = "zyre_api" />
     <class name = "zyre" />
     <class name = "zyre_event" />
     <class name = "zre_msg" />
