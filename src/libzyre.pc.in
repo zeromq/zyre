@@ -11,7 +11,7 @@ includedir=@includedir@
 Name: libzyre
 Description: an open-source framework for proximity-based p2p apps
 Version: @VERSION@
-Requires: libzmq
+Requires: libzmq libczmq
 Libs: -L${libdir} -lzyre
 Cflags: -I${includedir}
 
