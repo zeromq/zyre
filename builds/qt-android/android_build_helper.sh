@@ -4,7 +4,7 @@
 #   Please read the README.txt file if you like to do permanent changes.    #
 #############################################################################
 #
-# Copyright 2014, Joe Eli McIlvain; All rights reserved.
+# Courtesy of Joe Eli McIlvain; original code at:
 # https://github.com/jemc/android_build_helper
 #   android_build_helper.sh
 #
