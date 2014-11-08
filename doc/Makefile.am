@@ -11,7 +11,7 @@ MAN_TXT = $(MAN1:%.1=%.txt)
 MAN_TXT += $(MAN3:%.3=%.txt)
 MAN_TXT += $(MAN7:%.7=%.txt)
 
-EXTRA_DIST = asciidoc.conf mkman $(MAN_TXT)
+EXTRA_DIST = asciidoc.conf $(MAN_TXT)
 
 if BUILD_DOC
 if INSTALL_MAN
@@ -25,7 +25,7 @@ dist-hook : $(MAN_DOC)
 SUFFIXES=.txt .xml .1 .3 .7
 
 .txt.xml:
-	$(srcdir)/mkman $<
+	zproject_mkman $<
 	asciidoc -d manpage -b docbook -f $(srcdir)/asciidoc.conf \
         -azyre_version=@PACKAGE_VERSION@ -o$@ $<
 .xml.1:

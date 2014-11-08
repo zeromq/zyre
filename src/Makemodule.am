@@ -7,19 +7,19 @@ lib_LTLIBRARIES += src/libzyre.la
 pkgconfig_DATA = src/libzyre.pc
 
 include_HEADERS = \
-    include/zyre_library.h \
     include/zyre.h \
     include/zyre_event.h \
-    include/zre_msg.h
+    include/zre_msg.h \
+    include/zyre_library.h
 
 src_libzyre_la_SOURCES = \
-    src/platform.h \
     src/zyre.c \
     src/zyre_event.c \
     src/zre_msg.c \
     src/zyre_peer.c \
     src/zyre_group.c \
-    src/zyre_node.c
+    src/zyre_node.c \
+    src/platform.h
 
 src_libzyre_la_CPPFLAGS = \
     ${AM_CPPFLAGS}
@@ -34,6 +34,7 @@ src_libzyre_la_LDFLAGS += \
     -avoid-version
 endif
 
+
 check_PROGRAMS += src/zyre_selftest
 
 src_zyre_selftest_CPPFLAGS = \
@@ -42,8 +43,7 @@ src_zyre_selftest_CPPFLAGS = \
 src_zyre_selftest_LDADD = \
     src/libzyre.la
 
-src_zyre_selftest_SOURCES = \
-    src/zyre_selftest.c
+src_zyre_selftest_SOURCES = src/zyre_selftest.c
 
 TESTS = src/zyre_selftest
 

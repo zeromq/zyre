@@ -1,0 +1,452 @@
+#### zre_msg - work with ZRE messages
+
+zre_msg - work with ZRE messages
+
+
+This is the class interface:
+
+    //  Create a new zre_msg
+    ZYRE_EXPORT zre_msg_t *
+        zre_msg_new (int id);
+    
+    //  Destroy the zre_msg
+    ZYRE_EXPORT void
+        zre_msg_destroy (zre_msg_t **self_p);
+    
+    //  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
+    //  the message could not be parsed, or was NULL. Destroys msg and 
+    //  nullifies the msg reference.
+    ZYRE_EXPORT zre_msg_t *
+        zre_msg_decode (zmsg_t **msg_p);
+    
+    //  Encode zre_msg into zmsg and destroy it. Returns a newly created
+    //  object or NULL if error. Use when not in control of sending the message.
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_encode (zre_msg_t **self_p);
+    
+    //  Receive and parse a zre_msg from the socket. Returns new object, 
+    //  or NULL if error. Will block if there's no message waiting.
+    ZYRE_EXPORT zre_msg_t *
+        zre_msg_recv (void *input);
+    
+    //  Receive and parse a zre_msg from the socket. Returns new object, 
+    //  or NULL either if there was no input waiting, or the recv was interrupted.
+    ZYRE_EXPORT zre_msg_t *
+        zre_msg_recv_nowait (void *input);
+    
+    //  Send the zre_msg to the output, and destroy it
+    ZYRE_EXPORT int
+        zre_msg_send (zre_msg_t **self_p, void *output);
+    
+    //  Send the zre_msg to the output, and do not destroy it
+    ZYRE_EXPORT int
+        zre_msg_send_again (zre_msg_t *self, void *output);
+    
+    //  Encode the HELLO 
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_encode_hello (
+            uint16_t sequence,
+            const char *endpoint,
+            zlist_t *groups,
+            byte status,
+            const char *name,
+            zhash_t *headers);
+    
+    //  Encode the WHISPER 
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_encode_whisper (
+            uint16_t sequence,
+            zmsg_t *content);
+    
+    //  Encode the SHOUT 
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_encode_shout (
+            uint16_t sequence,
+            const char *group,
+            zmsg_t *content);
+    
+    //  Encode the JOIN 
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_encode_join (
+            uint16_t sequence,
+            const char *group,
+            byte status);
+    
+    //  Encode the LEAVE 
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_encode_leave (
+            uint16_t sequence,
+            const char *group,
+            byte status);
+    
+    //  Encode the PING 
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_encode_ping (
+            uint16_t sequence);
+    
+    //  Encode the PING_OK 
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_encode_ping_ok (
+            uint16_t sequence);
+    
+    
+    //  Send the HELLO to the output in one step
+    //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
+    ZYRE_EXPORT int
+        zre_msg_send_hello (void *output,
+            uint16_t sequence,
+            const char *endpoint,
+            zlist_t *groups,
+            byte status,
+            const char *name,
+            zhash_t *headers);
+        
+    //  Send the WHISPER to the output in one step
+    //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
+    ZYRE_EXPORT int
+        zre_msg_send_whisper (void *output,
+            uint16_t sequence,
+            zmsg_t *content);
+        
+    //  Send the SHOUT to the output in one step
+    //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
+    ZYRE_EXPORT int
+        zre_msg_send_shout (void *output,
+            uint16_t sequence,
+            const char *group,
+            zmsg_t *content);
+        
+    //  Send the JOIN to the output in one step
+    //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
+    ZYRE_EXPORT int
+        zre_msg_send_join (void *output,
+            uint16_t sequence,
+            const char *group,
+            byte status);
+        
+    //  Send the LEAVE to the output in one step
+    //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
+    ZYRE_EXPORT int
+        zre_msg_send_leave (void *output,
+            uint16_t sequence,
+            const char *group,
+            byte status);
+        
+    //  Send the PING to the output in one step
+    //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
+    ZYRE_EXPORT int
+        zre_msg_send_ping (void *output,
+            uint16_t sequence);
+        
+    //  Send the PING_OK to the output in one step
+    //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
+    ZYRE_EXPORT int
+        zre_msg_send_ping_ok (void *output,
+            uint16_t sequence);
+        
+    //  Duplicate the zre_msg message
+    ZYRE_EXPORT zre_msg_t *
+        zre_msg_dup (zre_msg_t *self);
+    
+    //  Print contents of message to stdout
+    ZYRE_EXPORT void
+        zre_msg_print (zre_msg_t *self);
+    
+    //  Get/set the message routing id
+    ZYRE_EXPORT zframe_t *
+        zre_msg_routing_id (zre_msg_t *self);
+    ZYRE_EXPORT void
+        zre_msg_set_routing_id (zre_msg_t *self, zframe_t *routing_id);
+    
+    //  Get the zre_msg id and printable command
+    ZYRE_EXPORT int
+        zre_msg_id (zre_msg_t *self);
+    ZYRE_EXPORT void
+        zre_msg_set_id (zre_msg_t *self, int id);
+    ZYRE_EXPORT const char *
+        zre_msg_command (zre_msg_t *self);
+    
+    //  Get/set the sequence field
+    ZYRE_EXPORT uint16_t
+        zre_msg_sequence (zre_msg_t *self);
+    ZYRE_EXPORT void
+        zre_msg_set_sequence (zre_msg_t *self, uint16_t sequence);
+    
+    //  Get/set the endpoint field
+    ZYRE_EXPORT const char *
+        zre_msg_endpoint (zre_msg_t *self);
+    ZYRE_EXPORT void
+        zre_msg_set_endpoint (zre_msg_t *self, const char *format, ...);
+    
+    //  Get/set the groups field
+    ZYRE_EXPORT zlist_t *
+        zre_msg_groups (zre_msg_t *self);
+    //  Get the groups field and transfer ownership to caller
+    ZYRE_EXPORT zlist_t *
+        zre_msg_get_groups (zre_msg_t *self);
+    //  Set the groups field, transferring ownership from caller
+    ZYRE_EXPORT void
+        zre_msg_set_groups (zre_msg_t *self, zlist_t **groups_p);
+    
+    //  Iterate through the groups field, and append a groups value
+    ZYRE_EXPORT const char *
+        zre_msg_groups_first (zre_msg_t *self);
+    ZYRE_EXPORT const char *
+        zre_msg_groups_next (zre_msg_t *self);
+    ZYRE_EXPORT void
+        zre_msg_groups_append (zre_msg_t *self, const char *format, ...);
+    ZYRE_EXPORT size_t
+        zre_msg_groups_size (zre_msg_t *self);
+    
+    //  Get/set the status field
+    ZYRE_EXPORT byte
+        zre_msg_status (zre_msg_t *self);
+    ZYRE_EXPORT void
+        zre_msg_set_status (zre_msg_t *self, byte status);
+    
+    //  Get/set the name field
+    ZYRE_EXPORT const char *
+        zre_msg_name (zre_msg_t *self);
+    ZYRE_EXPORT void
+        zre_msg_set_name (zre_msg_t *self, const char *format, ...);
+    
+    //  Get/set the headers field
+    ZYRE_EXPORT zhash_t *
+        zre_msg_headers (zre_msg_t *self);
+    //  Get the headers field and transfer ownership to caller
+    ZYRE_EXPORT zhash_t *
+        zre_msg_get_headers (zre_msg_t *self);
+    //  Set the headers field, transferring ownership from caller
+    ZYRE_EXPORT void
+        zre_msg_set_headers (zre_msg_t *self, zhash_t **headers_p);
+        
+    //  Get/set a value in the headers dictionary
+    ZYRE_EXPORT const char *
+        zre_msg_headers_string (zre_msg_t *self,
+            const char *key, const char *default_value);
+    ZYRE_EXPORT uint64_t
+        zre_msg_headers_number (zre_msg_t *self,
+            const char *key, uint64_t default_value);
+    ZYRE_EXPORT void
+        zre_msg_headers_insert (zre_msg_t *self,
+            const char *key, const char *format, ...);
+    ZYRE_EXPORT size_t
+        zre_msg_headers_size (zre_msg_t *self);
+    
+    //  Get a copy of the content field
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_content (zre_msg_t *self);
+    //  Get the content field and transfer ownership to caller
+    ZYRE_EXPORT zmsg_t *
+        zre_msg_get_content (zre_msg_t *self);
+    //  Set the content field, transferring ownership from caller
+    ZYRE_EXPORT void
+        zre_msg_set_content (zre_msg_t *self, zmsg_t **msg_p);
+    
+    //  Get/set the group field
+    ZYRE_EXPORT const char *
+        zre_msg_group (zre_msg_t *self);
+    ZYRE_EXPORT void
+        zre_msg_set_group (zre_msg_t *self, const char *format, ...);
+    
+    //  Self test of this class
+    ZYRE_EXPORT int
+        zre_msg_test (bool verbose);
+
+This is the class self test code:
+
+    //  Simple create/destroy test
+    zre_msg_t *self = zre_msg_new (0);
+    assert (self);
+    zre_msg_destroy (&self);
+    
+    //  Create pair of sockets we can send through
+    zsock_t *input = zsock_new (ZMQ_ROUTER);
+    assert (input);
+    zsock_connect (input, "inproc://selftest-zre_msg");
+    
+    zsock_t *output = zsock_new (ZMQ_DEALER);
+    assert (output);
+    zsock_bind (output, "inproc://selftest-zre_msg");
+    
+    //  Encode/send/decode and verify each message type
+    int instance;
+    zre_msg_t *copy;
+    self = zre_msg_new (ZRE_MSG_HELLO);
+    
+    //  Check that _dup works on empty message
+    copy = zre_msg_dup (self);
+    assert (copy);
+    zre_msg_destroy (&copy);
+    
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_endpoint (self, "Life is short but Now lasts for ever");
+    zre_msg_groups_append (self, "Name: %s", "Brutus");
+    zre_msg_groups_append (self, "Age: %d", 43);
+    zre_msg_set_status (self, 123);
+    zre_msg_set_name (self, "Life is short but Now lasts for ever");
+    zre_msg_headers_insert (self, "Name", "Brutus");
+    zre_msg_headers_insert (self, "Age", "%d", 43);
+    //  Send twice from same object
+    zre_msg_send_again (self, output);
+    zre_msg_send (&self, output);
+    
+    for (instance = 0; instance < 2; instance++) {
+        self = zre_msg_recv (input);
+        assert (self);
+        assert (zre_msg_routing_id (self));
+        
+        assert (zre_msg_sequence (self) == 123);
+        assert (streq (zre_msg_endpoint (self), "Life is short but Now lasts for ever"));
+        assert (zre_msg_groups_size (self) == 2);
+        assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
+        assert (streq (zre_msg_groups_next (self), "Age: 43"));
+        assert (zre_msg_status (self) == 123);
+        assert (streq (zre_msg_name (self), "Life is short but Now lasts for ever"));
+        assert (zre_msg_headers_size (self) == 2);
+        assert (streq (zre_msg_headers_string (self, "Name", "?"), "Brutus"));
+        assert (zre_msg_headers_number (self, "Age", 0) == 43);
+        zre_msg_destroy (&self);
+    }
+    self = zre_msg_new (ZRE_MSG_WHISPER);
+    
+    //  Check that _dup works on empty message
+    copy = zre_msg_dup (self);
+    assert (copy);
+    zre_msg_destroy (&copy);
+    
+    zre_msg_set_sequence (self, 123);
+    zmsg_t *whisper_content = zmsg_new ();
+    zre_msg_set_content (self, &whisper_content);
+    zmsg_addstr (zre_msg_content (self), "Hello, World");
+    //  Send twice from same object
+    zre_msg_send_again (self, output);
+    zre_msg_send (&self, output);
+    
+    for (instance = 0; instance < 2; instance++) {
+        self = zre_msg_recv (input);
+        assert (self);
+        assert (zre_msg_routing_id (self));
+        
+        assert (zre_msg_sequence (self) == 123);
+        assert (zmsg_size (zre_msg_content (self)) == 1);
+        zre_msg_destroy (&self);
+    }
+    self = zre_msg_new (ZRE_MSG_SHOUT);
+    
+    //  Check that _dup works on empty message
+    copy = zre_msg_dup (self);
+    assert (copy);
+    zre_msg_destroy (&copy);
+    
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_group (self, "Life is short but Now lasts for ever");
+    zmsg_t *shout_content = zmsg_new ();
+    zre_msg_set_content (self, &shout_content);
+    zmsg_addstr (zre_msg_content (self), "Hello, World");
+    //  Send twice from same object
+    zre_msg_send_again (self, output);
+    zre_msg_send (&self, output);
+    
+    for (instance = 0; instance < 2; instance++) {
+        self = zre_msg_recv (input);
+        assert (self);
+        assert (zre_msg_routing_id (self));
+        
+        assert (zre_msg_sequence (self) == 123);
+        assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+        assert (zmsg_size (zre_msg_content (self)) == 1);
+        zre_msg_destroy (&self);
+    }
+    self = zre_msg_new (ZRE_MSG_JOIN);
+    
+    //  Check that _dup works on empty message
+    copy = zre_msg_dup (self);
+    assert (copy);
+    zre_msg_destroy (&copy);
+    
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_group (self, "Life is short but Now lasts for ever");
+    zre_msg_set_status (self, 123);
+    //  Send twice from same object
+    zre_msg_send_again (self, output);
+    zre_msg_send (&self, output);
+    
+    for (instance = 0; instance < 2; instance++) {
+        self = zre_msg_recv (input);
+        assert (self);
+        assert (zre_msg_routing_id (self));
+        
+        assert (zre_msg_sequence (self) == 123);
+        assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+        assert (zre_msg_status (self) == 123);
+        zre_msg_destroy (&self);
+    }
+    self = zre_msg_new (ZRE_MSG_LEAVE);
+    
+    //  Check that _dup works on empty message
+    copy = zre_msg_dup (self);
+    assert (copy);
+    zre_msg_destroy (&copy);
+    
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_group (self, "Life is short but Now lasts for ever");
+    zre_msg_set_status (self, 123);
+    //  Send twice from same object
+    zre_msg_send_again (self, output);
+    zre_msg_send (&self, output);
+    
+    for (instance = 0; instance < 2; instance++) {
+        self = zre_msg_recv (input);
+        assert (self);
+        assert (zre_msg_routing_id (self));
+        
+        assert (zre_msg_sequence (self) == 123);
+        assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+        assert (zre_msg_status (self) == 123);
+        zre_msg_destroy (&self);
+    }
+    self = zre_msg_new (ZRE_MSG_PING);
+    
+    //  Check that _dup works on empty message
+    copy = zre_msg_dup (self);
+    assert (copy);
+    zre_msg_destroy (&copy);
+    
+    zre_msg_set_sequence (self, 123);
+    //  Send twice from same object
+    zre_msg_send_again (self, output);
+    zre_msg_send (&self, output);
+    
+    for (instance = 0; instance < 2; instance++) {
+        self = zre_msg_recv (input);
+        assert (self);
+        assert (zre_msg_routing_id (self));
+        
+        assert (zre_msg_sequence (self) == 123);
+        zre_msg_destroy (&self);
+    }
+    self = zre_msg_new (ZRE_MSG_PING_OK);
+    
+    //  Check that _dup works on empty message
+    copy = zre_msg_dup (self);
+    assert (copy);
+    zre_msg_destroy (&copy);
+    
+    zre_msg_set_sequence (self, 123);
+    //  Send twice from same object
+    zre_msg_send_again (self, output);
+    zre_msg_send (&self, output);
+    
+    for (instance = 0; instance < 2; instance++) {
+        self = zre_msg_recv (input);
+        assert (self);
+        assert (zre_msg_routing_id (self));
+        
+        assert (zre_msg_sequence (self) == 123);
+        zre_msg_destroy (&self);
+    }
+    
+    zsock_destroy (&input);
+    zsock_destroy (&output);
+

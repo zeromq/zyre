@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zyre_classes - all private classes
+    zyre_classes - private header file
 
     Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
     Copyright other contributors as noted in the AUTHORS file.              
@@ -29,6 +29,10 @@
 #ifndef __ZYRE_CLASSES_H_INCLUDED__
 #define __ZYRE_CLASSES_H_INCLUDED__
 
+//  External API
+#include "../include/zyre.h"
+
+//  Internal API
 #include "zyre_peer.h"
 #include "zyre_group.h"
 #include "zyre_node.h"
