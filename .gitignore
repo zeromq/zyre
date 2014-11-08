@@ -7,14 +7,10 @@ config.log
 config.status
 config/
 configure
-doc/Makefile
-doc/Makefile.in
 examples/chat
 examples/chat/.deps
 libtool
 src/.deps/
-src/Makefile
-src/Makefile.in
 src/libfmq.pc
 src/platform.h
 src/platform.h.in
