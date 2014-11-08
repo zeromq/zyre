@@ -30,7 +30,6 @@
     =========================================================================
 */
 
-#include "../include/zyre.h"
 #include "zyre_classes.h"
 
 int
@@ -42,7 +41,7 @@ main (int argc, char *argv [])
     else
         verbose = false;
 
-    printf ("Running ZYRE selftests...\n");
+    printf ("Running zyre selftests...\n");
 
     zyre_test (verbose); 
     zyre_event_test (verbose); 

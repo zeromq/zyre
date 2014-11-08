@@ -267,199 +267,202 @@ EXAMPLE
 -------
 .From zre_msg_test method
 ----
-    //  Simple create/destroy test
-    zre_msg_t *self = zre_msg_new (0);
+//  Simple create/destroy test
+zre_msg_t *self = zre_msg_new (0);
+assert (self);
+zre_msg_destroy (&self);
+
+//  Create pair of sockets we can send through
+zsock_t *input = zsock_new (ZMQ_ROUTER);
+assert (input);
+zsock_connect (input, "inproc://selftest-zre_msg");
+
+zsock_t *output = zsock_new (ZMQ_DEALER);
+assert (output);
+zsock_bind (output, "inproc://selftest-zre_msg");
+
+//  Encode/send/decode and verify each message type
+int instance;
+zre_msg_t *copy;
+self = zre_msg_new (ZRE_MSG_HELLO);
+
+//  Check that _dup works on empty message
+copy = zre_msg_dup (self);
+assert (copy);
+zre_msg_destroy (&copy);
+
+zre_msg_set_sequence (self, 123);
+zre_msg_set_endpoint (self, "Life is short but Now lasts for ever");
+zre_msg_groups_append (self, "Name: %s", "Brutus");
+zre_msg_groups_append (self, "Age: %d", 43);
+zre_msg_set_status (self, 123);
+zre_msg_set_name (self, "Life is short but Now lasts for ever");
+zre_msg_headers_insert (self, "Name", "Brutus");
+zre_msg_headers_insert (self, "Age", "%d", 43);
+//  Send twice from same object
+zre_msg_send_again (self, output);
+zre_msg_send (&self, output);
+
+for (instance = 0; instance < 2; instance++) {
+    self = zre_msg_recv (input);
     assert (self);
+    assert (zre_msg_routing_id (self));
+    
+    assert (zre_msg_sequence (self) == 123);
+    assert (streq (zre_msg_endpoint (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_groups_size (self) == 2);
+    assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
+    assert (streq (zre_msg_groups_next (self), "Age: 43"));
+    assert (zre_msg_status (self) == 123);
+    assert (streq (zre_msg_name (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_headers_size (self) == 2);
+    assert (streq (zre_msg_headers_string (self, "Name", "?"), "Brutus"));
+    assert (zre_msg_headers_number (self, "Age", 0) == 43);
     zre_msg_destroy (&self);
+}
+self = zre_msg_new (ZRE_MSG_WHISPER);
 
-    //  Create pair of sockets we can send through
-    zsock_t *input = zsock_new (ZMQ_ROUTER);
-    assert (input);
-    zsock_connect (input, "inproc://selftest-zre_msg");
+//  Check that _dup works on empty message
+copy = zre_msg_dup (self);
+assert (copy);
+zre_msg_destroy (&copy);
 
-    zsock_t *output = zsock_new (ZMQ_DEALER);
-    assert (output);
-    zsock_bind (output, "inproc://selftest-zre_msg");
+zre_msg_set_sequence (self, 123);
+zmsg_t *whisper_content = zmsg_new ();
+zre_msg_set_content (self, &whisper_content);
+zmsg_addstr (zre_msg_content (self), "Hello, World");
+//  Send twice from same object
+zre_msg_send_again (self, output);
+zre_msg_send (&self, output);
 
-    //  Encode/send/decode and verify each message type
-    int instance;
-    zre_msg_t *copy;
-    self = zre_msg_new (ZRE_MSG_HELLO);
+for (instance = 0; instance < 2; instance++) {
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_routing_id (self));
     
-    //  Check that _dup works on empty message
-    copy = zre_msg_dup (self);
-    assert (copy);
-    zre_msg_destroy (&copy);
+    assert (zre_msg_sequence (self) == 123);
+    assert (zmsg_size (zre_msg_content (self)) == 1);
+    zre_msg_destroy (&self);
+}
+self = zre_msg_new (ZRE_MSG_SHOUT);
 
-    zre_msg_set_sequence (self, 123);
-    zre_msg_set_endpoint (self, "Life is short but Now lasts for ever");
-    zre_msg_groups_append (self, "Name: %s", "Brutus");
-    zre_msg_groups_append (self, "Age: %d", 43);
-    zre_msg_set_status (self, 123);
-    zre_msg_set_name (self, "Life is short but Now lasts for ever");
-    zre_msg_headers_insert (self, "Name", "Brutus");
-    zre_msg_headers_insert (self, "Age", "%d", 43);
-    //  Send twice from same object
-    zre_msg_send_again (self, output);
-    zre_msg_send (&self, output);
+//  Check that _dup works on empty message
+copy = zre_msg_dup (self);
+assert (copy);
+zre_msg_destroy (&copy);
 
-    for (instance = 0; instance < 2; instance++) {
-        self = zre_msg_recv (input);
-        assert (self);
-        assert (zre_msg_routing_id (self));
-        
-        assert (zre_msg_sequence (self) == 123);
-        assert (streq (zre_msg_endpoint (self), "Life is short but Now lasts for ever"));
-        assert (zre_msg_groups_size (self) == 2);
-        assert (streq (zre_msg_groups_first (self), "Name: Brutus"));
-        assert (streq (zre_msg_groups_next (self), "Age: 43"));
-        assert (zre_msg_status (self) == 123);
-        assert (streq (zre_msg_name (self), "Life is short but Now lasts for ever"));
-        assert (zre_msg_headers_size (self) == 2);
-        assert (streq (zre_msg_headers_string (self, "Name", "?"), "Brutus"));
-        assert (zre_msg_headers_number (self, "Age", 0) == 43);
-        zre_msg_destroy (&self);
-    }
-    self = zre_msg_new (ZRE_MSG_WHISPER);
+zre_msg_set_sequence (self, 123);
+zre_msg_set_group (self, "Life is short but Now lasts for ever");
+zmsg_t *shout_content = zmsg_new ();
+zre_msg_set_content (self, &shout_content);
+zmsg_addstr (zre_msg_content (self), "Hello, World");
+//  Send twice from same object
+zre_msg_send_again (self, output);
+zre_msg_send (&self, output);
+
+for (instance = 0; instance < 2; instance++) {
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_routing_id (self));
     
-    //  Check that _dup works on empty message
-    copy = zre_msg_dup (self);
-    assert (copy);
-    zre_msg_destroy (&copy);
+    assert (zre_msg_sequence (self) == 123);
+    assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+    assert (zmsg_size (zre_msg_content (self)) == 1);
+    zre_msg_destroy (&self);
+}
+self = zre_msg_new (ZRE_MSG_JOIN);
 
-    zre_msg_set_sequence (self, 123);
-    zmsg_t *whisper_content = zmsg_new ();
-    zre_msg_set_content (self, &whisper_content);
-    zmsg_addstr (zre_msg_content (self), "Hello, World");
-    //  Send twice from same object
-    zre_msg_send_again (self, output);
-    zre_msg_send (&self, output);
+//  Check that _dup works on empty message
+copy = zre_msg_dup (self);
+assert (copy);
+zre_msg_destroy (&copy);
 
-    for (instance = 0; instance < 2; instance++) {
-        self = zre_msg_recv (input);
-        assert (self);
-        assert (zre_msg_routing_id (self));
-        
-        assert (zre_msg_sequence (self) == 123);
-        assert (zmsg_size (zre_msg_content (self)) == 1);
-        zre_msg_destroy (&self);
-    }
-    self = zre_msg_new (ZRE_MSG_SHOUT);
+zre_msg_set_sequence (self, 123);
+zre_msg_set_group (self, "Life is short but Now lasts for ever");
+zre_msg_set_status (self, 123);
+//  Send twice from same object
+zre_msg_send_again (self, output);
+zre_msg_send (&self, output);
+
+for (instance = 0; instance < 2; instance++) {
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_routing_id (self));
     
-    //  Check that _dup works on empty message
-    copy = zre_msg_dup (self);
-    assert (copy);
-    zre_msg_destroy (&copy);
+    assert (zre_msg_sequence (self) == 123);
+    assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_status (self) == 123);
+    zre_msg_destroy (&self);
+}
+self = zre_msg_new (ZRE_MSG_LEAVE);
 
-    zre_msg_set_sequence (self, 123);
-    zre_msg_set_group (self, "Life is short but Now lasts for ever");
-    zmsg_t *shout_content = zmsg_new ();
-    zre_msg_set_content (self, &shout_content);
-    zmsg_addstr (zre_msg_content (self), "Hello, World");
-    //  Send twice from same object
-    zre_msg_send_again (self, output);
-    zre_msg_send (&self, output);
+//  Check that _dup works on empty message
+copy = zre_msg_dup (self);
+assert (copy);
+zre_msg_destroy (&copy);
 
-    for (instance = 0; instance < 2; instance++) {
-        self = zre_msg_recv (input);
-        assert (self);
-        assert (zre_msg_routing_id (self));
-        
-        assert (zre_msg_sequence (self) == 123);
-        assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
-        assert (zmsg_size (zre_msg_content (self)) == 1);
-        zre_msg_destroy (&self);
-    }
-    self = zre_msg_new (ZRE_MSG_JOIN);
+zre_msg_set_sequence (self, 123);
+zre_msg_set_group (self, "Life is short but Now lasts for ever");
+zre_msg_set_status (self, 123);
+//  Send twice from same object
+zre_msg_send_again (self, output);
+zre_msg_send (&self, output);
+
+for (instance = 0; instance < 2; instance++) {
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_routing_id (self));
     
-    //  Check that _dup works on empty message
-    copy = zre_msg_dup (self);
-    assert (copy);
-    zre_msg_destroy (&copy);
+    assert (zre_msg_sequence (self) == 123);
+    assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+    assert (zre_msg_status (self) == 123);
+    zre_msg_destroy (&self);
+}
+self = zre_msg_new (ZRE_MSG_PING);
 
-    zre_msg_set_sequence (self, 123);
-    zre_msg_set_group (self, "Life is short but Now lasts for ever");
-    zre_msg_set_status (self, 123);
-    //  Send twice from same object
-    zre_msg_send_again (self, output);
-    zre_msg_send (&self, output);
+//  Check that _dup works on empty message
+copy = zre_msg_dup (self);
+assert (copy);
+zre_msg_destroy (&copy);
 
-    for (instance = 0; instance < 2; instance++) {
-        self = zre_msg_recv (input);
-        assert (self);
-        assert (zre_msg_routing_id (self));
-        
-        assert (zre_msg_sequence (self) == 123);
-        assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
-        assert (zre_msg_status (self) == 123);
-        zre_msg_destroy (&self);
-    }
-    self = zre_msg_new (ZRE_MSG_LEAVE);
+zre_msg_set_sequence (self, 123);
+//  Send twice from same object
+zre_msg_send_again (self, output);
+zre_msg_send (&self, output);
+
+for (instance = 0; instance < 2; instance++) {
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_routing_id (self));
     
-    //  Check that _dup works on empty message
-    copy = zre_msg_dup (self);
-    assert (copy);
-    zre_msg_destroy (&copy);
+    assert (zre_msg_sequence (self) == 123);
+    zre_msg_destroy (&self);
+}
+self = zre_msg_new (ZRE_MSG_PING_OK);
 
-    zre_msg_set_sequence (self, 123);
-    zre_msg_set_group (self, "Life is short but Now lasts for ever");
-    zre_msg_set_status (self, 123);
-    //  Send twice from same object
-    zre_msg_send_again (self, output);
-    zre_msg_send (&self, output);
+//  Check that _dup works on empty message
+copy = zre_msg_dup (self);
+assert (copy);
+zre_msg_destroy (&copy);
 
-    for (instance = 0; instance < 2; instance++) {
-        self = zre_msg_recv (input);
-        assert (self);
-        assert (zre_msg_routing_id (self));
-        
-        assert (zre_msg_sequence (self) == 123);
-        assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
-        assert (zre_msg_status (self) == 123);
-        zre_msg_destroy (&self);
-    }
-    self = zre_msg_new (ZRE_MSG_PING);
+zre_msg_set_sequence (self, 123);
+//  Send twice from same object
+zre_msg_send_again (self, output);
+zre_msg_send (&self, output);
+
+for (instance = 0; instance < 2; instance++) {
+    self = zre_msg_recv (input);
+    assert (self);
+    assert (zre_msg_routing_id (self));
     
-    //  Check that _dup works on empty message
-    copy = zre_msg_dup (self);
-    assert (copy);
-    zre_msg_destroy (&copy);
+    assert (zre_msg_sequence (self) == 123);
+    zre_msg_destroy (&self);
+}
 
-    zre_msg_set_sequence (self, 123);
-    //  Send twice from same object
-    zre_msg_send_again (self, output);
-    zre_msg_send (&self, output);
-
-    for (instance = 0; instance < 2; instance++) {
-        self = zre_msg_recv (input);
-        assert (self);
-        assert (zre_msg_routing_id (self));
-        
-        assert (zre_msg_sequence (self) == 123);
-        zre_msg_destroy (&self);
-    }
-    self = zre_msg_new (ZRE_MSG_PING_OK);
-    
-    //  Check that _dup works on empty message
-    copy = zre_msg_dup (self);
-    assert (copy);
-    zre_msg_destroy (&copy);
-
-    zre_msg_set_sequence (self, 123);
-    //  Send twice from same object
-    zre_msg_send_again (self, output);
-    zre_msg_send (&self, output);
-
-    for (instance = 0; instance < 2; instance++) {
-        self = zre_msg_recv (input);
-        assert (self);
-        assert (zre_msg_routing_id (self));
-        
-        assert (zre_msg_sequence (self) == 123);
-        zre_msg_destroy (&self);
-    }
-
-    zsock_destroy (&input);
-    zsock_destroy (&output);
+zsock_destroy (&input);
+zsock_destroy (&output);
 ----
 
+SEE ALSO
+--------
+linkczmq:czmq[7]

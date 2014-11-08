@@ -1,0 +1,128 @@
+#### zyre_event - no title found
+
+This class provides a higher-level API to the zyre_recv call, by doing
+work that you will want to do in many cases, such as unpacking the peer
+headers for each ENTER event received.
+
+
+This is the class interface:
+
+    typedef enum {
+        ZYRE_EVENT_ENTER = 1,
+        ZYRE_EVENT_JOIN = 2,
+        ZYRE_EVENT_LEAVE = 3,
+        ZYRE_EVENT_EXIT = 4,
+        ZYRE_EVENT_WHISPER = 5,
+        ZYRE_EVENT_SHOUT = 6
+    } zyre_event_type_t;
+    
+    
+    //  Constructor: receive an event from the zyre node, wraps zyre_recv.
+    //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+    //  data (WHISPER, SHOUT).
+    ZYRE_EXPORT zyre_event_t *
+        zyre_event_new (zyre_t *self);
+    
+    //  Destructor; destroys an event instance
+    ZYRE_EXPORT void
+        zyre_event_destroy (zyre_event_t **self_p);
+    
+    //  Returns event type, which is a zyre_event_type_t
+    ZYRE_EXPORT zyre_event_type_t
+        zyre_event_type (zyre_event_t *self);
+    
+    //  Return the sending peer's id as a string
+    ZYRE_EXPORT char *
+        zyre_event_sender (zyre_event_t *self);
+    
+    //  Return the sending peer's public name as a string
+    ZYRE_EXPORT char *
+        zyre_event_name (zyre_event_t *self);
+    
+    //  Return the sending peer's ipaddress as a string
+    ZYRE_EXPORT char *
+        zyre_event_address (zyre_event_t *self);
+    
+    //  Returns the event headers, or NULL if there are none
+    ZYRE_EXPORT zhash_t *
+        zyre_event_headers (zyre_event_t *self);
+    
+    //  Returns value of a header from the message headers
+    //  obtained by ENTER. Return NULL if no value was found.
+    ZYRE_EXPORT char *
+        zyre_event_header (zyre_event_t *self, char *name);
+    
+    //  Returns the group name that a SHOUT event was sent to
+    ZYRE_EXPORT char *
+        zyre_event_group (zyre_event_t *self);
+    
+    //  Returns the incoming message payload (currently one frame)
+    ZYRE_EXPORT zmsg_t *
+        zyre_event_msg (zyre_event_t *self);
+    
+    // Self test of this class
+    ZYRE_EXPORT void
+        zyre_event_test (bool verbose);
+
+This is the class self test code:
+
+    //  Create two nodes
+    zyre_t *node1 = zyre_new ("node1");
+    assert (node1);
+    zyre_set_header (node1, "X-HELLO", "World");
+    zyre_set_verbose (node1);
+    if (zyre_start (node1)) {
+        zyre_destroy (&node1);
+        printf ("OK (skipping test, no UDP discovery)\n");
+        return;
+    }
+    zyre_join (node1, "GLOBAL");
+    
+    zyre_t *node2 = zyre_new ("node2");
+    assert (node2);
+    zyre_set_verbose (node2);
+    int rc = zyre_start (node2);
+    assert (rc == 0);
+    zyre_join (node2, "GLOBAL");
+    
+    //  Give time for them to interconnect
+    zclock_sleep (250);
+    
+    //  One node shouts to GLOBAL
+    zmsg_t *msg = zmsg_new ();
+    zmsg_addstr (msg, "Hello, World");
+    zyre_shout (node1, "GLOBAL", &msg);
+    zclock_sleep (100);
+    
+    //  Parse ENTER
+    zyre_event_t *event = zyre_event_new (node2);
+    assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
+    char *sender = zyre_event_sender (event);
+    assert (sender);
+    char *name = zyre_event_name (event);
+    assert (name);
+    assert (streq (name, "node1"));
+    char *address = zyre_event_address (event);
+    assert (address);
+    char *header = zyre_event_header (event, "X-HELLO");
+    assert (header);
+    zyre_event_destroy (&event);
+    
+    //  Parse JOIN
+    event = zyre_event_new (node2);
+    assert (zyre_event_type (event) == ZYRE_EVENT_JOIN);
+    zyre_event_destroy (&event);
+    
+    //  Parse SHOUT
+    event = zyre_event_new (node2);
+    assert (zyre_event_type (event) == ZYRE_EVENT_SHOUT);
+    assert (streq (zyre_event_group (event), "GLOBAL"));
+    msg = zyre_event_msg (event);
+    char *string = zmsg_popstr (msg);
+    assert (streq (string, "Hello, World"));
+    free (string);
+    zyre_event_destroy (&event);
+    
+    zyre_destroy (&node1);
+    zyre_destroy (&node2);
+

@@ -27,8 +27,8 @@
     =========================================================================
 */
 
-#ifndef __ZYRE_H_INCLUDED__
-#define __ZYRE_H_INCLUDED__
+#ifndef __zyre_library_H_INCLUDED__
+#define __zyre_library_H_INCLUDED__
 
 //  External dependencies
 #include <czmq.h>
@@ -68,7 +68,6 @@ typedef struct _zre_msg_t zre_msg_t;
 #define ZRE_DISCOVERY_PORT	5670 //              IANA-assigned UDP port for ZRE
 
 //  Public API classes
-
 #include "zyre_event.h"
 #include "zre_msg.h"
 

@@ -4,8 +4,9 @@ The following ABNF grammar defines the work with ZRE messages:
     greeting        = hello
     traffic         = whisper / shout / join / leave / ping / ping-ok
 
-    ;     Greet a peer so it can connect back to us
-    hello           = signature %d1 version sequence endpoint groups status name headers
+    ;  Greet a peer so it can connect back to us                             
+
+    HELLO           = signature %d1 version sequence endpoint groups status name headers
     signature       = %xAA %xA1             ; two octets
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
@@ -13,42 +14,48 @@ The following ABNF grammar defines the work with ZRE messages:
     groups          = strings               ; List of groups sender is in
     status          = number-1              ; Sender groups status value
     name            = string                ; Sender public name
-    headers         = dictionary            ; Sender header properties
+    headers         = hash                  ; Sender header properties
 
-    ;     Send a multi-part message to a peer
-    whisper         = signature %d2 version sequence content
+    ;  Send a multi-part message to a peer                                   
+
+    WHISPER         = signature %d2 version sequence content
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
     content         = msg                   ; Wrapped message content
 
-    ;     Send a multi-part message to a group
-    shout           = signature %d3 version sequence group content
+    ;  Send a multi-part message to a group                                  
+
+    SHOUT           = signature %d3 version sequence group content
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
     group           = string                ; Group to send to
     content         = msg                   ; Wrapped message content
 
-    ;     Join a group
-    join            = signature %d4 version sequence group status
+    ;  Join a group                                                          
+
+    JOIN            = signature %d4 version sequence group status
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
     group           = string                ; Name of group
     status          = number-1              ; Sender groups status value
 
-    ;     Leave a group
-    leave           = signature %d5 version sequence group status
+    ;  Leave a group                                                         
+
+    LEAVE           = signature %d5 version sequence group status
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
     group           = string                ; Name of group
     status          = number-1              ; Sender groups status value
 
-    ;     Ping a peer that has gone silent
-    ping            = signature %d6 version sequence
+    ;  Ping a peer that has gone silent                                      
+
+    PING            = signature %d6 version sequence
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
 
-    ;     Reply to a peer's ping
-    ping_ok         = signature %d7 version sequence
+    ;  Reply to a peer's ping                                                
+
+    PING-OK         = signature %d7 version sequence
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
 
@@ -56,12 +63,6 @@ The following ABNF grammar defines the work with ZRE messages:
     strings         = strings-count *strings-value
     strings-count   = number-4
     strings-value   = longstr
-
-    ; A list of name/value pairs
-    dictionary      = dict-count *( dict-name dict-value )
-    dict-count      = number-4
-    dict-value      = longstr
-    dict-name       = string
 
     ; A msg is zero or more distinct frames
     msg             = *frame
