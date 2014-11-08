@@ -2,7 +2,7 @@
     name = "zre_msg"
     signature = "1"
     title = "work with ZRE messages"
-    script = "zproto_codec_c"
+    script = "zproto_codec_c_v1"
     package_dir = "../include"
     project_header = "../include/zyre.h"
     export_macro = "ZYRE_EXPORT"
@@ -29,7 +29,7 @@
         <field name = "groups" type = "strings">List of groups sender is in</field>
         <field name = "status" type = "number" size = "1">Sender groups status value</field>
         <field name = "name" type = "string">Sender public name</field>
-        <field name = "headers" type = "dictionary">Sender header properties</field>
+        <field name = "headers" type = "hash">Sender header properties</field>
     Greet a peer so it can connect back to us
     </message>
 

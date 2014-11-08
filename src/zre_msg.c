@@ -9,10 +9,9 @@
     statements. DO NOT MAKE ANY CHANGES YOU WISH TO KEEP. The correct places
     for commits are:
 
-    * The XML model used for this code generation: zre_msg.xml
-    * The code generation script that built this file: zproto_codec_c
+     * The XML model used for this code generation: zre_msg.xml, or
+     * The code generation script that built this file: zproto_codec_c_v1
     ************************************************************************
-    
     Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
     Copyright other contributors as noted in the AUTHORS file.              
                                                                             

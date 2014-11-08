@@ -9,8 +9,8 @@
     statements. DO NOT MAKE ANY CHANGES YOU WISH TO KEEP. The correct places
     for commits are:
 
-    * The XML model used for this code generation: zre_msg.xml
-    * The code generation script that built this file: zproto_codec_c
+     * The XML model used for this code generation: zre_msg.xml, or
+     * The code generation script that built this file: zproto_codec_c_v1
     ************************************************************************
     Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
     Copyright other contributors as noted in the AUTHORS file.              
@@ -45,7 +45,7 @@
         groups              strings     List of groups sender is in
         status              number 1    Sender groups status value
         name                string      Sender public name
-        headers             dictionary  Sender header properties
+        headers             hash        Sender header properties
 
     WHISPER - Send a multi-part message to a peer
         version             number 1    Version number (2)
@@ -88,8 +88,16 @@
 #define ZRE_MSG_PING                        6
 #define ZRE_MSG_PING_OK                     7
 
+#include <czmq.h>
+
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+//  Opaque class structure
+#ifndef ZRE_MSG_T_DEFINED
+typedef struct _zre_msg_t zre_msg_t;
+#define ZRE_MSG_T_DEFINED
 #endif
 
 //  @interface
