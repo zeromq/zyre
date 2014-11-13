@@ -1,5 +1,7 @@
 # Zyre - an open-source framework for proximity-based peer-to-peer applications
 
+[![Build Status](https://travis-ci.org/zeromq/zyre.svg?branch=master)](https://travis-ci.org/zeromq/zyre)
+
 ## Description
 
 Zyre does local area discovery and clustering. A Zyre node broadcasts
