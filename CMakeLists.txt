@@ -18,7 +18,7 @@ set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 # determine version
 ########################################################################
 foreach(which MAJOR MINOR PATCH)
-    file(STRINGS "${SOURCE_DIR}/include/zyre.h" ZYRE_VERSION_STRING REGEX "#define ZYRE_VERSION_${which}")
+    file(STRINGS "${SOURCE_DIR}/include/zyre_library.h" ZYRE_VERSION_STRING REGEX "#define ZYRE_VERSION_${which}")
     string(REGEX MATCH "#define ZYRE_VERSION_${which} ([0-9_]+)" ZYRE_REGEX_MATCH "${ZYRE_VERSION_STRING}")
     if (NOT ZYRE_REGEX_MATCH)
         message(FATAL_ERROR "failed to parse ZYRE_VERSION_${which} from zyre.h")
@@ -69,11 +69,22 @@ if (MINGW)
     set(MORE_LIBRARIES -lws2_32 -lrpcrt4 -liphlpapi)
 endif()
 
-########################################################################
-# ZeroMQ depedency
-########################################################################
+
 list(APPEND CMAKE_MODULE_PATH ${SOURCE_DIR})
+
+########################################################################
+# ZMQ dependency
+########################################################################
 find_package(ZeroMQ REQUIRED)
+include_directories(${ZEROMQ_INCLUDE_DIRS})
+list(APPEND MORE_LIBRARIES ${ZEROMQ_LIBRARIES})
+
+########################################################################
+# CZMQ dependency
+########################################################################
+find_package(CZMQ REQUIRED)
+include_directories(${CZMQ_INCLUDE_DIRS})
+list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
 
 ########################################################################
 # includes
@@ -95,7 +106,6 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 include_directories(${BINARY_DIR})
 include_directories(${SOURCE_DIR}/include)
-include_directories(${ZEROMQ_INCLUDE_DIRS})
 set (zyre_sources
     src/zyre.c
     src/zyre_event.c
