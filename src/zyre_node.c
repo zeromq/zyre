@@ -31,7 +31,6 @@
 //  Structure of our class
 
 struct _zyre_node_t {
-    zctx_t *ctx;                //  ... until we use zbeacon actor
     //  We send command replies and signals to the pipe
     zsock_t *pipe;              //  Pipe back to application
     //  We send all Zyre messages to the outbox
@@ -41,7 +40,7 @@ struct _zyre_node_t {
     int beacon_port;            //  Beacon port number
     size_t interval;            //  Beacon interval
     zpoller_t *poller;          //  Socket poller
-    zbeacon_t *beacon;          //  Beacon object
+    zactor_t *beacon;           //  Beacon actor
     zuuid_t *uuid;              //  Our UUID as object
     zsock_t *inbox;             //  Our inbox socket (ROUTER)
     char *name;                 //  Our public name
@@ -91,7 +90,6 @@ zyre_node_new (zsock_t *pipe, void *args)
     //  canonical one, and any old trailing commands are discarded.
     zsock_set_router_handover (self->inbox, 1);
     
-    self->ctx = zctx_new ();
     self->pipe = pipe;
     self->outbox = (zsock_t *) args;
     self->poller = zpoller_new (self->pipe, NULL);
@@ -129,12 +127,11 @@ zyre_node_destroy (zyre_node_t **self_p)
         zhash_destroy (&self->headers);
         zsock_destroy (&self->inbox);
         zsock_destroy (&self->outbox);
-        zbeacon_destroy (&self->beacon);
+        zactor_destroy (&self->beacon);
         zactor_destroy (&self->gossip);
         zstr_free (&self->endpoint);
         zstr_free (&self->gossip_bind);
         zstr_free (&self->gossip_connect);
-        zctx_destroy (&self->ctx);
         free (self->name);
         free (self);
         *self_p = NULL;
@@ -163,14 +160,15 @@ zyre_node_start (zyre_node_t *self)
         //  Start beacon discovery
         //  ------------------------------------------------------------------
         assert (!self->beacon);
-        self->beacon = zbeacon_new (self->ctx, self->beacon_port);
+        self->beacon = zactor_new (zbeacon, NULL);
         if (!self->beacon)
             return 1;               //  Not possible to start beacon
-        if (self->interval)
-            zbeacon_set_interval (self->beacon, self->interval);
+        zsock_send (self->beacon, "si", "CONFIGURE", self->beacon_port);
 
         //  Our hostname is provided by zbeacon
-        self->port = zsock_bind (self->inbox, "tcp://%s:*", zbeacon_hostname (self->beacon));
+        char *hostname = zstr_recv (self->beacon);
+        self->port = zsock_bind (self->inbox, "tcp://%s:*", hostname);
+        zstr_free (&hostname);
         assert (self->port > 0);    //  Die on bad interface or port exhaustion
         assert (!self->endpoint);   //  If caller set this, we'd be using gossip
         self->endpoint = strdup (zsock_endpoint (self->inbox));
@@ -183,13 +181,10 @@ zyre_node_start (zyre_node_t *self)
         beacon.version = BEACON_VERSION;
         beacon.port = htons (self->port);
         zuuid_export (self->uuid, beacon.uuid);
-        zbeacon_noecho (self->beacon);
-        zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
-        zbeacon_subscribe (self->beacon, (byte *) "ZRE", 3);
-        
-        //  TODO: zbeacon should be a zactor, in which case we can poll
-        //  it directly, rather than via its socket
-        zpoller_add (self->poller, zbeacon_socket (self->beacon));
+        zsock_send (self->beacon, "sbi", "PUBLISH",
+            (byte *) &beacon, sizeof (beacon_t), self->interval);
+        zsock_send (self->beacon, "sb", "SUBSCRIBE", (byte *) "ZRE", 3);
+        zpoller_add (self->poller, self->beacon);
     }
     else {
         //  Start gossip discovery
@@ -233,10 +228,11 @@ zyre_node_stop (zyre_node_t *self)
         beacon.version = BEACON_VERSION;
         beacon.port = 0;            //  Zero means we're stopping
         zuuid_export (self->uuid, beacon.uuid);
-        zbeacon_publish (self->beacon, (byte *) &beacon, sizeof (beacon_t));
+        zsock_send (self->beacon, "sbi", "PUBLISH",
+            (byte *) &beacon, sizeof (beacon_t), self->interval);
         zclock_sleep (1);           //  Allow 1 msec for beacon to go out
-        zpoller_remove (self->poller, zbeacon_socket (self->beacon));
-        zbeacon_destroy (&self->beacon);
+        zpoller_remove (self->poller, self->beacon);
+        zactor_destroy (&self->beacon);
     }
     //  Stop polling on inbox
     zpoller_remove (self->poller, self->inbox);
@@ -737,8 +733,8 @@ static void
 zyre_node_recv_beacon (zyre_node_t *self)
 {
     //  Get IP address and beacon of peer
-    char *ipaddress = zstr_recv (zbeacon_socket (self->beacon));
-    zframe_t *frame = zframe_recv (zbeacon_socket (self->beacon));
+    char *ipaddress = zstr_recv (self->beacon);
+    zframe_t *frame = zframe_recv (self->beacon);
     if (ipaddress == NULL)
         return;                 //  Interrupted
 
@@ -860,7 +856,7 @@ zyre_node_actor (zsock_t *pipe, void *args)
             zyre_node_recv_peer (self);
         else
         if (self->beacon
-        && (void *) which == zbeacon_socket (self->beacon))
+        && (void *) which == self->beacon)
             zyre_node_recv_beacon (self);
         else
         if (self->gossip
