@@ -41,7 +41,9 @@ src_zyre_selftest_CPPFLAGS = \
     ${src_libzyre_la_CFLAGS}
 
 src_zyre_selftest_LDADD = \
-    src/libzyre.la
+    src/libzyre.la \
+    ${zmq_LIBS} \
+    ${czmq_LIBS}
 
 src_zyre_selftest_SOURCES = src/zyre_selftest.c
 
