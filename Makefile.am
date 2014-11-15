@@ -6,6 +6,8 @@
 ACLOCAL_AMFLAGS = -I config
 
 AM_CPPFLAGS = \
+    ${zmq_CFLAGS} \
+    ${czmq_CFLAGS} \
     -I$(srcdir)/include
 
 SUBDIRS =

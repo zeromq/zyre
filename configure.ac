@@ -69,49 +69,67 @@ if test "x${ZYRE_GCOV}" == "xyes"; then
     fi
 fi
 
-# libzmq integration
-AC_ARG_WITH([libzmq],
-            [AS_HELP_STRING([--with-libzmq],
-                            [Specify libzmq prefix])],
-            [search_libzmq="yes"],
-            [])
+PREVIOUS_CFLAGS="${CFLAGS}"
+PREVIOUS_LIBS="${LIBS}"
 
-if test "x$search_libzmq" = "xyes"; then
-    if test -r "${with_libzmq}/include/zmq.h"; then
-        CFLAGS="-I${with_libzmq}/include ${CFLAGS}"
-        LDFLAGS="-L${with_libzmq}/lib ${LDFLAGS}"
-    else
-        AC_MSG_ERROR([${with_libzmq}/include/zmq.h not found. Please check libzmq prefix])
-    fi
+
+was_zmq_check_lib_detected=no
+
+PKG_CHECK_MODULES([zmq], [libzmq >= 2.2.0],,
+    [AC_MSG_ERROR([Cannot find required package for libzmq.       Note, pkg-config is required due to specified version >= 2.2.0])
+  ])
+
+if test "x$was_zmq_check_lib_detected" = "xno"; then
+    CFLAGS="${zmq_CFLAGS} ${CFLAGS}"
+    LIBS="${zmq_LIBS} ${LIBS}"
 fi
 
-AC_CHECK_LIB(zmq, zmq_init,
-    LIBS="-lzmq $LIBS",
-    [AC_MSG_ERROR([cannot link with -lzmq, install libzmq.])])
 
-PKG_CHECK_MODULES([zmq], [libzmq >= 2.2.0])
+was_czmq_check_lib_detected=no
 
-# libczmq integration
-AC_ARG_WITH([libczmq],
-            [AS_HELP_STRING([--with-libczmq],
-                            [Specify libczmq prefix])],
+PKG_CHECK_MODULES([czmq], [libczmq],,
+    [
+        AC_ARG_WITH([libczmq],
+            [
+                AS_HELP_STRING([--with-libczmq],
+                [Specify libczmq prefix])
+            ],
             [search_libczmq="yes"],
             [])
 
-if test "x$search_libczmq" = "xyes"; then
-    if test -r "${with_libczmq}/include/czmq.h"; then
-        CFLAGS="-I${with_libczmq}/include ${CFLAGS}"
-        LDFLAGS="-L${with_libczmq}/lib ${LDFLAGS}"
-    else
-        AC_MSG_ERROR([${with_libczmq}/include/czmq.h not found. Please check libczmq prefix])
-    fi
+        czmq_synthetic_cflags=""
+        czmq_synthetic_libs="-lczmq"
+
+        if test "x$search_libczmq" = "xyes"; then
+            if test -r "${with_libczmq}/include/czmq.h"; then
+                czmq_synthetic_cflags="-I${with_libczmq}/include"
+                czmq_synthetic_libs="-L${with_libczmq}/lib -lczmq"
+            else
+                AC_MSG_ERROR([${with_libczmq}/include/czmq.h not found. Please check libczmq prefix])
+            fi
+        fi
+
+        CFLAGS="${czmq_synthetic_cflags} ${CFLAGS}"
+        LDFLAGS="${czmq_synthetic_libs} ${LDFLAGS}"
+        LIBS="${czmq_synthetic_libs} ${LIBS}"
+
+        AC_CHECK_LIB([czmq], [zctx_test],
+            [
+                AC_SUBST([czmq_CFLAGS],[${czmq_synthetic_cflags}])
+                AC_SUBST([czmq_LIBS],[${czmq_synthetic_libs}])
+                was_czmq_check_lib_detected=yes
+            ],
+            [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
+    ])
+
+if test "x$was_czmq_check_lib_detected" = "xno"; then
+    CFLAGS="${czmq_CFLAGS} ${CFLAGS}"
+    LIBS="${czmq_LIBS} ${LIBS}"
 fi
 
-AC_CHECK_LIB(czmq, zctx_test,
-    LIBS="-lczmq $LIBS",
-    [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
 
-
+CFLAGS="${PREVIOUS_CFLAGS}"
+LIBS="${PREVIOUS_LIBS}"
 
 # Platform specific checks
 zyre_on_mingw32="no"
