@@ -643,14 +643,14 @@ zre_msg_recv (void *input)
         return NULL;            //  Interrupted
     //  If message came from a router socket, first frame is routing_id
     zframe_t *routing_id = NULL;
-    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER) {
+    if (zsock_type (zsock_resolve (input)) == ZMQ_ROUTER) {
         routing_id = zmsg_pop (msg);
         //  If message was not valid, forget about it
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
     zre_msg_t *zre_msg = zre_msg_decode (&msg);
-    if (zre_msg && zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
+    if (zre_msg && zsock_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_msg->routing_id = routing_id;
 
     return zre_msg;
@@ -670,14 +670,14 @@ zre_msg_recv_nowait (void *input)
         return NULL;            //  Interrupted
     //  If message came from a router socket, first frame is routing_id
     zframe_t *routing_id = NULL;
-    if (zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER) {
+    if (zsock_type (zsock_resolve (input)) == ZMQ_ROUTER) {
         routing_id = zmsg_pop (msg);
         //  If message was not valid, forget about it
         if (!routing_id || !zmsg_next (msg))
             return NULL;        //  Malformed or empty
     }
     zre_msg_t *zre_msg = zre_msg_decode (&msg);
-    if (zre_msg && zsocket_type (zsock_resolve (input)) == ZMQ_ROUTER)
+    if (zre_msg && zsock_type (zsock_resolve (input)) == ZMQ_ROUTER)
         zre_msg->routing_id = routing_id;
 
     return zre_msg;
@@ -704,7 +704,7 @@ zre_msg_send (zre_msg_t **self_p, void *output)
     zmsg_t *msg = zre_msg_encode (self_p);
     
     //  If we're sending to a ROUTER, send the routing_id first
-    if (zsocket_type (zsock_resolve (output)) == ZMQ_ROUTER) {
+    if (zsock_type (zsock_resolve (output)) == ZMQ_ROUTER) {
         assert (routing_id);
         zmsg_prepend (msg, &routing_id);
     }
