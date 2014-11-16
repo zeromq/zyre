@@ -34,6 +34,10 @@ src_libzyre_la_LDFLAGS += \
     -avoid-version
 endif
 
+src_libzyre_la_LIBADD = \
+    ${zmq_LIBS} \
+    ${czmq_LIBS}
+
 
 check_PROGRAMS += src/zyre_selftest
 
@@ -41,9 +45,7 @@ src_zyre_selftest_CPPFLAGS = \
     ${src_libzyre_la_CFLAGS}
 
 src_zyre_selftest_LDADD = \
-    src/libzyre.la \
-    ${zmq_LIBS} \
-    ${czmq_LIBS}
+    src/libzyre.la
 
 src_zyre_selftest_SOURCES = src/zyre_selftest.c
 
