@@ -327,6 +327,7 @@ zyre_stop (zyre_t *self)
 {
     assert (self);
     zstr_sendx (self->actor, "STOP", NULL);
+    zsock_wait (self->actor);
 }
 
 
