@@ -438,7 +438,7 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "PEER ENDPOINT")) {
         char *uuid = zmsg_popstr (request);
-        zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, (void *) uuid);
+        zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, uuid);
         assert (peer);
         zsock_send (self->pipe, "s", zyre_peer_endpoint (peer));
         zstr_free (&uuid);
@@ -447,7 +447,7 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "PEER HEADER")) {
         char *uuid = zmsg_popstr (request);
         char *key = zmsg_popstr (request);
-        zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, (void *) uuid);
+        zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, uuid);
         if (!peer)
             zstr_send (self->pipe, "");
         else
@@ -558,7 +558,7 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 static zyre_group_t *
 zyre_node_require_peer_group (zyre_node_t *self, const char *name)
 {
-    zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->peer_groups, (void *) name);
+    zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->peer_groups, name);
     if (!group)
         group = zyre_group_new (name, self->peer_groups);
     return group;

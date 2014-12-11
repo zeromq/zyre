@@ -58,8 +58,8 @@ zyre_group_new (const char *name, zhash_t *container)
     
     //  Insert into container if requested
     if (container) {
-        zhash_insert (container, (void *) name, self);
-        zhash_freefn (container, (void *) name, s_delete_group);
+        zhash_insert (container, name, self);
+        zhash_freefn (container, name, s_delete_group);
     }
     return self;
 }
