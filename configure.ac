@@ -40,7 +40,7 @@ AC_SUBST(PACKAGE_VERSION)
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 #
 # libzyre -version-info
-LTVER="2:0:1"
+LTVER="1:1:0"
 AC_SUBST(LTVER)
 
 # Capture c flags
@@ -76,7 +76,7 @@ PREVIOUS_LIBS="${LIBS}"
 was_zmq_check_lib_detected=no
 
 PKG_CHECK_MODULES([zmq], [libzmq >= 2.2.0],,
-    [AC_MSG_ERROR([Cannot find required package for libzmq.       Note, pkg-config is required due to specified version >= 2.2.0])
+    [AC_MSG_ERROR([Cannot find required package for libzmq. Note, pkg-config is required due to specified version >= 2.2.0])
   ])
 
 if test "x$was_zmq_check_lib_detected" = "xno"; then
