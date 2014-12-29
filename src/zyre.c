@@ -476,6 +476,21 @@ zyre_peer_address(zyre_t *self, const char *peer)
 }
 
 //  --------------------------------------------------------------------------
+//  Return the name of a connected peer. Caller owns the
+//  string.
+
+char *
+zyre_get_peer_name(zyre_t *self, const char *peer)
+{
+    assert (self);
+    char *address;
+    zstr_sendm (self->actor, "PEER NAME");
+    zstr_send (self->actor, peer);
+    zsock_recv (self->actor, "s", &address);
+    return address;
+}
+
+//  --------------------------------------------------------------------------
 //  Return the value of a header of a conected peer. 
 //  Returns null if peer or key doesn't exits. Caller
 //  owns the string
@@ -655,6 +670,9 @@ zyre_test (bool verbose)
     char *name = zmsg_popstr (msg);
     assert (streq (name, "node1"));
     zstr_free (&name);
+    char *peer_name = zyre_get_peer_name(node2, peerid);
+    assert (streq (peer_name, "node1"));
+    zstr_free (&peer_name);
     zframe_t *headers_packed = zmsg_pop (msg);
     char *peeraddress = zmsg_popstr (msg);
     char *peerendpoint = zyre_peer_address (node2, peerid);
