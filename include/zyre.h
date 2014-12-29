@@ -170,6 +170,11 @@ ZYRE_EXPORT zlist_t *
 ZYRE_EXPORT char *
     zyre_peer_address(zyre_t *self, const char *peer);
 
+//  Return the name of a connected peer. Caller owns the
+//  string.
+ZYRE_EXPORT char *
+    zyre_get_peer_name(zyre_t *self, const char *peer);
+
 //  Return the value of a header of a conected peer. 
 //  Returns null if peer or key doesn't exits. Caller
 //  owns the string
