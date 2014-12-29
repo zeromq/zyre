@@ -686,7 +686,7 @@ zyre_test (bool verbose)
     zhash_t *headers = zhash_unpack (headers_packed);
     assert (headers);
     zframe_destroy (&headers_packed);
-    assert (streq ((char*) zhash_lookup (headers, "X-HELLO"), "World"));
+    assert (streq ((char *) zhash_lookup (headers, "X-HELLO"), "World"));
     zhash_destroy (&headers);
     zmsg_destroy (&msg);
 
