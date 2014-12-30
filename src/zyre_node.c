@@ -163,10 +163,13 @@ zyre_node_start (zyre_node_t *self)
         self->beacon = zactor_new (zbeacon, NULL);
         if (!self->beacon)
             return 1;               //  Not possible to start beacon
-        zsock_send (self->beacon, "si", "CONFIGURE", self->beacon_port);
 
         //  Our hostname is provided by zbeacon
+        zsock_send (self->beacon, "si", "CONFIGURE", self->beacon_port);
         char *hostname = zstr_recv (self->beacon);
+        if (streq (hostname, ""))
+            return -1;              //  No UDP broadcast interface available
+
         self->port = zsock_bind (self->inbox, "tcp://%s:*", hostname);
         zstr_free (&hostname);
         assert (self->port > 0);    //  Die on bad interface or port exhaustion
