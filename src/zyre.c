@@ -674,13 +674,13 @@ zyre_test (bool verbose)
     assert (streq (peer_name, "node1"));
     zstr_free (&peer_name);
     zframe_t *headers_packed = zmsg_pop (msg);
-    char *peeraddress = zmsg_popstr (msg);
-    char *peerendpoint = zyre_peer_address (node2, peerid);
-    assert (streq (peeraddress, peerendpoint));
-
+    
+    char *address = zmsg_popstr (msg);
+    char *endpoint = zyre_peer_address (node2, peerid);
+    assert (streq (address, endpoint));
     zstr_free (&peerid);
-    zstr_free (&peerendpoint);
-    zstr_free (&peeraddress);
+    zstr_free (&endpoint);
+    zstr_free (&address);
 
     assert (headers_packed);
     zhash_t *headers = zhash_unpack (headers_packed);
