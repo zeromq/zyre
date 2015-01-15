@@ -146,6 +146,8 @@ zyre_node_gossip_start (zyre_node_t *self)
     if (!self->gossip) {
         self->beacon_port = 0;      //  Disable UDP beaconing
         self->gossip = zactor_new (zgossip, self->name);
+        if (self->verbose)
+            zstr_send (self->gossip, "VERBOSE");
         assert (self->gossip);
     }
 }
@@ -855,6 +857,8 @@ zyre_node_actor (zsock_t *pipe, void *args)
     int64_t reap_at = zclock_time () + REAP_INTERVAL;
     while (!self->terminated) {
         int timeout = (int) (reap_at - zclock_time ());
+        if (timeout > REAP_INTERVAL)
+            zsys_debug ("zyre_node: internal error NA01, timeout=%d", timeout);
         assert (timeout <= REAP_INTERVAL);
         if (timeout < 0)
             timeout = 0;
