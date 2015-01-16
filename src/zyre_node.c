@@ -146,6 +146,8 @@ zyre_node_gossip_start (zyre_node_t *self)
     if (!self->gossip) {
         self->beacon_port = 0;      //  Disable UDP beaconing
         self->gossip = zactor_new (zgossip, self->name);
+        if (self->verbose)
+            zstr_send (self->gossip, "VERBOSE");
         assert (self->gossip);
     }
 }
@@ -163,10 +165,13 @@ zyre_node_start (zyre_node_t *self)
         self->beacon = zactor_new (zbeacon, NULL);
         if (!self->beacon)
             return 1;               //  Not possible to start beacon
-        zsock_send (self->beacon, "si", "CONFIGURE", self->beacon_port);
 
         //  Our hostname is provided by zbeacon
+        zsock_send (self->beacon, "si", "CONFIGURE", self->beacon_port);
         char *hostname = zstr_recv (self->beacon);
+        if (streq (hostname, ""))
+            return -1;              //  No UDP broadcast interface available
+
         self->port = zsock_bind (self->inbox, "tcp://%s:*", hostname);
         zstr_free (&hostname);
         assert (self->port > 0);    //  Die on bad interface or port exhaustion
@@ -789,6 +794,7 @@ zyre_node_recv_gossip (zyre_node_t *self)
     //  Any replies except DELIVER would signify an internal error; these
     //  messages come from zgossip, not an external source
     assert (streq (command, "DELIVER"));
+    
     //  Require peer, if it's not us
     if (strneq (endpoint, self->endpoint)) {
         zuuid_t *uuid = zuuid_new ();
@@ -852,7 +858,9 @@ zyre_node_actor (zsock_t *pipe, void *args)
     int64_t reap_at = zclock_time () + REAP_INTERVAL;
     while (!self->terminated) {
         int timeout = (int) (reap_at - zclock_time ());
-        assert (timeout <= REAP_INTERVAL);
+        if (timeout > REAP_INTERVAL)
+            timeout = REAP_INTERVAL;
+        else
         if (timeout < 0)
             timeout = 0;
         
@@ -871,6 +879,9 @@ zyre_node_actor (zsock_t *pipe, void *args)
         && (zactor_t *) which == self->gossip)
             zyre_node_recv_gossip (self);
         else
+        if (zpoller_terminated (self->poller))
+            break;          //  Interrupted, check before expired
+        else
         if (zpoller_expired (self->poller)) {
             if (zclock_time () >= reap_at) {
                 reap_at = zclock_time () + REAP_INTERVAL;
@@ -878,9 +889,6 @@ zyre_node_actor (zsock_t *pipe, void *args)
                 zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_ping_peer, self);
             }
         }
-        else
-        if (zpoller_terminated (self->poller))
-            break;          //  Interrupted
     }
     zyre_node_destroy (&self);
 }
