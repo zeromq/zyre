@@ -37,18 +37,17 @@ src_libzyre_la_LDFLAGS += \
     -avoid-version
 endif
 
-src_libzyre_la_LIBADD = \
-    ${zmq_LIBS} \
-    ${czmq_LIBS}
+if ON_CYGWIN
+src_libzyre_la_LDFLAGS += \
+    -no-undefined \
+    -avoid-version
+endif
 
+src_libzyre_la_LIBADD = ${project_libs}
 
 check_PROGRAMS += src/zyre_selftest
-
-src_zyre_selftest_CPPFLAGS = ${src_libzyre_la_CFLAGS}
-
-src_zyre_selftest_LDADD = \
-    src/libzyre.la
-
+src_zyre_selftest_CPPFLAGS = ${src_libzyre_la_CPPFLAGS}
+src_zyre_selftest_LDADD = ${program_libs}
 src_zyre_selftest_SOURCES = src/zyre_selftest.c
 
 TESTS = src/zyre_selftest
