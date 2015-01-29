@@ -69,6 +69,10 @@ if (MINGW)
     set(MORE_LIBRARIES -lws2_32 -lrpcrt4 -liphlpapi)
 endif()
 
+# required libraries for cygwin
+if (CYGWIN)
+    set(MORE_LIBRARIES -luuid)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${SOURCE_DIR})
 

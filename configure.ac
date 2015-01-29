@@ -133,6 +133,7 @@ LIBS="${PREVIOUS_LIBS}"
 
 # Platform specific checks
 zyre_on_mingw32="no"
+zyre_on_cygwin="no"
 zyre_on_android="no"
 
 # Host specific checks
@@ -224,6 +225,7 @@ case "${host_os}" in
         # Define on Cygwin to enable all library features
         CPPFLAGS="-D_GNU_SOURCE $CPPFLAGS"
         AC_DEFINE(ZYRE_HAVE_CYGWIN, 1, [Have Cygwin])
+        zyre_on_cygwin="yes"
         ;;
     *)
         AC_MSG_ERROR([unsupported system: ${host_os}.])
@@ -259,6 +261,7 @@ if test "x$GCC" = "xyes"; then
 fi
 
 AM_CONDITIONAL(ON_MINGW, test "x$zyre_on_mingw32" = "xyes")
+AM_CONDITIONAL(ON_CYGWIN, test "x$zyre_on_cygwin" = "xyes")
 AM_CONDITIONAL(ON_ANDROID, test "x$zyre_on_android" = "xyes")
 AM_CONDITIONAL(INSTALL_MAN, test "x$zyre_install_man" = "xyes")
 AM_CONDITIONAL(BUILD_DOC, test "x$zyre_build_doc" = "xyes")
@@ -275,7 +278,10 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
 AC_SUBST([pkgconfigdir])
 
 # Specify output files
-AC_CONFIG_FILES([Makefile doc/Makefile src/libzyre.pc])
+AC_CONFIG_FILES([Makefile
+                 doc/Makefile
+                 src/libzyre.pc
+                 ])
 AC_OUTPUT
 
 ################################################################################
