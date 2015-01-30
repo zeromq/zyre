@@ -45,6 +45,31 @@ endif
 
 src_libzyre_la_LIBADD = ${project_libs}
 
+bin_PROGRAMS += src/perf_local
+src_perf_local_CPPFLAGS = ${AM_CPPFLAGS}
+src_perf_local_LDADD = ${program_libs}
+src_perf_local_SOURCES = src/perf_local.c
+
+bin_PROGRAMS += src/perf_remote
+src_perf_remote_CPPFLAGS = ${AM_CPPFLAGS}
+src_perf_remote_LDADD = ${program_libs}
+src_perf_remote_SOURCES = src/perf_remote.c
+
+bin_PROGRAMS += src/zpinger
+src_zpinger_CPPFLAGS = ${AM_CPPFLAGS}
+src_zpinger_LDADD = ${program_libs}
+src_zpinger_SOURCES = src/zpinger.c
+
+bin_PROGRAMS += src/ztester_beacon
+src_ztester_beacon_CPPFLAGS = ${AM_CPPFLAGS}
+src_ztester_beacon_LDADD = ${program_libs}
+src_ztester_beacon_SOURCES = src/ztester_beacon.c
+
+bin_PROGRAMS += src/ztester_gossip
+src_ztester_gossip_CPPFLAGS = ${AM_CPPFLAGS}
+src_ztester_gossip_LDADD = ${program_libs}
+src_ztester_gossip_SOURCES = src/ztester_gossip.c
+
 check_PROGRAMS += src/zyre_selftest
 src_zyre_selftest_CPPFLAGS = ${src_libzyre_la_CPPFLAGS}
 src_zyre_selftest_LDADD = ${program_libs}

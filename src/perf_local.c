@@ -82,7 +82,7 @@ main (int argc, char *argv [])
     int64_t start = zclock_time ();
     int64_t elapse;
 
-    char **peers = zmalloc (sizeof (char *) * max_node);
+    char **peers = (char **) zmalloc (sizeof (char *) * max_node);
 
     while (true) {
         zmsg_t *incoming = zyre_recv (node);

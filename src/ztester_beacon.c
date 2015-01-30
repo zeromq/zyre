@@ -165,7 +165,7 @@ int main (int argc, char *argv [])
         max_iterations = atoi (argv [2]);
 
     //  We address nodes as an array of actors
-    zactor_t **actors = zmalloc (sizeof (zactor_t *) * max_nodes);
+    zactor_t **actors = (zactor_t **) zmalloc (sizeof (zactor_t *) * max_nodes);
 
     //  We will randomly start and stop node threads
     uint index;
