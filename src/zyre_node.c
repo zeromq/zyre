@@ -166,6 +166,9 @@ zyre_node_start (zyre_node_t *self)
         if (!self->beacon)
             return 1;               //  Not possible to start beacon
 
+        if (self->verbose)
+            zsock_send (self->beacon, "s", "VERBOSE");
+            
         //  Our hostname is provided by zbeacon
         zsock_send (self->beacon, "si", "CONFIGURE", self->beacon_port);
         char *hostname = zstr_recv (self->beacon);
