@@ -132,7 +132,7 @@ int main (int argc, char *argv [])
         max_node = atoi (argv [1]);
 
     //  We address nodes as an array of pipes
-    void **nodes = zmalloc (sizeof (zactor_t *) * max_node);
+    zactor_t **nodes = (zactor_t **) zmalloc (sizeof (zactor_t *) * max_node);
 
     int node_nbr;
     for (node_nbr = 0; node_nbr < max_node; node_nbr++) {
@@ -145,7 +145,7 @@ int main (int argc, char *argv [])
 
     for (node_nbr = 0; node_nbr < max_node; node_nbr++) {
         zclock_log ("I: Stopped node %d", node_nbr + 1);
-        zactor_destroy (nodes [node_nbr]);
+        zactor_destroy (&nodes [node_nbr]);
     }
     zclock_log ("I: Stopped perl_remote");
     free (nodes);

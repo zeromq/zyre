@@ -16,9 +16,16 @@
     <class name = "zyre_group" private = "1" />
     <class name = "zyre_node" private = "1" />
     <model name = "zre_msg" />
+    
+    <main name = "perf_local" private = "1" />
+    <main name = "perf_remote" private = "1" />
+    <main name = "zpinger" />
+    <main name = "ztester_beacon" private = "1" />
+    <main name = "ztester_gossip" private = "1" />
 
     <constant name = "ZRE_DISCOVERY_PORT" value = "5670">IANA-assigned UDP port for ZRE</constant>
-    <constant name = "PEER_EVASIVE" value = "3000" private = "1" >3 seconds' silence is evasive</constant>
-    <constant name = "PEER_EXPIRED" value = "5000" private = "1" >5 seconds' silence is expired</constant>
+    <constant name = "PEER_EVASIVE" value = "10000" private = "1" >10 seconds' silence is evasive</constant>
+    <constant name = "PEER_EXPIRED" value = "30000" private = "1" >30 seconds' silence is expired</constant>
     <constant name = "REAP_INTERVAL" value = "1000" private = "1" >Once per second</constant>
 </project>
+   

@@ -1,5 +1,5 @@
 /*  =========================================================================
-    pinger - ping other peers in a ZRE network
+    zpinger - ping other peers in a ZRE network
 
     -------------------------------------------------------------------------
     Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
@@ -22,6 +22,14 @@
     License along with this program. If not, see
     <http://www.gnu.org/licenses/>.
     =========================================================================
+*/
+
+/*
+@header
+    zpinger tells you what other nodes are running. Use this to debug network
+    issues.
+@discuss
+@end
 */
 
 #include <czmq.h>

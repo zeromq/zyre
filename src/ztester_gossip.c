@@ -177,7 +177,7 @@ int main (int argc, char *argv [])
     zstr_sendx (hub, "BIND", "inproc://zyre-hub", NULL);
         
     //  We address nodes as an array of actors
-    zactor_t **actors = zmalloc (sizeof (zactor_t *) * max_nodes);
+    zactor_t **actors = (zactor_t **) zmalloc (sizeof (zactor_t *) * max_nodes);
 
     //  We will randomly start and stop node threads
     uint index;

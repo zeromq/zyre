@@ -1,0 +1,15 @@
+#### zpinger - ping other peers in a ZRE network
+
+zpinger tells you what other nodes are running. Use this to debug network
+issues.
+
+Please add @discuss section in ../src/zpinger.c.
+
+This is the class interface:
+
+Please add @interface section in ../src/zpinger.c.
+
+This is the class self test code:
+
+Please add @selftest section in ../src/zpinger.c.
+

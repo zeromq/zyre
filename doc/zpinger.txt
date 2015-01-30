@@ -1,0 +1,27 @@
+zpinger(1)
+==========
+
+NAME
+----
+zpinger - ping other peers in a ZRE network
+
+SYNOPSIS
+--------
+----
+Please add @interface section in ../src/zpinger.c.
+----
+
+DESCRIPTION
+-----------
+
+zpinger tells you what other nodes are running. Use this to debug network
+issues.
+
+Please add @discuss section in ../src/zpinger.c.
+
+EXAMPLE
+-------
+.From zpinger_test method
+----
+Please add @selftest section in ../src/zpinger.c.
+----
