@@ -260,12 +260,62 @@ if test "x$GCC" = "xyes"; then
     CPPFLAGS="-pedantic -Werror -Wall -Wc++-compat ${CPPFLAGS}"
 fi
 
+AM_CONDITIONAL(ENABLE_SHARED, test "x$enable_shared" = "xyes")
 AM_CONDITIONAL(ON_MINGW, test "x$zyre_on_mingw32" = "xyes")
 AM_CONDITIONAL(ON_CYGWIN, test "x$zyre_on_cygwin" = "xyes")
 AM_CONDITIONAL(ON_ANDROID, test "x$zyre_on_android" = "xyes")
 AM_CONDITIONAL(INSTALL_MAN, test "x$zyre_install_man" = "xyes")
 AM_CONDITIONAL(BUILD_DOC, test "x$zyre_build_doc" = "xyes")
-AM_CONDITIONAL([ENABLE_LABS], [test "x$enable_labs" = "xyes"])
+
+# Check for perf_local intent
+AC_ARG_WITH([perf_local],
+    AS_HELP_STRING([--with-perf_local],
+        [Compile the perf_local program [default=yes].]),
+    [with_perf_local=$withval],
+    [with_perf_local=yes])
+
+AM_CONDITIONAL([WITH_PERF_LOCAL], [test x$with_perf_local != xno])
+AM_COND_IF([WITH_PERF_LOCAL], [AC_MSG_NOTICE([WITH_PERF_LOCAL defined])])
+
+# Check for perf_remote intent
+AC_ARG_WITH([perf_remote],
+    AS_HELP_STRING([--with-perf_remote],
+        [Compile the perf_remote program [default=yes].]),
+    [with_perf_remote=$withval],
+    [with_perf_remote=yes])
+
+AM_CONDITIONAL([WITH_PERF_REMOTE], [test x$with_perf_remote != xno])
+AM_COND_IF([WITH_PERF_REMOTE], [AC_MSG_NOTICE([WITH_PERF_REMOTE defined])])
+
+# Check for zpinger intent
+AC_ARG_WITH([zpinger],
+    AS_HELP_STRING([--with-zpinger],
+        [Compile and install the zpinger program [default=yes].]),
+    [with_zpinger=$withval],
+    [with_zpinger=yes])
+
+AM_CONDITIONAL([WITH_ZPINGER], [test x$with_zpinger != xno])
+AM_COND_IF([WITH_ZPINGER], [AC_MSG_NOTICE([WITH_ZPINGER defined])])
+
+# Check for ztester_beacon intent
+AC_ARG_WITH([ztester_beacon],
+    AS_HELP_STRING([--with-ztester_beacon],
+        [Compile the ztester_beacon program [default=yes].]),
+    [with_ztester_beacon=$withval],
+    [with_ztester_beacon=yes])
+
+AM_CONDITIONAL([WITH_ZTESTER_BEACON], [test x$with_ztester_beacon != xno])
+AM_COND_IF([WITH_ZTESTER_BEACON], [AC_MSG_NOTICE([WITH_ZTESTER_BEACON defined])])
+
+# Check for ztester_gossip intent
+AC_ARG_WITH([ztester_gossip],
+    AS_HELP_STRING([--with-ztester_gossip],
+        [Compile the ztester_gossip program [default=yes].]),
+    [with_ztester_gossip=$withval],
+    [with_ztester_gossip=yes])
+
+AM_CONDITIONAL([WITH_ZTESTER_GOSSIP], [test x$with_ztester_gossip != xno])
+AM_COND_IF([WITH_ZTESTER_GOSSIP], [AC_MSG_NOTICE([WITH_ZTESTER_GOSSIP defined])])
 
 # Checks for library functions.
 AC_TYPE_SIGNAL

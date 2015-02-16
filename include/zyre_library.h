@@ -30,6 +30,8 @@
 #ifndef __zyre_library_H_INCLUDED__
 #define __zyre_library_H_INCLUDED__
 
+//  Set up environment for the application
+
 //  External dependencies
 #include <czmq.h>
 
