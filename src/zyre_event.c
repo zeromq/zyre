@@ -148,7 +148,7 @@ zyre_event_type (zyre_event_t *self)
 //  --------------------------------------------------------------------------
 //  Return the sending peer's id as a string
 
-char *
+const char *
 zyre_event_sender (zyre_event_t *self)
 {
     assert (self);
@@ -159,7 +159,7 @@ zyre_event_sender (zyre_event_t *self)
 //  --------------------------------------------------------------------------
 //  Return the sending peer's public name as a string
 
-char *
+const char *
 zyre_event_name (zyre_event_t *self)
 {
     assert (self);
@@ -170,7 +170,7 @@ zyre_event_name (zyre_event_t *self)
 //  --------------------------------------------------------------------------
 //  Return the sending peer's ipaddress as a string
 
-char *
+const char *
 zyre_event_address (zyre_event_t *self)
 {
     assert (self);
@@ -193,18 +193,18 @@ zyre_event_headers (zyre_event_t *self)
 //  Returns value of a header from the message headers
 //  obtained by ENTER. Return NULL if no value was found.
 
-char *
-zyre_event_header (zyre_event_t *self, char *name)
+const char *
+zyre_event_header (zyre_event_t *self, const char *name)
 {
     assert (self);
-    return (char*) zhash_lookup (self->headers, name);
+    return (const char *)zhash_lookup (self->headers, name);
 }
 
 
 //  --------------------------------------------------------------------------
 //  Returns the group name that a SHOUT event was sent to
 
-char *
+const char *
 zyre_event_group (zyre_event_t *self)
 {
     assert (self);
@@ -265,14 +265,14 @@ zyre_event_test (bool verbose)
     //  Parse ENTER
     zyre_event_t *event = zyre_event_new (node2);
     assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
-    char *sender = zyre_event_sender (event);
+    const char *sender = zyre_event_sender (event);
     assert (sender);
-    char *name = zyre_event_name (event);
+    const char *name = zyre_event_name (event);
     assert (name);
     assert (streq (name, "node1"));
-    char *address = zyre_event_address (event);
+    const char *address = zyre_event_address (event);
     assert (address);
-    char *header = zyre_event_header (event, "X-HELLO");
+    const char *header = zyre_event_header (event, "X-HELLO");
     assert (header);
     zyre_event_destroy (&event);
     
