@@ -268,6 +268,13 @@ zyre_node_log_item (const char *key, void *item, void *argument)
     return 0;
 }
 
+static int
+zyre_node_log_pair (const char *key, void *item, void *argument)
+{
+    zsys_info ("   - %s: %s", key, (const char *)item);
+    return 0;
+}
+
 //  Prints node information
 
 static void
@@ -287,7 +294,7 @@ zyre_node_dump (zyre_node_t *self)
             zsys_info ("   - connect endpoint=%s", self->gossip_connect);
     }
     zsys_info (" - headers=%zu:", zhash_size (self->headers));
-    zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_node_log_item, self);
+    zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_node_log_pair, self);
     
     zsys_info (" - peers=%zu:", zhash_size (self->peers));
     zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_log_item, self);
