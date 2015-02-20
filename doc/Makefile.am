@@ -35,13 +35,13 @@ SUFFIXES=.txt .xml .1 .3 .7
 	xmlto man $<
 
 zyre.txt:
-	zproject_mkman $<
+	zproject_mkman $@
 zyre_event.txt:
-	zproject_mkman $<
+	zproject_mkman $@
 zre_msg.txt:
-	zproject_mkman $<
+	zproject_mkman $@
 zpinger.txt:
-	zproject_mkman $<
+	zproject_mkman $@
 clean:
 	rm -f *.1 *.3
 	zproject_mkman zyre zyre_event zre_msg zpinger 

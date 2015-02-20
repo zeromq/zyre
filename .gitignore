@@ -70,3 +70,6 @@ obj/
 
 # qt-android build results
 builds/qt-android/prefix/
+
+# Python bindings
+*.pyc
