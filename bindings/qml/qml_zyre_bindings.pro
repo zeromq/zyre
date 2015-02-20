@@ -38,10 +38,12 @@ LIBS += -lzyre
 
 HEADERS += \
   $$SRCDIR/qml_zyre_plugin.h \
-  $$SRCDIR/QmlZyre.h 
+  $$SRCDIR/QmlZyre.h \
+  $$SRCDIR/QmlZyreEvent.h 
 
 SOURCES += \
-  $$SRCDIR/QmlZyre.cpp 
+  $$SRCDIR/QmlZyre.cpp \
+  $$SRCDIR/QmlZyreEvent.cpp 
 
 OBJECTS_DIR = $$BUILDDIR/.obj
 MOC_DIR     = $$BUILDDIR/.moc

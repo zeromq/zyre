@@ -13,8 +13,11 @@
 
 class QmlZyre;
 class QmlZyreAttached;
+class QmlZyreEvent;
+class QmlZyreEventAttached;
 
 #include "QmlZyre.h"
+#include "QmlZyreEvent.h"
 
 class QmlZyrePlugin : public QQmlExtensionPlugin
 {
@@ -26,6 +29,8 @@ public:
     {
         qmlRegisterType<QmlZyre> (uri, 1, 0, "QmlZyre");
         qmlRegisterType<QmlZyreAttached>();
+        qmlRegisterType<QmlZyreEvent> (uri, 1, 0, "QmlZyreEvent");
+        qmlRegisterType<QmlZyreEventAttached>();
     };
 };
 
