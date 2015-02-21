@@ -6,7 +6,10 @@
     >
     <include filename = "license.xml" />
     <version major = "1" minor = "1" patch = "0" />
-    <use project = "czmq" />
+    <use project = "czmq">
+        <class name="zhash" />
+        <class name="zmsg" />
+    </use>
 
     <!-- The order of the classes is NOT important -->
     <class name = "zyre" />

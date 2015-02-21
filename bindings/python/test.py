@@ -44,6 +44,7 @@ class TestZyre(unittest.TestCase):
         self.assertEquals(e.sender(), z1.uuid())
         self.assertEquals(e.type(), 'shout')
         self.assertEquals(e.group(), 'test group')
+        self.assertEquals(e.msg().popstr(), "Hello World")
 
 if __name__ == '__main__':
     unittest.main()
