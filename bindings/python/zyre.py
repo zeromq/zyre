@@ -3,9 +3,25 @@
 #  Please refer to the README for information about making permanent changes.  #
 ################################################################################
 
+from __future__ import print_function
 from ctypes import *
 from ctypes.util import find_library
 
+# load libc to access free, etc.
+libcpath = find_library("libc")
+if not libcpath:
+    raise ImportError("Unable to find libc")
+libc = cdll.LoadLibrary(libcpath)
+libc.free.argtypes = [c_void_p]
+libc.free.restype = None
+
+def return_fresh_string(char_p):
+    s = string_at(char_p)
+    libc.free(char_p)
+    return s
+
+
+# zyre
 libpath = find_library("zyre")
 if not libpath:
     raise ImportError("Unable to find zyre C library")
@@ -85,9 +101,9 @@ lib.zyre_own_groups.restype = zlist_p
 lib.zyre_own_groups.argtypes = [zyre_p]
 lib.zyre_peer_groups.restype = zlist_p
 lib.zyre_peer_groups.argtypes = [zyre_p]
-lib.zyre_peer_address.restype = c_char_p
+lib.zyre_peer_address.restype = POINTER(c_char)
 lib.zyre_peer_address.argtypes = [zyre_p, c_char_p]
-lib.zyre_peer_header_value.restype = c_char_p
+lib.zyre_peer_header_value.restype = POINTER(c_char)
 lib.zyre_peer_header_value.argtypes = [zyre_p, c_char_p, c_char_p]
 lib.zyre_socket.restype = zsock_p
 lib.zyre_socket.argtypes = [zyre_p]
@@ -96,7 +112,7 @@ lib.zyre_dump.argtypes = [zyre_p]
 lib.zyre_version.restype = None
 lib.zyre_version.argtypes = [POINTER(c_int), POINTER(c_int), POINTER(c_int)]
 lib.zyre_test.restype = None
-lib.zyre_test.argtypes = [c_int]
+lib.zyre_test.argtypes = [c_bool]
 
 class Zyre(object):
     """An open-source framework for proximity-based P2P apps"""
@@ -237,13 +253,13 @@ list and should destroy it when finished with it."""
 
     def peer_address(self, peer):
         """Return the endpoint of a connected peer. Caller owns the string."""
-        return lib.zyre_peer_address(self._as_parameter_, peer)
+        return return_fresh_string(lib.zyre_peer_address(self._as_parameter_)
 
     def peer_header_value(self, peer, name):
         """Return the value of a header of a conected peer. 
 Returns null if peer or key doesn't exits. Caller
 owns the string"""
-        return lib.zyre_peer_header_value(self._as_parameter_, peer, name)
+        return return_fresh_string(lib.zyre_peer_header_value(self._as_parameter_)
 
     def socket(self):
         """Return socket for talking to the Zyre node, for polling"""
@@ -286,7 +302,7 @@ lib.zyre_event_group.argtypes = [zyre_event_p]
 lib.zyre_event_msg.restype = zmsg_p
 lib.zyre_event_msg.argtypes = [zyre_event_p]
 lib.zyre_event_test.restype = None
-lib.zyre_event_test.argtypes = [c_int]
+lib.zyre_event_test.argtypes = [c_bool]
 
 class ZyreEvent(object):
     """Parsing Zyre messages"""
