@@ -3,9 +3,26 @@
 #  Please refer to the README for information about making permanent changes.  #
 ################################################################################
 
+from __future__ import print_function
 from ctypes import *
 from ctypes.util import find_library
+import czmq
 
+# load libc to access free, etc.
+libcpath = find_library("libc")
+if not libcpath:
+    raise ImportError("Unable to find libc")
+libc = cdll.LoadLibrary(libcpath)
+libc.free.argtypes = [c_void_p]
+libc.free.restype = None
+
+def return_fresh_string(char_p):
+    s = string_at(char_p)
+    libc.free(char_p)
+    return s
+
+
+# zyre
 libpath = find_library("zyre")
 if not libpath:
     raise ImportError("Unable to find zyre C library")
@@ -14,10 +31,6 @@ lib = cdll.LoadLibrary(libpath)
 class zyre_t(Structure):
     pass # Empty - only for type checking
 zyre_p = POINTER(zyre_t)
-
-class zmsg_t(Structure):
-    pass # Empty - only for type checking
-zmsg_p = POINTER(zmsg_t)
 
 class zlist_t(Structure):
     pass # Empty - only for type checking
@@ -30,10 +43,6 @@ zsock_p = POINTER(zsock_t)
 class zyre_event_t(Structure):
     pass # Empty - only for type checking
 zyre_event_p = POINTER(zyre_event_t)
-
-class zhash_t(Structure):
-    pass # Empty - only for type checking
-zhash_p = POINTER(zhash_t)
 
 
 # zyre
@@ -69,12 +78,12 @@ lib.zyre_join.restype = c_int
 lib.zyre_join.argtypes = [zyre_p, c_char_p]
 lib.zyre_leave.restype = c_int
 lib.zyre_leave.argtypes = [zyre_p, c_char_p]
-lib.zyre_recv.restype = zmsg_p
+lib.zyre_recv.restype = czmq.zmsg_p
 lib.zyre_recv.argtypes = [zyre_p]
 lib.zyre_whisper.restype = c_int
-lib.zyre_whisper.argtypes = [zyre_p, c_char_p, POINTER(zmsg_p)]
+lib.zyre_whisper.argtypes = [zyre_p, c_char_p, POINTER(czmq.zmsg_p)]
 lib.zyre_shout.restype = c_int
-lib.zyre_shout.argtypes = [zyre_p, c_char_p, POINTER(zmsg_p)]
+lib.zyre_shout.argtypes = [zyre_p, c_char_p, POINTER(czmq.zmsg_p)]
 lib.zyre_whispers.restype = c_int
 lib.zyre_whispers.argtypes = [zyre_p, c_char_p, c_char_p]
 lib.zyre_shouts.restype = c_int
@@ -85,9 +94,9 @@ lib.zyre_own_groups.restype = zlist_p
 lib.zyre_own_groups.argtypes = [zyre_p]
 lib.zyre_peer_groups.restype = zlist_p
 lib.zyre_peer_groups.argtypes = [zyre_p]
-lib.zyre_peer_address.restype = c_char_p
+lib.zyre_peer_address.restype = POINTER(c_char)
 lib.zyre_peer_address.argtypes = [zyre_p, c_char_p]
-lib.zyre_peer_header_value.restype = c_char_p
+lib.zyre_peer_header_value.restype = POINTER(c_char)
 lib.zyre_peer_header_value.argtypes = [zyre_p, c_char_p, c_char_p]
 lib.zyre_socket.restype = zsock_p
 lib.zyre_socket.argtypes = [zyre_p]
@@ -96,7 +105,7 @@ lib.zyre_dump.argtypes = [zyre_p]
 lib.zyre_version.restype = None
 lib.zyre_version.argtypes = [POINTER(c_int), POINTER(c_int), POINTER(c_int)]
 lib.zyre_test.restype = None
-lib.zyre_test.argtypes = [c_int]
+lib.zyre_test.argtypes = [c_bool]
 
 class Zyre(object):
     """An open-source framework for proximity-based P2P apps"""
@@ -106,15 +115,18 @@ class Zyre(object):
 node it is silent and invisible to other nodes on the network.
 The node name is provided to other nodes during discovery. If you
 specify NULL, Zyre generates a randomized node name from the UUID."""
-        if len(args) == 1 and isinstance(args[0], zyre_p):
+        if len(args) == 2 and isinstance(args[0], zyre_p) and isinstance(args[1], bool):
             self._as_parameter_ = args[0] # Conversion from raw type to binding
+            self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
         else:
             self._as_parameter_ = lib.zyre_new(*args) # Creation of new raw type
+            self.allow_destruct = True
 
     def __del__(self):
         """Destructor, destroys a Zyre node. When you destroy a node, any
 messages it is sending or receiving will be discarded."""
-        lib.zyre_destroy(byref(self._as_parameter_))
+        if self.allow_destruct:
+            lib.zyre_destroy(byref(self._as_parameter_))
 
     def uuid(self):
         """Return our node UUID string, after successful initialization"""
@@ -200,17 +212,17 @@ the group and all Zyre nodes in that group will receive them."""
         """Receive next message from network; the message may be a control
 message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
 Returns zmsg_t object, or NULL if interrupted"""
-        return lib.zyre_recv(self._as_parameter_)
+        return czmq.Zmsg(lib.zyre_recv(self._as_parameter_), False)
 
     def whisper(self, peer, msg_p):
         """Send message to single peer, specified as a UUID string
 Destroys message after sending"""
-        return lib.zyre_whisper(self._as_parameter_, peer, byref(zmsg_p.from_param(msg_p)))
+        return lib.zyre_whisper(self._as_parameter_, peer, byref(czmq.zmsg_p.from_param(msg_p)))
 
     def shout(self, group, msg_p):
         """Send message to a named group
 Destroys message after sending"""
-        return lib.zyre_shout(self._as_parameter_, group, byref(zmsg_p.from_param(msg_p)))
+        return lib.zyre_shout(self._as_parameter_, group, byref(czmq.zmsg_p.from_param(msg_p)))
 
     def whispers(self, peer, format, *args):
         """Send formatted string to a single peer specified as UUID string"""
@@ -223,31 +235,31 @@ Destroys message after sending"""
     def peers(self):
         """Return zlist of current peer ids. The caller owns this list and should
 destroy it when finished with it."""
-        return lib.zyre_peers(self._as_parameter_)
+        return Zlist(lib.zyre_peers(self._as_parameter_), True)
 
     def own_groups(self):
         """Return zlist of currently joined groups. The caller owns this list and
 should destroy it when finished with it."""
-        return lib.zyre_own_groups(self._as_parameter_)
+        return Zlist(lib.zyre_own_groups(self._as_parameter_), True)
 
     def peer_groups(self):
         """Return zlist of groups known through connected peers. The caller owns this
 list and should destroy it when finished with it."""
-        return lib.zyre_peer_groups(self._as_parameter_)
+        return Zlist(lib.zyre_peer_groups(self._as_parameter_), True)
 
     def peer_address(self, peer):
         """Return the endpoint of a connected peer. Caller owns the string."""
-        return lib.zyre_peer_address(self._as_parameter_, peer)
+        return return_fresh_string(lib.zyre_peer_address(self._as_parameter_, peer))
 
     def peer_header_value(self, peer, name):
         """Return the value of a header of a conected peer. 
 Returns null if peer or key doesn't exits. Caller
 owns the string"""
-        return lib.zyre_peer_header_value(self._as_parameter_, peer, name)
+        return return_fresh_string(lib.zyre_peer_header_value(self._as_parameter_, peer, name))
 
     def socket(self):
         """Return socket for talking to the Zyre node, for polling"""
-        return lib.zyre_socket(self._as_parameter_)
+        return Zsock(lib.zyre_socket(self._as_parameter_), False)
 
     def dump(self):
         """Prints Zyre node information"""
@@ -277,16 +289,16 @@ lib.zyre_event_name.restype = c_char_p
 lib.zyre_event_name.argtypes = [zyre_event_p]
 lib.zyre_event_address.restype = c_char_p
 lib.zyre_event_address.argtypes = [zyre_event_p]
-lib.zyre_event_headers.restype = zhash_p
+lib.zyre_event_headers.restype = czmq.zhash_p
 lib.zyre_event_headers.argtypes = [zyre_event_p]
 lib.zyre_event_header.restype = c_char_p
 lib.zyre_event_header.argtypes = [zyre_event_p, c_char_p]
 lib.zyre_event_group.restype = c_char_p
 lib.zyre_event_group.argtypes = [zyre_event_p]
-lib.zyre_event_msg.restype = zmsg_p
+lib.zyre_event_msg.restype = czmq.zmsg_p
 lib.zyre_event_msg.argtypes = [zyre_event_p]
 lib.zyre_event_test.restype = None
-lib.zyre_event_test.argtypes = [c_int]
+lib.zyre_event_test.argtypes = [c_bool]
 
 class ZyreEvent(object):
     """Parsing Zyre messages"""
@@ -313,14 +325,17 @@ class ZyreEvent(object):
         """Constructor: receive an event from the zyre node, wraps zyre_recv.
 The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
 data (WHISPER, SHOUT)."""
-        if len(args) == 1 and isinstance(args[0], zyre_event_p):
+        if len(args) == 2 and isinstance(args[0], zyre_event_p) and isinstance(args[1], bool):
             self._as_parameter_ = args[0] # Conversion from raw type to binding
+            self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
         else:
             self._as_parameter_ = lib.zyre_event_new(*args) # Creation of new raw type
+            self.allow_destruct = True
 
     def __del__(self):
         """Destructor; destroys an event instance"""
-        lib.zyre_event_destroy(byref(self._as_parameter_))
+        if self.allow_destruct:
+            lib.zyre_event_destroy(byref(self._as_parameter_))
 
     def type(self):
         """Returns event type, which is a zyre_event_type_t"""
@@ -340,7 +355,7 @@ data (WHISPER, SHOUT)."""
 
     def headers(self):
         """Returns the event headers, or NULL if there are none"""
-        return lib.zyre_event_headers(self._as_parameter_)
+        return czmq.Zhash(lib.zyre_event_headers(self._as_parameter_), False)
 
     def header(self, name):
         """Returns value of a header from the message headers
@@ -353,7 +368,7 @@ obtained by ENTER. Return NULL if no value was found."""
 
     def msg(self):
         """Returns the incoming message payload (currently one frame)"""
-        return lib.zyre_event_msg(self._as_parameter_)
+        return czmq.Zmsg(lib.zyre_event_msg(self._as_parameter_), False)
 
     @staticmethod
     def test(verbose):
