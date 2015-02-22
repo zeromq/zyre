@@ -40,7 +40,8 @@ typedef enum {
     ZYRE_EVENT_LEAVE = 3,
     ZYRE_EVENT_EXIT = 4,
     ZYRE_EVENT_WHISPER = 5,
-    ZYRE_EVENT_SHOUT = 6
+    ZYRE_EVENT_SHOUT = 6,
+    ZYRE_EVENT_STOP = 7
 } zyre_event_type_t;
 
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.

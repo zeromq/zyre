@@ -306,6 +306,7 @@ class ZyreEvent(object):
         'exit': 4,
         'whisper': 5,
         'shout': 6,
+        'stop': 7,
     }
 
     Type_out = {
@@ -315,6 +316,7 @@ class ZyreEvent(object):
          4: 'exit',
          5: 'whisper',
          6: 'shout',
+         7: 'stop',
     }
 
     def __init__(self, *args):

@@ -105,6 +105,10 @@ zyre_event_new (zyre_t *node)
         msg = NULL;
     }
     else
+    if (streq (type, "STOP")) {
+        self->type = ZYRE_EVENT_STOP;
+    }
+    else
         zsys_warning ("bad message received from node: %s\n", type);
     
     free (type);

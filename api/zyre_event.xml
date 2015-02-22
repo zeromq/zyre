@@ -10,6 +10,7 @@
         <constant name="exit" value="4" />
         <constant name="whisper" value="5" />
         <constant name="shout" value="6" />
+        <constant name="stop" value="7" />
     </enum>
 
     <constructor>
