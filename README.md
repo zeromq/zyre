@@ -24,6 +24,8 @@ frames provide further values:
         a peer has sent this node a message
     SHOUT fromnode groupname message
         a peer has sent one of our groups a message
+    STOP fromnode
+        this node has stopped - no further events will be received
 
 In SHOUT and WHISPER the message is a single frame in this version
 of Zyre. In ENTER, the headers frame contains a packed dictionary,

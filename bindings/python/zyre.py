@@ -32,10 +32,6 @@ class zyre_t(Structure):
     pass # Empty - only for type checking
 zyre_p = POINTER(zyre_t)
 
-class zlist_t(Structure):
-    pass # Empty - only for type checking
-zlist_p = POINTER(zlist_t)
-
 class zsock_t(Structure):
     pass # Empty - only for type checking
 zsock_p = POINTER(zsock_t)
@@ -88,11 +84,11 @@ lib.zyre_whispers.restype = c_int
 lib.zyre_whispers.argtypes = [zyre_p, c_char_p, c_char_p]
 lib.zyre_shouts.restype = c_int
 lib.zyre_shouts.argtypes = [zyre_p, c_char_p, c_char_p]
-lib.zyre_peers.restype = zlist_p
+lib.zyre_peers.restype = czmq.zlist_p
 lib.zyre_peers.argtypes = [zyre_p]
-lib.zyre_own_groups.restype = zlist_p
+lib.zyre_own_groups.restype = czmq.zlist_p
 lib.zyre_own_groups.argtypes = [zyre_p]
-lib.zyre_peer_groups.restype = zlist_p
+lib.zyre_peer_groups.restype = czmq.zlist_p
 lib.zyre_peer_groups.argtypes = [zyre_p]
 lib.zyre_peer_address.restype = POINTER(c_char)
 lib.zyre_peer_address.argtypes = [zyre_p, c_char_p]
@@ -235,17 +231,17 @@ Destroys message after sending"""
     def peers(self):
         """Return zlist of current peer ids. The caller owns this list and should
 destroy it when finished with it."""
-        return Zlist(lib.zyre_peers(self._as_parameter_), True)
+        return czmq.Zlist(lib.zyre_peers(self._as_parameter_), True)
 
     def own_groups(self):
         """Return zlist of currently joined groups. The caller owns this list and
 should destroy it when finished with it."""
-        return Zlist(lib.zyre_own_groups(self._as_parameter_), True)
+        return czmq.Zlist(lib.zyre_own_groups(self._as_parameter_), True)
 
     def peer_groups(self):
         """Return zlist of groups known through connected peers. The caller owns this
 list and should destroy it when finished with it."""
-        return Zlist(lib.zyre_peer_groups(self._as_parameter_), True)
+        return czmq.Zlist(lib.zyre_peer_groups(self._as_parameter_), True)
 
     def peer_address(self, peer):
         """Return the endpoint of a connected peer. Caller owns the string."""
@@ -259,7 +255,7 @@ owns the string"""
 
     def socket(self):
         """Return socket for talking to the Zyre node, for polling"""
-        return Zsock(lib.zyre_socket(self._as_parameter_), False)
+        return lib.zyre_socket(self._as_parameter_)
 
     def dump(self):
         """Prints Zyre node information"""
@@ -310,6 +306,7 @@ class ZyreEvent(object):
         'exit': 4,
         'whisper': 5,
         'shout': 6,
+        'stop': 7,
     }
 
     Type_out = {
@@ -319,6 +316,7 @@ class ZyreEvent(object):
          4: 'exit',
          5: 'whisper',
          6: 'shout',
+         7: 'stop',
     }
 
     def __init__(self, *args):

@@ -693,10 +693,18 @@ zyre_test (bool verbose)
     assert (streq (command, "SHOUT"));
     zstr_free (&command);
     zmsg_destroy (&msg);
-    
-    zyre_stop (node1);
+
     zyre_stop (node2);
-    
+
+    msg = zyre_recv (node2);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "STOP"));
+    zstr_free (&command);
+    zmsg_destroy (&msg);
+
+    zyre_stop (node1);
+
     zyre_destroy (&node1);
     zyre_destroy (&node2);
     //  @end

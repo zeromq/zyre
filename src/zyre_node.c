@@ -244,6 +244,9 @@ zyre_node_stop (zyre_node_t *self)
     }
     //  Stop polling on inbox
     zpoller_remove (self->poller, self->inbox);
+    zstr_sendm (self->outbox, "STOP");
+    zstr_sendm (self->outbox, zuuid_str (self->uuid));
+    zstr_send (self->outbox, self->name);
     return 0;
 }
 

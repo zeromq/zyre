@@ -8,6 +8,7 @@
     <version major = "1" minor = "1" patch = "0" />
     <use project = "czmq">
         <class name="zhash" />
+        <class name="zlist" />
         <class name="zmsg" />
     </use>
 
