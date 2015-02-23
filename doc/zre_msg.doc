@@ -2,6 +2,7 @@
 
 zre_msg - work with ZRE messages
 
+Please add @discuss section in ../src/zre_msg.c.
 
 This is the class interface:
 
