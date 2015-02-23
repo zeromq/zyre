@@ -137,6 +137,63 @@ zyre_event_destroy (zyre_event_t **self_p)
     }
 }
 
+static int
+zyre_event_log_pair (const char *key, void *item, void *argument)
+{
+    zsys_info ("   - %s: %s", key, (const char *)item);
+    return 0;
+}
+
+void
+zyre_event_print (zyre_event_t *self)
+{
+    zsys_info ("zyre_event:");
+    zsys_info (" - from name=%s uuid=%s", zyre_event_name(self), zyre_event_sender(self));
+
+    switch (self->type)
+    {
+    case ZYRE_EVENT_ENTER:
+        zsys_info (" - type=ENTER");
+        zsys_info (" - headers=%zu:", zhash_size (self->headers));
+        zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_event_log_pair, self);
+        zsys_info (" - address=%s", zyre_event_address(self));
+        break;
+
+    case ZYRE_EVENT_EXIT:
+        zsys_info (" - type=EXIT");
+        break;
+
+    case ZYRE_EVENT_STOP:
+        zsys_info (" - type=STOP");
+        break;
+
+    case ZYRE_EVENT_JOIN:
+        zsys_info (" - type=JOIN");
+        zsys_info (" - group=%s", zyre_event_group(self));
+        break;
+
+    case ZYRE_EVENT_LEAVE:
+        zsys_info (" - type=LEAVE");
+        zsys_info (" - group=%s", zyre_event_group(self));
+        break;
+
+    case ZYRE_EVENT_SHOUT:
+        zsys_info (" - type=SHOUT");
+        zsys_info (" - message:");
+        zmsg_print (self->msg);
+        break;
+
+    case ZYRE_EVENT_WHISPER:
+        zsys_info (" - type=WHISPER");
+        zsys_info (" - message:");
+        zmsg_print (self->msg);
+        break;
+
+    default:
+        zsys_info (" - type=UNKNOWN");
+        break;
+    }
+}
 
 //  --------------------------------------------------------------------------
 //  Returns event type, which is a zyre_event_type_t

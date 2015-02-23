@@ -9,6 +9,12 @@
 
 
 ///
+//  Print properties of object
+void QmlZyre::print () {
+    zyre_print (self);
+};
+
+///
 //  Return our node UUID string, after successful initialization
 const QString QmlZyre::uuid () {
     return QString (zyre_uuid (self));
@@ -195,12 +201,6 @@ QString QmlZyre::peerHeaderValue (const QString &peer, const QString &name) {
 //  Return socket for talking to the Zyre node, for polling
 zsock_t *QmlZyre::socket () {
     return zyre_socket (self);
-};
-
-///
-//  Prints Zyre node information
-void QmlZyre::dump () {
-    zyre_dump (self);
 };
 
 

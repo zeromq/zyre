@@ -48,6 +48,10 @@ ZYRE_EXPORT zyre_t *
 ZYRE_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
+//  Print properties of object
+ZYRE_EXPORT void
+    zyre_print (zyre_t *self);
+
 //  Return our node UUID string, after successful initialization
 ZYRE_EXPORT const char *
     zyre_uuid (zyre_t *self);
@@ -181,10 +185,6 @@ ZYRE_EXPORT char *
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
-//  Prints Zyre node information
-ZYRE_EXPORT void
-    zyre_dump (zyre_t *self);
-
 //  Return the Zyre version for run-time API detection
 ZYRE_EXPORT void
     zyre_version (int *major, int *minor, int *patch);
@@ -193,6 +193,8 @@ ZYRE_EXPORT void
 ZYRE_EXPORT void
     zyre_test (bool verbose);
 //  @end
+
+#define zyre_dump(z) zyre_print((z))
 
 #ifdef __cplusplus
 }

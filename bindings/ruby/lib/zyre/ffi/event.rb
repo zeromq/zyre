@@ -67,6 +67,13 @@ module Zyre
         result
       end
       
+      # Print properties of object
+      def print
+        raise DestroyedError unless @ptr
+        result = ::Zyre::FFI.zyre_event_print @ptr
+        result
+      end
+      
       # Returns event type, which is a zyre_event_type_t
       def type
         raise DestroyedError unless @ptr

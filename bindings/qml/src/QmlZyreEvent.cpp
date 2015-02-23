@@ -9,6 +9,12 @@
 
 
 ///
+//  Print properties of object
+void QmlZyreEvent::print () {
+    zyre_event_print (self);
+};
+
+///
 //  Returns event type, which is a zyre_event_type_t
 zyre_event_type_t QmlZyreEvent::type () {
     return zyre_event_type (self);

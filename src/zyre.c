@@ -535,7 +535,7 @@ zyre_socket (zyre_t *self)
 //  Prints zyre node information
 
 void
-zyre_dump (zyre_t *self)
+zyre_print (zyre_t *self)
 {
     zstr_send (self->actor, "DUMP");
 }

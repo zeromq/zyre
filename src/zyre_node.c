@@ -285,6 +285,7 @@ zyre_node_dump (zyre_node_t *self)
 {
     zsys_info ("zyre_node: dump state");
     zsys_info (" - name=%s uuid=%s", self->name, zuuid_str (self->uuid));
+
     zsys_info (" - endpoint=%s", self->endpoint);
     if (self->beacon_port) 
         zsys_info (" - discovery=beacon port=%d interval=%zu",
