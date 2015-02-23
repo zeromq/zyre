@@ -28,6 +28,9 @@ public:
     static QObject* qmlAttachedProperties(QObject* object); // defined in QmlZyre.cpp
     
 public slots:
+    //  Print properties of object
+    void print ();
+
     //  Return our node UUID string, after successful initialization
     const QString uuid ();
 
@@ -135,9 +138,6 @@ public slots:
 
     //  Return socket for talking to the Zyre node, for polling
     zsock_t *socket ();
-
-    //  Prints Zyre node information
-    void dump ();
 };
 
 class QmlZyreAttached : public QObject

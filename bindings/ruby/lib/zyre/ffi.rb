@@ -36,6 +36,7 @@ module Zyre
       
       attach_function :zyre_new, [:string], :pointer, **opts
       attach_function :zyre_destroy, [:pointer], :void, **opts
+      attach_function :zyre_print, [:pointer], :void, **opts
       attach_function :zyre_uuid, [:pointer], :string, **opts
       attach_function :zyre_name, [:pointer], :string, **opts
       attach_function :zyre_set_header, [:pointer, :string, :string, :varargs], :void, **opts
@@ -61,7 +62,6 @@ module Zyre
       attach_function :zyre_peer_address, [:pointer, :string], :pointer, **opts
       attach_function :zyre_peer_header_value, [:pointer, :string, :string], :pointer, **opts
       attach_function :zyre_socket, [:pointer], :pointer, **opts
-      attach_function :zyre_dump, [:pointer], :void, **opts
       attach_function :zyre_version, [:pointer, :pointer, :pointer], :void, **opts
       attach_function :zyre_test, [:bool], :void, **opts
       
@@ -69,6 +69,7 @@ module Zyre
       
       attach_function :zyre_event_new, [:pointer], :pointer, **opts
       attach_function :zyre_event_destroy, [:pointer], :void, **opts
+      attach_function :zyre_event_print, [:pointer], :void, **opts
       attach_function :zyre_event_type, [:pointer], :pointer, **opts
       attach_function :zyre_event_sender, [:pointer], :string, **opts
       attach_function :zyre_event_name, [:pointer], :string, **opts
