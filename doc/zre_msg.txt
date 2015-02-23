@@ -262,6 +262,7 @@ DESCRIPTION
 
 zre_msg - work with ZRE messages
 
+Please add @discuss section in ../src/zre_msg.c.
 
 EXAMPLE
 -------
@@ -462,7 +463,3 @@ for (instance = 0; instance < 2; instance++) {
 zsock_destroy (&input);
 zsock_destroy (&output);
 ----
-
-SEE ALSO
---------
-linkczmq:czmq[7]
