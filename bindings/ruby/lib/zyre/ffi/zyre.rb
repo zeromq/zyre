@@ -69,6 +69,13 @@ module Zyre
         result
       end
       
+      # Print properties of object
+      def print
+        raise DestroyedError unless @ptr
+        result = ::Zyre::FFI.zyre_print @ptr
+        result
+      end
+      
       # Return our node UUID string, after successful initialization
       def uuid
         raise DestroyedError unless @ptr

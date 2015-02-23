@@ -28,6 +28,9 @@ public:
     static QObject* qmlAttachedProperties(QObject* object); // defined in QmlZyre.cpp
     
 public slots:
+    //  Print properties of object
+    void print ();
+
     //  Return our node UUID string, after successful initialization
     const QString uuid ();
 
