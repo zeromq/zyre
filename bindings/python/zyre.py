@@ -4,12 +4,13 @@
 ################################################################################
 
 from __future__ import print_function
+import os, sys
 from ctypes import *
 from ctypes.util import find_library
 import czmq
 
 # load libc to access free, etc.
-libcpath = find_library("libc")
+libcpath = find_library("c")
 if not libcpath:
     raise ImportError("Unable to find libc")
 libc = cdll.LoadLibrary(libcpath)
@@ -21,12 +22,22 @@ def return_fresh_string(char_p):
     libc.free(char_p)
     return s
 
-
 # zyre
-libpath = find_library("zyre")
-if not libpath:
-    raise ImportError("Unable to find zyre C library")
-lib = cdll.LoadLibrary(libpath)
+try:
+    # If LD_LIBRARY_PATH or your OSs equivalent is set, this is the only way to
+    # load the library.  If we use find_library below, we get the wrong result.
+    if os.name == 'posix':
+        if sys.platform == 'darwin':
+            lib = cdll.LoadLibrary('libzyre.1.dylib')
+        else:
+            lib = cdll.LoadLibrary("libzyre.so.1")
+    elif os.name == 'nt':
+        lib = cdll.LoadLibrary('libzyre.dll')
+except OSError:
+    libpath = find_library("zyre")
+    if not libpath:
+        raise ImportError("Unable to find libzyre")
+    lib = cdll.LoadLibrary(libpath)
 
 class zyre_t(Structure):
     pass # Empty - only for type checking
@@ -111,11 +122,15 @@ class Zyre(object):
 node it is silent and invisible to other nodes on the network.
 The node name is provided to other nodes during discovery. If you
 specify NULL, Zyre generates a randomized node name from the UUID."""
-        if len(args) == 2 and isinstance(args[0], zyre_p) and isinstance(args[1], bool):
+        if len(args) == 2 and type(args[0]) is c_void_p and isinstance(args[1], bool):
+            self._as_parameter_ = cast(args[0], zyre_p) # Conversion from raw type to binding
+            self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
+        elif len(args) == 2 and type(args[0]) is zyre_p and isinstance(args[1], bool):
             self._as_parameter_ = args[0] # Conversion from raw type to binding
             self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
         else:
-            self._as_parameter_ = lib.zyre_new(*args) # Creation of new raw type
+            assert(len(args) == 1)
+            self._as_parameter_ = lib.zyre_new(args[0]) # Creation of new raw type
             self.allow_destruct = True
 
     def __del__(self):
@@ -124,8 +139,16 @@ messages it is sending or receiving will be discarded."""
         if self.allow_destruct:
             lib.zyre_destroy(byref(self._as_parameter_))
 
+    def __bool__(self):
+        "Determine whether the object is valid by converting to boolean" # Python 3
+        return self._as_parameter_.__bool__()
+
+    def __nonzero__(self):
+        "Determine whether the object is valid by converting to boolean" # Python 2
+        return self._as_parameter_.__nonzero__()
+
     def print(self):
-        """Print properties of object"""
+        """Print properties of the zyre object."""
         return lib.zyre_print(self._as_parameter_)
 
     def uuid(self):
@@ -233,28 +256,24 @@ Destroys message after sending"""
         return lib.zyre_shouts(self._as_parameter_, group, format, *args)
 
     def peers(self):
-        """Return zlist of current peer ids. The caller owns this list and should
-destroy it when finished with it."""
+        """Return zlist of current peer ids."""
         return czmq.Zlist(lib.zyre_peers(self._as_parameter_), True)
 
     def own_groups(self):
-        """Return zlist of currently joined groups. The caller owns this list and
-should destroy it when finished with it."""
+        """Return zlist of currently joined groups."""
         return czmq.Zlist(lib.zyre_own_groups(self._as_parameter_), True)
 
     def peer_groups(self):
-        """Return zlist of groups known through connected peers. The caller owns this
-list and should destroy it when finished with it."""
+        """Return zlist of groups known through connected peers."""
         return czmq.Zlist(lib.zyre_peer_groups(self._as_parameter_), True)
 
     def peer_address(self, peer):
-        """Return the endpoint of a connected peer. Caller owns the string."""
+        """Return the endpoint of a connected peer."""
         return return_fresh_string(lib.zyre_peer_address(self._as_parameter_, peer))
 
     def peer_header_value(self, peer, name):
         """Return the value of a header of a conected peer. 
-Returns null if peer or key doesn't exits. Caller
-owns the string"""
+Returns null if peer or key doesn't exist."""
         return return_fresh_string(lib.zyre_peer_header_value(self._as_parameter_, peer, name))
 
     def socket(self):
@@ -325,11 +344,15 @@ class ZyreEvent(object):
         """Constructor: receive an event from the zyre node, wraps zyre_recv.
 The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
 data (WHISPER, SHOUT)."""
-        if len(args) == 2 and isinstance(args[0], zyre_event_p) and isinstance(args[1], bool):
+        if len(args) == 2 and type(args[0]) is c_void_p and isinstance(args[1], bool):
+            self._as_parameter_ = cast(args[0], zyre_event_p) # Conversion from raw type to binding
+            self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
+        elif len(args) == 2 and type(args[0]) is zyre_event_p and isinstance(args[1], bool):
             self._as_parameter_ = args[0] # Conversion from raw type to binding
             self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
         else:
-            self._as_parameter_ = lib.zyre_event_new(*args) # Creation of new raw type
+            assert(len(args) == 1)
+            self._as_parameter_ = lib.zyre_event_new(args[0]) # Creation of new raw type
             self.allow_destruct = True
 
     def __del__(self):
@@ -337,8 +360,16 @@ data (WHISPER, SHOUT)."""
         if self.allow_destruct:
             lib.zyre_event_destroy(byref(self._as_parameter_))
 
+    def __bool__(self):
+        "Determine whether the object is valid by converting to boolean" # Python 3
+        return self._as_parameter_.__bool__()
+
+    def __nonzero__(self):
+        "Determine whether the object is valid by converting to boolean" # Python 2
+        return self._as_parameter_.__nonzero__()
+
     def print(self):
-        """Print properties of object"""
+        """Print properties of the zyre event object."""
         return lib.zyre_event_print(self._as_parameter_)
 
     def type(self):

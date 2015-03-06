@@ -27,8 +27,8 @@
     =========================================================================
 */
 
-#ifndef __zyre_library_H_INCLUDED__
-#define __zyre_library_H_INCLUDED__
+#ifndef zyre_library_H_INCLUDED
+#define zyre_library_H_INCLUDED
 
 //  Set up environment for the application
 

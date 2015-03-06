@@ -9,7 +9,7 @@
 
 
 ///
-//  Print properties of object
+//  Print properties of the zyre object.
 void QmlZyre::print () {
     zyre_print (self);
 };
@@ -157,28 +157,25 @@ int QmlZyre::shouts (const QString &group, const QString &format) {
 };
 
 ///
-//  Return zlist of current peer ids. The caller owns this list and should
-//  destroy it when finished with it.                                     
+//  Return zlist of current peer ids.
 zlist_t *QmlZyre::peers () {
     return zyre_peers (self);
 };
 
 ///
-//  Return zlist of currently joined groups. The caller owns this list and
-//  should destroy it when finished with it.                              
+//  Return zlist of currently joined groups.
 zlist_t *QmlZyre::ownGroups () {
     return zyre_own_groups (self);
 };
 
 ///
-//  Return zlist of groups known through connected peers. The caller owns this
-//  list and should destroy it when finished with it.                         
+//  Return zlist of groups known through connected peers.
 zlist_t *QmlZyre::peerGroups () {
     return zyre_peer_groups (self);
 };
 
 ///
-//  Return the endpoint of a connected peer. Caller owns the string.
+//  Return the endpoint of a connected peer.
 QString QmlZyre::peerAddress (const QString &peer) {
     char *retStr_ = zyre_peer_address (self, peer.toUtf8().data());
     QString retQStr_ = QString (retStr_);
@@ -188,8 +185,7 @@ QString QmlZyre::peerAddress (const QString &peer) {
 
 ///
 //  Return the value of a header of a conected peer. 
-//  Returns null if peer or key doesn't exits. Caller
-//  owns the string                                  
+//  Returns null if peer or key doesn't exist.       
 QString QmlZyre::peerHeaderValue (const QString &peer, const QString &name) {
     char *retStr_ = zyre_peer_header_value (self, peer.toUtf8().data(), name.toUtf8().data());
     QString retQStr_ = QString (retStr_);

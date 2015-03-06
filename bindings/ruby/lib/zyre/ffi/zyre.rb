@@ -69,7 +69,7 @@ module Zyre
         result
       end
       
-      # Print properties of object
+      # Print properties of the zyre object.
       def print
         raise DestroyedError unless @ptr
         result = ::Zyre::FFI.zyre_print @ptr
@@ -253,31 +253,28 @@ module Zyre
         result
       end
       
-      # Return zlist of current peer ids. The caller owns this list and should
-      # destroy it when finished with it.                                     
+      # Return zlist of current peer ids.
       def peers
         raise DestroyedError unless @ptr
         result = ::Zyre::FFI.zyre_peers @ptr
         result
       end
       
-      # Return zlist of currently joined groups. The caller owns this list and
-      # should destroy it when finished with it.                              
+      # Return zlist of currently joined groups.
       def own_groups
         raise DestroyedError unless @ptr
         result = ::Zyre::FFI.zyre_own_groups @ptr
         result
       end
       
-      # Return zlist of groups known through connected peers. The caller owns this
-      # list and should destroy it when finished with it.                         
+      # Return zlist of groups known through connected peers.
       def peer_groups
         raise DestroyedError unless @ptr
         result = ::Zyre::FFI.zyre_peer_groups @ptr
         result
       end
       
-      # Return the endpoint of a connected peer. Caller owns the string.
+      # Return the endpoint of a connected peer.
       def peer_address peer
         raise DestroyedError unless @ptr
         peer = String(peer)
@@ -286,8 +283,7 @@ module Zyre
       end
       
       # Return the value of a header of a conected peer. 
-      # Returns null if peer or key doesn't exits. Caller
-      # owns the string                                  
+      # Returns null if peer or key doesn't exist.       
       def peer_header_value peer, name
         raise DestroyedError unless @ptr
         peer = String(peer)

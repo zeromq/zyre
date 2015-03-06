@@ -48,7 +48,7 @@ ZYRE_EXPORT zyre_t *
 ZYRE_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
-//  Print properties of object
+//  Print properties of the zyre object.
 ZYRE_EXPORT void
     zyre_print (zyre_t *self);
 
@@ -156,28 +156,29 @@ ZYRE_EXPORT int
 ZYRE_EXPORT int
     zyre_shouts (zyre_t *self, const char *group, const char *format, ...) CHECK_PRINTF (3);
 
-//  Return zlist of current peer ids. The caller owns this list and should
-//  destroy it when finished with it.                                     
+//  Return zlist of current peer ids.
+//  The caller is responsible for destroying the return value when finished with it.
 ZYRE_EXPORT zlist_t *
     zyre_peers (zyre_t *self);
 
-//  Return zlist of currently joined groups. The caller owns this list and
-//  should destroy it when finished with it.                              
+//  Return zlist of currently joined groups.
+//  The caller is responsible for destroying the return value when finished with it.
 ZYRE_EXPORT zlist_t *
     zyre_own_groups (zyre_t *self);
 
-//  Return zlist of groups known through connected peers. The caller owns this
-//  list and should destroy it when finished with it.                         
+//  Return zlist of groups known through connected peers.
+//  The caller is responsible for destroying the return value when finished with it.
 ZYRE_EXPORT zlist_t *
     zyre_peer_groups (zyre_t *self);
 
-//  Return the endpoint of a connected peer. Caller owns the string.
+//  Return the endpoint of a connected peer.
+//  The caller is responsible for destroying the return value when finished with it.
 ZYRE_EXPORT char *
     zyre_peer_address (zyre_t *self, const char *peer);
 
 //  Return the value of a header of a conected peer. 
-//  Returns null if peer or key doesn't exits. Caller
-//  owns the string                                  
+//  Returns null if peer or key doesn't exist.       
+//  The caller is responsible for destroying the return value when finished with it.
 ZYRE_EXPORT char *
     zyre_peer_header_value (zyre_t *self, const char *peer, const char *name);
 

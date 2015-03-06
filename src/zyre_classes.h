@@ -26,8 +26,8 @@
     =========================================================================
 */
 
-#ifndef __ZYRE_CLASSES_H_INCLUDED__
-#define __ZYRE_CLASSES_H_INCLUDED__
+#ifndef ZYRE_CLASSES_H_INCLUDED
+#define ZYRE_CLASSES_H_INCLUDED
 
 //  External API
 #include "../include/zyre.h"

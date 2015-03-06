@@ -9,7 +9,7 @@
 
 
 ///
-//  Print properties of object
+//  Print properties of the zyre event object.
 void QmlZyreEvent::print () {
     zyre_event_print (self);
 };

@@ -28,7 +28,7 @@ public:
     static QObject* qmlAttachedProperties(QObject* object); // defined in QmlZyre.cpp
     
 public slots:
-    //  Print properties of object
+    //  Print properties of the zyre object.
     void print ();
 
     //  Return our node UUID string, after successful initialization
@@ -116,24 +116,20 @@ public slots:
     //  Send formatted string to a named group
     int shouts (const QString &group, const QString &format);
 
-    //  Return zlist of current peer ids. The caller owns this list and should
-    //  destroy it when finished with it.                                     
+    //  Return zlist of current peer ids.
     zlist_t *peers ();
 
-    //  Return zlist of currently joined groups. The caller owns this list and
-    //  should destroy it when finished with it.                              
+    //  Return zlist of currently joined groups.
     zlist_t *ownGroups ();
 
-    //  Return zlist of groups known through connected peers. The caller owns this
-    //  list and should destroy it when finished with it.                         
+    //  Return zlist of groups known through connected peers.
     zlist_t *peerGroups ();
 
-    //  Return the endpoint of a connected peer. Caller owns the string.
+    //  Return the endpoint of a connected peer.
     QString peerAddress (const QString &peer);
 
     //  Return the value of a header of a conected peer. 
-    //  Returns null if peer or key doesn't exits. Caller
-    //  owns the string                                  
+    //  Returns null if peer or key doesn't exist.       
     QString peerHeaderValue (const QString &peer, const QString &name);
 
     //  Return socket for talking to the Zyre node, for polling
