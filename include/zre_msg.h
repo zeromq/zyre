@@ -33,8 +33,8 @@
     =========================================================================
 */
 
-#ifndef __ZRE_MSG_H_INCLUDED__
-#define __ZRE_MSG_H_INCLUDED__
+#ifndef ZRE_MSG_H_INCLUDED
+#define ZRE_MSG_H_INCLUDED
 
 /*  These are the zre_msg messages:
 
@@ -90,6 +90,7 @@
 
 #include <czmq.h>
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -108,6 +109,12 @@ ZYRE_EXPORT zre_msg_t *
 //  Destroy the zre_msg
 ZYRE_EXPORT void
     zre_msg_destroy (zre_msg_t **self_p);
+
+//  Parse a zmsg_t and decides whether it is zre_msg. Returns
+//  true if it is, false otherwise. Doesn't destroy or modify the
+//  original message.
+ZYRE_EXPORT bool
+    is_zre_msg (zmsg_t *msg_p);
 
 //  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
 //  the message could not be parsed, or was NULL. Destroys msg and 
