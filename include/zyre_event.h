@@ -54,7 +54,7 @@ ZYRE_EXPORT zyre_event_t *
 ZYRE_EXPORT void
     zyre_event_destroy (zyre_event_t **self_p);
 
-//  Print properties of object
+//  Print properties of the zyre event object.
 ZYRE_EXPORT void
     zyre_event_print (zyre_event_t *self);
 

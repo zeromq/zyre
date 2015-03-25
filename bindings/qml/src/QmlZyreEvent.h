@@ -28,7 +28,7 @@ public:
     static QObject* qmlAttachedProperties(QObject* object); // defined in QmlZyreEvent.cpp
     
 public slots:
-    //  Print properties of object
+    //  Print properties of the zyre event object.
     void print ();
 
     //  Returns event type, which is a zyre_event_type_t

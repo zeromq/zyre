@@ -11,8 +11,8 @@ project(zyre)
 enable_language(C)
 enable_testing()
 
-set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
 ########################################################################
 # determine version
@@ -45,7 +45,7 @@ if (NOT HAVE_NET_IF_H)
     CHECK_INCLUDE_FILE("net/if.h" HAVE_NET_IF_H)
 endif()
 
-file(WRITE ${BINARY_DIR}/platform.h.in "
+file(WRITE "${BINARY_DIR}/platform.h.in" "
 #cmakedefine HAVE_LINUX_WIRELESS_H
 #cmakedefine HAVE_NET_IF_H
 #cmakedefine HAVE_NET_IF_MEDIA_H
@@ -53,13 +53,13 @@ file(WRITE ${BINARY_DIR}/platform.h.in "
 #cmakedefine HAVE_FREEIFADDRS
 ")
 
-configure_file(${BINARY_DIR}/platform.h.in ${BINARY_DIR}/platform.h)
+configure_file("${BINARY_DIR}/platform.h.in" "${BINARY_DIR}/platform.h")
 
 #The MSVC C compiler is too out of date,
 #so the sources have to be compiled as c++
 if (MSVC)
     enable_language(CXX)
-    file(GLOB sources ${SOURCE_DIR}/src/*.c)
+    file(GLOB sources "${SOURCE_DIR}/src/*.c")
     set_source_files_properties(${sources} PROPERTIES LANGUAGE CXX)
     set(MORE_LIBRARIES ws2_32 Rpcrt4 Iphlpapi)
 endif()
@@ -74,7 +74,7 @@ if (CYGWIN)
     set(MORE_LIBRARIES -luuid)
 endif()
 
-list(APPEND CMAKE_MODULE_PATH ${SOURCE_DIR})
+list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}")
 
 ########################################################################
 # ZMQ dependency
@@ -108,8 +108,7 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 # library
 ########################################################################
-include_directories(${BINARY_DIR})
-include_directories(${SOURCE_DIR}/include)
+include_directories("${BINARY_DIR}" "${SOURCE_DIR}/include")
 set (zyre_sources
     src/zyre.c
     src/zyre_event.c
@@ -119,13 +118,16 @@ set (zyre_sources
     src/zyre_node.c
 )
 source_group ("Source Files" FILES ${zyre_sources})
-add_library(zyre SHARED ${zyre_sources})
+if (NOT DEFINED BUILD_SHARED_LIBS)
+    SET(BUILD_SHARED_LIBS ON)
+endif()
+add_library(zyre ${zyre_sources})
 set_target_properties(zyre PROPERTIES DEFINE_SYMBOL "LIBZYRE_EXPORTS")
 target_link_libraries(zyre ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES})
 
 install(TARGETS zyre
-    LIBRARY DESTINATION lib${LIB_SUFFIX} # .so file
-    ARCHIVE DESTINATION lib${LIB_SUFFIX} # .lib file
+    LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
+    ARCHIVE DESTINATION "lib${LIB_SUFFIX}" # .lib file
     RUNTIME DESTINATION bin              # .dll file
 )
 
@@ -138,19 +140,19 @@ set(exec_prefix "\${prefix}")
 set(libdir "\${prefix}/lib${LIB_SUFFIX}")
 set(includedir "\${prefix}/include")
 configure_file(
-    ${SOURCE_DIR}/src/libzyre.pc.in
-    ${BINARY_DIR}/libzyre.pc
+    "${SOURCE_DIR}/src/libzyre.pc.in"
+    "${BINARY_DIR}/libzyre.pc"
 @ONLY)
 
 install(
-    FILES ${BINARY_DIR}/libzyre.pc
-    DESTINATION lib${LIB_SUFFIX}/pkgconfig
+    FILES "${BINARY_DIR}/libzyre.pc"
+    DESTINATION "lib${LIB_SUFFIX}/pkgconfig"
 )
 
 ########################################################################
 # tests
 ########################################################################
-add_executable(zyre_selftest ${SOURCE_DIR}/src/zyre_selftest.c)
+add_executable(zyre_selftest "${SOURCE_DIR}/src/zyre_selftest.c")
 target_link_libraries(zyre_selftest zyre ${ZEROMQ_LIBRARIES})
 add_test(zyre_selftest zyre_selftest)
 

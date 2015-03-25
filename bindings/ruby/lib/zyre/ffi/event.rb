@@ -67,7 +67,7 @@ module Zyre
         result
       end
       
-      # Print properties of object
+      # Print properties of the zyre event object.
       def print
         raise DestroyedError unless @ptr
         result = ::Zyre::FFI.zyre_event_print @ptr
