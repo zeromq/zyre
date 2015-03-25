@@ -64,6 +64,12 @@ The following ABNF grammar defines the work with ZRE messages:
     strings-count   = number-4
     strings-value   = longstr
 
+    ; A list of name/value pairs
+    hash            = hash-count *( hash-name hash-value )
+    hash-count      = number-4
+    hash-value      = longstr
+    hash-name       = string
+
     ; A msg is zero or more distinct frames
     msg             = *frame
 

@@ -236,6 +236,47 @@ zre_msg_destroy (zre_msg_t **self_p)
     }
 }
 
+//  Parse a zmsg_t and decides whether it is zre_msg. Returns
+//  true if it is, false otherwise. Doesn't destroy or modify the
+//  original message.
+bool
+is_zre_msg (zmsg_t *msg)
+{
+    if (msg == NULL)
+        return false;
+
+    zframe_t *frame = zmsg_first (msg);
+
+    //  Get and check protocol signature
+    zre_msg_t *self = zre_msg_new (0);
+    self->needle = zframe_data (frame);
+    self->ceiling = self->needle + zframe_size (frame);
+    uint16_t signature;
+    GET_NUMBER2 (signature);
+    if (signature != (0xAAA0 | 1))
+        goto fail;             //  Invalid signature
+
+    //  Get message id and parse per message type
+    GET_NUMBER1 (self->id);
+
+    switch (self->id) {
+        case ZRE_MSG_HELLO:
+        case ZRE_MSG_WHISPER:
+        case ZRE_MSG_SHOUT:
+        case ZRE_MSG_JOIN:
+        case ZRE_MSG_LEAVE:
+        case ZRE_MSG_PING:
+        case ZRE_MSG_PING_OK:
+            zre_msg_destroy (&self);
+            return true;
+        default:
+            goto fail;
+    }
+    fail:
+    malformed:
+        zre_msg_destroy (&self);
+        return false;
+}
 
 //  --------------------------------------------------------------------------
 //  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
@@ -641,6 +682,7 @@ zre_msg_recv (void *input)
     zmsg_t *msg = zmsg_recv (input);
     if (!msg)
         return NULL;            //  Interrupted
+
     //  If message came from a router socket, first frame is routing_id
     zframe_t *routing_id = NULL;
     if (zsock_type (zsock_resolve (input)) == ZMQ_ROUTER) {
@@ -745,11 +787,11 @@ zre_msg_encode_hello (
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_HELLO);
     zre_msg_set_sequence (self, sequence);
-    zre_msg_set_endpoint (self, endpoint);
+    zre_msg_set_endpoint (self, "%s", endpoint);
     zlist_t *groups_copy = zlist_dup (groups);
     zre_msg_set_groups (self, &groups_copy);
     zre_msg_set_status (self, status);
-    zre_msg_set_name (self, name);
+    zre_msg_set_name (self, "%s", name);
     zhash_t *headers_copy = zhash_dup (headers);
     zre_msg_set_headers (self, &headers_copy);
     return zre_msg_encode (&self);
@@ -783,7 +825,7 @@ zre_msg_encode_shout (
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_SHOUT);
     zre_msg_set_sequence (self, sequence);
-    zre_msg_set_group (self, group);
+    zre_msg_set_group (self, "%s", group);
     zmsg_t *content_copy = zmsg_dup (content);
     zre_msg_set_content (self, &content_copy);
     return zre_msg_encode (&self);
@@ -801,7 +843,7 @@ zre_msg_encode_join (
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_JOIN);
     zre_msg_set_sequence (self, sequence);
-    zre_msg_set_group (self, group);
+    zre_msg_set_group (self, "%s", group);
     zre_msg_set_status (self, status);
     return zre_msg_encode (&self);
 }
@@ -818,7 +860,7 @@ zre_msg_encode_leave (
 {
     zre_msg_t *self = zre_msg_new (ZRE_MSG_LEAVE);
     zre_msg_set_sequence (self, sequence);
-    zre_msg_set_group (self, group);
+    zre_msg_set_group (self, "%s", group);
     zre_msg_set_status (self, status);
     return zre_msg_encode (&self);
 }
@@ -1530,6 +1572,9 @@ int
 zre_msg_test (bool verbose)
 {
     printf (" * zre_msg: ");
+
+    //  Silence an "unused" warning by "using" the verbose variable
+    if (verbose) {;}
 
     //  @selftest
     //  Simple create/destroy test
