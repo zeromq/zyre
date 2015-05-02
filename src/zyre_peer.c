@@ -226,7 +226,7 @@ zyre_peer_connected (zyre_peer_t *self)
 //  --------------------------------------------------------------------------
 //  Return peer identity string
 
-char *
+const char *
 zyre_peer_identity (zyre_peer_t *self)
 {
     assert (self);
@@ -237,7 +237,7 @@ zyre_peer_identity (zyre_peer_t *self)
 //  --------------------------------------------------------------------------
 //  Return peer connection endpoint
 
-char *
+const char *
 zyre_peer_endpoint (zyre_peer_t *self)
 {
     assert (self);
@@ -285,7 +285,7 @@ zyre_peer_expired_at (zyre_peer_t *self)
 //  --------------------------------------------------------------------------
 //  Return peer name
 
-char *
+const char *
 zyre_peer_name (zyre_peer_t *self)
 {
     assert (self);
@@ -366,7 +366,7 @@ zyre_peer_set_ready (zyre_peer_t *self, bool ready)
 //  --------------------------------------------------------------------------
 //  Get peer header value
 
-char *
+const char *
 zyre_peer_header (zyre_peer_t *self, char *key, char *default_value)
 {
     assert (self);

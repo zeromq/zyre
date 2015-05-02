@@ -54,7 +54,7 @@ bool
     zyre_peer_connected (zyre_peer_t *self);
 
 //  Return peer connection endpoint
-char *
+const char *
     zyre_peer_endpoint (zyre_peer_t *self);
 
 //  Send message to peer
@@ -62,7 +62,7 @@ int
     zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p);
 
 //  Return peer identity string
-char *
+const char *
     zyre_peer_identity (zyre_peer_t *self);
     
 //  Register activity at peer
@@ -78,7 +78,7 @@ int64_t
     zyre_peer_expired_at (zyre_peer_t *self);
 
 //  Return peer name
-char *
+const char *
     zyre_peer_name (zyre_peer_t *self);
 
 //  Set peer name
@@ -106,7 +106,7 @@ void
     zyre_peer_set_ready (zyre_peer_t *self, bool ready);
 
 //  Get peer header value
-char *
+const char *
     zyre_peer_header (zyre_peer_t *self, char *key, char *default_value);
 
 //  Get peer headers table
