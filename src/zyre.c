@@ -475,21 +475,19 @@ zyre_peer_address (zyre_t *self, const char *peer)
 }
 
 //  --------------------------------------------------------------------------
-//  Return the value of a header of a conected peer. 
-//  Returns null if peer or key doesn't exits. Caller
-//  owns the string
+//  Return the value of a header of a conected peer.  Returns null if peer
+//  or key doesn't exits. Caller owns the string.
+
 char *
 zyre_peer_header_value (zyre_t *self, const char *peer, const char *name)
 {
     assert (self);
     assert (peer);
     assert (name);
-    char *value;
     zstr_sendm (self->actor, "PEER HEADER");
     zstr_sendm (self->actor, peer);
     zstr_send (self->actor, name);
-    value = zstr_recv (self->actor);
-    return value;
+    return zstr_recv (self->actor);
 }
 
 //  --------------------------------------------------------------------------
