@@ -255,8 +255,8 @@ void
 zyre_peer_refresh (zyre_peer_t *self)
 {
     assert (self);
-    self->evasive_at = zclock_time () + PEER_EVASIVE;
-    self->expired_at = zclock_time () + PEER_EXPIRED;
+    self->evasive_at = zclock_mono () + PEER_EVASIVE;
+    self->expired_at = zclock_mono () + PEER_EXPIRED;
 }
 
 

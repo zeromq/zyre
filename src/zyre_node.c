@@ -831,14 +831,14 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
 {
     zyre_peer_t *peer = (zyre_peer_t *) item;
     zyre_node_t *self = (zyre_node_t *) argument;
-    if (zclock_time () >= zyre_peer_expired_at (peer)) {
+    if (zclock_mono () >= zyre_peer_expired_at (peer)) {
         if (self->verbose)
             zsys_info ("(%s) peer expired name=%s endpoint=%s",
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
         zyre_node_remove_peer (self, peer);
     }
     else
-    if (zclock_time () >= zyre_peer_evasive_at (peer)) {
+    if (zclock_mono () >= zyre_peer_evasive_at (peer)) {
         //  If peer is being evasive, force a TCP ping.
         //  TODO: do this only once for a peer in this state;
         //  it would be nicer to use a proper state machine
@@ -869,9 +869,9 @@ zyre_node_actor (zsock_t *pipe, void *args)
     zsock_signal (self->pipe, 0);
 
     //  Loop until the agent is terminated one way or another
-    int64_t reap_at = zclock_time () + REAP_INTERVAL;
+    int64_t reap_at = zclock_mono () + REAP_INTERVAL;
     while (!self->terminated) {
-        int timeout = (int) (reap_at - zclock_time ());
+        int timeout = (int) (reap_at - zclock_mono ());
         if (timeout > REAP_INTERVAL)
             timeout = REAP_INTERVAL;
         else
@@ -897,8 +897,8 @@ zyre_node_actor (zsock_t *pipe, void *args)
             break;          //  Interrupted, check before expired
         else
         if (zpoller_expired (self->poller)) {
-            if (zclock_time () >= reap_at) {
-                reap_at = zclock_time () + REAP_INTERVAL;
+            if (zclock_mono () >= reap_at) {
+                reap_at = zclock_mono () + REAP_INTERVAL;
                 //  Ping all peers and reap any expired ones
                 zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_ping_peer, self);
             }

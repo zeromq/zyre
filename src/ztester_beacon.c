@@ -47,7 +47,7 @@ node_actor (zsock_t *pipe, void *args)
     char *cookie = NULL;
 
     zpoller_t *poller = zpoller_new (pipe, zyre_socket (node), NULL);
-    int64_t trigger = zclock_time () + 1000;
+    int64_t trigger = zclock_mono () + 1000;
     while (!zsys_interrupted) {
         void *which = zpoller_wait (poller, randof (1000));
         if (!which)
@@ -134,8 +134,8 @@ node_actor (zsock_t *pipe, void *args)
                 cookie = NULL;
             }
         }
-        if (zclock_time () >= trigger) {
-            trigger = zclock_time () + 1000;
+        if (zclock_mono () >= trigger) {
+            trigger = zclock_mono () + 1000;
             char group [10];
             sprintf (group, "GROUP%03d", randof (MAX_GROUP));
             if (randof (4) == 0)

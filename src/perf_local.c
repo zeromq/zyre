@@ -79,7 +79,7 @@ main (int argc, char *argv [])
     zyre_start (node);
     zyre_join (node, "GLOBAL");
 
-    int64_t start = zclock_time ();
+    int64_t start = zclock_mono ();
     int64_t elapse;
 
     char **peers = (char **) zmalloc (sizeof (char *) * max_node);
@@ -97,7 +97,7 @@ main (int argc, char *argv [])
 
             if (nbr_node == max_node) {
                 // got HELLO from the all remote nodes
-                elapse = zclock_time () - start;
+                elapse = zclock_mono () - start;
                 printf ("Took %ld ms to coordinate with all remote\n",
                         (long) elapse);
             }
@@ -110,7 +110,7 @@ main (int argc, char *argv [])
             if (streq (cookie, "R:HELLO")) {
                 if (++nbr_hello_response == max_node) {
                     // got HELLO from the all remote nodes
-                    elapse = zclock_time () - start;
+                    elapse = zclock_mono () - start;
                     printf ("Took %ld ms to get greeting from all remote\n",
                             (long) elapse);
                 }
@@ -126,7 +126,7 @@ main (int argc, char *argv [])
     }
 
     //  Send WHISPER message
-    start = zclock_time ();
+    start = zclock_mono ();
     zpoller_t *poller = zpoller_new (zyre_socket (node), NULL);
     for (nbr_message = 0; nbr_message < max_message; nbr_message++) {
         zyre_whispers (node, peers [nbr_message % max_node], "S:WHISPER");
@@ -140,11 +140,11 @@ main (int argc, char *argv [])
             nbr_message_response++;
 
     //  Got WHISPER response from the all remote nodes
-    elapse = zclock_time () - start;
+    elapse = zclock_mono () - start;
     printf ("Took %ld ms to send/receive %d message. %.2f msg/s \n", (long)elapse, max_message, (float) max_message * 1000 / elapse);
 
     //  send SPOUT message
-    start = zclock_time ();
+    start = zclock_mono ();
     nbr_message = 0;
     nbr_message_response = 0;
 
@@ -162,7 +162,7 @@ main (int argc, char *argv [])
             nbr_message_response++;
 
     // got SHOUT response from the all remote nodes
-    elapse = zclock_time () - start;
+    elapse = zclock_mono () - start;
     printf ("Took %ld ms to send %d, recv %d GROUP message. %.2f msg/s \n",
             (long) elapse, max_message, max_node * max_message,
             (float) max_node * max_message * 1000 / elapse);
