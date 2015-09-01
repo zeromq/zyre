@@ -14,6 +14,12 @@ This is the class interface:
     ZYRE_EXPORT void
         zre_msg_destroy (zre_msg_t **self_p);
     
+    //  Parse a zmsg_t and decides whether it is zre_msg. Returns
+    //  true if it is, false otherwise. Doesn't destroy or modify the
+    //  original message.
+    ZYRE_EXPORT bool
+        is_zre_msg (zmsg_t *msg_p);
+    
     //  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
     //  the message could not be parsed, or was NULL. Destroys msg and 
     //  nullifies the msg reference.
