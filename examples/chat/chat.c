@@ -58,7 +58,7 @@ chat_actor (zsock_t *pipe, void *args)
             if (streq (command, "SHOUT")) { 
                 char *string = zmsg_popstr (msg);
                 zyre_shouts (node, "CHAT", "%s", string);
-            }
+	    }
             else {
                 puts ("E: invalid message to actor");
                 assert (false);
@@ -80,9 +80,12 @@ chat_actor (zsock_t *pipe, void *args)
             else if (streq (event, "EXIT")) { 
                 printf ("%s has left the chat\n", name);
             }
-            if (streq (event, "SHOUT")) { 
+            else if (streq (event, "SHOUT")) { 
                 printf ("%s: %s\n", name, message);
             }
+	    else if (streq (event, "EVASIVE")) {
+	    	printf ("%s is being evasive\n", name);
+	    }
             //printf ("Message from node\n");
             //printf ("event: %s peer: %s  name: %s\n  group: %s message: %s\n", event, peer, name, group, message);
 

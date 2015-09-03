@@ -823,7 +823,7 @@ zyre_node_recv_gossip (zyre_node_t *self)
 
 
 //  We do this once a second:
-//  - if peer has gone quiet, send TCP ping
+//  - if peer has gone quiet, send TCP ping and emit EVASIVE event
 //  - if peer has disappeared, expire it
 
 static int
@@ -848,6 +848,10 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING);
         zyre_peer_send (peer, &msg);
+        // Inform the calling application this peer is being evasive
+    	zstr_sendm (self->outbox, "EVASIVE");
+	zstr_sendm (self->outbox, zyre_peer_identity (peer));
+    	zstr_send (self->outbox, zyre_peer_name (peer));
     }
     return 0;
 }
