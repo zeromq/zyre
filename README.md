@@ -281,6 +281,16 @@ Events must be destroyed once you no longer need them.
     zyre_destroy (&node2);
     zctx_destroy (&ctx);
 
+## Hints to Contributors
+
+Zyre is a nice, neat library, and you may not immediately appreciate why. Read the CLASS style guide please, and write your code to make it indistinguishable from the rest of the code in the library. That is the only real criteria for good style: it's invisible.
+
+Don't include system headers in source files. The right place for these is zyre_library.h. If you need to check against configured libraries and/or headers, include platform.h in the source before including zyre.h.
+
+Do read your code after you write it and ask, "Can I make this simpler?" We do use a nice minimalist and yet readable style. Learn it, adopt it, use it.
+
+Before opening a pull request read our [contribution guidelines](https://github.com/zeromq/zyre/blob/master/CONTRIBUTING.md). Thanks!
+
 ## Project Organization
 
 Zyre is owned by all its authors and contributors. This is an open source
