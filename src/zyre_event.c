@@ -109,6 +109,10 @@ zyre_event_new (zyre_t *node)
         self->type = ZYRE_EVENT_STOP;
     }
     else
+    if (streq (type, "EVASIVE")) {
+        self->type = ZYRE_EVENT_EVASIVE;
+    }
+    else
         zsys_warning ("bad message received from node: %s\n", type);
     
     free (type);
@@ -188,7 +192,9 @@ zyre_event_print (zyre_event_t *self)
         zsys_info (" - message:");
         zmsg_print (self->msg);
         break;
-
+    case ZYRE_EVENT_EVASIVE:
+	zsys_info (" - type=EVASIVE");
+	break;
     default:
         zsys_info (" - type=UNKNOWN");
         break;
