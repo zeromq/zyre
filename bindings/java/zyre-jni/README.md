@@ -1,14 +1,18 @@
 # jyre-jni
 
-## generating files
+## Generate c header. 
 
-Generate c header. From project directory root run:
+From project directory root run:
 
     javah -d src/main/c -v -classpath build/classes/main/:lib/jeromq-0.3.6-SNAPSHOT.jar org.zyre.Zyre
+
+## Create c implementation
     
 Implmenet/edit c file manually.  Then compile c file:
 
     gcc -fPIC -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -shared -o src/main/c/libzrejni.so src/main/c/org_zyre_Zyre.c
+
+## Ensure correct linking
     
 Important: you may need to set the following environment variable to the location of libzyre. 
 This allows the linker to find the zyre symbols.  See 
@@ -33,6 +37,8 @@ libzyre, czmq, libzmq, libsodium, etc. in the output:
     libstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007fc4cc8df000)
     libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007fc4cc6c9000)
     libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007fc4cc3c3000)
+
+## Copmile and run java 
 
 compile java classes:
 
