@@ -1,6 +1,7 @@
 # jyre-jni
 
-Demonstrate a hard-coded, simplistic JNI wrapper for libzyre
+Demonstrates a hard-coded, simplistic JNI wrapper for libzyre.
+These steps have been tested on Linux only.
 
 ## prerequisites
 
@@ -11,13 +12,14 @@ first, install these libs locally:
 
 ## Generate c header for this demo project. 
 
-From project directory root run:
+The header file probably already exists.  But if you need to re-create it, 
+from project directory root run:
 
     javah -d src/main/c -v -classpath build/classes/main/:lib/jeromq-0.3.6-SNAPSHOT.jar org.zyre.Zyre
 
 ## Create c implementation
     
-Implmenet/edit c file manually.  Then compile c file:
+Implmenet/edit c file manually if needed.  Then compile c file:
 
     gcc -fPIC -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -shared -o src/main/c/libzrejni.so src/main/c/org_zyre_Zyre.c
 
