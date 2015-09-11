@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     org_zyre_Zyre
+ * Method:    nativeInit
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_zyre_Zyre_nativeInit
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     org_zyre_Zyre
  * Method:    create
  * Signature: ()V
  */
@@ -50,9 +58,9 @@ JNIEXPORT void JNICALL Java_org_zyre_Zyre_whisper
 /*
  * Class:     org_zyre_Zyre
  * Method:    recv
- * Signature: ()Lorg/zeromq/ZMsg;
+ * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jobject JNICALL Java_org_zyre_Zyre_recv
+JNIEXPORT jstring JNICALL Java_org_zyre_Zyre_recv
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

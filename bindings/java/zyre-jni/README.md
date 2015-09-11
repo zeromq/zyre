@@ -1,14 +1,25 @@
 # jyre-jni
 
-## Generate c header. 
+Demonstrates a hard-coded, simplistic JNI wrapper for libzyre.
+These steps have been tested on Linux only.
 
-From project directory root run:
+## prerequisites
+
+first, install these libs locally:
+  * libzmq
+  * libczmq
+  * libzyre
+
+## Generate c header for this demo project. 
+
+The header file probably already exists.  But if you need to re-create it, 
+from project directory root run:
 
     javah -d src/main/c -v -classpath build/classes/main/:lib/jeromq-0.3.6-SNAPSHOT.jar org.zyre.Zyre
 
 ## Create c implementation
     
-Implmenet/edit c file manually.  Then compile c file:
+Implmenet/edit c file manually if needed.  Then compile c file:
 
     gcc -fPIC -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -shared -o src/main/c/libzrejni.so src/main/c/org_zyre_Zyre.c
 
@@ -38,13 +49,17 @@ libzyre, czmq, libzmq, libsodium, etc. in the output:
     libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007fc4cc6c9000)
     libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007fc4cc3c3000)
 
-## Copmile and run java 
+## Compile and run java 
 
-compile java classes:
+compile java classes using gradlew:
 
-    ./gradlew build
+    ./gradlew --daemon build
 
-run HelloZyre from the command line:
+run HelloZyre using gradlew:
 
-    java -Djava.library.path=./src/main/c:/usr/local/lib -cp build/classes/main/:lib/jeromq-0.3.6-SNAPSHOT.jar org.zyre.HelloZyre
+    ./gradlew --daemon run
+
+OR run HelloZyre from the command line, using java command:
+
+    java -Djava.library.path=./src/main/c:/usr/local/lib -cp build/classes/main/:<list other jars from lib/ here> org.zyre.HelloZyre
 
