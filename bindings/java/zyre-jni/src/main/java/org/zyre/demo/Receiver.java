@@ -7,19 +7,21 @@ import org.zyre.Zyre;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Receiver implements Runnable {
-
+	
+	Zyre zyre;
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public void run() {
 		System.out.println("RECEIVER starting");
-		Zyre zyre = new Zyre();
+		zyre = new Zyre();
 		zyre.create();
 		zyre.join("GLOBAL");
 
 		try { Thread.sleep(500); } 
 		catch (InterruptedException e) { e.printStackTrace(); }
 		
-		while(true) {
+		while(!Thread.currentThread().isInterrupted()) {
 			String msg = zyre.recv();
 			try {
 				// Convert the JSON string into a Map
@@ -35,6 +37,13 @@ public class Receiver implements Runnable {
 				e.printStackTrace();
 			} 
 		}
+		System.out.println("RECEIVER done");
+		try { Thread.sleep(10); } catch (InterruptedException e) {/*don't handle*/ }
+		zyre.destroy();
+	}
+	
+	public void destroy() {
+		zyre.destroy();
 	}
 
 }

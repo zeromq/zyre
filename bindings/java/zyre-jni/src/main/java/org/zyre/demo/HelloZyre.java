@@ -7,13 +7,19 @@ public class HelloZyre {
 	public static void main(String[] args) throws Exception {
 		
 		Thread senderThread = new Thread(new Sender());
-		Thread recvThread = new Thread(new Receiver());
+		
+		Receiver receiver = new Receiver();
+		Thread recvThread = new Thread(receiver);
 		
 		recvThread.start();
 
 		Thread.sleep(1000);
 
 		senderThread.start();
+		senderThread.join();
+		System.out.println("done sending");
+		recvThread.interrupt();
+		receiver.destroy();
 	}
 	
 	public static void hello(String[] args) {

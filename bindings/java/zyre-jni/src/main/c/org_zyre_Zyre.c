@@ -23,8 +23,6 @@ JNIEXPORT void JNICALL Java_org_zyre_Zyre_create (JNIEnv * env, jobject thisObj)
     put_node(env, thisObj, node);
 
     zyre_start(node);
-
-    printf("create done\n");
 }
 
 JNIEXPORT void JNICALL Java_org_zyre_Zyre_destroy (JNIEnv * env, jobject thisObj) {
@@ -34,14 +32,12 @@ JNIEXPORT void JNICALL Java_org_zyre_Zyre_destroy (JNIEnv * env, jobject thisObj
     zclock_sleep(100);
 
     zyre_destroy(&node);
-    printf("destroyed\n");
 }
 
 JNIEXPORT void JNICALL Java_org_zyre_Zyre_join (JNIEnv * env, jobject thisObj, jstring group) {
     const char *grp = (*env)->GetStringUTFChars(env, group, 0);
     zyre_t* node = get_node(env, thisObj);
     zyre_join(node, grp);
-    printf("joined group: %s\n", grp);
 }
 
 JNIEXPORT void JNICALL Java_org_zyre_Zyre_shout (JNIEnv * env, jobject thisObj, jstring group, jstring message) {
@@ -86,6 +82,7 @@ JNIEXPORT jstring JNICALL Java_org_zyre_Zyre_recv (JNIEnv * env, jobject thisObj
     free (group);
     free (message);
     zmsg_destroy (&zmsg);
+
     return jstrMsg;
 }
 
