@@ -2,25 +2,14 @@
     zyre - API wrapping one Zyre node
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2014 iMatix Corporation <www.imatix.com>
-    Copyright other contributors as noted in the AUTHORS file.
+    Copyright (c) the Contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
     peer-to-peer applications -- See http://zyre.org.
 
-    This is free software; you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or (at
-    your option) any later version.
-
-    This software is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this program. If not, see
-    <http://www.gnu.org/licenses/>.
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
     =========================================================================
 */
 
@@ -48,7 +37,7 @@
             a peer has sent this node a message
         SHOUT fromnode name groupname message
             a peer has sent one of our groups a message
-            
+
     In SHOUT and WHISPER the message is zero or more frames, and can hold
     any ZeroMQ message. In ENTER, the headers frame contains a packed
     dictionary, see zhash_pack/unpack.
@@ -92,7 +81,7 @@ zyre_new (const char *name)
     //  Create front-to-back pipe pair for data traffic
     zsock_t *outbox;
     self->inbox = zsys_create_pipe (&outbox);
-    
+
     //  Start node engine and wait for it to be ready
     self->actor = zactor_new (zyre_node_actor, outbox);
     assert (self->actor);
@@ -100,7 +89,7 @@ zyre_new (const char *name)
     //  Send name, if any, to node ending
     if (name)
         zstr_sendx (self->actor, "SET NAME", name, NULL);
-    
+
     return self;
 }
 
@@ -257,7 +246,7 @@ zyre_set_endpoint (zyre_t *self, const char *format, ...)
     va_start (argptr, format);
     char *string = zsys_vprintf (format, argptr);
     va_end (argptr);
-    
+
     zstr_sendx (self->actor, "SET ENDPOINT", string, NULL);
     free (string);
     return zsock_wait (self->actor) == 0? 0: -1;
@@ -561,16 +550,16 @@ zyre_test (bool verbose)
     printf (" * zyre: ");
     if (verbose)
         printf ("\n");
-    
+
     //  @selftest
     //  We'll use inproc gossip discovery so that this works without networking
-    
+
     int major, minor, patch;
     zyre_version (&major, &minor, &patch);
     assert (major == ZYRE_VERSION_MAJOR);
     assert (minor == ZYRE_VERSION_MINOR);
     assert (patch == ZYRE_VERSION_PATCH);
-    
+
     //  Create two nodes
     zyre_t *node1 = zyre_new ("node1");
     assert (node1);
@@ -578,7 +567,7 @@ zyre_test (bool verbose)
     zyre_set_header (node1, "X-HELLO", "World");
     if (verbose)
         zyre_set_verbose (node1);
-    
+
     //  Set inproc endpoint for this node
     int rc = zyre_set_endpoint (node1, "inproc://zyre-node1");
     assert (rc == 0);
@@ -592,7 +581,7 @@ zyre_test (bool verbose)
     assert (streq (zyre_name (node2), "node2"));
     if (verbose)
         zyre_set_verbose (node2);
-    
+
     //  Set inproc endpoint for this node
     //  First, try to use existing name, it'll fail
     rc = zyre_set_endpoint (node2, "inproc://zyre-node1");
@@ -600,13 +589,13 @@ zyre_test (bool verbose)
     //  Now use available name and confirm that it succeeds
     rc = zyre_set_endpoint (node2, "inproc://zyre-node2");
     assert (rc == 0);
-   
+
     //  Set up gossip network for this node
     zyre_gossip_connect (node2, "inproc://gossip-hub");
     rc = zyre_start (node2);
     assert (rc == 0);
     assert (strneq (zyre_uuid (node1), zyre_uuid (node2)));
-    
+
     zyre_join (node1, "GLOBAL");
     zyre_join (node2, "GLOBAL");
 
@@ -655,7 +644,7 @@ zyre_test (bool verbose)
     assert (streq (name, "node1"));
     zstr_free (&name);
     zframe_t *headers_packed = zmsg_pop (msg);
-    
+
     char *address = zmsg_popstr (msg);
     char *endpoint = zyre_peer_address (node2, peerid);
     assert (streq (address, endpoint));

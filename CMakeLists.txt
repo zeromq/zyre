@@ -80,19 +80,15 @@ list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}")
 # ZMQ dependency
 ########################################################################
 find_package(ZeroMQ REQUIRED)
-IF (ZEROMQ_FOUND)
 include_directories(${ZEROMQ_INCLUDE_DIRS})
 list(APPEND MORE_LIBRARIES ${ZEROMQ_LIBRARIES})
-ENDIF (ZEROMQ_FOUND)
 
 ########################################################################
 # CZMQ dependency
 ########################################################################
 find_package(CZMQ REQUIRED)
-IF (CZMQ_FOUND)
 include_directories(${CZMQ_INCLUDE_DIRS})
 list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
-ENDIF (CZMQ_FOUND)
 
 ########################################################################
 # includes

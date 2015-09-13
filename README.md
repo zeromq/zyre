@@ -4,13 +4,9 @@
 
 ## Description
 
-Zyre does local area discovery and clustering. A Zyre node broadcasts
-UDP beacons, and connects to peers that it finds. This class wraps a
-Zyre node with a message-based API.
+Zyre does local area discovery and clustering. A Zyre node broadcasts UDP beacons, and connects to peers that it finds. This class wraps a Zyre node with a message-based API.
 
-All incoming events are zmsg_t messages delivered via the zyre_recv
-call. The first frame defines the type of the message, and following
-frames provide further values:
+All incoming events are zmsg_t messages delivered via the zyre_recv call. The first frame defines the type of the message, and following frames provide further values:
 
     ENTER fromnode headers ipaddress
         a new peer has entered the network
@@ -27,14 +23,9 @@ frames provide further values:
     STOP fromnode
         this node has stopped - no further events will be received
 
-In SHOUT and WHISPER the message is a single frame in this version
-of Zyre. In ENTER, the headers frame contains a packed dictionary,
-see zhash_pack/unpack.
+In SHOUT and WHISPER the message is a single frame in this version of Zyre. In ENTER, the headers frame contains a packed dictionary, see zhash_pack/unpack.
 
-To join or leave a group, use the zyre_join and zyre_leave methods.
-To set a header value, use the zyre_set_header method. To send a message
-to a single peer, use zyre_whisper. To send a message to a group, use
-zyre_shout.
+To join or leave a group, use the zyre_join and zyre_leave methods. To set a header value, use the zyre_set_header method. To send a message to a single peer, use zyre_whisper. To send a message to a group, use zyre_shout.
 
 ## API
 
@@ -100,7 +91,7 @@ zyre_shout.
     // Destroys message after sending
     int
         zyre_shouts (zyre_t *self, char *group, char *format, ...);
-        
+
     //  Return handle to the Zyre node, for polling
     void *
         zyre_socket (zyre_t *self);
@@ -147,24 +138,24 @@ zyre_shout.
     assert (streq (zhash_lookup (headers, "X-HELLO"), "World"));
     zhash_destroy (&headers);
     zmsg_destroy (&msg);
-    
+
     msg = zyre_recv (node2);
     assert (msg);
     command = zmsg_popstr (msg);
     assert (streq (command, "JOIN"));
     free (command);
     zmsg_destroy (&msg);
-    
+
     msg = zyre_recv (node2);
     assert (msg);
     command = zmsg_popstr (msg);
     assert (streq (command, "SHOUT"));
     free (command);
     zmsg_destroy (&msg);
-    
+
     zyre_stop (node1);
     zyre_stop (node2);
-    
+
     zyre_destroy (&node1);
     zyre_destroy (&node2);
     zctx_destroy (&ctx);
@@ -187,13 +178,13 @@ Besides the plain receive method Zyre provides an API to receive an wrapped even
     SHOUT   = ZYRE_EVENT_SHOUT
 
 Events must be destroyed once you no longer need them.
-    
+
     // Constructor: receive an event from the zyre node, wraps zyre_recv.
     // The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
     // data (WHISPER, SHOUT).
     CZMQ_EXPORT zyre_event_t *
     zyre_event_new (zyre_t *self);
-    
+
     // Destructor; destroys an event instance
     void
         zyre_event_destroy (zyre_event_t **self_p);
@@ -233,7 +224,7 @@ Events must be destroyed once you no longer need them.
     zmsg_t *
         zyre_event_msg (zyre_event_t *self);
 
-## Example 
+## Example
 
     zctx_t *ctx = zctx_new ();
     // Create two nodes
@@ -261,12 +252,12 @@ Events must be destroyed once you no longer need them.
     assert (streq (zyre_event_header (zyre_event, "X-HELLO"), "World"));
     msg = zyre_event_msg (zyre_event);
     zyre_event_destroy (&zyre_event);
-    
+
     // Parse JOIN
     zyre_event = zyre_event_recv (node2);
     assert (zyre_event_type (zyre_event) == ZYRE_EVENT_JOIN);
     zyre_event_destroy (&zyre_event);
-    
+
     // Parse SHOUT
     zyre_event = zyre_event_recv (node2);
     assert (zyre_event_type (zyre_event) == ZYRE_EVENT_SHOUT);
@@ -276,7 +267,7 @@ Events must be destroyed once you no longer need them.
     assert (streq (string, "Hello, World"));
     free (string);
     zyre_event_destroy (&zyre_event);
-    
+
     zyre_destroy (&node1);
     zyre_destroy (&node2);
     zctx_destroy (&ctx);
@@ -293,6 +284,4 @@ Before opening a pull request read our [contribution guidelines](https://github.
 
 ## Project Organization
 
-Zyre is owned by all its authors and contributors. This is an open source
-project licensed under the LGPLv3. To contribute to Zyre please read the
-[C4.1 process](http://rfc.zeromq.org/spec:22) that we use.
+Zyre is owned by all its authors and contributors. This is an open source project licensed under the MPLv2. To contribute to Zyre please read the [C4.1 process](http://rfc.zeromq.org/spec:22) that we use.

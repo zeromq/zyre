@@ -2,25 +2,14 @@
     zyre_peer - one of our peers in a ZRE network
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2014 iMatix Corporation <www.imatix.com>
-    Copyright other contributors as noted in the AUTHORS file.
+    Copyright (c) the Contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
     peer-to-peer applications -- See http://zyre.org.
 
-    This is free software; you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or (at
-    your option) any later version.
-
-    This software is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this program. If not, see
-    <http://www.gnu.org/licenses/>.
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
     =========================================================================
 */
 
@@ -115,7 +104,7 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint)
     self->mailbox = zsock_new (ZMQ_DEALER);
     if (!self->mailbox)
         return;             //  Null when we're shutting down
-    
+
     //  Set our own identity on the socket so that receiving node
     //  knows who each message came from. Note that we cannot use
     //  the UUID directly as the identity since it may contain a
@@ -192,7 +181,7 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
                 zre_msg_command (msg),
                 self->name? self->name: "-",
                 zre_msg_sequence (msg));
-            
+
         if (zre_msg_send (msg_p, self->mailbox)) {
             if (errno == EAGAIN) {
                 if (self->verbose)
@@ -207,7 +196,7 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
     }
     else
         zre_msg_destroy (msg_p);
-    
+
     return 0;
 }
 
@@ -426,7 +415,7 @@ zyre_peer_messages_lost (zyre_peer_t *self, zre_msg_t *msg)
         self->want_sequence = 1;
     else
         self->want_sequence += 1;
-        
+
     if (self->want_sequence != zre_msg_sequence (msg)) {
         zsys_info ("(%s) seq error from peer=%s expect=%d, got=%d",
             self->origin,

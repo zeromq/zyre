@@ -1,4 +1,4 @@
-<project 
+<project
     name = "zyre"
     description = "an open-source framework for proximity-based P2P apps"
     script = "zproject.gsl"
@@ -7,12 +7,12 @@
     <include filename = "license.xml" />
     <version major = "1" minor = "1" patch = "0" />
     <use project = "czmq">
-        <class name="zhash" />
-        <class name="zlist" />
-        <class name="zmsg" />
+        <class name = "zhash" />
+        <class name = "zlist" />
+        <class name = "zmsg" />
+        <class name = "zsock" />
     </use>
 
-    <!-- The order of the classes is NOT important -->
     <class name = "zyre" />
     <class name = "zyre_event" />
     <class name = "zre_msg" />
@@ -20,7 +20,7 @@
     <class name = "zyre_group" private = "1" />
     <class name = "zyre_node" private = "1" />
     <model name = "zre_msg" />
-    
+
     <main name = "perf_local" private = "1" />
     <main name = "perf_remote" private = "1" />
     <main name = "zpinger" />
@@ -32,4 +32,4 @@
     <constant name = "PEER_EXPIRED" value = "30000" private = "1" >30 seconds' silence is expired</constant>
     <constant name = "REAP_INTERVAL" value = "1000" private = "1" >Once per second</constant>
 </project>
-   
+

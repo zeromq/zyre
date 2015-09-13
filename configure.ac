@@ -326,6 +326,7 @@ AM_COND_IF([WITH_ZTESTER_GOSSIP], [AC_MSG_NOTICE([WITH_ZTESTER_GOSSIP defined])]
 # Checks for library functions.
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(perror gettimeofday memset getifaddrs)
+AC_CHECK_LIB([uuid], [uuid_generate])
 
 # Set pkgconfigdir
 AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],

@@ -2,25 +2,14 @@
     zyre_event.h - Parsing Zyre messages
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2014 iMatix Corporation <www.imatix.com>
-    Copyright other contributors as noted in the AUTHORS file.
+    Copyright (c) the Contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
     peer-to-peer applications -- See http://zyre.org.
 
-    This is free software; you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or (at
-    your option) any later version.
-
-    This software is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this program. If not, see
-    <http://www.gnu.org/licenses/>.
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
     =========================================================================
 */
 
@@ -114,7 +103,7 @@ zyre_event_new (zyre_t *node)
     }
     else
         zsys_warning ("bad message received from node: %s\n", type);
-    
+
     free (type);
     zmsg_destroy (&msg);
     return self;
@@ -311,7 +300,7 @@ zyre_event_test (bool verbose)
         return;
     }
     zyre_join (node1, "GLOBAL");
-    
+
     zyre_t *node2 = zyre_new ("node2");
     assert (node2);
     if (verbose)
@@ -319,7 +308,7 @@ zyre_event_test (bool verbose)
     int rc = zyre_start (node2);
     assert (rc == 0);
     zyre_join (node2, "GLOBAL");
-    
+
     //  Give time for them to interconnect
     zclock_sleep (250);
 
@@ -342,7 +331,7 @@ zyre_event_test (bool verbose)
     const char *header = zyre_event_header (event, "X-HELLO");
     assert (header);
     zyre_event_destroy (&event);
-    
+
     //  Parse JOIN
     //  We tolerate other events, which we can get if there are instances
     //  of Zyre running somewhere on the network.
