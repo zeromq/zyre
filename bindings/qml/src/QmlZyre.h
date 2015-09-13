@@ -129,7 +129,7 @@ public slots:
     QString peerAddress (const QString &peer);
 
     //  Return the value of a header of a conected peer. 
-    //  Returns null if peer or key doesn't exist.       
+    //  Returns null if peer or key doesn't exits.       
     QString peerHeaderValue (const QString &peer, const QString &name);
 
     //  Return socket for talking to the Zyre node, for polling

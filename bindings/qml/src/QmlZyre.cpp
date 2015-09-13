@@ -185,7 +185,7 @@ QString QmlZyre::peerAddress (const QString &peer) {
 
 ///
 //  Return the value of a header of a conected peer. 
-//  Returns null if peer or key doesn't exist.       
+//  Returns null if peer or key doesn't exits.       
 QString QmlZyre::peerHeaderValue (const QString &peer, const QString &name) {
     char *retStr_ = zyre_peer_header_value (self, peer.toUtf8().data(), name.toUtf8().data());
     QString retQStr_ = QString (retStr_);

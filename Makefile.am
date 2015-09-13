@@ -15,9 +15,10 @@ project_libs = \
     ${czmq_LIBS}
 
 SUBDIRS =
-SUBDIRS += doc
-
 DIST_SUBDIRS =
+SUBDIRS += doc
+DIST_SUBDIRS += doc
+
 lib_LTLIBRARIES =
 bin_PROGRAMS =
 noinst_PROGRAMS =
@@ -26,6 +27,12 @@ noinst_LTLIBRARIES =
 TESTS =
 
 EXTRA_DIST = \
+    src/zyre_peer.h \
+    src/zyre_group.h \
+    src/zyre_node.h \
+    src/zyre_classes.h \
+    README.md \
+    CONTRIBUTING.md \
     version.sh
 
 include $(srcdir)/src/Makemodule.am

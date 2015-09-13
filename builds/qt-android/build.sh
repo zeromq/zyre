@@ -35,13 +35,13 @@ fi
 (android_build_verify_so "libczmq.so" &> /dev/null) || {
     # Use a default value assuming the czmq project sits alongside this one
     test -z "$CZMQ_ROOT" && CZMQ_ROOT="$(cd ../../../czmq && pwd)"
-    
+
     if [ ! -d "$CZMQ_ROOT" ]; then
         echo "The CZMQ_ROOT directory does not exist"
         echo "  ${CZMQ_ROOT}"
         exit 1
     fi
-    
+
     (bash ${CZMQ_ROOT}/builds/qt-android/build.sh) || exit 1
     UPSTREAM_PREFIX=${CZMQ_ROOT}/builds/qt-android/prefix/${TOOLCHAIN_NAME}
     cp -r ${UPSTREAM_PREFIX}/* ${ANDROID_BUILD_PREFIX}
@@ -54,10 +54,10 @@ fi
     rm -rf "${cache}/zyre"
     (cp -r ../.. "${cache}/zyre" && cd "${cache}/zyre" \
         && make clean && rm configure config.status)
-    rm 
-    
+    rm
+
     export LIBTOOL_EXTRA_LDFLAGS='-avoid-version'
-    
+
     (cd "${cache}/zyre" && ./autogen.sh \
         && ./configure "${ANDROID_BUILD_OPTS[@]}" \
         && make \
@@ -67,7 +67,6 @@ fi
 ##
 # Verify shared libraries in prefix
 
-android_build_verify_so "libzmq.so"
 android_build_verify_so "libczmq.so"
 android_build_verify_so "libzyre.so" "libczmq.so"
 

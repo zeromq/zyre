@@ -177,7 +177,7 @@ ZYRE_EXPORT char *
     zyre_peer_address (zyre_t *self, const char *peer);
 
 //  Return the value of a header of a conected peer. 
-//  Returns null if peer or key doesn't exist.       
+//  Returns null if peer or key doesn't exits.       
 //  The caller is responsible for destroying the return value when finished with it.
 ZYRE_EXPORT char *
     zyre_peer_header_value (zyre_t *self, const char *peer, const char *name);
