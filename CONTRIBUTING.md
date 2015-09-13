@@ -1,6 +1,6 @@
 # Contributing to Zyre
 
-The contributors are listed in AUTHORS (add yourself). This project uses the LGPLv3 license, see LICENSE.
+The contributors are listed in AUTHORS (add yourself). This project uses the MPLv2 license, see LICENSE.
 
 Please read these documents BEFORE you send a patch:
 

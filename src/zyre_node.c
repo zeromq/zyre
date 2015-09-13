@@ -2,25 +2,14 @@
     zyre_node - node on a ZRE network
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2014 iMatix Corporation <www.imatix.com>
-    Copyright other contributors as noted in the AUTHORS file.
+    Copyright (c) the Contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
     peer-to-peer applications -- See http://zyre.org.
 
-    This is free software; you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or (at
-    your option) any later version.
-
-    This software is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this program. If not, see
-    <http://www.gnu.org/licenses/>.
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
     =========================================================================
 */
 
@@ -89,7 +78,7 @@ zyre_node_new (zsock_t *pipe, void *args)
     //  then reconnects, the new client connection is treated as the
     //  canonical one, and any old trailing commands are discarded.
     zsock_set_router_handover (self->inbox, 1);
-    
+
     self->pipe = pipe;
     self->outbox = (zsock_t *) args;
     self->poller = zpoller_new (self->pipe, NULL);
@@ -168,7 +157,7 @@ zyre_node_start (zyre_node_t *self)
 
         if (self->verbose)
             zsock_send (self->beacon, "s", "VERBOSE");
-            
+
         //  Our hostname is provided by zbeacon
         zsock_send (self->beacon, "si", "CONFIGURE", self->beacon_port);
         char *hostname = zstr_recv (self->beacon);
@@ -287,7 +276,7 @@ zyre_node_dump (zyre_node_t *self)
     zsys_info (" - name=%s uuid=%s", self->name, zuuid_str (self->uuid));
 
     zsys_info (" - endpoint=%s", self->endpoint);
-    if (self->beacon_port) 
+    if (self->beacon_port)
         zsys_info (" - discovery=beacon port=%d interval=%zu",
                    self->beacon_port, self->interval);
     else {
@@ -299,7 +288,7 @@ zyre_node_dump (zyre_node_t *self)
     }
     zsys_info (" - headers=%zu:", zhash_size (self->headers));
     zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_node_log_pair, self);
-    
+
     zsys_info (" - peers=%zu:", zhash_size (self->peers));
     zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_log_item, self);
 
@@ -317,7 +306,7 @@ zyre_node_recv_api (zyre_node_t *self)
     zmsg_t *request = zmsg_recv (self->pipe);
     if (!request)
         return;                 //  Interrupted
-        
+
     char *command = zmsg_popstr (request);
     if (streq (command, "UUID"))
         zstr_send (self->pipe, zuuid_str (self->uuid));
@@ -392,7 +381,7 @@ zyre_node_recv_api (zyre_node_t *self)
         //  Get peer to send message to
         char *identity = zmsg_popstr (request);
         zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, identity);
-        
+
         //  Send frame on out to peer's mailbox, drop message
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
@@ -572,7 +561,7 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
     if (self->verbose)
         zsys_info ("(%s) EXIT name=%s endpoint=%s",
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
-    
+
     //  Remove peer from any groups we've got it in
     zhash_foreach (self->peer_groups, (zhash_foreach_fn *) zyre_node_delete_peer, peer);
     //  To destroy peer, we remove from peers hash table
@@ -602,7 +591,7 @@ zyre_node_join_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *nam
     zstr_sendm (self->outbox, zyre_peer_identity (peer));
     zstr_sendm (self->outbox, zyre_peer_name (peer));
     zstr_send (self->outbox, name);
-    
+
     if (self->verbose)
         zsys_info ("(%s) JOIN name=%s group=%s",
                 self->name, zyre_peer_name (peer), name);
@@ -625,7 +614,7 @@ zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *na
     if (self->verbose)
         zsys_info ("(%s) LEAVE name=%s group=%s",
                 self->name, zyre_peer_name (peer), name);
-        
+
     return group;
 }
 
@@ -703,7 +692,7 @@ zyre_node_recv_peer (zyre_node_t *self)
         if (self->verbose)
             zsys_info ("(%s) ENTER name=%s endpoint=%s",
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
-        
+
         //  Join peer to listed groups
         const char *name = zre_msg_groups_first (msg);
         while (name) {
@@ -713,7 +702,7 @@ zyre_node_recv_peer (zyre_node_t *self)
         //  Now take peer's status from HELLO, after joining groups
         zyre_peer_set_status (peer, zre_msg_status (msg));
     }
-    else 
+    else
     if (zre_msg_id (msg) == ZRE_MSG_WHISPER) {
         //  Pass up to caller API as WHISPER event
         zstr_sendm (self->outbox, "WHISPER");
@@ -749,7 +738,7 @@ zyre_node_recv_peer (zyre_node_t *self)
     }
     zuuid_destroy (&uuid);
     zre_msg_destroy (&msg);
-    
+
     //  Activity from peer resets peer timers
     zyre_peer_refresh (peer);
 }
@@ -804,11 +793,11 @@ zyre_node_recv_gossip (zyre_node_t *self)
     zstr_recvx (self->gossip, &command, &uuidstr, &endpoint, NULL);
     if (command == NULL)
         return;                 //  Interrupted
-    
+
     //  Any replies except DELIVER would signify an internal error; these
     //  messages come from zgossip, not an external source
     assert (streq (command, "DELIVER"));
-    
+
     //  Require peer, if it's not us
     if (strneq (endpoint, self->endpoint)) {
         zuuid_t *uuid = zuuid_new ();
@@ -868,7 +857,7 @@ zyre_node_actor (zsock_t *pipe, void *args)
     zyre_node_t *self = zyre_node_new (pipe, args);
     if (!self)                  //  Interrupted
         return;
-    
+
     //  Signal actor successfully initialized
     zsock_signal (self->pipe, 0);
 
@@ -881,7 +870,7 @@ zyre_node_actor (zsock_t *pipe, void *args)
         else
         if (timeout < 0)
             timeout = 0;
-        
+
         zsock_t *which = (zsock_t *) zpoller_wait (self->poller, timeout);
         if (which == self->pipe)
             zyre_node_recv_api (self);

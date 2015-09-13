@@ -43,10 +43,6 @@ class zyre_t(Structure):
     pass # Empty - only for type checking
 zyre_p = POINTER(zyre_t)
 
-class zsock_t(Structure):
-    pass # Empty - only for type checking
-zsock_p = POINTER(zsock_t)
-
 class zyre_event_t(Structure):
     pass # Empty - only for type checking
 zyre_event_p = POINTER(zyre_event_t)
@@ -107,7 +103,7 @@ lib.zyre_peer_address.restype = POINTER(c_char)
 lib.zyre_peer_address.argtypes = [zyre_p, c_char_p]
 lib.zyre_peer_header_value.restype = POINTER(c_char)
 lib.zyre_peer_header_value.argtypes = [zyre_p, c_char_p, c_char_p]
-lib.zyre_socket.restype = zsock_p
+lib.zyre_socket.restype = czmq.zsock_p
 lib.zyre_socket.argtypes = [zyre_p]
 lib.zyre_version.restype = None
 lib.zyre_version.argtypes = [POINTER(c_int), POINTER(c_int), POINTER(c_int)]
@@ -278,7 +274,7 @@ Returns null if peer or key doesn't exits."""
 
     def socket(self):
         """Return socket for talking to the Zyre node, for polling"""
-        return lib.zyre_socket(self._as_parameter_)
+        return czmq.Zsock(lib.zyre_socket(self._as_parameter_), False)
 
     @staticmethod
     def version(major, minor, patch):
