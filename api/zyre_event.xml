@@ -11,6 +11,7 @@
         <constant name="whisper" value="5" />
         <constant name="shout" value="6" />
         <constant name="stop" value="7" />
+        <constant name="evasive" value="8" />
     </enum>
 
     <constructor>

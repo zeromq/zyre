@@ -75,9 +75,12 @@ PREVIOUS_LIBS="${LIBS}"
 
 was_zmq_check_lib_detected=no
 
-PKG_CHECK_MODULES([zmq], [libzmq >= 2.2.0],,
-    [AC_MSG_ERROR([Cannot find required package for libzmq. Note, pkg-config is required due to specified version >= 2.2.0])
-  ])
+PKG_CHECK_MODULES([zmq], [libzmq >= 2.2.0],
+    [
+    ],
+    [
+        AC_MSG_ERROR([Cannot find required package for libzmq. Note, pkg-config is required due to specified version >= 2.2.0])
+    ])
 
 if test "x$was_zmq_check_lib_detected" = "xno"; then
     CFLAGS="${zmq_CFLAGS} ${CFLAGS}"
@@ -87,7 +90,9 @@ fi
 
 was_czmq_check_lib_detected=no
 
-PKG_CHECK_MODULES([czmq], [libczmq],,
+PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
+    [
+    ],
     [
         AC_ARG_WITH([libczmq],
             [
@@ -109,12 +114,12 @@ PKG_CHECK_MODULES([czmq], [libczmq],,
             fi
         fi
 
-        CFLAGS="${czmq_synthetic_cflags} ${CFLAGS}"
-        LDFLAGS="${czmq_synthetic_libs} ${LDFLAGS}"
-        LIBS="${czmq_synthetic_libs} ${LIBS}"
-
         AC_CHECK_LIB([czmq], [zctx_test],
             [
+                CFLAGS="${czmq_synthetic_cflags} ${CFLAGS}"
+                LDFLAGS="${czmq_synthetic_libs} ${LDFLAGS}"
+                LIBS="${czmq_synthetic_libs} ${LIBS}"
+
                 AC_SUBST([czmq_CFLAGS],[${czmq_synthetic_cflags}])
                 AC_SUBST([czmq_LIBS],[${czmq_synthetic_libs}])
                 was_czmq_check_lib_detected=yes
@@ -169,7 +174,7 @@ case "${host_os}" in
         # Define on Linux to enable all library features
         CPPFLAGS="-D_GNU_SOURCE -DLINUX $CPPFLAGS"
         AC_DEFINE(ZYRE_HAVE_LINUX, 1, [Have Linux OS])
-        
+
         case "${host_os}" in
             *android*)
                 AC_DEFINE(ZYRE_HAVE_ANDROID, 1, [Have Android OS])

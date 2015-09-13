@@ -273,7 +273,7 @@ Destroys message after sending"""
 
     def peer_header_value(self, peer, name):
         """Return the value of a header of a conected peer. 
-Returns null if peer or key doesn't exist."""
+Returns null if peer or key doesn't exits."""
         return return_fresh_string(lib.zyre_peer_header_value(self._as_parameter_, peer, name))
 
     def socket(self):
@@ -328,6 +328,7 @@ class ZyreEvent(object):
         'whisper': 5,
         'shout': 6,
         'stop': 7,
+        'evasive': 8,
     }
 
     Type_out = {
@@ -338,6 +339,7 @@ class ZyreEvent(object):
          5: 'whisper',
          6: 'shout',
          7: 'stop',
+         8: 'evasive',
     }
 
     def __init__(self, *args):

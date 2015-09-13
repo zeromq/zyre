@@ -38,6 +38,8 @@ module Zyre
         raise DestroyedError unless @ptr
         @ptr
       end
+      # So external Libraries can just pass the Object to a FFI function which expects a :pointer
+      alias_method :to_ptr, :__ptr
       # Nullify internal pointer and return pointer pointer
       def __ptr_give_ref
         raise DestroyedError unless @ptr
@@ -283,7 +285,7 @@ module Zyre
       end
       
       # Return the value of a header of a conected peer. 
-      # Returns null if peer or key doesn't exist.       
+      # Returns null if peer or key doesn't exits.       
       def peer_header_value peer, name
         raise DestroyedError unless @ptr
         peer = String(peer)

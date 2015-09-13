@@ -43,12 +43,12 @@ main (int argc, char *argv [])
 
     printf ("Running zyre selftests...\n");
 
-    zyre_test (verbose); 
-    zyre_event_test (verbose); 
-    zre_msg_test (verbose); 
-    zyre_peer_test (verbose); 
-    zyre_group_test (verbose); 
-    zyre_node_test (verbose); 
+    zyre_test (verbose);
+    zyre_event_test (verbose);
+    zre_msg_test (verbose);
+    zyre_peer_test (verbose);
+    zyre_group_test (verbose);
+    zyre_node_test (verbose);
 
     printf ("Tests passed OK\n");
     return 0;
