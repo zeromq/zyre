@@ -6,9 +6,9 @@ These steps have been tested on Linux only.
 ## prerequisites
 
 first, install these libs locally:
-  * libzmq
-  * libczmq
-  * libzyre
+  * libzmq, [instructions](http://zeromq.org/intro:get-the-software)
+  * libczmq, [instructinos](http://czmq.zeromq.org/page:get-the-software)
+  * libzyre, [download](https://github.com/zeromq/zyre/releases)
 
 ## Generate c header for this demo project. 
 
