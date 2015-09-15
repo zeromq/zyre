@@ -38,6 +38,8 @@ module Zyre
         raise DestroyedError unless @ptr
         @ptr
       end
+      # So external Libraries can just pass the Object to a FFI function which expects a :pointer
+      alias_method :to_ptr, :__ptr
       # Nullify internal pointer and return pointer pointer
       def __ptr_give_ref
         raise DestroyedError unless @ptr
@@ -52,9 +54,9 @@ module Zyre
       # Constructor: receive an event from the zyre node, wraps zyre_recv.
       # The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
       # data (WHISPER, SHOUT).                                            
-      def self.new self
-        self = self.__ptr if self
-        ptr = ::Zyre::FFI.zyre_event_new self
+      def self.new self_
+        self_ = self_.__ptr if self_
+        ptr = ::Zyre::FFI.zyre_event_new self_
         
         __new ptr
       end

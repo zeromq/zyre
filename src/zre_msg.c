@@ -12,24 +12,14 @@
      * The XML model used for this code generation: zre_msg.xml, or
      * The code generation script that built this file: zproto_codec_c_v1
     ************************************************************************
-    Copyright (c) 1991-2012 iMatix Corporation -- http://www.imatix.com     
-    Copyright other contributors as noted in the AUTHORS file.              
-                                                                            
-    This file is part of Zyre, an open-source framework for proximity-based 
-    peer-to-peer applications -- See http://zyre.org.                       
-                                                                            
-    This is free software; you can redistribute it and/or modify it under   
-    the terms of the GNU Lesser General Public License as published by the  
-    Free Software Foundation; either version 3 of the License, or (at your  
-    option) any later version.                                              
-                                                                            
-    This software is distributed in the hope that it will be useful, but    
-    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTA-   
-    BILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General  
-    Public License for more details.                                        
-                                                                            
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program. If not, see http://www.gnu.org/licenses/.      
+    Copyright (c) the Contributors as noted in the AUTHORS file.           
+                                                                           
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.                      
+                                                                           
+    This Source Code Form is subject to the terms of the Mozilla Public    
+    License, v. 2.0. If a copy of the MPL was not distributed with this    
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.               
     =========================================================================
 */
 
@@ -57,7 +47,7 @@ struct _zre_msg_t {
     byte status;                        //  Sender groups status value
     char *name;                         //  Sender public name
     zhash_t *headers;                   //  Sender header properties
-    size_t headers_bytes;               //  Size of dictionary content
+    size_t headers_bytes;               //  Sender header properties
     zmsg_t *content;                    //  Wrapped message content
     char *group;                        //  Group to send to
 };
@@ -246,6 +236,8 @@ is_zre_msg (zmsg_t *msg)
         return false;
 
     zframe_t *frame = zmsg_first (msg);
+    if (frame == NULL)
+        return false;
 
     //  Get and check protocol signature
     zre_msg_t *self = zre_msg_new (0);

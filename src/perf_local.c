@@ -2,25 +2,14 @@
     perf_remote - remote performance peer
 
     -------------------------------------------------------------------------
-    Copyright (c) 1991-2012 iMatix Corporation <www.imatix.com>
-    Copyright other contributors as noted in the AUTHORS file.
+    Copyright (c) the Contributors as noted in the AUTHORS file.
 
     This file is part of Zyre, an open-source framework for proximity-based
     peer-to-peer applications -- See http://zyre.org.
 
-    This is free software; you can redistribute it and/or modify it under
-    the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or (at
-    your option) any later version.
-
-    This software is distributed in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public
-    License along with this program. If not, see
-    <http://www.gnu.org/licenses/>.
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
     =========================================================================
 */
 
@@ -40,11 +29,11 @@ s_node_recv (zyre_t *node, char* command, char* expected)
         char *group = NULL;
         if (streq (command, "SHOUT"))
             group = zmsg_popstr (incoming);
-        
+
         char *cookie = zmsg_popstr (incoming);
         if (streq (cookie, expected))
             result = true;
-        
+
         free (peer);
         if (group)
             free (group);
