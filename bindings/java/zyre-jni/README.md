@@ -32,6 +32,10 @@ for the hint to use this variable.
     
     export LD_PRELOAD=/usr/local/lib/libzyre.so 
 
+You also might need to specify all needed libs like so:
+
+    export LD_PRELOAD="/usr/local/lib/libzyre.so:/usr/local/lib/libczmq.so:/usr/local/lib/libzmq.so:/usr/local/lib/libsodium.so"
+
 Run ldd to confirm that the right libraries are linked. You should see
 libzyre, czmq, libzmq, libsodium, etc. in the output:
 
