@@ -17,7 +17,8 @@ public class HelloZyre {
 
 		senderThread.start();
 		senderThread.join();
-		System.out.println("done sending");
+		System.out.println("done sending, wait for receivers");
+		Thread.sleep(5000);
 		recvThread.interrupt();
 		receiver.destroy();
 	}
