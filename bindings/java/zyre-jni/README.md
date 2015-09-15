@@ -6,6 +6,7 @@ These steps have been tested on Linux only.
 ## prerequisites
 
 first, install these libs locally:
+  * libsodium, [installation](https://github.com/awynne/zyre.git)
   * libzmq, [instructions](http://zeromq.org/intro:get-the-software)
   * libczmq, [instructinos](http://czmq.zeromq.org/page:get-the-software)
   * libzyre, [download](https://github.com/zeromq/zyre/releases)
