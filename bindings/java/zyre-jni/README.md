@@ -32,7 +32,7 @@ Compile on amd64:
 
 Or, compile on arm (raspberry pi):
 
-    gcc -fPIC -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -shared -o src/main/c/native/pi/libzrejni.so src/main/c/org_zyre_Zyre.c
+    gcc -fPIC -lzyre -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -shared -o src/main/c/native/pi/libzrejni.so src/main/c/org_zyre_Zyre.c
 
 ## Set a symlink to point to the library for your architecture
 
