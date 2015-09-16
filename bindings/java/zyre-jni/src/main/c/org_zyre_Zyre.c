@@ -31,7 +31,7 @@ JNIEXPORT void JNICALL Java_org_zyre_Zyre_destroy (JNIEnv * env, jobject thisObj
     zyre_stop(node);
     zclock_sleep(100);
 
-    zyre_destroy(&node);
+//    zyre_destroy(&node);
 }
 
 JNIEXPORT void JNICALL Java_org_zyre_Zyre_join (JNIEnv * env, jobject thisObj, jstring group) {
@@ -71,8 +71,9 @@ JNIEXPORT jstring JNICALL Java_org_zyre_Zyre_recv (JNIEnv * env, jobject thisObj
     char *message = zmsg_popstr (zmsg); 
 
      
-     char ret[128];
-     sprintf(ret, "{\"event\":\"%s\", \"peer\":\"%s\", \"group\":\"%s\", \"message\":\"%s\"}", event, peer, group, message);
+     int len = 1024;
+     char ret[len];
+     snprintf(ret, len, "{\"event\":\"%s\", \"peer\":\"%s\", \"group\":\"%s\", \"message\":\"%s\"}", event, peer, group, message);
 
     jstring jstrMsg = (*env)->NewStringUTF(env, ret);
 

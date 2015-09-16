@@ -8,7 +8,7 @@ public class Zyre {
 	// Load native libraries and initialize JNI stuff 
 	static {
 		String path = System.getProperty("java.library.path");
-		System.out.println("java.library.path: " + path);
+		System.out.println("Zyre java.library.path: " + path);
 		System.loadLibrary("zyre"); 
 		System.loadLibrary("zrejni"); 
 		nativeInit();
