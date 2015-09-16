@@ -11,6 +11,10 @@ first, install these libs locally:
   * libczmq, [instructinos](http://czmq.zeromq.org/page:get-the-software)
   * libzyre, [download](https://github.com/zeromq/zyre/releases)
 
+Then run ldconfig to build your ld cache:
+
+    sudo ldconfig
+
 ## Generate c header for this demo project. 
 
 The header file probably already exists.  But if you need to re-create it, 
