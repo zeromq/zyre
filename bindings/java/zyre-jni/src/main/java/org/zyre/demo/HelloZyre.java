@@ -22,16 +22,5 @@ public class HelloZyre {
 		recvThread.interrupt();
 		receiver.destroy();
 	}
-	
-	public static void hello(String[] args) {
-		
-		Zyre zyre = new Zyre();
-		zyre.create();
-		zyre.join("GLOBAL");
-		zyre.shout("GLOBAL", "hello");
-		zyre.whisper("id1", "hey hey");
-		//zyre.recv();
-		zyre.destroy();
-	}
 
 }
