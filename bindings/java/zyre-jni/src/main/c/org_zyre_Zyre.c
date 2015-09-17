@@ -75,7 +75,7 @@ JNIEXPORT jstring JNICALL Java_org_zyre_Zyre_recv (JNIEnv * env, jobject thisObj
     int len = 1024; 
     char ret[len];
 
-    // populate the message to be returned
+    // populate the string to be returned
     if (strcmp(event, "SHOUT") == 0) {
         group = zmsg_popstr (zmsg);
         message = zmsg_popstr (zmsg); 
