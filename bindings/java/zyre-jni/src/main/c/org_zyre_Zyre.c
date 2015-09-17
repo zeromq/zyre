@@ -64,24 +64,41 @@ JNIEXPORT jstring JNICALL Java_org_zyre_Zyre_recv (JNIEnv * env, jobject thisObj
         return NULL;
     }
 
+    // pop data off of the zmsg stack to build our return object
     char *event = zmsg_popstr (zmsg);
     char *peer = zmsg_popstr (zmsg);
-    char *name = zmsg_popstr (zmsg);
-    char *group = zmsg_popstr (zmsg);
-    char *message = zmsg_popstr (zmsg); 
+    char *name = zmsg_popstr (zmsg); // not using this now, just remove from stack
+    char *group = NULL;
+    char *message = NULL;
 
-     
-    int len = 1024;
+    // return data as a string
+    int len = 1024; 
     char ret[len];
-    snprintf(ret, len, "event::%s|peer::%s|group::%s|message::%s", event, peer, group, message);
 
+    // populate the message to be returned
+    if (strcmp(event, "SHOUT") == 0) {
+        group = zmsg_popstr (zmsg);
+        message = zmsg_popstr (zmsg); 
+        snprintf(ret, len, "event::%s|peer::%s|group::%s|message::%s", event, peer, group, message);
+    }
+    else if (strcmp(event, "WHISPER") == 0) {
+        message = zmsg_popstr (zmsg); 
+        snprintf(ret, len, "event::%s|peer::%s|group::|message::%s", event, peer, message);
+    }
+    else {
+        snprintf(ret, len, "event::%s|peer::%s|group::|message::", event, peer);
+    }
+
+    // create a java string
     jstring jstrMsg = (*env)->NewStringUTF(env, ret);
 
     free (event);
     free (peer);
     free (name);
-    free (group);
-    free (message);
+    if (group)
+        free (group);
+    if (message)
+        free (message);
     zmsg_destroy (&zmsg);
 
     return jstrMsg;
