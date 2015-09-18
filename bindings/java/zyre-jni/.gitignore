@@ -5,3 +5,5 @@ build/
 bin/
 *.log
 .gradle
+src/main/c/libzrejni.so
+*.swp

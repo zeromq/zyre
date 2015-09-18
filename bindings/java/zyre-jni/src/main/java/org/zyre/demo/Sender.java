@@ -22,7 +22,5 @@ public class Sender implements Runnable {
 		catch (InterruptedException e) { e.printStackTrace(); }
 
 		zyre.destroy();
-
-		System.exit(0);
 	}
 }

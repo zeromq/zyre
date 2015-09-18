@@ -6,9 +6,14 @@ These steps have been tested on Linux only.
 ## prerequisites
 
 first, install these libs locally:
-  * libzmq
-  * libczmq
-  * libzyre
+  * libsodium, [installation](https://github.com/awynne/zyre.git)
+  * libzmq, [instructions](http://zeromq.org/intro:get-the-software)
+  * libczmq, [instructinos](http://czmq.zeromq.org/page:get-the-software)
+  * libzyre, [download](https://github.com/zeromq/zyre/releases)
+
+Then run ldconfig to build your ld cache:
+
+    sudo ldconfig
 
 ## Generate c header for this demo project. 
 
@@ -19,12 +24,29 @@ from project directory root run:
 
 ## Create c implementation
     
-Implmenet/edit c file manually if needed.  Then compile c file:
+Implmenet/edit c file manually if needed.  Then compile c file for each target platform
 
-    gcc -fPIC -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -shared -o src/main/c/libzrejni.so src/main/c/org_zyre_Zyre.c
+Compile on amd64:
 
-## Ensure correct linking
-    
+    gcc -fPIC -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -shared -o src/main/c/native/linux/libzrejni.so src/main/c/org_zyre_Zyre.c
+
+Or, compile on arm (raspberry pi):
+
+    gcc -fPIC -lzyre -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" -shared -o src/main/c/native/pi/libzrejni.so src/main/c/org_zyre_Zyre.c
+
+## Set a symlink to point to the library for your architecture
+
+on amd64:
+
+    ln -s native/linux/libzrejni.so src/main/c/libzrejni.so
+
+on arm:
+
+    ln -s native/pi/libzrejni.so src/main/c/libzrejni.so
+
+
+## Ensure correct dynamic linking
+
 Important: you may need to set the following environment variable to the location of libzyre. 
 This allows the linker to find the zyre symbols.  See 
 [this link](http://stackoverflow.com/questions/9558909/jni-symbol-lookup-error-in-shared-library-on-linux/13086028#13086028) 

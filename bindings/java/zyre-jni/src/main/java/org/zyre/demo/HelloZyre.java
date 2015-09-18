@@ -7,24 +7,20 @@ public class HelloZyre {
 	public static void main(String[] args) throws Exception {
 		
 		Thread senderThread = new Thread(new Sender());
-		Thread recvThread = new Thread(new Receiver());
+		
+		Receiver receiver = new Receiver();
+		Thread recvThread = new Thread(receiver);
 		
 		recvThread.start();
 
 		Thread.sleep(1000);
 
 		senderThread.start();
-	}
-	
-	public static void hello(String[] args) {
-		
-		Zyre zyre = new Zyre();
-		zyre.create();
-		zyre.join("GLOBAL");
-		zyre.shout("GLOBAL", "hello");
-		zyre.whisper("id1", "hey hey");
-		//zyre.recv();
-		zyre.destroy();
+		senderThread.join();
+		System.out.println("done sending, wait for receivers");
+		Thread.sleep(5000);
+		recvThread.interrupt();
+		receiver.destroy();
 	}
 
 }

@@ -23,8 +23,6 @@ JNIEXPORT void JNICALL Java_org_zyre_Zyre_create (JNIEnv * env, jobject thisObj)
     put_node(env, thisObj, node);
 
     zyre_start(node);
-
-    printf("create done\n");
 }
 
 JNIEXPORT void JNICALL Java_org_zyre_Zyre_destroy (JNIEnv * env, jobject thisObj) {
@@ -33,15 +31,13 @@ JNIEXPORT void JNICALL Java_org_zyre_Zyre_destroy (JNIEnv * env, jobject thisObj
     zyre_stop(node);
     zclock_sleep(100);
 
-    zyre_destroy(&node);
-    printf("destroyed\n");
+//    zyre_destroy(&node);
 }
 
 JNIEXPORT void JNICALL Java_org_zyre_Zyre_join (JNIEnv * env, jobject thisObj, jstring group) {
     const char *grp = (*env)->GetStringUTFChars(env, group, 0);
     zyre_t* node = get_node(env, thisObj);
     zyre_join(node, grp);
-    printf("joined group: %s\n", grp);
 }
 
 JNIEXPORT void JNICALL Java_org_zyre_Zyre_shout (JNIEnv * env, jobject thisObj, jstring group, jstring message) {
@@ -68,24 +64,46 @@ JNIEXPORT jstring JNICALL Java_org_zyre_Zyre_recv (JNIEnv * env, jobject thisObj
         return NULL;
     }
 
+    // pop data off of the zmsg stack to build our return object
     char *event = zmsg_popstr (zmsg);
     char *peer = zmsg_popstr (zmsg);
-    char *name = zmsg_popstr (zmsg);
-    char *group = zmsg_popstr (zmsg);
-    char *message = zmsg_popstr (zmsg); 
+    char *name = zmsg_popstr (zmsg); // not using this now, just remove from stack
+    char *group = NULL;
+    char *message = NULL;
 
-     
-     char ret[128];
-     sprintf(ret, "{\"event\":\"%s\", \"peer\":\"%s\", \"group\":\"%s\", \"message\":\"%s\"}", event, peer, group, message);
+    // return data as a string
+    int len = 1024; 
+    char ret[len];
 
+    // populate the string to be returned
+    if (strcmp(event, "SHOUT") == 0) {
+        group = zmsg_popstr (zmsg);
+        message = zmsg_popstr (zmsg); 
+        snprintf(ret, len, "event::%s|peer::%s|group::%s|message::%s", event, peer, group, message);
+    }
+    else if (strcmp(event, "WHISPER") == 0) {
+        message = zmsg_popstr (zmsg); 
+        snprintf(ret, len, "event::%s|peer::%s|group::|message::%s", event, peer, message);
+    }
+    else if (strcmp(event, "JOIN") == 0) {
+        snprintf(ret, len, "event::%s|peer::%s|group::%s|message::", event, peer, group);
+    }
+    else {
+        snprintf(ret, len, "event::%s|peer::%s|group::|message::", event, peer);
+    }
+
+    // create a java string
     jstring jstrMsg = (*env)->NewStringUTF(env, ret);
 
     free (event);
     free (peer);
     free (name);
-    free (group);
-    free (message);
+    if (group)
+        free (group);
+    if (message)
+        free (message);
     zmsg_destroy (&zmsg);
+
     return jstrMsg;
 }
 
