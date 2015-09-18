@@ -38,5 +38,5 @@ test {
 }
 
 // Ucomment this to log messages to debug test code
-test.testLogging.showStandardStreams = true
+//test.testLogging.showStandardStreams = true
 
