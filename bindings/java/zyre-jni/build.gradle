@@ -37,6 +37,6 @@ test {
     environment 'LD_PRELOAD', '/usr/local/lib/libzyre.so'
 }
 
-// Ucomment this to log messages if tests are failing
-//test.testLogging.showStandardStreams = true
+// Ucomment this to log messages to debug test code
+test.testLogging.showStandardStreams = true
 
