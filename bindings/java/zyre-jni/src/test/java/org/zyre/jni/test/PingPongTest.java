@@ -10,6 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.zyre.Utils;
 import org.zyre.Zyre;
 
+/**
+ * Tests the request-response pattern where a single requester sends "ping"
+ * and the responder replies with "pong"
+ *
+ */
 public class PingPongTest {
 	
 	private static final Logger log = LoggerFactory.getLogger(PingPongTest.class);

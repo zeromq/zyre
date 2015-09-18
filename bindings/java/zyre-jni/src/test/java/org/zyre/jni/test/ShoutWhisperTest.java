@@ -12,6 +12,11 @@ import org.slf4j.LoggerFactory;
 import org.zyre.Utils;
 import org.zyre.Zyre;
 
+/**
+ * Tests the SHOUT-WHISPER "pattern" in which a single requester sends a 
+ * number of SHOUT messages to a group and each responder in the group
+ * replies with a WHISPER to the requester.
+ */
 public class ShoutWhisperTest {
 	
 	private static final Logger log = LoggerFactory.getLogger(ShoutWhisperTest.class);
