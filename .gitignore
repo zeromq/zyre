@@ -24,6 +24,8 @@ doc/*.3
 *.lo
 *.la
 *.lst
+*.so
+*.swp
 core
 .cache
 testit
