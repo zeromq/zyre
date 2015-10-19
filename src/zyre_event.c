@@ -253,6 +253,8 @@ const char *
 zyre_event_header (zyre_event_t *self, const char *name)
 {
     assert (self);
+    if (!self->headers)
+        return NULL;
     return (const char *)zhash_lookup (self->headers, name);
 }
 
