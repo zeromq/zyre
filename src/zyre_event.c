@@ -173,19 +173,13 @@ zyre_event_print (zyre_event_t *self)
     case ZYRE_EVENT_SHOUT:
         zsys_info (" - type=SHOUT");
         zsys_info (" - message:");
-        if (self->msg)
-            zmsg_print (self->msg);
-        else
-            zmsg_print ("null");
+        zmsg_print (self->msg);
         break;
 
     case ZYRE_EVENT_WHISPER:
         zsys_info (" - type=WHISPER");
         zsys_info (" - message:");
-        if (self->msg)
-            zmsg_print (self->msg);
-        else
-            zmsg_print ("null");
+        zmsg_print (self->msg);
         break;
     case ZYRE_EVENT_EVASIVE:
 	zsys_info (" - type=EVASIVE");
