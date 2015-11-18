@@ -164,3 +164,13 @@ Java_org_zeromq_zyre_Zyre__1_1peers (JNIEnv *env, jclass c, jlong ptr) {
     }
     return -1;
 }
+
+JNIEXPORT jlong JNICALL
+Java_org_zeromq_zyre_Zyre__1_1peer_1groups (JNIEnv *env, jclass c, jlong ptr) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    zlist_t *list = zyre_peer_groups (zyre);
+    if (list) {
+        return (jlong) list;
+    }
+    return -1;
+}

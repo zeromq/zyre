@@ -57,6 +57,8 @@ public class Zyre implements AutoCloseable {
 
     static native void __gossip_connect(long pointer, String endpoint);
 
+    static native long __peer_groups(long pointer);
+
     public String uuid() {
         return Zyre.__uuid(pointer);
     }
@@ -130,6 +132,11 @@ public class Zyre implements AutoCloseable {
     public void gossipConnect(String format, Object... args) {
         final String str = String.format(format, args);
         Zyre.__gossip_connect(pointer, str);
+    }
+
+    public ZList peerGroups() {
+        final long zlistPtr = Zyre.__peer_groups(pointer);
+        return new ZList(zlistPtr);
     }
 
     @Override

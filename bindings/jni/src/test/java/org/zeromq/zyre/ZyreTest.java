@@ -68,6 +68,10 @@ public class ZyreTest {
         Assert.assertEquals(2, ownGroups.size());
         ownGroups.close();
 
+        ZList peerGroups = node1.peerGroups();
+        Assert.assertEquals(2, peerGroups.size());
+        peerGroups.close();
+
         node1.close();
         node2.close();
     }
