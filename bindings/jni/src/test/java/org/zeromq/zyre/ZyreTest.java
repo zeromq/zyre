@@ -72,6 +72,9 @@ public class ZyreTest {
         Assert.assertEquals(2, peerGroups.size());
         peerGroups.close();
 
+        String value = node2.peerHeaderValue(node1.uuid(), "X-HELLO");
+        Assert.assertEquals("World", value);
+
         node1.close();
         node2.close();
     }

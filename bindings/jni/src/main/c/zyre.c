@@ -23,13 +23,15 @@ Java_org_zeromq_zyre_Zyre__1_1destroy (JNIEnv *env, jclass c, jlong ptr) {
 
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_Zyre__1_1uuid (JNIEnv *env, jclass c, jlong ptr) {
-    const char* uuid = zyre_uuid((zyre_t *) ptr);
+    const char* uuid = zyre_uuid ((zyre_t *) ptr);
+    // zyre manages uuid
     return (*env)->NewStringUTF (env, uuid);
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_Zyre__1_1name (JNIEnv *env, jclass c, jlong ptr) {
-    const char* name = zyre_name((zyre_t *) ptr);
+    const char* name = zyre_name ((zyre_t *) ptr);
+    // zyre manages name
     return (*env)->NewStringUTF (env, name);
 }
 
@@ -38,9 +40,9 @@ Java_org_zeromq_zyre_Zyre__1_1shout (JNIEnv *env, jclass c, jlong ptr, jstring s
     zyre_t *zyre = (zyre_t *) ptr;
     zmsg_t *msg = (zmsg_t *) zmsg_ptr;
     const char *group = (const char *) (*env)->GetStringUTFChars (env, str, NULL);
-    (*env)->ReleaseStringUTFChars (env, str, group);
 
     zyre_shout (zyre, group, &msg);
+    (*env)->ReleaseStringUTFChars (env, str, group);
 }
 
 JNIEXPORT void JNICALL
@@ -48,9 +50,9 @@ Java_org_zeromq_zyre_Zyre__1_1whisper (JNIEnv *env, jclass c, jlong ptr, jstring
     zyre_t *zyre = (zyre_t *) ptr;
     zmsg_t *msg = (zmsg_t *) zmsg_ptr;
     const char *peer = (const char *) (*env)->GetStringUTFChars (env, str, NULL);
-    (*env)->ReleaseStringUTFChars (env, str, peer);
 
     zyre_whisper (zyre, peer, &msg);
+    (*env)->ReleaseStringUTFChars (env, str, peer);
 }
 
 JNIEXPORT jint JNICALL
@@ -97,11 +99,8 @@ JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1set_1header (JNIEnv *env, jclass c, jlong ptr, jstring key, jstring value) {
     zyre_t *zyre = (zyre_t *) ptr;
     const char *k = (const char *) (*env)->GetStringUTFChars (env, key, NULL);
-    (*env)->ReleaseStringUTFChars (env, key, k);
-
     const char *v = (const char *) (*env)->GetStringUTFChars (env, value, NULL);
-    (*env)->ReleaseStringUTFChars (env, value, v);
-
+    // Don't need to explictly deallocate since zyre_set_header does that for you
     zyre_set_header (zyre, k, "%s", v);
 }
 
@@ -173,4 +172,21 @@ Java_org_zeromq_zyre_Zyre__1_1peer_1groups (JNIEnv *env, jclass c, jlong ptr) {
         return (jlong) list;
     }
     return -1;
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_zeromq_zyre_Zyre__1_1peer_1header_1value (JNIEnv *env, jclass c, jlong ptr, jstring jpeer, jstring jname) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    const char *peer = (const char *) (*env)->GetStringUTFChars (env, jpeer, NULL);
+    const char *name = (const char *) (*env)->GetStringUTFChars (env, jname, NULL);
+
+    char *value = zyre_peer_header_value (zyre, peer, name);
+
+    jstring s = (*env)->NewStringUTF (env, value);
+    zstr_free (&value);
+
+    (*env)->ReleaseStringUTFChars (env, jpeer, peer);
+    (*env)->ReleaseStringUTFChars (env, jname, name);
+
+    return s;
 }
