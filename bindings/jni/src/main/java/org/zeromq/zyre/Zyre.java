@@ -61,6 +61,10 @@ public class Zyre implements AutoCloseable {
 
     static native String __peer_header_value(long pointer, String peer, String name);
 
+    static native int __shouts(long pointer, String group, String value);
+
+    static native String __peerAddress(long pointer, String peerId);
+
     public String uuid() {
         return Zyre.__uuid(pointer);
     }
@@ -144,6 +148,15 @@ public class Zyre implements AutoCloseable {
     public String peerHeaderValue(String peer, String name) {
         String value = Zyre.__peer_header_value(pointer, peer, name);
         return value;
+    }
+
+    public boolean shouts(String format, String group, Object... args) {
+        final String str = String.format(format, args);
+        return 0 == Zyre.__shouts(pointer, group, str);
+    }
+
+    public String peerAddress(String peerId) {
+        return Zyre.__peerAddress(pointer, peerId);
     }
 
     @Override

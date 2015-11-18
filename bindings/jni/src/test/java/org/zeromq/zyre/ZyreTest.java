@@ -2,7 +2,9 @@ package org.zeromq.zyre;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.zeromq.czmq.ZFrame;
 import org.zeromq.czmq.ZList;
+import org.zeromq.czmq.ZMsg;
 
 public class ZyreTest {
     private static final boolean VERBOSE = true;
@@ -74,6 +76,25 @@ public class ZyreTest {
 
         String value = node2.peerHeaderValue(node1.uuid(), "X-HELLO");
         Assert.assertEquals("World", value);
+
+        // One node shouts to GLOBAL
+        node1.shouts("GLOBAL", "Hello, World");
+
+        ZMsg msg = node2.recv();
+        String command = msg.popstr();
+
+        Assert.assertEquals("ENTER", command);
+        Assert.assertEquals(4,msg.size());
+
+        String peerId = msg.popstr();
+        String name = msg.popstr();
+
+        Assert.assertEquals("node1", name);
+        ZFrame headersPacked = msg.pop();
+
+        String address = msg.popstr();
+        String endpoint = node2.peerAddress(peerId);
+        Assert.assertEquals(address, endpoint);
 
         node1.close();
         node2.close();

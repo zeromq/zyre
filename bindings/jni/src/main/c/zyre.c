@@ -190,3 +190,33 @@ Java_org_zeromq_zyre_Zyre__1_1peer_1header_1value (JNIEnv *env, jclass c, jlong 
 
     return s;
 }
+
+JNIEXPORT jint JNICALL
+Java_org_zeromq_zyre_Zyre__1_1shouts (JNIEnv *env, jclass c, jlong ptr, jstring jgroup, jstring jvalue) {
+    zyre_t *zyre = (zyre_t *) ptr;
+
+    const char *group = (const char *) (*env)->GetStringUTFChars (env, jgroup, NULL);
+    const char *value = (const char *) (*env)->GetStringUTFChars (env, jvalue, NULL);
+
+    int rc = zyre_shouts (zyre, group, "%s", value);
+
+    (*env)->ReleaseStringUTFChars (env, jgroup, group);
+    (*env)->ReleaseStringUTFChars (env, jvalue, value);
+
+    return rc;
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_zeromq_zyre_Zyre__1_1peerAddress (JNIEnv *env, jclass c, jlong ptr, jstring jpeer) {
+    zyre_t *zyre = (zyre_t *) ptr;
+
+    const char *peer = (const char *) (*env)->GetStringUTFChars (env, jpeer, NULL);
+
+    char *address = zyre_peer_address (zyre, peer);
+
+    jstring s = (*env)->NewStringUTF (env, address);
+    zstr_free (&address);
+    (*env)->ReleaseStringUTFChars (env, jpeer, peer);
+
+    return s;
+}
