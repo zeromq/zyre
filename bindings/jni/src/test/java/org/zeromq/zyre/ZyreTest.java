@@ -105,7 +105,6 @@ public class ZyreTest {
 //        zmsg_destroy (&msg);
         msg.close();
 
-
         msg = node2.recv();
         command = msg.popstr();
         Assert.assertEquals("JOIN", command);
@@ -123,9 +122,19 @@ public class ZyreTest {
         Assert.assertEquals("SHOUT", command);
         msg.close();
 
+        node2.stop();
+
+        msg = node2.recv();
+        command = msg.popstr();
+        Assert.assertEquals("STOP", command);
+        msg.close();
+
+        node1.stop();
 
         node1.close();
         node2.close();
+
+        System.out.println("OK");
     }
 }
 
