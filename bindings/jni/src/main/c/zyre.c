@@ -82,3 +82,55 @@ Java_org_zeromq_zyre_Zyre__1_1leave (JNIEnv *env, jclass c, jlong ptr, jstring s
 
     return zyre_leave (zyre, group);
 }
+
+JNIEXPORT jlong JNICALL
+Java_org_zeromq_zyre_Zyre__1_1zyre_1recv (JNIEnv *env, jclass c, jlong ptr) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    zmsg_t *msg = zyre_recv (zyre);
+    if (msg) {
+        return (jlong) msg;
+    }
+    return -1;
+}
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1set_1header (JNIEnv *env, jclass c, jlong ptr, jstring key, jstring value) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    const char *k = (const char *) (*env)->GetStringUTFChars (env, key, NULL);
+    (*env)->ReleaseStringUTFChars (env, key, k);
+
+    const char *v = (const char *) (*env)->GetStringUTFChars (env, value, NULL);
+    (*env)->ReleaseStringUTFChars (env, value, v);
+
+    zyre_set_header (zyre, k, "%s", v);
+}
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1set_1verbose (JNIEnv *env, jclass c , jlong ptr) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    zyre_set_verbose (zyre);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_zeromq_zyre_Zyre__1_1set_1endpoint (JNIEnv *env, jclass c, jlong ptr, jstring endpoint) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    const char *ep = (const char *) (*env)->GetStringUTFChars (env, endpoint, NULL);
+    (*env)->ReleaseStringUTFChars (env, endpoint, ep);
+
+    return zyre_set_endpoint (zyre, "%s", ep);
+}
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1gossip_1bind (JNIEnv *env, jclass c, jlong ptr, jstring endpoint) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    const char *ep = (const char *) (*env)->GetStringUTFChars (env, endpoint, NULL);
+    (*env)->ReleaseStringUTFChars (env, endpoint, ep);
+
+    zyre_gossip_bind (zyre, "%s", ep);
+}
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1dump (JNIEnv *env, jclass c, jlong ptr) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    zyre_dump (zyre);
+}

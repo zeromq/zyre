@@ -40,6 +40,16 @@ public class Zyre implements AutoCloseable {
 
     static native long __zyre_recv(long pointer);
 
+    static native void __set_header(long pointer, String key, String value);
+
+    static native void __set_verbose(long pointer);
+
+    static native int __set_endpoint(long pointer, String endpoint);
+
+    static native void __gossip_bind(long pointer, String endpoint);
+
+    static native void __dump(long pointer);
+
     public String uuid() {
         return Zyre.__uuid(pointer);
     }
@@ -76,7 +86,30 @@ public class Zyre implements AutoCloseable {
         final long zmsgPointer = __zyre_recv(pointer);
         return new ZMsg(zmsgPointer);
     }
-    
+
+    public void setHeader(String key, String format, Object... args) {
+        final String str = String.format(format, args);
+        Zyre.__set_header(pointer, key, str);
+    }
+
+    public void setVerbose() {
+        Zyre.__set_verbose(pointer);
+    }
+
+    public boolean setEndpoint(String format, Object... args) {
+        final String str = String.format(format, args);
+        return 0 == Zyre.__set_endpoint(pointer, str);
+    }
+
+    public void gossipBind(String format, Object... args) {
+        final String str = String.format(format, args);
+        Zyre.__gossip_bind(pointer, str);
+    }
+
+    public void dump() {
+        Zyre.__dump(pointer);
+    }
+
     @Override
     public void close() {
         Zyre.__destroy(pointer);
