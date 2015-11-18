@@ -130,7 +130,37 @@ Java_org_zeromq_zyre_Zyre__1_1gossip_1bind (JNIEnv *env, jclass c, jlong ptr, js
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1gossip_1connect (JNIEnv *env, jclass c, jlong ptr, jstring endpoint) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    const char *ep = (const char *) (*env)->GetStringUTFChars (env, endpoint, NULL);
+    (*env)->ReleaseStringUTFChars (env, endpoint, ep);
+
+    zyre_gossip_connect (zyre, "%s", ep);
+}
+
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1dump (JNIEnv *env, jclass c, jlong ptr) {
     zyre_t *zyre = (zyre_t *) ptr;
     zyre_dump (zyre);
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_zeromq_zyre_Zyre__1_1own_1groups (JNIEnv *env, jclass c, jlong ptr) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    zlist_t *list = zyre_own_groups (zyre);
+    if (list) {
+        return (jlong) list;
+    }
+    return -1;
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_zeromq_zyre_Zyre__1_1peers (JNIEnv *env, jclass c, jlong ptr) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    zlist_t *list = zyre_peers (zyre);
+    if (list) {
+        return (jlong) list;
+    }
+    return -1;
 }

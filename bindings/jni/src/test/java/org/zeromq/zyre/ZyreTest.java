@@ -2,6 +2,7 @@ package org.zeromq.zyre;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.zeromq.czmq.ZList;
 
 public class ZyreTest {
     private static final boolean VERBOSE = true;
@@ -37,7 +38,7 @@ public class ZyreTest {
         rc = node2.setEndpoint("inproc://zyre-node2");
         Assert.assertTrue(rc);
         //  Set up gossip network for this node
-        node2.gossipBind("inproc://gossip-hub");
+        node2.gossipConnect("inproc://gossip-hub");
 
         rc = node2.start();
         Assert.assertTrue(rc);
@@ -52,6 +53,21 @@ public class ZyreTest {
         if (VERBOSE) {
             node1.dump();
         }
+
+        ZList peers = node1.peers();
+        Assert.assertEquals(1, peers.size());
+        peers.close();
+
+        node1.join("node1 group of one");
+        node2.join("node2 group of one");
+
+        // Give them time to join their groups
+        Thread.sleep(100);
+
+        ZList ownGroups = node1.ownGroups();
+        Assert.assertEquals(2, ownGroups.size());
+        ownGroups.close();
+
         node1.close();
         node2.close();
     }

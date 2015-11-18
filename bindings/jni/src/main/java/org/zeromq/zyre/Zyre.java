@@ -1,5 +1,6 @@
 package org.zeromq.zyre;
 
+import org.zeromq.czmq.ZList;
 import org.zeromq.czmq.ZMsg;
 
 public class Zyre implements AutoCloseable {
@@ -49,6 +50,12 @@ public class Zyre implements AutoCloseable {
     static native void __gossip_bind(long pointer, String endpoint);
 
     static native void __dump(long pointer);
+
+    static native long __own_groups(long pointer);
+
+    static native long __peers(long pointer);
+
+    static native void __gossip_connect(long pointer, String endpoint);
 
     public String uuid() {
         return Zyre.__uuid(pointer);
@@ -108,6 +115,21 @@ public class Zyre implements AutoCloseable {
 
     public void dump() {
         Zyre.__dump(pointer);
+    }
+
+    public ZList ownGroups() {
+        final long zlistPtr = Zyre.__own_groups(pointer);
+        return new ZList(zlistPtr);
+    }
+
+    public ZList peers() {
+        final long zlistPtr = Zyre.__peers(pointer);
+        return new ZList(zlistPtr);
+    }
+
+    public void gossipConnect(String format, Object... args) {
+        final String str = String.format(format, args);
+        Zyre.__gossip_connect(pointer, str);
     }
 
     @Override
