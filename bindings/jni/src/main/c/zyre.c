@@ -206,6 +206,21 @@ Java_org_zeromq_zyre_Zyre__1_1shouts (JNIEnv *env, jclass c, jlong ptr, jstring 
     return rc;
 }
 
+JNIEXPORT jint JNICALL
+Java_org_zeromq_zyre_Zyre__1_1whispers (JNIEnv *env, jclass c, jlong ptr, jstring jpeer, jstring jvalue) {
+    zyre_t *zyre = (zyre_t *) ptr;
+
+    const char *peer = (const char *) (*env)->GetStringUTFChars (env, jpeer, NULL);
+    const char *value = (const char *) (*env)->GetStringUTFChars (env, jvalue, NULL);
+
+    int rc = zyre_whispers (zyre, peer, "%s", value);
+
+    (*env)->ReleaseStringUTFChars (env, jpeer, peer);
+    (*env)->ReleaseStringUTFChars (env, jvalue, value);
+
+    return rc;
+}
+
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_Zyre__1_1peerAddress (JNIEnv *env, jclass c, jlong ptr, jstring jpeer) {
     zyre_t *zyre = (zyre_t *) ptr;

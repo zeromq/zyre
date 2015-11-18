@@ -63,6 +63,8 @@ public class Zyre implements AutoCloseable {
 
     static native int __shouts(long pointer, String group, String value);
 
+    static native int __whispers(long pointer, String peer, String value);
+
     static native String __peerAddress(long pointer, String peerId);
 
     public String uuid() {
@@ -153,6 +155,11 @@ public class Zyre implements AutoCloseable {
     public boolean shouts(String group, String format, Object... args) {
         final String str = String.format(format, args);
         return 0 == Zyre.__shouts(pointer, group, str);
+    }
+
+    public boolean whispers(String peer, String format, Object... args) {
+        final String str = String.format(format, args);
+        return 0 == Zyre.__whispers(pointer, peer, str);
     }
 
     public String peerAddress(String peerId) {
