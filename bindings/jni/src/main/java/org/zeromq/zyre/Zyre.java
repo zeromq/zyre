@@ -150,7 +150,7 @@ public class Zyre implements AutoCloseable {
         return value;
     }
 
-    public boolean shouts(String format, String group, Object... args) {
+    public boolean shouts(String group, String format, Object... args) {
         final String str = String.format(format, args);
         return 0 == Zyre.__shouts(pointer, group, str);
     }

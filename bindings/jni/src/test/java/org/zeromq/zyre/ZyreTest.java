@@ -84,7 +84,7 @@ public class ZyreTest {
         String command = msg.popstr();
 
         Assert.assertEquals("ENTER", command);
-        Assert.assertEquals(4,msg.size());
+        Assert.assertEquals(4, msg.size());
 
         String peerId = msg.popstr();
         String name = msg.popstr();
@@ -95,6 +95,34 @@ public class ZyreTest {
         String address = msg.popstr();
         String endpoint = node2.peerAddress(peerId);
         Assert.assertEquals(address, endpoint);
+
+//        assert (headers_packed);
+//        zhash_t *headers = zhash_unpack (headers_packed);
+//        assert (headers);
+//        zframe_destroy (&headers_packed);
+//        assert (streq ((char *) zhash_lookup (headers, "X-HELLO"), "World"));
+//        zhash_destroy (&headers);
+//        zmsg_destroy (&msg);
+        msg.close();
+
+
+        msg = node2.recv();
+        command = msg.popstr();
+        Assert.assertEquals("JOIN", command);
+        Assert.assertEquals(3, msg.size());
+        msg.close();
+
+        msg = node2.recv();
+        command = msg.popstr();
+        Assert.assertEquals("JOIN", command);
+        Assert.assertEquals(3, msg.size());
+        msg.close();
+
+        msg = node2.recv();
+        command = msg.popstr();
+        Assert.assertEquals("SHOUT", command);
+        msg.close();
+
 
         node1.close();
         node2.close();
