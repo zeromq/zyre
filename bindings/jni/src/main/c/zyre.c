@@ -71,18 +71,18 @@ JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1join (JNIEnv *env, jclass c, jlong ptr, jstring str) {
     zyre_t *zyre = (zyre_t *) ptr;
     const char *group = (const char *) (*env)->GetStringUTFChars (env, str, NULL);
+    int rc = zyre_join (zyre, group);
     (*env)->ReleaseStringUTFChars (env, str, group);
-
-    return zyre_join (zyre, group);
+    return rc;
 }
 
 JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1leave (JNIEnv *env, jclass c, jlong ptr, jstring str) {
     zyre_t *zyre = (zyre_t *) ptr;
     const char *group = (const char *) (*env)->GetStringUTFChars (env, str, NULL);
+    int rc = zyre_leave (zyre, group);
     (*env)->ReleaseStringUTFChars (env, str, group);
-
-    return zyre_leave (zyre, group);
+    return rc;
 }
 
 JNIEXPORT jlong JNICALL
@@ -114,27 +114,25 @@ JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1set_1endpoint (JNIEnv *env, jclass c, jlong ptr, jstring endpoint) {
     zyre_t *zyre = (zyre_t *) ptr;
     const char *ep = (const char *) (*env)->GetStringUTFChars (env, endpoint, NULL);
+    int rc = zyre_set_endpoint (zyre, "%s", ep);
     (*env)->ReleaseStringUTFChars (env, endpoint, ep);
-
-    return zyre_set_endpoint (zyre, "%s", ep);
+    return rc;
 }
 
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1gossip_1bind (JNIEnv *env, jclass c, jlong ptr, jstring endpoint) {
     zyre_t *zyre = (zyre_t *) ptr;
     const char *ep = (const char *) (*env)->GetStringUTFChars (env, endpoint, NULL);
-    (*env)->ReleaseStringUTFChars (env, endpoint, ep);
-
     zyre_gossip_bind (zyre, "%s", ep);
+    (*env)->ReleaseStringUTFChars (env, endpoint, ep);
 }
 
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1gossip_1connect (JNIEnv *env, jclass c, jlong ptr, jstring endpoint) {
     zyre_t *zyre = (zyre_t *) ptr;
     const char *ep = (const char *) (*env)->GetStringUTFChars (env, endpoint, NULL);
-    (*env)->ReleaseStringUTFChars (env, endpoint, ep);
-
     zyre_gossip_connect (zyre, "%s", ep);
+    (*env)->ReleaseStringUTFChars (env, endpoint, ep);
 }
 
 
