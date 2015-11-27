@@ -69,6 +69,8 @@ public class Zyre implements AutoCloseable {
 
     static native void __set_interface(long pointer, String value);
 
+    static native void __set_port(long pointer, int port);
+
     public String uuid() {
         return Zyre.__uuid(pointer);
     }
@@ -170,6 +172,10 @@ public class Zyre implements AutoCloseable {
 
     public void setInterface(String value) {
         Zyre.__set_interface(pointer, value);
+    }
+
+    public void setPort(int port) {
+        Zyre.__set_port(pointer, port);
     }
 
     @Override

@@ -241,3 +241,9 @@ Java_org_zeromq_zyre_Zyre__1_1set_1interface (JNIEnv *env, jclass c, jlong ptr, 
     zyre_set_interface (zyre, value);
     (*env)->ReleaseStringUTFChars (env, jvalue, value);
 }
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1set_1port (JNIEnv *env, jclass c, jlong ptr, jint port) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    zyre_set_port (zyre, port);
+}
