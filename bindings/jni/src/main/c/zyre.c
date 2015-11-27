@@ -233,3 +233,11 @@ Java_org_zeromq_zyre_Zyre__1_1peerAddress (JNIEnv *env, jclass c, jlong ptr, jst
 
     return s;
 }
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1set_1interface (JNIEnv *env, jclass c, jlong ptr, jstring jvalue) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    const char *value = (const char *) (*env)->GetStringUTFChars (env, jvalue, NULL);
+    zyre_set_interface (zyre, value);
+    (*env)->ReleaseStringUTFChars (env, jvalue, value);
+}

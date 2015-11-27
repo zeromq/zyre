@@ -67,6 +67,8 @@ public class Zyre implements AutoCloseable {
 
     static native String __peerAddress(long pointer, String peerId);
 
+    static native void __set_interface(long pointer, String value);
+
     public String uuid() {
         return Zyre.__uuid(pointer);
     }
@@ -164,6 +166,10 @@ public class Zyre implements AutoCloseable {
 
     public String peerAddress(String peerId) {
         return Zyre.__peerAddress(pointer, peerId);
+    }
+
+    public void setInterface(String value) {
+        Zyre.__set_interface(pointer, value);
     }
 
     @Override
