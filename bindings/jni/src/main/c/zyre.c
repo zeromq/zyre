@@ -247,3 +247,9 @@ Java_org_zeromq_zyre_Zyre__1_1set_1port (JNIEnv *env, jclass c, jlong ptr, jint 
     zyre_t *zyre = (zyre_t *) ptr;
     zyre_set_port (zyre, port);
 }
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1set_1interval (JNIEnv *env, jclass c, jlong ptr, jlong size) {
+    zyre_t *zyre = (zyre_t *) ptr;
+    zyre_set_interval (zyre, (size_t) size);
+}
