@@ -37,10 +37,6 @@ ZYRE_EXPORT zyre_t *
 ZYRE_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
-//  Print properties of the zyre object.
-ZYRE_EXPORT void
-    zyre_print (zyre_t *self);
-
 //  Return our node UUID string, after successful initialization
 ZYRE_EXPORT const char *
     zyre_uuid (zyre_t *self);

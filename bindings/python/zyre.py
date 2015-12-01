@@ -53,8 +53,6 @@ lib.zyre_new.restype = zyre_p
 lib.zyre_new.argtypes = [c_char_p]
 lib.zyre_destroy.restype = None
 lib.zyre_destroy.argtypes = [POINTER(zyre_p)]
-lib.zyre_print.restype = None
-lib.zyre_print.argtypes = [zyre_p]
 lib.zyre_uuid.restype = c_char_p
 lib.zyre_uuid.argtypes = [zyre_p]
 lib.zyre_name.restype = c_char_p
@@ -142,10 +140,6 @@ messages it is sending or receiving will be discarded."""
     def __nonzero__(self):
         "Determine whether the object is valid by converting to boolean" # Python 2
         return self._as_parameter_.__nonzero__()
-
-    def print(self):
-        """Print properties of the zyre object."""
-        return lib.zyre_print(self._as_parameter_)
 
     def uuid(self):
         """Return our node UUID string, after successful initialization"""
@@ -292,8 +286,6 @@ lib.zyre_event_new.restype = zyre_event_p
 lib.zyre_event_new.argtypes = [zyre_p]
 lib.zyre_event_destroy.restype = None
 lib.zyre_event_destroy.argtypes = [POINTER(zyre_event_p)]
-lib.zyre_event_print.restype = None
-lib.zyre_event_print.argtypes = [zyre_event_p]
 lib.zyre_event_type.restype = c_int
 lib.zyre_event_type.argtypes = [zyre_event_p]
 lib.zyre_event_sender.restype = c_char_p
@@ -365,10 +357,6 @@ data (WHISPER, SHOUT)."""
     def __nonzero__(self):
         "Determine whether the object is valid by converting to boolean" # Python 2
         return self._as_parameter_.__nonzero__()
-
-    def print(self):
-        """Print properties of the zyre event object."""
-        return lib.zyre_event_print(self._as_parameter_)
 
     def type(self):
         """Returns event type, which is a zyre_event_type_t"""

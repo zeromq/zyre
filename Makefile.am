@@ -5,20 +5,19 @@
 
 ACLOCAL_AMFLAGS = -I config
 
+AM_CFLAGS = \
+	-Werror=format-security
+
+
 AM_CPPFLAGS = \
-    ${zmq_CFLAGS} \
+    ${libzmq_CFLAGS} \
     ${czmq_CFLAGS} \
     -I$(srcdir)/include
 
-project_libs = \
-    ${zmq_LIBS} \
-    ${czmq_LIBS}
+project_libs = ${libzmq_LIBS} ${czmq_LIBS}
 
-SUBDIRS =
-DIST_SUBDIRS =
-SUBDIRS += doc
-DIST_SUBDIRS += doc
-
+SUBDIRS = doc
+DIST_SUBDIRS = doc
 lib_LTLIBRARIES =
 bin_PROGRAMS =
 noinst_PROGRAMS =

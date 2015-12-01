@@ -11,7 +11,7 @@ AC_PREREQ(2.61)
 # the version.sh script. Hence, it should be updated there.
 # The version in git should reflect the *next* version planned.
 #
-AC_INIT([zyre],[m4_esyscmd([./version.sh zyre])],[zeromq-dev@lists.zeromq.org])
+AC_INIT([zyre],[m4_esyscmd([./version.sh zyre.h])],[zeromq-dev@lists.zeromq.org])
 
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
@@ -73,18 +73,18 @@ PREVIOUS_CFLAGS="${CFLAGS}"
 PREVIOUS_LIBS="${LIBS}"
 
 
-was_zmq_check_lib_detected=no
+was_libzmq_check_lib_detected=no
 
-PKG_CHECK_MODULES([zmq], [libzmq >= 2.2.0],
+PKG_CHECK_MODULES([libzmq], [libzmq >= 2.2.0],
     [
     ],
     [
         AC_MSG_ERROR([Cannot find required package for libzmq. Note, pkg-config is required due to specified version >= 2.2.0])
     ])
 
-if test "x$was_zmq_check_lib_detected" = "xno"; then
-    CFLAGS="${zmq_CFLAGS} ${CFLAGS}"
-    LIBS="${zmq_LIBS} ${LIBS}"
+if test "x$was_libzmq_check_lib_detected" = "xno"; then
+    CFLAGS="${libzmq_CFLAGS} ${CFLAGS}"
+    LIBS="${libzmq_LIBS} ${LIBS}"
 fi
 
 
@@ -114,7 +114,7 @@ PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
             fi
         fi
 
-        AC_CHECK_LIB([czmq], [zctx_test],
+        AC_CHECK_LIB([libczmq], [zctx_test],
             [
                 CFLAGS="${czmq_synthetic_cflags} ${CFLAGS}"
                 LDFLAGS="${czmq_synthetic_libs} ${LDFLAGS}"
@@ -326,13 +326,14 @@ AM_COND_IF([WITH_ZTESTER_GOSSIP], [AC_MSG_NOTICE([WITH_ZTESTER_GOSSIP defined])]
 # Checks for library functions.
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(perror gettimeofday memset getifaddrs)
-AC_CHECK_LIB([uuid], [uuid_generate])
 
 # Set pkgconfigdir
 AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
     [Path to the pkgconfig directory [[LIBDIR/pkgconfig]]]),
     [pkgconfigdir="$withval"], [pkgconfigdir='${libdir}/pkgconfig'])
 AC_SUBST([pkgconfigdir])
+
+
 
 # Specify output files
 AC_CONFIG_FILES([Makefile
