@@ -9,12 +9,6 @@
 
 
 ///
-//  Print properties of the zyre object.
-void QmlZyre::print () {
-    zyre_print (self);
-};
-
-///
 //  Return our node UUID string, after successful initialization
 const QString QmlZyre::uuid () {
     return QString (zyre_uuid (self));

@@ -4,18 +4,22 @@
 ################################################################################
 
 require 'ffi'
-
 require_relative 'ffi/version'
-
 
 module Zyre
   module FFI
+    module LibC
+      extend ::FFI::Library
+      ffi_lib ::FFI::Platform::LIBC
+      attach_function :free, [ :pointer ], :void, blocking: true
+    end
+
     extend ::FFI::Library
-    
+
     def self.available?
       @available
     end
-    
+
     begin
       lib_name = 'libzyre'
       lib_paths = ['/usr/local/lib', '/opt/local/lib', '/usr/lib64']
@@ -28,15 +32,14 @@ module Zyre
       warn ""
       @available = false
     end
-    
+
     if available?
       opts = {
         blocking: true  # only necessary on MRI to deal with the GIL.
       }
-      
+
       attach_function :zyre_new, [:string], :pointer, **opts
       attach_function :zyre_destroy, [:pointer], :void, **opts
-      attach_function :zyre_print, [:pointer], :void, **opts
       attach_function :zyre_uuid, [:pointer], :string, **opts
       attach_function :zyre_name, [:pointer], :string, **opts
       attach_function :zyre_set_header, [:pointer, :string, :string, :varargs], :void, **opts
@@ -64,13 +67,23 @@ module Zyre
       attach_function :zyre_socket, [:pointer], :pointer, **opts
       attach_function :zyre_version, [:pointer, :pointer, :pointer], :void, **opts
       attach_function :zyre_test, [:bool], :void, **opts
-      
+
       require_relative 'ffi/zyre'
-      
+
+      enum :zyre_event_type, [
+        :enter, 1,
+        :join, 2,
+        :leave, 3,
+        :exit, 4,
+        :whisper, 5,
+        :shout, 6,
+        :stop, 7,
+        :evasive, 8,
+      ]
+
       attach_function :zyre_event_new, [:pointer], :pointer, **opts
       attach_function :zyre_event_destroy, [:pointer], :void, **opts
-      attach_function :zyre_event_print, [:pointer], :void, **opts
-      attach_function :zyre_event_type, [:pointer], :pointer, **opts
+      attach_function :zyre_event_type, [:pointer], :zyre event_type, **opts
       attach_function :zyre_event_sender, [:pointer], :string, **opts
       attach_function :zyre_event_name, [:pointer], :string, **opts
       attach_function :zyre_event_address, [:pointer], :string, **opts
@@ -79,7 +92,7 @@ module Zyre
       attach_function :zyre_event_group, [:pointer], :string, **opts
       attach_function :zyre_event_msg, [:pointer], :pointer, **opts
       attach_function :zyre_event_test, [:bool], :void, **opts
-      
+
       require_relative 'ffi/event'
     end
   end

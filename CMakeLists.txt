@@ -77,12 +77,14 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}")
 
 ########################################################################
-# ZMQ dependency
+# LIBZMQ dependency
 ########################################################################
 find_package(ZeroMQ REQUIRED)
 IF (ZEROMQ_FOUND)
 include_directories(${ZEROMQ_INCLUDE_DIRS})
 list(APPEND MORE_LIBRARIES ${ZEROMQ_LIBRARIES})
+ELSE (ZEROMQ_FOUND)
+message( FATAL_ERROR "ZeroMQ not found." )
 ENDIF (ZEROMQ_FOUND)
 
 ########################################################################
@@ -92,6 +94,8 @@ find_package(CZMQ REQUIRED)
 IF (CZMQ_FOUND)
 include_directories(${CZMQ_INCLUDE_DIRS})
 list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
+ELSE (CZMQ_FOUND)
+message( FATAL_ERROR "CZMQ not found." )
 ENDIF (CZMQ_FOUND)
 
 ########################################################################
@@ -158,8 +162,26 @@ install(
 ########################################################################
 add_executable(zyre_selftest "${SOURCE_DIR}/src/zyre_selftest.c")
 target_link_libraries(zyre_selftest zyre ${ZEROMQ_LIBRARIES})
-add_test(zyre_selftest zyre_selftest)
 
+set(CLASSTEST_TIMEOUT 5 CACHE STRING "Timeout of the selftest of a class")
+set(TOTAL_TIMEOUT 20 CACHE STRING "Timout of the total testsuite")
+
+set(TEST_CLASSES
+  zyre_test
+  zyre event_test
+  zre_msg_test
+  zyre_peer_test
+  zyre_group_test
+  zyre_node_test
+)
+
+foreach(TEST_CLASS ${TEST_CLASSES})
+  add_test(NAME ${TEST_CLASS} COMMAND zyre_selftest -e -v --test ${TEST_CLASS})
+  set_tests_properties(${TEST_CLASS} PROPERTIES TIMEOUT ${CLASSTEST_TIMEOUT})
+endforeach(TEST_CLASS)
+
+add_test(zyre_selftest zyre_selftest)
+set_tests_properties(zyre_selftest PROPERTIES TIMEOUT ${TOTAL_TIMEOUT})
 ########################################################################
 # summary
 ########################################################################

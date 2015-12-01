@@ -5,11 +5,11 @@
 
 module Zyre
   module FFI
-    
+
     # Parsing Zyre messages
     class Event
       class DestroyedError < RuntimeError; end
-      
+
       # Boilerplate for self pointer, initializer, and finalizer
       class << self
         alias :__new :new
@@ -19,7 +19,7 @@ module Zyre
         if @ptr.null?
           @ptr = nil # Remove null pointers so we don't have to test for them.
         elsif finalize
-          @finalizer = self.class.send :create_finalizer_for, @ptr
+          @finalizer = self.class.create_finalizer_for @ptr
           ObjectSpace.define_finalizer self, @finalizer
         end
       end
@@ -31,7 +31,7 @@ module Zyre
         end
       end
       def null?
-        !@ptr or ptr.null?
+        !@ptr or @ptr.null?
       end
       # Return internal pointer
       def __ptr
@@ -50,98 +50,97 @@ module Zyre
         @ptr = nil
         ptr_ptr
       end
-      
+
       # Constructor: receive an event from the zyre node, wraps zyre_recv.
       # The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
       # data (WHISPER, SHOUT).                                            
-      def self.new self_
+      def self.new(self_)
         self_ = self_.__ptr if self_
-        ptr = ::Zyre::FFI.zyre_event_new self_
-        
+        ptr = ::Zyre::FFI.zyre_event_new(self_)
         __new ptr
       end
-      
+
       # Destructor; destroys an event instance
-      def destroy
+      def destroy()
         return unless @ptr
         self_p = __ptr_give_ref
-        result = ::Zyre::FFI.zyre_event_destroy self_p
+        result = ::Zyre::FFI.zyre_event_destroy(self_p)
         result
       end
-      
-      # Print properties of the zyre event object.
-      def print
-        raise DestroyedError unless @ptr
-        result = ::Zyre::FFI.zyre_event_print @ptr
-        result
-      end
-      
+
       # Returns event type, which is a zyre_event_type_t
-      def type
+      def type()
         raise DestroyedError unless @ptr
-        result = ::Zyre::FFI.zyre_event_type @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_event_type(self_p)
         result
       end
-      
+
       # Return the sending peer's id as a string
-      def sender
+      def sender()
         raise DestroyedError unless @ptr
-        result = ::Zyre::FFI.zyre_event_sender @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_event_sender(self_p)
         result
       end
-      
+
       # Return the sending peer's public name as a string
-      def name
+      def name()
         raise DestroyedError unless @ptr
-        result = ::Zyre::FFI.zyre_event_name @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_event_name(self_p)
         result
       end
-      
+
       # Return the sending peer's ipaddress as a string
-      def address
+      def address()
         raise DestroyedError unless @ptr
-        result = ::Zyre::FFI.zyre_event_address @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_event_address(self_p)
         result
       end
-      
+
       # Returns the event headers, or NULL if there are none
-      def headers
+      def headers()
         raise DestroyedError unless @ptr
-        result = ::Zyre::FFI.zyre_event_headers @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_event_headers(self_p)
         result
       end
-      
+
       # Returns value of a header from the message headers   
       # obtained by ENTER. Return NULL if no value was found.
-      def header name
+      def header(name)
         raise DestroyedError unless @ptr
+        self_p = @ptr
         name = String(name)
-        result = ::Zyre::FFI.zyre_event_header @ptr, name
+        result = ::Zyre::FFI.zyre_event_header(self_p, name)
         result
       end
-      
+
       # Returns the group name that a SHOUT event was sent to
-      def group
+      def group()
         raise DestroyedError unless @ptr
-        result = ::Zyre::FFI.zyre_event_group @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_event_group(self_p)
         result
       end
-      
+
       # Returns the incoming message payload (currently one frame)
-      def msg
+      def msg()
         raise DestroyedError unless @ptr
-        result = ::Zyre::FFI.zyre_event_msg @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_event_msg(self_p)
         result
       end
-      
+
       # Self test of this class
-      def self.test verbose
+      def self.test(verbose)
         verbose = !(0==verbose||!verbose) # boolean
-        result = ::Zyre::FFI.zyre_event_test verbose
+        result = ::Zyre::FFI.zyre_event_test(verbose)
         result
       end
     end
-    
   end
 end
 
