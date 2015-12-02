@@ -6,7 +6,7 @@
 */
 package org.zeromq.zyre;
 
-public class Zyre implements AutoCloseable {
+public class Zyre implements AutoCloseable{
     static {
         try {
             System.loadLibrary ("zyrejni");
@@ -16,7 +16,6 @@ public class Zyre implements AutoCloseable {
         }
     }
     long self;
-
     /*
     Constructor, creates a new Zyre node. Note that until you start the
     node it is silent and invisible to other nodes on the network.     
@@ -27,6 +26,9 @@ public class Zyre implements AutoCloseable {
     public Zyre (String name) {
         /*  TODO: if __init fails, self is null...  */
         self = __init (name);
+    }
+    public Zyre () {
+        self = 0;
     }
     /*
     Destructor, destroys a Zyre node. When you destroy a node, any
@@ -43,30 +45,30 @@ public class Zyre implements AutoCloseable {
     */
     native static String __uuid (long self);
     public String uuid (long self) {
-        return Zyre.__uuid (self);
+        return __uuid (self);
     }
     /*
     Return our node name, after successful initialization
     */
     native static String __name (long self);
     public String name (long self) {
-        return Zyre.__name (self);
+        return __name (self);
     }
     /*
     Set node header; these are provided to other nodes during discovery
     and come in each ENTER message.                                    
     */
     native static void __set_header (long self, String name, String format);
-    public void set_header (long self, String name, String format) {
-        Zyre.__set_header (self, name, format);
+    public void setHeader (long self, String name, String format) {
+        __set_header (self, name, format);
     }
     /*
     Set verbose mode; this tells the node to log all traffic as well as 
     all major events.                                                   
     */
     native static void __set_verbose (long self);
-    public void set_verbose (long self) {
-        Zyre.__set_verbose (self);
+    public void setVerbose (long self) {
+        __set_verbose (self);
     }
     /*
     Set UDP beacon discovery port; defaults to 5670, this call overrides 
@@ -74,16 +76,16 @@ public class Zyre implements AutoCloseable {
     e.g. development vs. production. Has no effect after zyre_start().   
     */
     native static void __set_port (long self, int portNbr);
-    public void set_port (long self, int portNbr) {
-        Zyre.__set_port (self, portNbr);
+    public void setPort (long self, int portNbr) {
+        __set_port (self, portNbr);
     }
     /*
     Set UDP beacon discovery interval, in milliseconds. Default is instant
     beacon exploration followed by pinging every 1,000 msecs.             
     */
     native static void __set_interval (long self, long interval);
-    public void set_interval (long self, long interval) {
-        Zyre.__set_interval (self, interval);
+    public void setInterval (long self, long interval) {
+        __set_interval (self, interval);
     }
     /*
     Set network interface for UDP beacons. If you do not set this, CZMQ will
@@ -91,8 +93,8 @@ public class Zyre implements AutoCloseable {
     specify which one you want to use, or strange things can happen.        
     */
     native static void __set_interface (long self, String value);
-    public void set_interface (long self, String value) {
-        Zyre.__set_interface (self, value);
+    public void setInterface (long self, String value) {
+        __set_interface (self, value);
     }
     /*
     By default, Zyre binds to an ephemeral TCP port and broadcasts the local 
@@ -105,8 +107,8 @@ public class Zyre implements AutoCloseable {
     the bind was successful, else -1.                                        
     */
     native static int __set_endpoint (long self, String format);
-    public int set_endpoint (long self, String format) {
-        return Zyre.__set_endpoint (self, format);
+    public int setEndpoint (long self, String format) {
+        return __set_endpoint (self, format);
     }
     /*
     Set-up gossip discovery of other nodes. At least one node in the cluster
@@ -115,8 +117,8 @@ public class Zyre implements AutoCloseable {
     endpoints, and should not overlap (they can use the same transport).    
     */
     native static void __gossip_bind (long self, String format);
-    public void gossip_bind (long self, String format) {
-        Zyre.__gossip_bind (self, format);
+    public void gossipBind (long self, String format) {
+        __gossip_bind (self, format);
     }
     /*
     Set-up gossip discovery of other nodes. A node may connect to multiple
@@ -124,8 +126,8 @@ public class Zyre implements AutoCloseable {
     design, see the CZMQ zgossip class.                                   
     */
     native static void __gossip_connect (long self, String format);
-    public void gossip_connect (long self, String format) {
-        Zyre.__gossip_connect (self, format);
+    public void gossipConnect (long self, String format) {
+        __gossip_connect (self, format);
     }
     /*
     Start node, after setting header values. When you start a node it
@@ -134,7 +136,7 @@ public class Zyre implements AutoCloseable {
     */
     native static int __start (long self);
     public int start (long self) {
-        return Zyre.__start (self);
+        return __start (self);
     }
     /*
     Stop node; this signals to other peers that this node will go away.
@@ -143,7 +145,7 @@ public class Zyre implements AutoCloseable {
     */
     native static void __stop (long self);
     public void stop (long self) {
-        Zyre.__stop (self);
+        __stop (self);
     }
     /*
     Join a named group; after joining a group you can send messages to
@@ -151,14 +153,14 @@ public class Zyre implements AutoCloseable {
     */
     native static int __join (long self, String group);
     public int join (long self, String group) {
-        return Zyre.__join (self, group);
+        return __join (self, group);
     }
     /*
     Leave a group
     */
     native static int __leave (long self, String group);
     public int leave (long self, String group) {
-        return Zyre.__leave (self, group);
+        return __leave (self, group);
     }
     /*
     Receive next message from network; the message may be a control
@@ -167,7 +169,7 @@ public class Zyre implements AutoCloseable {
     */
     native static long __recv (long self);
     public long recv (long self) {
-        return Zyre.__recv (self);
+        return __recv (self);
     }
     /*
     Send message to single peer, specified as a UUID string
@@ -175,7 +177,7 @@ public class Zyre implements AutoCloseable {
     */
     native static int __whisper (long self, String peer, long msgP);
     public int whisper (long self, String peer, long msgP) {
-        return Zyre.__whisper (self, peer, msgP);
+        return __whisper (self, peer, msgP);
     }
     /*
     Send message to a named group 
@@ -183,77 +185,77 @@ public class Zyre implements AutoCloseable {
     */
     native static int __shout (long self, String group, long msgP);
     public int shout (long self, String group, long msgP) {
-        return Zyre.__shout (self, group, msgP);
+        return __shout (self, group, msgP);
     }
     /*
     Send formatted string to a single peer specified as UUID string
     */
     native static int __whispers (long self, String peer, String format);
     public int whispers (long self, String peer, String format) {
-        return Zyre.__whispers (self, peer, format);
+        return __whispers (self, peer, format);
     }
     /*
     Send formatted string to a named group
     */
     native static int __shouts (long self, String group, String format);
     public int shouts (long self, String group, String format) {
-        return Zyre.__shouts (self, group, format);
+        return __shouts (self, group, format);
     }
     /*
     Return zlist of current peer ids.
     */
     native static long __peers (long self);
     public long peers (long self) {
-        return Zyre.__peers (self);
+        return __peers (self);
     }
     /*
     Return zlist of currently joined groups.
     */
     native static long __own_groups (long self);
-    public long own_groups (long self) {
-        return Zyre.__own_groups (self);
+    public long ownGroups (long self) {
+        return __own_groups (self);
     }
     /*
     Return zlist of groups known through connected peers.
     */
     native static long __peer_groups (long self);
-    public long peer_groups (long self) {
-        return Zyre.__peer_groups (self);
+    public long peerGroups (long self) {
+        return __peer_groups (self);
     }
     /*
     Return the endpoint of a connected peer.
     */
     native static String __peer_address (long self, String peer);
-    public String peer_address (long self, String peer) {
-        return Zyre.__peer_address (self, peer);
+    public String peerAddress (long self, String peer) {
+        return __peer_address (self, peer);
     }
     /*
     Return the value of a header of a conected peer. 
     Returns null if peer or key doesn't exits.       
     */
     native static String __peer_header_value (long self, String peer, String name);
-    public String peer_header_value (long self, String peer, String name) {
-        return Zyre.__peer_header_value (self, peer, name);
+    public String peerHeaderValue (long self, String peer, String name) {
+        return __peer_header_value (self, peer, name);
     }
     /*
     Return socket for talking to the Zyre node, for polling
     */
     native static long __socket (long self);
     public long socket (long self) {
-        return Zyre.__socket (self);
+        return __socket (self);
     }
     /*
     Return the Zyre version for run-time API detection
     */
     native static void __version (int major, int minor, int patch);
     public void version (int major, int minor, int patch) {
-        Zyre.__version (major, minor, patch);
+        __version (major, minor, patch);
     }
     /*
     Self test of this class
     */
     native static void __test (boolean verbose);
     public void test (boolean verbose) {
-        Zyre.__test (verbose);
+        __test (verbose);
     }
 }
