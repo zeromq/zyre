@@ -86,9 +86,7 @@ endif
 # Install api files into /usr/local/share/zproject
 apidir = @datadir@/zproject/zyre
 dist_api_DATA = \
-    api/../license.xml \
     api/zyre.xml \
-    api/../license.xml \
     api/zyre_event.xml
 
 # define custom target for all products of /src
