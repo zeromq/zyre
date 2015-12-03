@@ -9,10 +9,10 @@ package org.zeromq.zyre;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ZyreEventTest {
+public class ZyreTest {
     @Test
     public void test () {
-        ZyreEvent zyre_event = new ZyreEvent ();
-        zyre_event.test (false);
+        Zyre zyre = new Zyre ();
+        zyre.test (false);
     }
 }
