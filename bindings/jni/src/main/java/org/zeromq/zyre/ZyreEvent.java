@@ -21,10 +21,10 @@ public class ZyreEvent implements AutoCloseable{
     The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
     data (WHISPER, SHOUT).                                            
     */
-    native static long __init (long self);
+    native static long __new (long self);
     public ZyreEvent (long self) {
-        /*  TODO: if __init fails, self is null...  */
-        self = __init (self);
+        /*  TODO: if __new fails, self is null...  */
+        self = __new (self);
     }
     public ZyreEvent () {
         self = 0;
