@@ -44,14 +44,14 @@ public class Zyre implements AutoCloseable{
     Return our node UUID string, after successful initialization
     */
     native static String __uuid (long self);
-    public String uuid (long self) {
+    public String uuid () {
         return __uuid (self);
     }
     /*
     Return our node name, after successful initialization
     */
     native static String __name (long self);
-    public String name (long self) {
+    public String name () {
         return __name (self);
     }
     /*
@@ -59,7 +59,7 @@ public class Zyre implements AutoCloseable{
     and come in each ENTER message.                                    
     */
     native static void __setHeader (long self, String name, String format);
-    public void setHeader (long self, String name, String format) {
+    public void setHeader (String name, String format) {
         __setHeader (self, name, format);
     }
     /*
@@ -67,7 +67,7 @@ public class Zyre implements AutoCloseable{
     all major events.                                                   
     */
     native static void __setVerbose (long self);
-    public void setVerbose (long self) {
+    public void setVerbose () {
         __setVerbose (self);
     }
     /*
@@ -76,7 +76,7 @@ public class Zyre implements AutoCloseable{
     e.g. development vs. production. Has no effect after zyre_start().   
     */
     native static void __setPort (long self, int portNbr);
-    public void setPort (long self, int portNbr) {
+    public void setPort (int portNbr) {
         __setPort (self, portNbr);
     }
     /*
@@ -84,7 +84,7 @@ public class Zyre implements AutoCloseable{
     beacon exploration followed by pinging every 1,000 msecs.             
     */
     native static void __setInterval (long self, long interval);
-    public void setInterval (long self, long interval) {
+    public void setInterval (long interval) {
         __setInterval (self, interval);
     }
     /*
@@ -93,7 +93,7 @@ public class Zyre implements AutoCloseable{
     specify which one you want to use, or strange things can happen.        
     */
     native static void __setInterface (long self, String value);
-    public void setInterface (long self, String value) {
+    public void setInterface (String value) {
         __setInterface (self, value);
     }
     /*
@@ -107,7 +107,7 @@ public class Zyre implements AutoCloseable{
     the bind was successful, else -1.                                        
     */
     native static int __setEndpoint (long self, String format);
-    public int setEndpoint (long self, String format) {
+    public int setEndpoint (String format) {
         return __setEndpoint (self, format);
     }
     /*
@@ -117,7 +117,7 @@ public class Zyre implements AutoCloseable{
     endpoints, and should not overlap (they can use the same transport).    
     */
     native static void __gossipBind (long self, String format);
-    public void gossipBind (long self, String format) {
+    public void gossipBind (String format) {
         __gossipBind (self, format);
     }
     /*
@@ -126,7 +126,7 @@ public class Zyre implements AutoCloseable{
     design, see the CZMQ zgossip class.                                   
     */
     native static void __gossipConnect (long self, String format);
-    public void gossipConnect (long self, String format) {
+    public void gossipConnect (String format) {
         __gossipConnect (self, format);
     }
     /*
@@ -135,7 +135,7 @@ public class Zyre implements AutoCloseable{
     possible to start the node.                                      
     */
     native static int __start (long self);
-    public int start (long self) {
+    public int start () {
         return __start (self);
     }
     /*
@@ -144,7 +144,7 @@ public class Zyre implements AutoCloseable{
     stopping it.                                                       
     */
     native static void __stop (long self);
-    public void stop (long self) {
+    public void stop () {
         __stop (self);
     }
     /*
@@ -152,14 +152,14 @@ public class Zyre implements AutoCloseable{
     the group and all Zyre nodes in that group will receive them.     
     */
     native static int __join (long self, String group);
-    public int join (long self, String group) {
+    public int join (String group) {
         return __join (self, group);
     }
     /*
     Leave a group
     */
     native static int __leave (long self, String group);
-    public int leave (long self, String group) {
+    public int leave (String group) {
         return __leave (self, group);
     }
     /*
@@ -168,7 +168,7 @@ public class Zyre implements AutoCloseable{
     Returns zmsg_t object, or NULL if interrupted                  
     */
     native static long __recv (long self);
-    public long recv (long self) {
+    public long recv () {
         return __recv (self);
     }
     /*
@@ -176,7 +176,7 @@ public class Zyre implements AutoCloseable{
     Destroys message after sending                         
     */
     native static int __whisper (long self, String peer, long msgP);
-    public int whisper (long self, String peer, long msgP) {
+    public int whisper (String peer, long msgP) {
         return __whisper (self, peer, msgP);
     }
     /*
@@ -184,49 +184,49 @@ public class Zyre implements AutoCloseable{
     Destroys message after sending
     */
     native static int __shout (long self, String group, long msgP);
-    public int shout (long self, String group, long msgP) {
+    public int shout (String group, long msgP) {
         return __shout (self, group, msgP);
     }
     /*
     Send formatted string to a single peer specified as UUID string
     */
     native static int __whispers (long self, String peer, String format);
-    public int whispers (long self, String peer, String format) {
+    public int whispers (String peer, String format) {
         return __whispers (self, peer, format);
     }
     /*
     Send formatted string to a named group
     */
     native static int __shouts (long self, String group, String format);
-    public int shouts (long self, String group, String format) {
+    public int shouts (String group, String format) {
         return __shouts (self, group, format);
     }
     /*
     Return zlist of current peer ids.
     */
     native static long __peers (long self);
-    public long peers (long self) {
+    public long peers () {
         return __peers (self);
     }
     /*
     Return zlist of currently joined groups.
     */
     native static long __ownGroups (long self);
-    public long ownGroups (long self) {
+    public long ownGroups () {
         return __ownGroups (self);
     }
     /*
     Return zlist of groups known through connected peers.
     */
     native static long __peerGroups (long self);
-    public long peerGroups (long self) {
+    public long peerGroups () {
         return __peerGroups (self);
     }
     /*
     Return the endpoint of a connected peer.
     */
     native static String __peerAddress (long self, String peer);
-    public String peerAddress (long self, String peer) {
+    public String peerAddress (String peer) {
         return __peerAddress (self, peer);
     }
     /*
@@ -234,14 +234,14 @@ public class Zyre implements AutoCloseable{
     Returns null if peer or key doesn't exits.       
     */
     native static String __peerHeaderValue (long self, String peer, String name);
-    public String peerHeaderValue (long self, String peer, String name) {
+    public String peerHeaderValue (String peer, String name) {
         return __peerHeaderValue (self, peer, name);
     }
     /*
     Return socket for talking to the Zyre node, for polling
     */
     native static long __socket (long self);
-    public long socket (long self) {
+    public long socket () {
         return __socket (self);
     }
     /*
