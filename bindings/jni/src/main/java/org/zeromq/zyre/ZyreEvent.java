@@ -42,35 +42,35 @@ public class ZyreEvent implements AutoCloseable{
     Returns event type, which is a zyre_event_type_t
     */
     native static int __type (long self);
-    public int type (long self) {
+    public int type () {
         return __type (self);
     }
     /*
     Return the sending peer's id as a string
     */
     native static String __sender (long self);
-    public String sender (long self) {
+    public String sender () {
         return __sender (self);
     }
     /*
     Return the sending peer's public name as a string
     */
     native static String __name (long self);
-    public String name (long self) {
+    public String name () {
         return __name (self);
     }
     /*
     Return the sending peer's ipaddress as a string
     */
     native static String __address (long self);
-    public String address (long self) {
+    public String address () {
         return __address (self);
     }
     /*
     Returns the event headers, or NULL if there are none
     */
     native static long __headers (long self);
-    public long headers (long self) {
+    public long headers () {
         return __headers (self);
     }
     /*
@@ -78,21 +78,21 @@ public class ZyreEvent implements AutoCloseable{
     obtained by ENTER. Return NULL if no value was found.
     */
     native static String __header (long self, String name);
-    public String header (long self, String name) {
+    public String header (String name) {
         return __header (self, name);
     }
     /*
     Returns the group name that a SHOUT event was sent to
     */
     native static String __group (long self);
-    public String group (long self) {
+    public String group () {
         return __group (self);
     }
     /*
     Returns the incoming message payload (currently one frame)
     */
     native static long __msg (long self);
-    public long msg (long self) {
+    public long msg () {
         return __msg (self);
     }
     /*
