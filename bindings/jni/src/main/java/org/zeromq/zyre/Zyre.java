@@ -22,10 +22,10 @@ public class Zyre implements AutoCloseable{
     The node name is provided to other nodes during discovery. If you  
     specify NULL, Zyre generates a randomized node name from the UUID. 
     */
-    native static long __init (String name);
+    native static long __new (String name);
     public Zyre (String name) {
-        /*  TODO: if __init fails, self is null...  */
-        self = __init (name);
+        /*  TODO: if __new fails, self is null...  */
+        self = __new (name);
     }
     public Zyre () {
         self = 0;
@@ -58,43 +58,43 @@ public class Zyre implements AutoCloseable{
     Set node header; these are provided to other nodes during discovery
     and come in each ENTER message.                                    
     */
-    native static void __set_header (long self, String name, String format);
+    native static void __setHeader (long self, String name, String format);
     public void setHeader (long self, String name, String format) {
-        __set_header (self, name, format);
+        __setHeader (self, name, format);
     }
     /*
     Set verbose mode; this tells the node to log all traffic as well as 
     all major events.                                                   
     */
-    native static void __set_verbose (long self);
+    native static void __setVerbose (long self);
     public void setVerbose (long self) {
-        __set_verbose (self);
+        __setVerbose (self);
     }
     /*
     Set UDP beacon discovery port; defaults to 5670, this call overrides 
     that so you can create independent clusters on the same network, for 
     e.g. development vs. production. Has no effect after zyre_start().   
     */
-    native static void __set_port (long self, int portNbr);
+    native static void __setPort (long self, int portNbr);
     public void setPort (long self, int portNbr) {
-        __set_port (self, portNbr);
+        __setPort (self, portNbr);
     }
     /*
     Set UDP beacon discovery interval, in milliseconds. Default is instant
     beacon exploration followed by pinging every 1,000 msecs.             
     */
-    native static void __set_interval (long self, long interval);
+    native static void __setInterval (long self, long interval);
     public void setInterval (long self, long interval) {
-        __set_interval (self, interval);
+        __setInterval (self, interval);
     }
     /*
     Set network interface for UDP beacons. If you do not set this, CZMQ will
     choose an interface for you. On boxes with several interfaces you should
     specify which one you want to use, or strange things can happen.        
     */
-    native static void __set_interface (long self, String value);
+    native static void __setInterface (long self, String value);
     public void setInterface (long self, String value) {
-        __set_interface (self, value);
+        __setInterface (self, value);
     }
     /*
     By default, Zyre binds to an ephemeral TCP port and broadcasts the local 
@@ -106,9 +106,9 @@ public class Zyre implements AutoCloseable{
     that is meaningful to remote as well as local nodes). Returns 0 if       
     the bind was successful, else -1.                                        
     */
-    native static int __set_endpoint (long self, String format);
+    native static int __setEndpoint (long self, String format);
     public int setEndpoint (long self, String format) {
-        return __set_endpoint (self, format);
+        return __setEndpoint (self, format);
     }
     /*
     Set-up gossip discovery of other nodes. At least one node in the cluster
@@ -116,18 +116,18 @@ public class Zyre implements AutoCloseable{
     it. Note that gossip endpoints are completely distinct from Zyre node   
     endpoints, and should not overlap (they can use the same transport).    
     */
-    native static void __gossip_bind (long self, String format);
+    native static void __gossipBind (long self, String format);
     public void gossipBind (long self, String format) {
-        __gossip_bind (self, format);
+        __gossipBind (self, format);
     }
     /*
     Set-up gossip discovery of other nodes. A node may connect to multiple
     other nodes, for redundancy paths. For details of the gossip network  
     design, see the CZMQ zgossip class.                                   
     */
-    native static void __gossip_connect (long self, String format);
+    native static void __gossipConnect (long self, String format);
     public void gossipConnect (long self, String format) {
-        __gossip_connect (self, format);
+        __gossipConnect (self, format);
     }
     /*
     Start node, after setting header values. When you start a node it
@@ -211,31 +211,31 @@ public class Zyre implements AutoCloseable{
     /*
     Return zlist of currently joined groups.
     */
-    native static long __own_groups (long self);
+    native static long __ownGroups (long self);
     public long ownGroups (long self) {
-        return __own_groups (self);
+        return __ownGroups (self);
     }
     /*
     Return zlist of groups known through connected peers.
     */
-    native static long __peer_groups (long self);
+    native static long __peerGroups (long self);
     public long peerGroups (long self) {
-        return __peer_groups (self);
+        return __peerGroups (self);
     }
     /*
     Return the endpoint of a connected peer.
     */
-    native static String __peer_address (long self, String peer);
+    native static String __peerAddress (long self, String peer);
     public String peerAddress (long self, String peer) {
-        return __peer_address (self, peer);
+        return __peerAddress (self, peer);
     }
     /*
     Return the value of a header of a conected peer. 
     Returns null if peer or key doesn't exits.       
     */
-    native static String __peer_header_value (long self, String peer, String name);
+    native static String __peerHeaderValue (long self, String peer, String name);
     public String peerHeaderValue (long self, String peer, String name) {
-        return __peer_header_value (self, peer, name);
+        return __peerHeaderValue (self, peer, name);
     }
     /*
     Return socket for talking to the Zyre node, for polling

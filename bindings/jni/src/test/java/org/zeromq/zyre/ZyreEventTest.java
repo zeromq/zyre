@@ -10,6 +10,14 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ZyreEventTest {
+    static {
+        try {
+            System.loadLibrary ("zyrejni");
+        }
+        catch (Exception e) {
+            System.exit (-1);
+        }
+    }
     @Test
     public void test () {
         ZyreEvent zyre_event = new ZyreEvent ();
