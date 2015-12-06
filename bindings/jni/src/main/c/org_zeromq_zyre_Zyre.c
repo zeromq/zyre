@@ -20,9 +20,9 @@ Java_org_zeromq_zyre_Zyre__1_1new (JNIEnv *env, jclass c, jstring name)
 }
 
 JNIEXPORT void JNICALL
-Java_org_zeromq_zyre_Zyre__1_1destroy (JNIEnv *env, jclass c, jlong self_p)
+Java_org_zeromq_zyre_Zyre__1_1destroy (JNIEnv *env, jclass c, jlong self)
 {
-    zyre_destroy ((zyre_t **) &self_p);
+    zyre_destroy ((zyre_t **) &self);
 }
 
 JNIEXPORT jstring JNICALL

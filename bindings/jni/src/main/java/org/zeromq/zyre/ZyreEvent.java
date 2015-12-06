@@ -22,9 +22,12 @@ public class ZyreEvent implements AutoCloseable{
     data (WHISPER, SHOUT).                                            
     */
     native static long __new (long self);
-    public ZyreEvent (long self) {
+    public ZyreEvent (Zyre self) {
         /*  TODO: if __new fails, self is null...  */
-        self = __new (self);
+        self = __new (self.self);
+    }
+    public ZyreEvent (long pointer) {
+        self = pointer;
     }
     public ZyreEvent () {
         self = 0;
@@ -70,8 +73,8 @@ public class ZyreEvent implements AutoCloseable{
     Returns the event headers, or NULL if there are none
     */
     native static long __headers (long self);
-    public long headers () {
-        return __headers (self);
+    public Zhash headers () {
+        return new Zhash (__headers (self));
     }
     /*
     Returns value of a header from the message headers   
@@ -92,8 +95,8 @@ public class ZyreEvent implements AutoCloseable{
     Returns the incoming message payload (currently one frame)
     */
     native static long __msg (long self);
-    public long msg () {
-        return __msg (self);
+    public Zmsg msg () {
+        return new Zmsg (__msg (self));
     }
     /*
     Self test of this class
