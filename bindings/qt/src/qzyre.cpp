@@ -275,7 +275,7 @@ void QZyre::version (int *major, int *minor, int *patch)
 }
 
 ///
-//  Self test of this class
+//  Self test of this class.
 void QZyre::test (bool verbose)
 {
     zyre_test (verbose);

@@ -206,7 +206,7 @@ void QmlZyreAttached::version (int *major, int *minor, int *patch) {
 };
 
 ///
-//  Self test of this class
+//  Self test of this class.
 void QmlZyreAttached::test (bool verbose) {
     zyre_test (verbose);
 };

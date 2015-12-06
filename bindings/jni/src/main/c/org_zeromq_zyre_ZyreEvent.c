@@ -11,9 +11,9 @@
 #include "../../native/include/org_zeromq_zyre_ZyreEvent.h"
 
 JNIEXPORT jlong JNICALL
-Java_org_zeromq_zyre_ZyreEvent__1_1new (JNIEnv *env, jclass c, jlong self)
+Java_org_zeromq_zyre_ZyreEvent__1_1new (JNIEnv *env, jclass c, jlong node)
 {
-    jlong new_ = (jlong) zyre_event_new ((zyre_t *) self);
+    jlong new_ = (jlong) zyre_event_new ((zyre_t *) node);
     return new_;
 }
 

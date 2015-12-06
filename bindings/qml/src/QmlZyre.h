@@ -147,7 +147,7 @@ public slots:
     //  Return the Zyre version for run-time API detection
     void version (int *major, int *minor, int *patch);
 
-    //  Self test of this class
+    //  Self test of this class.
     void test (bool verbose);
 
     //  Constructor, creates a new Zyre node. Note that until you start the

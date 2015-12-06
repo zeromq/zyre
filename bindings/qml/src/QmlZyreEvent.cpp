@@ -64,7 +64,7 @@ QObject* QmlZyreEvent::qmlAttachedProperties(QObject* object) {
 
 
 ///
-//  Self test of this class
+//  Self test of this class.
 void QmlZyreEventAttached::test (bool verbose) {
     zyre_event_test (verbose);
 };
@@ -73,9 +73,9 @@ void QmlZyreEventAttached::test (bool verbose) {
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.
 //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
 //  data (WHISPER, SHOUT).                                            
-QmlZyreEvent *QmlZyreEventAttached::construct (QmlZyre *self) {
+QmlZyreEvent *QmlZyreEventAttached::construct (QmlZyre *node) {
     QmlZyreEvent *qmlSelf = new QmlZyreEvent ();
-    qmlSelf->self = zyre_event_new (self->self);
+    qmlSelf->self = zyre_event_new (node->self);
     return qmlSelf;
 };
 

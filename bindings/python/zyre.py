@@ -277,7 +277,7 @@ Returns null if peer or key doesn't exits."""
 
     @staticmethod
     def test(verbose):
-        """Self test of this class"""
+        """Self test of this class."""
         return lib.zyre_test(verbose)
 
 
@@ -393,7 +393,7 @@ obtained by ENTER. Return NULL if no value was found."""
 
     @staticmethod
     def test(verbose):
-        """Self test of this class"""
+        """Self test of this class."""
         return lib.zyre_event_test(verbose)
 
 ################################################################################
