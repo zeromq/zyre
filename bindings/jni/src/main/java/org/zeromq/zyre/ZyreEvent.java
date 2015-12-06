@@ -6,6 +6,8 @@
 */
 package org.zeromq.zyre;
 
+import org.zeromq.czmq.*;
+
 public class ZyreEvent implements AutoCloseable{
     static {
         try {
