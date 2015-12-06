@@ -27,6 +27,9 @@ public class Zyre implements AutoCloseable{
         /*  TODO: if __new fails, self is null...  */
         self = __new (name);
     }
+    public Zyre (long pointer) {
+        self = pointer;
+    }
     public Zyre () {
         self = 0;
     }
@@ -168,24 +171,24 @@ public class Zyre implements AutoCloseable{
     Returns zmsg_t object, or NULL if interrupted                  
     */
     native static long __recv (long self);
-    public long recv () {
-        return __recv (self);
+    public Zmsg recv () {
+        return new Zmsg (__recv (self));
     }
     /*
     Send message to single peer, specified as a UUID string
     Destroys message after sending                         
     */
     native static int __whisper (long self, String peer, long msgP);
-    public int whisper (String peer, long msgP) {
-        return __whisper (self, peer, msgP);
+    public int whisper (String peer, Zmsg msgP) {
+        return __whisper (self, peer, msgP.self);
     }
     /*
     Send message to a named group 
     Destroys message after sending
     */
     native static int __shout (long self, String group, long msgP);
-    public int shout (String group, long msgP) {
-        return __shout (self, group, msgP);
+    public int shout (String group, Zmsg msgP) {
+        return __shout (self, group, msgP.self);
     }
     /*
     Send formatted string to a single peer specified as UUID string
@@ -205,22 +208,22 @@ public class Zyre implements AutoCloseable{
     Return zlist of current peer ids.
     */
     native static long __peers (long self);
-    public long peers () {
-        return __peers (self);
+    public Zlist peers () {
+        return new Zlist (__peers (self));
     }
     /*
     Return zlist of currently joined groups.
     */
     native static long __ownGroups (long self);
-    public long ownGroups () {
-        return __ownGroups (self);
+    public Zlist ownGroups () {
+        return new Zlist (__ownGroups (self));
     }
     /*
     Return zlist of groups known through connected peers.
     */
     native static long __peerGroups (long self);
-    public long peerGroups () {
-        return __peerGroups (self);
+    public Zlist peerGroups () {
+        return new Zlist (__peerGroups (self));
     }
     /*
     Return the endpoint of a connected peer.
@@ -241,8 +244,8 @@ public class Zyre implements AutoCloseable{
     Return socket for talking to the Zyre node, for polling
     */
     native static long __socket (long self);
-    public long socket () {
-        return __socket (self);
+    public Zsock socket () {
+        return new Zsock (__socket (self));
     }
     /*
     Return the Zyre version for run-time API detection

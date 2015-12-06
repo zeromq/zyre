@@ -18,9 +18,9 @@ Java_org_zeromq_zyre_ZyreEvent__1_1new (JNIEnv *env, jclass c, jlong self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_zeromq_zyre_ZyreEvent__1_1destroy (JNIEnv *env, jclass c, jlong self_p)
+Java_org_zeromq_zyre_ZyreEvent__1_1destroy (JNIEnv *env, jclass c, jlong self)
 {
-    zyre_event_destroy ((zyre_event_t **) &self_p);
+    zyre_event_destroy ((zyre_event_t **) &self);
 }
 
 JNIEXPORT jint JNICALL
