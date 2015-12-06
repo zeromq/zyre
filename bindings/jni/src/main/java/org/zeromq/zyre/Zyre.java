@@ -5,7 +5,6 @@
 ################################################################################
 */
 package org.zeromq.zyre;
-
 import org.zeromq.czmq.*;
 
 public class Zyre implements AutoCloseable{
@@ -17,7 +16,7 @@ public class Zyre implements AutoCloseable{
             System.exit (-1);
         }
     }
-    long self;
+    public long self;
     /*
     Constructor, creates a new Zyre node. Note that until you start the
     node it is silent and invisible to other nodes on the network.     
@@ -257,7 +256,7 @@ public class Zyre implements AutoCloseable{
         __version (major, minor, patch);
     }
     /*
-    Self test of this class
+    Self test of this class.
     */
     native static void __test (boolean verbose);
     public void test (boolean verbose) {

@@ -19,9 +19,9 @@ QZyreEvent::QZyreEvent (zyre_event_t *self, QObject *qObjParent) : QObject (qObj
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.
 //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
 //  data (WHISPER, SHOUT).                                            
-QZyreEvent::QZyreEvent (QZyre *self, QObject *qObjParent) : QObject (qObjParent)
+QZyreEvent::QZyreEvent (QZyre *node, QObject *qObjParent) : QObject (qObjParent)
 {
-    this->self = zyre_event_new (self->self);
+    this->self = zyre_event_new (node->self);
 }
 
 ///
@@ -97,7 +97,7 @@ QZmsg * QZyreEvent::msg ()
 }
 
 ///
-//  Self test of this class
+//  Self test of this class.
 void QZyreEvent::test (bool verbose)
 {
     zyre_event_test (verbose);

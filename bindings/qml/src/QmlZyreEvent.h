@@ -65,13 +65,13 @@ public:
     };
     
 public slots:
-    //  Self test of this class
+    //  Self test of this class.
     void test (bool verbose);
 
     //  Constructor: receive an event from the zyre node, wraps zyre_recv.
     //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
     //  data (WHISPER, SHOUT).                                            
-    QmlZyreEvent *construct (QmlZyre *self);
+    QmlZyreEvent *construct (QmlZyre *node);
 
     //  Destructor; destroys an event instance
     void destruct (QmlZyreEvent *qmlSelf);

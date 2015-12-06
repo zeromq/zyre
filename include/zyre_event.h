@@ -39,7 +39,7 @@ typedef enum {
 //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
 //  data (WHISPER, SHOUT).                                            
 ZYRE_EXPORT zyre_event_t *
-    zyre_event_new (zyre_t *self);
+    zyre_event_new (zyre_t *node);
 
 //  Destructor; destroys an event instance
 ZYRE_EXPORT void
@@ -78,7 +78,7 @@ ZYRE_EXPORT const char *
 ZYRE_EXPORT zmsg_t *
     zyre_event_msg (zyre_event_t *self);
 
-//  Self test of this class
+//  Self test of this class.
 ZYRE_EXPORT void
     zyre_event_test (bool verbose);
 //  @end

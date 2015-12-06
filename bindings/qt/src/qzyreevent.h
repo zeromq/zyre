@@ -20,7 +20,7 @@ public:
     //  Constructor: receive an event from the zyre node, wraps zyre_recv.
     //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
     //  data (WHISPER, SHOUT).                                            
-    explicit QZyreEvent (QZyre *self, QObject *qObjParent = 0);
+    explicit QZyreEvent (QZyre *node, QObject *qObjParent = 0);
 
     //  Destructor; destroys an event instance
     ~QZyreEvent ();
@@ -50,7 +50,7 @@ public:
     //  Returns the incoming message payload (currently one frame)
     QZmsg * msg ();
 
-    //  Self test of this class
+    //  Self test of this class.
     static void test (bool verbose);
 
     zyre_event_t *self;

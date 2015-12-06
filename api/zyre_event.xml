@@ -1,4 +1,4 @@
-<class name="zyre event">
+<class name = "zyre event">
     <!--
     Copyright (c) the Contributors as noted in the AUTHORS file.
 
@@ -11,73 +11,67 @@
     -->
     Parsing Zyre messages
 
-    <enum name="type">
-        <constant name="enter" value="1" />
-        <constant name="join" value="2" />
-        <constant name="leave" value="3" />
-        <constant name="exit" value="4" />
-        <constant name="whisper" value="5" />
-        <constant name="shout" value="6" />
-        <constant name="stop" value="7" />
-        <constant name="evasive" value="8" />
+    <enum name = "type">
+        <constant name = "enter" value = "1" />
+        <constant name = "join" value = "2" />
+        <constant name = "leave" value = "3" />
+        <constant name = "exit" value = "4" />
+        <constant name = "whisper" value = "5" />
+        <constant name = "shout" value = "6" />
+        <constant name = "stop" value = "7" />
+        <constant name = "evasive" value = "8" />
     </enum>
 
     <constructor>
         Constructor: receive an event from the zyre node, wraps zyre_recv.
         The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
         data (WHISPER, SHOUT).
-        <argument name="self" type="zyre" />
+        <argument name = "node" type = "zyre" />
     </constructor>
 
     <destructor>
         Destructor; destroys an event instance
     </destructor>
 
-    <method name="type">
+    <method name = "type">
         Returns event type, which is a zyre_event_type_t
-        <return type="enum:zyre event.type" />
+        <return type = "enum:zyre event.type" />
     </method>
 
-    <method name="sender">
+    <method name = "sender">
         Return the sending peer's id as a string
-        <return type="string" />
+        <return type = "string" />
     </method>
 
-    <method name="name">
+    <method name = "name">
         Return the sending peer's public name as a string
-        <return type="string" />
+        <return type = "string" />
     </method>
 
-    <method name="address">
+    <method name = "address">
         Return the sending peer's ipaddress as a string
-        <return type="string" />
+        <return type = "string" />
     </method>
 
-    <method name="headers">
+    <method name = "headers">
         Returns the event headers, or NULL if there are none
-        <return type="zhash" />
+        <return type = "zhash" />
     </method>
 
-    <method name="header">
+    <method name = "header">
         Returns value of a header from the message headers
         obtained by ENTER. Return NULL if no value was found.
-        <argument name="name" type="string" />
-        <return type="string" />
+        <argument name = "name" type = "string" />
+        <return type = "string" />
     </method>
 
-    <method name="group">
+    <method name = "group">
         Returns the group name that a SHOUT event was sent to
-        <return type="string" />
+        <return type = "string" />
     </method>
 
-    <method name="msg">
+    <method name = "msg">
         Returns the incoming message payload (currently one frame)
-        <return type="zmsg" />
-    </method>
-
-    <method name="test" singleton="1">
-        Self test of this class
-        <argument name="verbose" type="boolean" />
+        <return type = "zmsg" />
     </method>
 </class>
-

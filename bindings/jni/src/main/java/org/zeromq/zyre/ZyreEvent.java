@@ -5,7 +5,6 @@
 ################################################################################
 */
 package org.zeromq.zyre;
-
 import org.zeromq.czmq.*;
 
 public class ZyreEvent implements AutoCloseable{
@@ -17,16 +16,16 @@ public class ZyreEvent implements AutoCloseable{
             System.exit (-1);
         }
     }
-    long self;
+    public long self;
     /*
     Constructor: receive an event from the zyre node, wraps zyre_recv.
     The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
     data (WHISPER, SHOUT).                                            
     */
-    native static long __new (long self);
-    public ZyreEvent (Zyre self) {
+    native static long __new (long node);
+    public ZyreEvent (Zyre node) {
         /*  TODO: if __new fails, self is null...  */
-        self = __new (self.self);
+        self = __new (node.self);
     }
     public ZyreEvent (long pointer) {
         self = pointer;
@@ -101,7 +100,7 @@ public class ZyreEvent implements AutoCloseable{
         return new Zmsg (__msg (self));
     }
     /*
-    Self test of this class
+    Self test of this class.
     */
     native static void __test (boolean verbose);
     public void test (boolean verbose) {

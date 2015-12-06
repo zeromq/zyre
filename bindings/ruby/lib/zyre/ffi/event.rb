@@ -54,9 +54,9 @@ module Zyre
       # Constructor: receive an event from the zyre node, wraps zyre_recv.
       # The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
       # data (WHISPER, SHOUT).                                            
-      def self.new(self_)
-        self_ = self_.__ptr if self_
-        ptr = ::Zyre::FFI.zyre_event_new(self_)
+      def self.new(node)
+        node = node.__ptr if node
+        ptr = ::Zyre::FFI.zyre_event_new(node)
         __new ptr
       end
 
@@ -134,7 +134,7 @@ module Zyre
         result
       end
 
-      # Self test of this class
+      # Self test of this class.
       def self.test(verbose)
         verbose = !(0==verbose||!verbose) # boolean
         result = ::Zyre::FFI.zyre_event_test(verbose)

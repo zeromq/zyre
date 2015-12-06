@@ -175,7 +175,7 @@ ZYRE_EXPORT zsock_t *
 ZYRE_EXPORT void
     zyre_version (int *major, int *minor, int *patch);
 
-//  Self test of this class
+//  Self test of this class.
 ZYRE_EXPORT void
     zyre_test (bool verbose);
 //  @end
