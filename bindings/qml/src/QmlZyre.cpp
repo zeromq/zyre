@@ -193,6 +193,12 @@ zsock_t *QmlZyre::socket () {
     return zyre_socket (self);
 };
 
+///
+//  Print zyre node information to stdout
+void QmlZyre::print () {
+    zyre_print (self);
+};
+
 
 QObject* QmlZyre::qmlAttachedProperties(QObject* object) {
     return new QmlZyreAttached(object);

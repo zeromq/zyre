@@ -191,6 +191,10 @@
         <return type = "zsock" />
     </method>
 
+    <method name = "print">
+        Print zyre node information to stdout
+    </method>
+
     <method name = "version" singleton = "1">
         Return the Zyre version for run-time API detection
         <argument name = "major" type = "integer" by_reference = "1" />

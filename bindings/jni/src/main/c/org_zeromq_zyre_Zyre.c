@@ -29,16 +29,16 @@ JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_Zyre__1_1uuid (JNIEnv *env, jclass c, jlong self)
 {
     char *uuid_ = (char *) zyre_uuid ((zyre_t *) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, uuid_);
-    return return_string_;
+    jstring string = (*env)->NewStringUTF (env, uuid_);
+    return string;
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_Zyre__1_1name (JNIEnv *env, jclass c, jlong self)
 {
     char *name_ = (char *) zyre_name ((zyre_t *) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, name_);
-    return return_string_;
+    jstring string = (*env)->NewStringUTF (env, name_);
+    return string;
 }
 
 JNIEXPORT void JNICALL
@@ -206,10 +206,10 @@ Java_org_zeromq_zyre_Zyre__1_1peerAddress (JNIEnv *env, jclass c, jlong self, js
 {
     char *peer_ = (char *) (*env)->GetStringUTFChars (env, peer, NULL);
     char *peer_address_ = (char *) zyre_peer_address ((zyre_t *) self, peer_);
-    jstring return_string_ = (*env)->NewStringUTF (env, peer_address_);
+    jstring string = (*env)->NewStringUTF (env, peer_address_);
     zstr_free (&peer_address_);
     (*env)->ReleaseStringUTFChars (env, peer, peer_);
-    return return_string_;
+    return string;
 }
 
 JNIEXPORT jstring JNICALL
@@ -218,11 +218,11 @@ Java_org_zeromq_zyre_Zyre__1_1peerHeaderValue (JNIEnv *env, jclass c, jlong self
     char *peer_ = (char *) (*env)->GetStringUTFChars (env, peer, NULL);
     char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);
     char *peer_header_value_ = (char *) zyre_peer_header_value ((zyre_t *) self, peer_, name_);
-    jstring return_string_ = (*env)->NewStringUTF (env, peer_header_value_);
+    jstring string = (*env)->NewStringUTF (env, peer_header_value_);
     zstr_free (&peer_header_value_);
     (*env)->ReleaseStringUTFChars (env, peer, peer_);
     (*env)->ReleaseStringUTFChars (env, name, name_);
-    return return_string_;
+    return string;
 }
 
 JNIEXPORT jlong JNICALL
@@ -230,6 +230,12 @@ Java_org_zeromq_zyre_Zyre__1_1socket (JNIEnv *env, jclass c, jlong self)
 {
     jlong socket_ = (jlong) zyre_socket ((zyre_t *) self);
     return socket_;
+}
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1print (JNIEnv *env, jclass c, jlong self)
+{
+    zyre_print ((zyre_t *) self);
 }
 
 JNIEXPORT void JNICALL

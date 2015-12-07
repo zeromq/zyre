@@ -320,6 +320,14 @@ module Zyre
         result
       end
 
+      # Print zyre node information to stdout
+      def print()
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_print(self_p)
+        result
+      end
+
       # Return the Zyre version for run-time API detection
       def self.version(major, minor, patch)
         result = ::Zyre::FFI.zyre_version(major, minor, patch)

@@ -34,24 +34,24 @@ JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1sender (JNIEnv *env, jclass c, jlong self)
 {
     char *sender_ = (char *) zyre_event_sender ((zyre_event_t *) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, sender_);
-    return return_string_;
+    jstring string = (*env)->NewStringUTF (env, sender_);
+    return string;
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1name (JNIEnv *env, jclass c, jlong self)
 {
     char *name_ = (char *) zyre_event_name ((zyre_event_t *) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, name_);
-    return return_string_;
+    jstring string = (*env)->NewStringUTF (env, name_);
+    return string;
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1address (JNIEnv *env, jclass c, jlong self)
 {
     char *address_ = (char *) zyre_event_address ((zyre_event_t *) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, address_);
-    return return_string_;
+    jstring string = (*env)->NewStringUTF (env, address_);
+    return string;
 }
 
 JNIEXPORT jlong JNICALL
@@ -66,17 +66,17 @@ Java_org_zeromq_zyre_ZyreEvent__1_1header (JNIEnv *env, jclass c, jlong self, js
 {
     char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);
     char *header_ = (char *) zyre_event_header ((zyre_event_t *) self, name_);
-    jstring return_string_ = (*env)->NewStringUTF (env, header_);
+    jstring string = (*env)->NewStringUTF (env, header_);
     (*env)->ReleaseStringUTFChars (env, name, name_);
-    return return_string_;
+    return string;
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1group (JNIEnv *env, jclass c, jlong self)
 {
     char *group_ = (char *) zyre_event_group ((zyre_event_t *) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, group_);
-    return return_string_;
+    jstring string = (*env)->NewStringUTF (env, group_);
+    return string;
 }
 
 JNIEXPORT jlong JNICALL

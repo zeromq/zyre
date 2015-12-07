@@ -171,6 +171,10 @@ ZYRE_EXPORT char *
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
+//  Print zyre node information to stdout
+ZYRE_EXPORT void
+    zyre_print (zyre_t *self);
+
 //  Return the Zyre version for run-time API detection
 ZYRE_EXPORT void
     zyre_version (int *major, int *minor, int *patch);

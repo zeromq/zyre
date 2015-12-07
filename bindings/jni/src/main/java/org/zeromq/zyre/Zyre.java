@@ -249,6 +249,13 @@ public class Zyre implements AutoCloseable{
         return new Zsock (__socket (self));
     }
     /*
+    Print zyre node information to stdout
+    */
+    native static void __print (long self);
+    public void print () {
+        __print (self);
+    }
+    /*
     Return the Zyre version for run-time API detection
     */
     native static void __version (int major, int minor, int patch);

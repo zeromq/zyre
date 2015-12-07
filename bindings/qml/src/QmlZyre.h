@@ -131,6 +131,9 @@ public slots:
 
     //  Return socket for talking to the Zyre node, for polling
     zsock_t *socket ();
+
+    //  Print zyre node information to stdout
+    void print ();
 };
 
 class QmlZyreAttached : public QObject
