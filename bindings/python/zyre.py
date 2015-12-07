@@ -103,6 +103,8 @@ lib.zyre_peer_header_value.restype = POINTER(c_char)
 lib.zyre_peer_header_value.argtypes = [zyre_p, c_char_p, c_char_p]
 lib.zyre_socket.restype = czmq.zsock_p
 lib.zyre_socket.argtypes = [zyre_p]
+lib.zyre_print.restype = None
+lib.zyre_print.argtypes = [zyre_p]
 lib.zyre_version.restype = None
 lib.zyre_version.argtypes = [POINTER(c_int), POINTER(c_int), POINTER(c_int)]
 lib.zyre_test.restype = None
@@ -269,6 +271,10 @@ Returns null if peer or key doesn't exits."""
     def socket(self):
         """Return socket for talking to the Zyre node, for polling"""
         return czmq.Zsock(lib.zyre_socket(self._as_parameter_), False)
+
+    def print(self):
+        """Print zyre node information to stdout"""
+        return lib.zyre_print(self._as_parameter_)
 
     @staticmethod
     def version(major, minor, patch):

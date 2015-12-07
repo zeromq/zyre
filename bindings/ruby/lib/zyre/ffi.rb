@@ -65,6 +65,7 @@ module Zyre
       attach_function :zyre_peer_address, [:pointer, :string], :pointer, **opts
       attach_function :zyre_peer_header_value, [:pointer, :string, :string], :pointer, **opts
       attach_function :zyre_socket, [:pointer], :pointer, **opts
+      attach_function :zyre_print, [:pointer], :void, **opts
       attach_function :zyre_version, [:pointer, :pointer, :pointer], :void, **opts
       attach_function :zyre_test, [:bool], :void, **opts
 

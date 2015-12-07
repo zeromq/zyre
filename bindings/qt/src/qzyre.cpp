@@ -267,6 +267,14 @@ QZsock * QZyre::socket ()
 }
 
 ///
+//  Print zyre node information to stdout
+void QZyre::print ()
+{
+    zyre_print (self);
+    
+}
+
+///
 //  Return the Zyre version for run-time API detection
 void QZyre::version (int *major, int *minor, int *patch)
 {
