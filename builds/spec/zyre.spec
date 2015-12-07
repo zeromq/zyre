@@ -61,7 +61,7 @@ This package contains development files.
 %defattr(-,root,root)
 %{_includedir}/*
 %{_libdir}/libzyre.so
-%{_libdir}/pkgconfig/zyre.pc
+%{_libdir}/pkgconfig/libzyre.pc
 
 %prep
 %setup -q
@@ -81,11 +81,6 @@ find %{buildroot} -name '*.la' | xargs rm -f
 %files
 %defattr(-,root,root)
 %doc README.md
-%doc COPYING
-%{_bindir}/perf_local
-%{_bindir}/perf_remote
 %{_bindir}/zpinger
-%{_bindir}/ztester_beacon
-%{_bindir}/ztester_gossip
 
 %changelog

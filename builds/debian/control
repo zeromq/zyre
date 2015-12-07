@@ -9,7 +9,7 @@
 #    This Source Code Form is subject to the terms of the Mozilla Public    
 #    License, v. 2.0. If a copy of the MPL was not distributed with this    
 #    file, You can obtain one at http://mozilla.org/MPL/2.0/.               
-#
+
 
 Source:         zyre
 Section:        net
@@ -28,7 +28,7 @@ Build-Depends: bison, debhelper (>= 8),
 
 Package: libzyre1
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: zyre
  This package contains shared library for zyre: an open-source framework for proximity-based p2p apps
 
@@ -36,11 +36,9 @@ Package: zyre-dev
 Architecture: all
 Section: libdevel
 Depends:
-    libzyre1 (= ${binary:Version}),
-    ${shlibs:Depends},
     libzmq4-dev,
     libczmq-dev,
-    ${misc:Depends}
+    libzyre1 (= ${binary:Version})
 Description: development files for zyre
  This package contains development files for zyre: an open-source framework for proximity-based p2p apps
 
