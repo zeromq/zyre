@@ -20,7 +20,6 @@ public class ZyreEventTest {
     }
     @Test
     public void test () {
-        ZyreEvent zyre_event = new ZyreEvent ();
-        zyre_event.test (false);
+        ZyreEvent.test (false);
     }
 }

@@ -25,14 +25,11 @@ public class Zyre implements AutoCloseable{
     */
     native static long __new (String name);
     public Zyre (String name) {
-        /*  TODO: if __new fails, self is null...  */
+        /*  TODO: if __new fails, self is null...            */
         self = __new (name);
     }
     public Zyre (long pointer) {
         self = pointer;
-    }
-    public Zyre () {
-        self = 0;
     }
     /*
     Destructor, destroys a Zyre node. When you destroy a node, any
@@ -266,7 +263,7 @@ public class Zyre implements AutoCloseable{
     Self test of this class.
     */
     native static void __test (boolean verbose);
-    public void test (boolean verbose) {
+    public static void test (boolean verbose) {
         __test (verbose);
     }
 }
