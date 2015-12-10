@@ -24,14 +24,11 @@ public class ZyreEvent implements AutoCloseable{
     */
     native static long __new (long node);
     public ZyreEvent (Zyre node) {
-        /*  TODO: if __new fails, self is null...  */
+        /*  TODO: if __new fails, self is null...            */
         self = __new (node.self);
     }
     public ZyreEvent (long pointer) {
         self = pointer;
-    }
-    public ZyreEvent () {
-        self = 0;
     }
     /*
     Destructor; destroys an event instance
@@ -103,7 +100,7 @@ public class ZyreEvent implements AutoCloseable{
     Self test of this class.
     */
     native static void __test (boolean verbose);
-    public void test (boolean verbose) {
+    public static void test (boolean verbose) {
         __test (verbose);
     }
 }

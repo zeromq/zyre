@@ -7,14 +7,21 @@ module Zyre
   module FFI
 
     # An open-source framework for proximity-based P2P apps
+    # @note This class is 100% generated using zproject.
     class Zyre
+      # Raised when one tries to use an instance of {Zyre} after
+      # the internal pointer to the native object has been nullified.
       class DestroyedError < RuntimeError; end
 
       # Boilerplate for self pointer, initializer, and finalizer
       class << self
         alias :__new :new
       end
-      def initialize ptr, finalize=true
+      # Attaches the pointer _ptr_ to this instance and defines a finalizer for
+      # it if necessary.
+      # @param ptr [::FFI::Pointer]
+      # @param finalize [Boolean]
+      def initialize(ptr, finalize = true)
         @ptr = ptr
         if @ptr.null?
           @ptr = nil # Remove null pointers so we don't have to test for them.
@@ -23,24 +30,32 @@ module Zyre
           ObjectSpace.define_finalizer self, @finalizer
         end
       end
-      def self.create_finalizer_for ptr
+      # @param ptr [::FFI::Pointer]
+      # @return [Proc]
+      def self.create_finalizer_for(ptr)
         Proc.new do
           ptr_ptr = ::FFI::MemoryPointer.new :pointer
           ptr_ptr.write_pointer ptr
           ::Zyre::FFI.zyre_destroy ptr_ptr
         end
       end
+      # @return [Boolean]
       def null?
         !@ptr or @ptr.null?
       end
       # Return internal pointer
+      # @return [::FFI::Pointer]
       def __ptr
         raise DestroyedError unless @ptr
         @ptr
       end
       # So external Libraries can just pass the Object to a FFI function which expects a :pointer
       alias_method :to_ptr, :__ptr
-      # Nullify internal pointer and return pointer pointer
+      # Nullify internal pointer and return pointer pointer.
+      # @note This detaches the current instance from the native object
+      #   and thus makes it unusable.
+      # @return [::FFI::MemoryPointer] the pointer pointing to a pointer
+      #   pointing to the native object
       def __ptr_give_ref
         raise DestroyedError unless @ptr
         ptr_ptr = ::FFI::MemoryPointer.new :pointer
@@ -55,6 +70,8 @@ module Zyre
       # node it is silent and invisible to other nodes on the network.     
       # The node name is provided to other nodes during discovery. If you  
       # specify NULL, Zyre generates a randomized node name from the UUID. 
+      # @param name [String, #to_str, #to_s]
+      # @return [Zyre::Zyre]
       def self.new(name)
         name = String(name)
         ptr = ::Zyre::FFI.zyre_new(name)
@@ -63,6 +80,8 @@ module Zyre
 
       # Destructor, destroys a Zyre node. When you destroy a node, any
       # messages it is sending or receiving will be discarded.        
+      #
+      # @return [void]
       def destroy()
         return unless @ptr
         self_p = __ptr_give_ref
@@ -71,6 +90,8 @@ module Zyre
       end
 
       # Return our node UUID string, after successful initialization
+      #
+      # @return [String]
       def uuid()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -79,6 +100,8 @@ module Zyre
       end
 
       # Return our node name, after successful initialization
+      #
+      # @return [String]
       def name()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -88,6 +111,11 @@ module Zyre
 
       # Set node header; these are provided to other nodes during discovery
       # and come in each ENTER message.                                    
+      #
+      # @param name [String, #to_str, #to_s]
+      # @param format [String, #to_str, #to_s]
+      # @param args [Array<Object>] see https://github.com/ffi/ffi/wiki/examples#using-varargs
+      # @return [void]
       def set_header(name, format, *args)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -99,6 +127,8 @@ module Zyre
 
       # Set verbose mode; this tells the node to log all traffic as well as 
       # all major events.                                                   
+      #
+      # @return [void]
       def set_verbose()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -109,6 +139,9 @@ module Zyre
       # Set UDP beacon discovery port; defaults to 5670, this call overrides 
       # that so you can create independent clusters on the same network, for 
       # e.g. development vs. production. Has no effect after zyre_start().   
+      #
+      # @param port_nbr [Integer, #to_int, #to_i]
+      # @return [void]
       def set_port(port_nbr)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -119,6 +152,9 @@ module Zyre
 
       # Set UDP beacon discovery interval, in milliseconds. Default is instant
       # beacon exploration followed by pinging every 1,000 msecs.             
+      #
+      # @param interval [Integer, #to_int, #to_i]
+      # @return [void]
       def set_interval(interval)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -130,6 +166,9 @@ module Zyre
       # Set network interface for UDP beacons. If you do not set this, CZMQ will
       # choose an interface for you. On boxes with several interfaces you should
       # specify which one you want to use, or strange things can happen.        
+      #
+      # @param value [String, #to_str, #to_s]
+      # @return [void]
       def set_interface(value)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -146,6 +185,10 @@ module Zyre
       # inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address   
       # that is meaningful to remote as well as local nodes). Returns 0 if       
       # the bind was successful, else -1.                                        
+      #
+      # @param format [String, #to_str, #to_s]
+      # @param args [Array<Object>] see https://github.com/ffi/ffi/wiki/examples#using-varargs
+      # @return [Integer]
       def set_endpoint(format, *args)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -158,6 +201,10 @@ module Zyre
       # must bind to a well-known gossip endpoint, so other nodes can connect to
       # it. Note that gossip endpoints are completely distinct from Zyre node   
       # endpoints, and should not overlap (they can use the same transport).    
+      #
+      # @param format [String, #to_str, #to_s]
+      # @param args [Array<Object>] see https://github.com/ffi/ffi/wiki/examples#using-varargs
+      # @return [void]
       def gossip_bind(format, *args)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -169,6 +216,10 @@ module Zyre
       # Set-up gossip discovery of other nodes. A node may connect to multiple
       # other nodes, for redundancy paths. For details of the gossip network  
       # design, see the CZMQ zgossip class.                                   
+      #
+      # @param format [String, #to_str, #to_s]
+      # @param args [Array<Object>] see https://github.com/ffi/ffi/wiki/examples#using-varargs
+      # @return [void]
       def gossip_connect(format, *args)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -180,6 +231,8 @@ module Zyre
       # Start node, after setting header values. When you start a node it
       # begins discovery and connection. Returns 0 if OK, -1 if it wasn't
       # possible to start the node.                                      
+      #
+      # @return [Integer]
       def start()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -190,6 +243,8 @@ module Zyre
       # Stop node; this signals to other peers that this node will go away.
       # This is polite; however you can also just destroy the node without 
       # stopping it.                                                       
+      #
+      # @return [void]
       def stop()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -199,6 +254,9 @@ module Zyre
 
       # Join a named group; after joining a group you can send messages to
       # the group and all Zyre nodes in that group will receive them.     
+      #
+      # @param group [String, #to_str, #to_s]
+      # @return [Integer]
       def join(group)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -208,6 +266,9 @@ module Zyre
       end
 
       # Leave a group
+      #
+      # @param group [String, #to_str, #to_s]
+      # @return [Integer]
       def leave(group)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -219,6 +280,8 @@ module Zyre
       # Receive next message from network; the message may be a control
       # message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).   
       # Returns zmsg_t object, or NULL if interrupted                  
+      #
+      # @return [::FFI::Pointer]
       def recv()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -228,6 +291,10 @@ module Zyre
 
       # Send message to single peer, specified as a UUID string
       # Destroys message after sending                         
+      #
+      # @param peer [String, #to_str, #to_s]
+      # @param msg_p [::FFI::Pointer, #to_ptr]
+      # @return [Integer]
       def whisper(peer, msg_p)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -238,6 +305,10 @@ module Zyre
 
       # Send message to a named group 
       # Destroys message after sending
+      #
+      # @param group [String, #to_str, #to_s]
+      # @param msg_p [::FFI::Pointer, #to_ptr]
+      # @return [Integer]
       def shout(group, msg_p)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -247,6 +318,11 @@ module Zyre
       end
 
       # Send formatted string to a single peer specified as UUID string
+      #
+      # @param peer [String, #to_str, #to_s]
+      # @param format [String, #to_str, #to_s]
+      # @param args [Array<Object>] see https://github.com/ffi/ffi/wiki/examples#using-varargs
+      # @return [Integer]
       def whispers(peer, format, *args)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -257,6 +333,11 @@ module Zyre
       end
 
       # Send formatted string to a named group
+      #
+      # @param group [String, #to_str, #to_s]
+      # @param format [String, #to_str, #to_s]
+      # @param args [Array<Object>] see https://github.com/ffi/ffi/wiki/examples#using-varargs
+      # @return [Integer]
       def shouts(group, format, *args)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -267,6 +348,8 @@ module Zyre
       end
 
       # Return zlist of current peer ids.
+      #
+      # @return [::FFI::Pointer]
       def peers()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -275,6 +358,8 @@ module Zyre
       end
 
       # Return zlist of currently joined groups.
+      #
+      # @return [::FFI::Pointer]
       def own_groups()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -283,6 +368,8 @@ module Zyre
       end
 
       # Return zlist of groups known through connected peers.
+      #
+      # @return [::FFI::Pointer]
       def peer_groups()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -291,6 +378,9 @@ module Zyre
       end
 
       # Return the endpoint of a connected peer.
+      #
+      # @param peer [String, #to_str, #to_s]
+      # @return [::FFI::AutoPointer]
       def peer_address(peer)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -302,6 +392,10 @@ module Zyre
 
       # Return the value of a header of a conected peer. 
       # Returns null if peer or key doesn't exits.       
+      #
+      # @param peer [String, #to_str, #to_s]
+      # @param name [String, #to_str, #to_s]
+      # @return [::FFI::AutoPointer]
       def peer_header_value(peer, name)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -313,6 +407,8 @@ module Zyre
       end
 
       # Return socket for talking to the Zyre node, for polling
+      #
+      # @return [::FFI::Pointer]
       def socket()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -321,6 +417,8 @@ module Zyre
       end
 
       # Print zyre node information to stdout
+      #
+      # @return [void]
       def print()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -329,12 +427,20 @@ module Zyre
       end
 
       # Return the Zyre version for run-time API detection
+      #
+      # @param major [::FFI::Pointer, #to_ptr]
+      # @param minor [::FFI::Pointer, #to_ptr]
+      # @param patch [::FFI::Pointer, #to_ptr]
+      # @return [void]
       def self.version(major, minor, patch)
         result = ::Zyre::FFI.zyre_version(major, minor, patch)
         result
       end
 
       # Self test of this class.
+      #
+      # @param verbose [Boolean]
+      # @return [void]
       def self.test(verbose)
         verbose = !(0==verbose||!verbose) # boolean
         result = ::Zyre::FFI.zyre_test(verbose)

@@ -7,14 +7,21 @@ module Zyre
   module FFI
 
     # Parsing Zyre messages
+    # @note This class is 100% generated using zproject.
     class Event
+      # Raised when one tries to use an instance of {Event} after
+      # the internal pointer to the native object has been nullified.
       class DestroyedError < RuntimeError; end
 
       # Boilerplate for self pointer, initializer, and finalizer
       class << self
         alias :__new :new
       end
-      def initialize ptr, finalize=true
+      # Attaches the pointer _ptr_ to this instance and defines a finalizer for
+      # it if necessary.
+      # @param ptr [::FFI::Pointer]
+      # @param finalize [Boolean]
+      def initialize(ptr, finalize = true)
         @ptr = ptr
         if @ptr.null?
           @ptr = nil # Remove null pointers so we don't have to test for them.
@@ -23,24 +30,32 @@ module Zyre
           ObjectSpace.define_finalizer self, @finalizer
         end
       end
-      def self.create_finalizer_for ptr
+      # @param ptr [::FFI::Pointer]
+      # @return [Proc]
+      def self.create_finalizer_for(ptr)
         Proc.new do
           ptr_ptr = ::FFI::MemoryPointer.new :pointer
           ptr_ptr.write_pointer ptr
           ::Zyre::FFI.zyre_event_destroy ptr_ptr
         end
       end
+      # @return [Boolean]
       def null?
         !@ptr or @ptr.null?
       end
       # Return internal pointer
+      # @return [::FFI::Pointer]
       def __ptr
         raise DestroyedError unless @ptr
         @ptr
       end
       # So external Libraries can just pass the Object to a FFI function which expects a :pointer
       alias_method :to_ptr, :__ptr
-      # Nullify internal pointer and return pointer pointer
+      # Nullify internal pointer and return pointer pointer.
+      # @note This detaches the current instance from the native object
+      #   and thus makes it unusable.
+      # @return [::FFI::MemoryPointer] the pointer pointing to a pointer
+      #   pointing to the native object
       def __ptr_give_ref
         raise DestroyedError unless @ptr
         ptr_ptr = ::FFI::MemoryPointer.new :pointer
@@ -54,6 +69,8 @@ module Zyre
       # Constructor: receive an event from the zyre node, wraps zyre_recv.
       # The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
       # data (WHISPER, SHOUT).                                            
+      # @param node [Zyre, #__ptr]
+      # @return [Zyre::Event]
       def self.new(node)
         node = node.__ptr if node
         ptr = ::Zyre::FFI.zyre_event_new(node)
@@ -61,6 +78,8 @@ module Zyre
       end
 
       # Destructor; destroys an event instance
+      #
+      # @return [void]
       def destroy()
         return unless @ptr
         self_p = __ptr_give_ref
@@ -69,6 +88,8 @@ module Zyre
       end
 
       # Returns event type, which is a zyre_event_type_t
+      #
+      # @return [Symbol]
       def type()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -77,6 +98,8 @@ module Zyre
       end
 
       # Return the sending peer's id as a string
+      #
+      # @return [String]
       def sender()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -85,6 +108,8 @@ module Zyre
       end
 
       # Return the sending peer's public name as a string
+      #
+      # @return [String]
       def name()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -93,6 +118,8 @@ module Zyre
       end
 
       # Return the sending peer's ipaddress as a string
+      #
+      # @return [String]
       def address()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -101,6 +128,8 @@ module Zyre
       end
 
       # Returns the event headers, or NULL if there are none
+      #
+      # @return [::FFI::Pointer]
       def headers()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -110,6 +139,9 @@ module Zyre
 
       # Returns value of a header from the message headers   
       # obtained by ENTER. Return NULL if no value was found.
+      #
+      # @param name [String, #to_str, #to_s]
+      # @return [String]
       def header(name)
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -119,6 +151,8 @@ module Zyre
       end
 
       # Returns the group name that a SHOUT event was sent to
+      #
+      # @return [String]
       def group()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -127,6 +161,8 @@ module Zyre
       end
 
       # Returns the incoming message payload (currently one frame)
+      #
+      # @return [::FFI::Pointer]
       def msg()
         raise DestroyedError unless @ptr
         self_p = @ptr
@@ -135,6 +171,9 @@ module Zyre
       end
 
       # Self test of this class.
+      #
+      # @param verbose [Boolean]
+      # @return [void]
       def self.test(verbose)
         verbose = !(0==verbose||!verbose) # boolean
         result = ::Zyre::FFI.zyre_event_test(verbose)

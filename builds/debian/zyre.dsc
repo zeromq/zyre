@@ -1,7 +1,7 @@
 Format:         1.0
 Source:         zyre
 Version:        1.1.0-1
-Binary:         zyre, libzyre1
+Binary:         libzyre1, zyre-dev
 Architecture:   any all
 Maintainer:     John Doe <John.Doe@example.com>
 Standards-Version: 3.9.5
@@ -15,6 +15,6 @@ Build-Depends: bison, debhelper (>= 8),
     dh-autoreconf
 
 Package-List:
- zyre dev net optional arch-any
- libzyre1 dev net optional arch-any
+ libzyre1 deb net optional arch=any
+ zyre-dev deb libdevel optional arch=any
 

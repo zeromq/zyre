@@ -20,7 +20,6 @@ public class ZyreTest {
     }
     @Test
     public void test () {
-        Zyre zyre = new Zyre ();
-        zyre.test (false);
+        Zyre.test (false);
     }
 }
