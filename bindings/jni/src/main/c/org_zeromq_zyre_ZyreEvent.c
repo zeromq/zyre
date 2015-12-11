@@ -13,6 +13,8 @@
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1new (JNIEnv *env, jclass c, jlong node)
 {
+    //  Disable CZMQ signal handling; allow Java to deal with it
+    zsys_handler_set (NULL);
     jlong new_ = (jlong) zyre_event_new ((zyre_t *) node);
     return new_;
 }

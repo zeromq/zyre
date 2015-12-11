@@ -14,6 +14,8 @@ JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_Zyre__1_1new (JNIEnv *env, jclass c, jstring name)
 {
     char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);
+    //  Disable CZMQ signal handling; allow Java to deal with it
+    zsys_handler_set (NULL);
     jlong new_ = (jlong) zyre_new (name_);
     (*env)->ReleaseStringUTFChars (env, name, name_);
     return new_;
