@@ -2,7 +2,7 @@ Linux
 -----
 
 ./autogen.sh
-./configure.sh
+./configure
 make && make check
 make install
 
