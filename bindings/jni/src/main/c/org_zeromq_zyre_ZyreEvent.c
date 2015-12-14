@@ -15,7 +15,7 @@ Java_org_zeromq_zyre_ZyreEvent__1_1new (JNIEnv *env, jclass c, jlong node)
 {
     //  Disable CZMQ signal handling; allow Java to deal with it
     zsys_handler_set (NULL);
-    jlong new_ = (jlong) zyre_event_new ((zyre_t *) node);
+    jlong new_ = (jlong) (intptr_t) zyre_event_new ((zyre_t *) (intptr_t) node);
     return new_;
 }
 
@@ -28,14 +28,14 @@ Java_org_zeromq_zyre_ZyreEvent__1_1destroy (JNIEnv *env, jclass c, jlong self)
 JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1type (JNIEnv *env, jclass c, jlong self)
 {
-    jint type_ = (jint) zyre_event_type ((zyre_event_t *) self);
+    jint type_ = (jint) zyre_event_type ((zyre_event_t *) (intptr_t) self);
     return type_;
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1sender (JNIEnv *env, jclass c, jlong self)
 {
-    char *sender_ = (char *) zyre_event_sender ((zyre_event_t *) self);
+    char *sender_ = (char *) zyre_event_sender ((zyre_event_t *) (intptr_t) self);
     jstring return_string_ = (*env)->NewStringUTF (env, sender_);
     return return_string_;
 }
@@ -43,7 +43,7 @@ Java_org_zeromq_zyre_ZyreEvent__1_1sender (JNIEnv *env, jclass c, jlong self)
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1name (JNIEnv *env, jclass c, jlong self)
 {
-    char *name_ = (char *) zyre_event_name ((zyre_event_t *) self);
+    char *name_ = (char *) zyre_event_name ((zyre_event_t *) (intptr_t) self);
     jstring return_string_ = (*env)->NewStringUTF (env, name_);
     return return_string_;
 }
@@ -51,7 +51,7 @@ Java_org_zeromq_zyre_ZyreEvent__1_1name (JNIEnv *env, jclass c, jlong self)
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1address (JNIEnv *env, jclass c, jlong self)
 {
-    char *address_ = (char *) zyre_event_address ((zyre_event_t *) self);
+    char *address_ = (char *) zyre_event_address ((zyre_event_t *) (intptr_t) self);
     jstring return_string_ = (*env)->NewStringUTF (env, address_);
     return return_string_;
 }
@@ -59,7 +59,7 @@ Java_org_zeromq_zyre_ZyreEvent__1_1address (JNIEnv *env, jclass c, jlong self)
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1headers (JNIEnv *env, jclass c, jlong self)
 {
-    jlong headers_ = (jlong) zyre_event_headers ((zyre_event_t *) self);
+    jlong headers_ = (jlong) (intptr_t) zyre_event_headers ((zyre_event_t *) (intptr_t) self);
     return headers_;
 }
 
@@ -67,7 +67,7 @@ JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1header (JNIEnv *env, jclass c, jlong self, jstring name)
 {
     char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);
-    char *header_ = (char *) zyre_event_header ((zyre_event_t *) self, name_);
+    char *header_ = (char *) zyre_event_header ((zyre_event_t *) (intptr_t) self, name_);
     jstring return_string_ = (*env)->NewStringUTF (env, header_);
     (*env)->ReleaseStringUTFChars (env, name, name_);
     return return_string_;
@@ -76,7 +76,7 @@ Java_org_zeromq_zyre_ZyreEvent__1_1header (JNIEnv *env, jclass c, jlong self, js
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1group (JNIEnv *env, jclass c, jlong self)
 {
-    char *group_ = (char *) zyre_event_group ((zyre_event_t *) self);
+    char *group_ = (char *) zyre_event_group ((zyre_event_t *) (intptr_t) self);
     jstring return_string_ = (*env)->NewStringUTF (env, group_);
     return return_string_;
 }
@@ -84,7 +84,7 @@ Java_org_zeromq_zyre_ZyreEvent__1_1group (JNIEnv *env, jclass c, jlong self)
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1msg (JNIEnv *env, jclass c, jlong self)
 {
-    jlong msg_ = (jlong) zyre_event_msg ((zyre_event_t *) self);
+    jlong msg_ = (jlong) (intptr_t) zyre_event_msg ((zyre_event_t *) (intptr_t) self);
     return msg_;
 }
 

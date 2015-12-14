@@ -24,11 +24,11 @@ android {
     error(The ZYRE_ROOT directory does not exist: $$ZYRE_ROOT)
   }
   # Build the zyre library for android unless it is already built
-  !system(bash $$ZYRE_ROOT/builds/qt-android/build.sh) {
-    error(Failed to build the zyre C library with $$ZYRE_ROOT/builds/qt-android/build.sh)
+  !system(bash $$ZYRE_ROOT/builds/android/build.sh) {
+    error(Failed to build the zyre C library with $$ZYRE_ROOT/builds/android/build.sh)
   }
   
-  VENDOR_PREFIX = $$ZYRE_ROOT/builds/qt-android/prefix/$(TOOLCHAIN_NAME)
+  VENDOR_PREFIX = $$ZYRE_ROOT/builds/android/prefix/$(TOOLCHAIN_NAME)
   BUILDDIR  = $$PWD/build/$(TOOLCHAIN_NAME)
   QMAKE_LIBDIR += $$VENDOR_PREFIX/lib
   QMAKE_INCDIR += $$VENDOR_PREFIX/include

@@ -83,4 +83,5 @@ find %{buildroot} -name '*.la' | xargs rm -f
 %doc README.md
 %{_bindir}/zpinger
 
+
 %changelog

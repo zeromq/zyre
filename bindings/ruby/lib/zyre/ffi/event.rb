@@ -60,10 +60,17 @@ module Zyre
         raise DestroyedError unless @ptr
         ptr_ptr = ::FFI::MemoryPointer.new :pointer
         ptr_ptr.write_pointer @ptr
-        ObjectSpace.undefine_finalizer self if @finalizer
-        @finalizer = nil
+        __undef_finalizer if @finalizer
         @ptr = nil
         ptr_ptr
+      end
+      # Undefines the finalizer for this object.
+      # @note Only use this if you need to and can guarantee that the native
+      #   object will be freed by other means.
+      # @return [void]
+      def __undef_finalizer
+        ObjectSpace.undefine_finalizer self
+        @finalizer = nil
       end
 
       # Constructor: receive an event from the zyre node, wraps zyre_recv.
@@ -140,12 +147,11 @@ module Zyre
       # Returns value of a header from the message headers   
       # obtained by ENTER. Return NULL if no value was found.
       #
-      # @param name [String, #to_str, #to_s]
+      # @param name [String, #to_s, nil]
       # @return [String]
       def header(name)
         raise DestroyedError unless @ptr
         self_p = @ptr
-        name = String(name)
         result = ::Zyre::FFI.zyre_event_header(self_p, name)
         result
       end

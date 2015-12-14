@@ -16,7 +16,7 @@ Java_org_zeromq_zyre_Zyre__1_1new (JNIEnv *env, jclass c, jstring name)
     char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);
     //  Disable CZMQ signal handling; allow Java to deal with it
     zsys_handler_set (NULL);
-    jlong new_ = (jlong) zyre_new (name_);
+    jlong new_ = (jlong) (intptr_t) zyre_new (name_);
     (*env)->ReleaseStringUTFChars (env, name, name_);
     return new_;
 }
@@ -30,7 +30,7 @@ Java_org_zeromq_zyre_Zyre__1_1destroy (JNIEnv *env, jclass c, jlong self)
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_Zyre__1_1uuid (JNIEnv *env, jclass c, jlong self)
 {
-    char *uuid_ = (char *) zyre_uuid ((zyre_t *) self);
+    char *uuid_ = (char *) zyre_uuid ((zyre_t *) (intptr_t) self);
     jstring return_string_ = (*env)->NewStringUTF (env, uuid_);
     return return_string_;
 }
@@ -38,7 +38,7 @@ Java_org_zeromq_zyre_Zyre__1_1uuid (JNIEnv *env, jclass c, jlong self)
 JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_Zyre__1_1name (JNIEnv *env, jclass c, jlong self)
 {
-    char *name_ = (char *) zyre_name ((zyre_t *) self);
+    char *name_ = (char *) zyre_name ((zyre_t *) (intptr_t) self);
     jstring return_string_ = (*env)->NewStringUTF (env, name_);
     return return_string_;
 }
@@ -48,7 +48,7 @@ Java_org_zeromq_zyre_Zyre__1_1setHeader (JNIEnv *env, jclass c, jlong self, jstr
 {
     char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
-    zyre_set_header ((zyre_t *) self, name_, "%s", format_);
+    zyre_set_header ((zyre_t *) (intptr_t) self, name_, "%s", format_);
     (*env)->ReleaseStringUTFChars (env, name, name_);
     (*env)->ReleaseStringUTFChars (env, format, format_);
 }
@@ -56,26 +56,26 @@ Java_org_zeromq_zyre_Zyre__1_1setHeader (JNIEnv *env, jclass c, jlong self, jstr
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setVerbose (JNIEnv *env, jclass c, jlong self)
 {
-    zyre_set_verbose ((zyre_t *) self);
+    zyre_set_verbose ((zyre_t *) (intptr_t) self);
 }
 
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setPort (JNIEnv *env, jclass c, jlong self, jint port_nbr)
 {
-    zyre_set_port ((zyre_t *) self, (int) port_nbr);
+    zyre_set_port ((zyre_t *) (intptr_t) self, (int) port_nbr);
 }
 
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setInterval (JNIEnv *env, jclass c, jlong self, jlong interval)
 {
-    zyre_set_interval ((zyre_t *) self, (size_t) interval);
+    zyre_set_interval ((zyre_t *) (intptr_t) self, (size_t) interval);
 }
 
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setInterface (JNIEnv *env, jclass c, jlong self, jstring value)
 {
     char *value_ = (char *) (*env)->GetStringUTFChars (env, value, NULL);
-    zyre_set_interface ((zyre_t *) self, value_);
+    zyre_set_interface ((zyre_t *) (intptr_t) self, value_);
     (*env)->ReleaseStringUTFChars (env, value, value_);
 }
 
@@ -83,7 +83,7 @@ JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setEndpoint (JNIEnv *env, jclass c, jlong self, jstring format)
 {
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
-    jint set_endpoint_ = (jint) zyre_set_endpoint ((zyre_t *) self, "%s", format_);
+    jint set_endpoint_ = (jint) zyre_set_endpoint ((zyre_t *) (intptr_t) self, "%s", format_);
     (*env)->ReleaseStringUTFChars (env, format, format_);
     return set_endpoint_;
 }
@@ -92,7 +92,7 @@ JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1gossipBind (JNIEnv *env, jclass c, jlong self, jstring format)
 {
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
-    zyre_gossip_bind ((zyre_t *) self, "%s", format_);
+    zyre_gossip_bind ((zyre_t *) (intptr_t) self, "%s", format_);
     (*env)->ReleaseStringUTFChars (env, format, format_);
 }
 
@@ -100,28 +100,28 @@ JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1gossipConnect (JNIEnv *env, jclass c, jlong self, jstring format)
 {
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
-    zyre_gossip_connect ((zyre_t *) self, "%s", format_);
+    zyre_gossip_connect ((zyre_t *) (intptr_t) self, "%s", format_);
     (*env)->ReleaseStringUTFChars (env, format, format_);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1start (JNIEnv *env, jclass c, jlong self)
 {
-    jint start_ = (jint) zyre_start ((zyre_t *) self);
+    jint start_ = (jint) zyre_start ((zyre_t *) (intptr_t) self);
     return start_;
 }
 
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1stop (JNIEnv *env, jclass c, jlong self)
 {
-    zyre_stop ((zyre_t *) self);
+    zyre_stop ((zyre_t *) (intptr_t) self);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1join (JNIEnv *env, jclass c, jlong self, jstring group)
 {
     char *group_ = (char *) (*env)->GetStringUTFChars (env, group, NULL);
-    jint join_ = (jint) zyre_join ((zyre_t *) self, group_);
+    jint join_ = (jint) zyre_join ((zyre_t *) (intptr_t) self, group_);
     (*env)->ReleaseStringUTFChars (env, group, group_);
     return join_;
 }
@@ -130,7 +130,7 @@ JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1leave (JNIEnv *env, jclass c, jlong self, jstring group)
 {
     char *group_ = (char *) (*env)->GetStringUTFChars (env, group, NULL);
-    jint leave_ = (jint) zyre_leave ((zyre_t *) self, group_);
+    jint leave_ = (jint) zyre_leave ((zyre_t *) (intptr_t) self, group_);
     (*env)->ReleaseStringUTFChars (env, group, group_);
     return leave_;
 }
@@ -138,7 +138,7 @@ Java_org_zeromq_zyre_Zyre__1_1leave (JNIEnv *env, jclass c, jlong self, jstring 
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_Zyre__1_1recv (JNIEnv *env, jclass c, jlong self)
 {
-    jlong recv_ = (jlong) zyre_recv ((zyre_t *) self);
+    jlong recv_ = (jlong) (intptr_t) zyre_recv ((zyre_t *) (intptr_t) self);
     return recv_;
 }
 
@@ -146,7 +146,7 @@ JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1whisper (JNIEnv *env, jclass c, jlong self, jstring peer, jlong msg_p)
 {
     char *peer_ = (char *) (*env)->GetStringUTFChars (env, peer, NULL);
-    jint whisper_ = (jint) zyre_whisper ((zyre_t *) self, peer_, (zmsg_t **) &msg_p);
+    jint whisper_ = (jint) zyre_whisper ((zyre_t *) (intptr_t) self, peer_, (zmsg_t **) (intptr_t) &msg_p);
     (*env)->ReleaseStringUTFChars (env, peer, peer_);
     return whisper_;
 }
@@ -155,7 +155,7 @@ JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1shout (JNIEnv *env, jclass c, jlong self, jstring group, jlong msg_p)
 {
     char *group_ = (char *) (*env)->GetStringUTFChars (env, group, NULL);
-    jint shout_ = (jint) zyre_shout ((zyre_t *) self, group_, (zmsg_t **) &msg_p);
+    jint shout_ = (jint) zyre_shout ((zyre_t *) (intptr_t) self, group_, (zmsg_t **) (intptr_t) &msg_p);
     (*env)->ReleaseStringUTFChars (env, group, group_);
     return shout_;
 }
@@ -165,7 +165,7 @@ Java_org_zeromq_zyre_Zyre__1_1whispers (JNIEnv *env, jclass c, jlong self, jstri
 {
     char *peer_ = (char *) (*env)->GetStringUTFChars (env, peer, NULL);
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
-    jint whispers_ = (jint) zyre_whispers ((zyre_t *) self, peer_, "%s", format_);
+    jint whispers_ = (jint) zyre_whispers ((zyre_t *) (intptr_t) self, peer_, "%s", format_);
     (*env)->ReleaseStringUTFChars (env, peer, peer_);
     (*env)->ReleaseStringUTFChars (env, format, format_);
     return whispers_;
@@ -176,7 +176,7 @@ Java_org_zeromq_zyre_Zyre__1_1shouts (JNIEnv *env, jclass c, jlong self, jstring
 {
     char *group_ = (char *) (*env)->GetStringUTFChars (env, group, NULL);
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
-    jint shouts_ = (jint) zyre_shouts ((zyre_t *) self, group_, "%s", format_);
+    jint shouts_ = (jint) zyre_shouts ((zyre_t *) (intptr_t) self, group_, "%s", format_);
     (*env)->ReleaseStringUTFChars (env, group, group_);
     (*env)->ReleaseStringUTFChars (env, format, format_);
     return shouts_;
@@ -185,21 +185,21 @@ Java_org_zeromq_zyre_Zyre__1_1shouts (JNIEnv *env, jclass c, jlong self, jstring
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_Zyre__1_1peers (JNIEnv *env, jclass c, jlong self)
 {
-    jlong peers_ = (jlong) zyre_peers ((zyre_t *) self);
+    jlong peers_ = (jlong) (intptr_t) zyre_peers ((zyre_t *) (intptr_t) self);
     return peers_;
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_Zyre__1_1ownGroups (JNIEnv *env, jclass c, jlong self)
 {
-    jlong own_groups_ = (jlong) zyre_own_groups ((zyre_t *) self);
+    jlong own_groups_ = (jlong) (intptr_t) zyre_own_groups ((zyre_t *) (intptr_t) self);
     return own_groups_;
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_Zyre__1_1peerGroups (JNIEnv *env, jclass c, jlong self)
 {
-    jlong peer_groups_ = (jlong) zyre_peer_groups ((zyre_t *) self);
+    jlong peer_groups_ = (jlong) (intptr_t) zyre_peer_groups ((zyre_t *) (intptr_t) self);
     return peer_groups_;
 }
 
@@ -207,7 +207,7 @@ JNIEXPORT jstring JNICALL
 Java_org_zeromq_zyre_Zyre__1_1peerAddress (JNIEnv *env, jclass c, jlong self, jstring peer)
 {
     char *peer_ = (char *) (*env)->GetStringUTFChars (env, peer, NULL);
-    char *peer_address_ = (char *) zyre_peer_address ((zyre_t *) self, peer_);
+    char *peer_address_ = (char *) zyre_peer_address ((zyre_t *) (intptr_t) self, peer_);
     jstring return_string_ = (*env)->NewStringUTF (env, peer_address_);
     zstr_free (&peer_address_);
     (*env)->ReleaseStringUTFChars (env, peer, peer_);
@@ -219,7 +219,7 @@ Java_org_zeromq_zyre_Zyre__1_1peerHeaderValue (JNIEnv *env, jclass c, jlong self
 {
     char *peer_ = (char *) (*env)->GetStringUTFChars (env, peer, NULL);
     char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);
-    char *peer_header_value_ = (char *) zyre_peer_header_value ((zyre_t *) self, peer_, name_);
+    char *peer_header_value_ = (char *) zyre_peer_header_value ((zyre_t *) (intptr_t) self, peer_, name_);
     jstring return_string_ = (*env)->NewStringUTF (env, peer_header_value_);
     zstr_free (&peer_header_value_);
     (*env)->ReleaseStringUTFChars (env, peer, peer_);
@@ -230,20 +230,20 @@ Java_org_zeromq_zyre_Zyre__1_1peerHeaderValue (JNIEnv *env, jclass c, jlong self
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_Zyre__1_1socket (JNIEnv *env, jclass c, jlong self)
 {
-    jlong socket_ = (jlong) zyre_socket ((zyre_t *) self);
+    jlong socket_ = (jlong) (intptr_t) zyre_socket ((zyre_t *) (intptr_t) self);
     return socket_;
 }
 
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1print (JNIEnv *env, jclass c, jlong self)
 {
-    zyre_print ((zyre_t *) self);
+    zyre_print ((zyre_t *) (intptr_t) self);
 }
 
 JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1version (JNIEnv *env, jclass c, jint major, jint minor, jint patch)
 {
-    zyre_version ((int *) &major, (int *) &minor, (int *) &patch);
+    zyre_version ((int *) (intptr_t) &major, (int *) (intptr_t) &minor, (int *) (intptr_t) &patch);
 }
 
 JNIEXPORT void JNICALL
