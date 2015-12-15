@@ -70,8 +70,8 @@ obj/
 .cproject
 .project
 
-# qt-android build results
-builds/qt-android/prefix/
+# android build results
+builds/android/prefix/
 
 # Python bindings
 *.pyc
