@@ -89,6 +89,12 @@ Java_org_zeromq_zyre_ZyreEvent__1_1msg (JNIEnv *env, jclass c, jlong self)
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_ZyreEvent__1_1print (JNIEnv *env, jclass c, jlong self)
+{
+    zyre_event_print ((zyre_event_t *) (intptr_t) self);
+}
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1test (JNIEnv *env, jclass c, jboolean verbose)
 {
     zyre_event_test ((bool) verbose);

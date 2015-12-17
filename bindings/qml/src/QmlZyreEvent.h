@@ -52,6 +52,9 @@ public slots:
 
     //  Returns the incoming message payload (currently one frame)
     zmsg_t *msg ();
+
+    //  Print event to zsys log
+    void print ();
 };
 
 class QmlZyreEventAttached : public QObject

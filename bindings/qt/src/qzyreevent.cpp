@@ -97,6 +97,14 @@ QZmsg * QZyreEvent::msg ()
 }
 
 ///
+//  Print event to zsys log
+void QZyreEvent::print ()
+{
+    zyre_event_print (self);
+    
+}
+
+///
 //  Self test of this class.
 void QZyreEvent::test (bool verbose)
 {

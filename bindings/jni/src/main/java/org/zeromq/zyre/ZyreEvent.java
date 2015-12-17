@@ -97,6 +97,13 @@ public class ZyreEvent implements AutoCloseable{
         return new Zmsg (__msg (self));
     }
     /*
+    Print event to zsys log
+    */
+    native static void __print (long self);
+    public void print () {
+        __print (self);
+    }
+    /*
     Self test of this class.
     */
     native static void __test (boolean verbose);
