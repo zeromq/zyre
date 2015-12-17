@@ -78,6 +78,10 @@ ZYRE_EXPORT const char *
 ZYRE_EXPORT zmsg_t *
     zyre_event_msg (zyre_event_t *self);
 
+//  Print event to zsys log
+ZYRE_EXPORT void
+    zyre_event_print (zyre_event_t *self);
+
 //  Self test of this class.
 ZYRE_EXPORT void
     zyre_event_test (bool verbose);

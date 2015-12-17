@@ -74,4 +74,8 @@
         Returns the incoming message payload (currently one frame)
         <return type = "zmsg" />
     </method>
+
+    <method name = "print">
+        Print event to zsys log
+    </method>
 </class>
