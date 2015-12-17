@@ -50,6 +50,9 @@ public:
     //  Returns the incoming message payload (currently one frame)
     QZmsg * msg ();
 
+    //  Print event to zsys log
+    void print ();
+
     //  Self test of this class.
     static void test (bool verbose);
 

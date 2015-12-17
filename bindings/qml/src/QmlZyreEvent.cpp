@@ -57,6 +57,12 @@ zmsg_t *QmlZyreEvent::msg () {
     return zyre_event_msg (self);
 };
 
+///
+//  Print event to zsys log
+void QmlZyreEvent::print () {
+    zyre_event_print (self);
+};
+
 
 QObject* QmlZyreEvent::qmlAttachedProperties(QObject* object) {
     return new QmlZyreEventAttached(object);

@@ -176,6 +176,16 @@ module Zyre
         result
       end
 
+      # Print event to zsys log
+      #
+      # @return [void]
+      def print()
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_event_print(self_p)
+        result
+      end
+
       # Self test of this class.
       #
       # @param verbose [Boolean]

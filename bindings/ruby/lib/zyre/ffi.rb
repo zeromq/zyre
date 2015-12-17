@@ -92,6 +92,7 @@ module Zyre
       attach_function :zyre_event_header, [:pointer, :string], :string, **opts
       attach_function :zyre_event_group, [:pointer], :string, **opts
       attach_function :zyre_event_msg, [:pointer], :pointer, **opts
+      attach_function :zyre_event_print, [:pointer], :void, **opts
       attach_function :zyre_event_test, [:bool], :void, **opts
 
       require_relative 'ffi/event'

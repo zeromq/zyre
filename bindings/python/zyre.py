@@ -308,6 +308,8 @@ lib.zyre_event_group.restype = c_char_p
 lib.zyre_event_group.argtypes = [zyre_event_p]
 lib.zyre_event_msg.restype = czmq.zmsg_p
 lib.zyre_event_msg.argtypes = [zyre_event_p]
+lib.zyre_event_print.restype = None
+lib.zyre_event_print.argtypes = [zyre_event_p]
 lib.zyre_event_test.restype = None
 lib.zyre_event_test.argtypes = [c_bool]
 
@@ -396,6 +398,10 @@ obtained by ENTER. Return NULL if no value was found."""
     def msg(self):
         """Returns the incoming message payload (currently one frame)"""
         return czmq.Zmsg(lib.zyre_event_msg(self._as_parameter_), False)
+
+    def print(self):
+        """Print event to zsys log"""
+        return lib.zyre_event_print(self._as_parameter_)
 
     @staticmethod
     def test(verbose):
