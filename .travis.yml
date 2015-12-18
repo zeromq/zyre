@@ -4,7 +4,7 @@ language: c
 
 env:
 - BUILD_TYPE=default
-- BUILD_TYPE=qt-android
+- BUILD_TYPE=android
 
 before_script:
 - sudo apt-get install uuid-dev
