@@ -19,7 +19,7 @@ sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 dependencies {
-    compile 'org.zeromq:czmq-jni:0.0.0'
+    compile 'org.zeromq:czmq-jni:+'
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
 }
