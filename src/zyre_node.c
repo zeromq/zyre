@@ -164,7 +164,11 @@ zyre_node_start (zyre_node_t *self)
         if (streq (hostname, ""))
             return -1;              //  No UDP broadcast interface available
 
-        self->port = zsock_bind (self->inbox, "tcp://%s:*", hostname);
+        if (zsys_ipv6 ())
+            self->port = zsock_bind (self->inbox, "tcp://%s%%%s:*", zsys_ipv6_address (), zsys_interface ());
+        else
+            self->port = zsock_bind (self->inbox, "tcp://%s:*", hostname);
+
         zstr_free (&hostname);
         assert (self->port > 0);    //  Die on bad interface or port exhaustion
         assert (!self->endpoint);   //  If caller set this, we'd be using gossip
@@ -765,8 +769,13 @@ zyre_node_recv_beacon (zyre_node_t *self)
     zuuid_t *uuid = zuuid_new ();
     zuuid_set (uuid, beacon.uuid);
     if (beacon.port) {
-        char endpoint [30];
-        sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
+        char endpoint [100];
+        const char *iface = zsys_interface ();
+
+        if (iface && !streq (iface, "") && !streq (iface, "*"))
+            sprintf (endpoint, "tcp://%s%%%s:%d", ipaddress, iface, ntohs (beacon.port));
+        else
+            sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
         zyre_peer_t *peer = zyre_node_require_peer (self, uuid, endpoint);
         zyre_peer_refresh (peer);
     }
