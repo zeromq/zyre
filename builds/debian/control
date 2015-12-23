@@ -22,9 +22,11 @@ Build-Depends: bison, debhelper (>= 8),
     automake,
     autoconf,
     libtool,
+    libsodium-dev,
     libzmq4-dev,
     libczmq-dev,
-    dh-autoreconf
+    dh-autoreconf,
+    systemd
 
 Package: libzyre1
 Architecture: any
@@ -36,6 +38,7 @@ Package: zyre-dev
 Architecture: all
 Section: libdevel
 Depends:
+    libsodium-dev,
     libzmq4-dev,
     libczmq-dev,
     libzyre1 (= ${binary:Version})

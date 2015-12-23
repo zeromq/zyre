@@ -12,7 +12,7 @@ Name: libzyre
 Description: an open-source framework for proximity-based P2P apps
 Version: @VERSION@
 
-Requires:libzmq >= 2.2.0 libczmq
+Requires:libsodium libzmq libczmq
 
 Libs: -L${libdir} -lzyre
 Cflags: -I${includedir}

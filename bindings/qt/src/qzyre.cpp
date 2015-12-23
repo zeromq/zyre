@@ -243,7 +243,7 @@ QString QZyre::peerAddress (const QString &peer)
 {
     char *retStr_ = zyre_peer_address (self, peer.toUtf8().data());
     QString rv = QString (retStr_);
-    free (retStr_);;
+    zstr_free (&retStr_);
     return rv;
 }
 
@@ -254,7 +254,7 @@ QString QZyre::peerHeaderValue (const QString &peer, const QString &name)
 {
     char *retStr_ = zyre_peer_header_value (self, peer.toUtf8().data(), name.toUtf8().data());
     QString rv = QString (retStr_);
-    free (retStr_);;
+    zstr_free (&retStr_);
     return rv;
 }
 
