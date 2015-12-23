@@ -23,6 +23,8 @@ BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
 BuildRequires:  pkg-config
+BuildRequires:  systemd-devel
+BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -50,6 +52,7 @@ This package contains shared library.
 Summary:        an open-source framework for proximity-based p2p apps
 Group:          System/Libraries
 Requires:       libzyre1 = %{version}
+Requires:       libsodium-devel
 Requires:       zeromq-devel
 Requires:       czmq-devel
 
@@ -68,7 +71,7 @@ This package contains development files.
 
 %build
 sh autogen.sh
-%{configure}
+%{configure} --with-systemd
 make %{_smp_mflags}
 
 %install

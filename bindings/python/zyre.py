@@ -113,6 +113,7 @@ lib.zyre_test.argtypes = [c_bool]
 class Zyre(object):
     """An open-source framework for proximity-based P2P apps"""
 
+    allow_destruct = False
     def __init__(self, *args):
         """Constructor, creates a new Zyre node. Note that until you start the
 node it is silent and invisible to other nodes on the network.
@@ -338,6 +339,7 @@ class ZyreEvent(object):
          8: 'evasive',
     }
 
+    allow_destruct = False
     def __init__(self, *args):
         """Constructor: receive an event from the zyre node, wraps zyre_recv.
 The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or

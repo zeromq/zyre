@@ -10,6 +10,7 @@ Build-Depends: bison, debhelper (>= 8),
     automake,
     autoconf,
     libtool,
+    libsodium-dev,
     libzmq4-dev,
     libczmq-dev,
     dh-autoreconf
