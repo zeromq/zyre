@@ -12,7 +12,6 @@ enable_language(C)
 enable_testing()
 
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
 ########################################################################
 # determine version
@@ -45,7 +44,7 @@ if (NOT HAVE_NET_IF_H)
     CHECK_INCLUDE_FILE("net/if.h" HAVE_NET_IF_H)
 endif()
 
-file(WRITE "${BINARY_DIR}/platform.h.in" "
+file(WRITE "${SOURCE_DIR}/src/platform.h.in" "
 #cmakedefine HAVE_LINUX_WIRELESS_H
 #cmakedefine HAVE_NET_IF_H
 #cmakedefine HAVE_NET_IF_MEDIA_H
@@ -53,7 +52,7 @@ file(WRITE "${BINARY_DIR}/platform.h.in" "
 #cmakedefine HAVE_FREEIFADDRS
 ")
 
-configure_file("${BINARY_DIR}/platform.h.in" "${BINARY_DIR}/platform.h")
+configure_file("${SOURCE_DIR}/src/platform.h.in" "${SOURCE_DIR}/src/platform.h")
 
 #The MSVC C compiler is too out of date,
 #so the sources have to be compiled as c++
@@ -127,7 +126,7 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 # library
 ########################################################################
-include_directories("${BINARY_DIR}" "${SOURCE_DIR}/include")
+include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include")
 set (zyre_sources
     src/zyre.c
     src/zyre_event.c
@@ -142,6 +141,7 @@ if (NOT DEFINED BUILD_SHARED_LIBS)
 endif()
 add_library(zyre ${zyre_sources})
 set_target_properties(zyre PROPERTIES DEFINE_SYMBOL "LIBZYRE_EXPORTS")
+set_target_properties(zyre PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
 target_link_libraries(zyre ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES})
 
 install(TARGETS zyre
@@ -160,20 +160,39 @@ set(libdir "\${prefix}/lib${LIB_SUFFIX}")
 set(includedir "\${prefix}/include")
 configure_file(
     "${SOURCE_DIR}/src/libzyre.pc.in"
-    "${BINARY_DIR}/libzyre.pc"
+    "${SOURCE_DIR}/src/libzyre.pc"
 @ONLY)
 
 install(
-    FILES "${BINARY_DIR}/libzyre.pc"
+    FILES "${SOURCE_DIR}/src/libzyre.pc"
     DESTINATION "lib${LIB_SUFFIX}/pkgconfig"
 )
 
 ########################################################################
-# tests
+# executables
 ########################################################################
+add_executable(perf_local "${SOURCE_DIR}/src/perf_local.c")
+target_link_libraries(perf_local zyre ${ZEROMQ_LIBRARIES})
+set_target_properties(perf_local PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
+add_executable(perf_remote "${SOURCE_DIR}/src/perf_remote.c")
+target_link_libraries(perf_remote zyre ${ZEROMQ_LIBRARIES})
+set_target_properties(perf_remote PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
+add_executable(zpinger "${SOURCE_DIR}/src/zpinger.c")
+target_link_libraries(zpinger zyre ${ZEROMQ_LIBRARIES})
+set_target_properties(zpinger PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
+add_executable(ztester_beacon "${SOURCE_DIR}/src/ztester_beacon.c")
+target_link_libraries(ztester_beacon zyre ${ZEROMQ_LIBRARIES})
+set_target_properties(ztester_beacon PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
+add_executable(ztester_gossip "${SOURCE_DIR}/src/ztester_gossip.c")
+target_link_libraries(ztester_gossip zyre ${ZEROMQ_LIBRARIES})
+set_target_properties(ztester_gossip PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
 add_executable(zyre_selftest "${SOURCE_DIR}/src/zyre_selftest.c")
 target_link_libraries(zyre_selftest zyre ${ZEROMQ_LIBRARIES})
+set_target_properties(zyre_selftest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
 
+########################################################################
+# tests
+########################################################################
 set(CLASSTEST_TIMEOUT 5 CACHE STRING "Timeout of the selftest of a class")
 set(TOTAL_TIMEOUT 20 CACHE STRING "Timout of the total testsuite")
 
@@ -193,6 +212,7 @@ endforeach(TEST_CLASS)
 
 add_test(zyre_selftest zyre_selftest)
 set_tests_properties(zyre_selftest PROPERTIES TIMEOUT ${TOTAL_TIMEOUT})
+
 ########################################################################
 # summary
 ########################################################################

@@ -2,6 +2,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # vs2013
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libzyre", "libzyre\libzyre.vcxproj", "{0C4A2E28-8C9E-4B27-85D9-BB679AD84AC7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "perf_local", "perf_local\perf_local.vcxproj", "{A5497C4B-1CD1-4779-9458-2CF7908E7E26}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "perf_remote", "perf_remote\perf_remote.vcxproj", "{A5497C4B-1CD1-4779-9458-2CF7908E7E26}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zpinger", "zpinger\zpinger.vcxproj", "{A5497C4B-1CD1-4779-9458-2CF7908E7E26}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ztester_beacon", "ztester_beacon\ztester_beacon.vcxproj", "{A5497C4B-1CD1-4779-9458-2CF7908E7E26}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ztester_gossip", "ztester_gossip\ztester_gossip.vcxproj", "{A5497C4B-1CD1-4779-9458-2CF7908E7E26}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zyre_selftest", "zyre_selftest\zyre_selftest.vcxproj", "{A5497C4B-1CD1-4779-9458-2CF7908E7E26}"
 EndProject
 Global

@@ -398,6 +398,16 @@ AC_ARG_WITH([ztester_gossip],
 AM_CONDITIONAL([WITH_ZTESTER_GOSSIP], [test x$with_ztester_gossip != xno])
 AM_COND_IF([WITH_ZTESTER_GOSSIP], [AC_MSG_NOTICE([WITH_ZTESTER_GOSSIP defined])])
 
+# Check for zyre_selftest intent
+AC_ARG_WITH([zyre_selftest],
+    AS_HELP_STRING([--with-zyre_selftest],
+        [Compile the zyre_selftest program [default=yes].]),
+    [with_zyre_selftest=$withval],
+    [with_zyre_selftest=yes])
+
+AM_CONDITIONAL([WITH_ZYRE_SELFTEST], [test x$with_zyre_selftest != xno])
+AM_COND_IF([WITH_ZYRE_SELFTEST], [AC_MSG_NOTICE([WITH_ZYRE_SELFTEST defined])])
+
 # Checks for library functions.
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(perror gettimeofday memset getifaddrs)
