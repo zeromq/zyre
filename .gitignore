@@ -30,12 +30,12 @@ core
 .cache
 testit
 *.pc
-zpinger
-ztester
-ztester_beacon
-ztester_gossip
-perf_local
-perf_remote
+src/zpinger
+src/ztester
+src/ztester_beacon
+src/ztester_gossip
+src/perf_local
+src/perf_remote
 doit
 src/zyre_selftest
 src/test-suite.log
@@ -47,9 +47,9 @@ CMakeFiles/
 CTestTestfile.cmake
 cmake_install.cmake
 install_manifest.txt
-libzyre.so
+src/libzyre.so
 include/platform.h
-platform.h.in
+src/platform.h.in
 *.log
 
 # config files for qtcreator
