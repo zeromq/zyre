@@ -1,13 +1,20 @@
 # Travis CI script
-
 language: c
+
+os:
+- linux
+- osx
+
+sudo: false
 
 env:
 - BUILD_TYPE=default
 - BUILD_TYPE=android
+- BUILD_TYPE=check-py
+- BUILD_TYPE=cmake
 
-before_script:
-- sudo apt-get install uuid-dev
+before_install:
+- if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils ; fi
 
 # Build and check this project according to the BUILD_TYPE
 script: ./ci_build.sh
