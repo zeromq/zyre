@@ -17,15 +17,31 @@ set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 # determine version
 ########################################################################
 foreach(which MAJOR MINOR PATCH)
-    file(STRINGS "${SOURCE_DIR}/include/zyre_library.h" ZYRE_VERSION_STRING REGEX "#define ZYRE_VERSION_${which}")
-    string(REGEX MATCH "#define ZYRE_VERSION_${which} ([0-9_]+)" ZYRE_REGEX_MATCH "${ZYRE_VERSION_STRING}")
+    file(
+        STRINGS
+        "${SOURCE_DIR}/include/zyre_library.h"
+        ZYRE_VERSION_STRING REGEX
+        "#define ZYRE_VERSION_${which}"
+    )
+    string(
+        REGEX MATCH
+        "#define ZYRE_VERSION_${which} ([0-9_]+)"
+        ZYRE_REGEX_MATCH
+        "${ZYRE_VERSION_STRING}"
+    )
     if (NOT ZYRE_REGEX_MATCH)
-        message(FATAL_ERROR "failed to parse ZYRE_VERSION_${which} from zyre.h")
+        message(
+            FATAL_ERROR
+            "failed to parse ZYRE_VERSION_${which} from zyre.h"
+        )
     endif()
     set(ZYRE_${which}_VERSION ${CMAKE_MATCH_1})
 endforeach(which)
 
-set(ZYRE_VERSION ${ZYRE_MAJOR_VERSION}.${ZYRE_MINOR_VERSION}.${ZYRE_PATCH_VERSION})
+set(
+    ZYRE_VERSION
+    ${ZYRE_MAJOR_VERSION}.${ZYRE_MINOR_VERSION}.${ZYRE_PATCH_VERSION}
+)
 
 ########################################################################
 # platform.h
@@ -59,7 +75,10 @@ configure_file("${SOURCE_DIR}/src/platform.h.in" "${SOURCE_DIR}/src/platform.h")
 if (MSVC)
     enable_language(CXX)
     file(GLOB sources "${SOURCE_DIR}/src/*.c")
-    set_source_files_properties(${sources} PROPERTIES LANGUAGE CXX)
+    set_source_files_properties(
+        ${sources}
+        PROPERTIES LANGUAGE CXX
+    )
     set(MORE_LIBRARIES ws2_32 Rpcrt4 Iphlpapi)
 endif()
 
@@ -80,10 +99,10 @@ list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}")
 ########################################################################
 find_package(Libsodium REQUIRED)
 IF (LIBSODIUM_FOUND)
-include_directories(${LIBSODIUM_INCLUDE_DIRS})
-list(APPEND MORE_LIBRARIES ${LIBSODIUM_LIBRARIES})
+    include_directories(${LIBSODIUM_INCLUDE_DIRS})
+    list(APPEND MORE_LIBRARIES ${LIBSODIUM_LIBRARIES})
 ELSE (LIBSODIUM_FOUND)
-message( FATAL_ERROR "Libsodium not found." )
+    message( FATAL_ERROR "Libsodium not found." )
 ENDIF (LIBSODIUM_FOUND)
 
 ########################################################################
@@ -91,10 +110,10 @@ ENDIF (LIBSODIUM_FOUND)
 ########################################################################
 find_package(ZeroMQ REQUIRED)
 IF (ZEROMQ_FOUND)
-include_directories(${ZEROMQ_INCLUDE_DIRS})
-list(APPEND MORE_LIBRARIES ${ZEROMQ_LIBRARIES})
+    include_directories(${ZEROMQ_INCLUDE_DIRS})
+    list(APPEND MORE_LIBRARIES ${ZEROMQ_LIBRARIES})
 ELSE (ZEROMQ_FOUND)
-message( FATAL_ERROR "ZeroMQ not found." )
+    message( FATAL_ERROR "ZeroMQ not found." )
 ENDIF (ZEROMQ_FOUND)
 
 ########################################################################
@@ -102,10 +121,10 @@ ENDIF (ZEROMQ_FOUND)
 ########################################################################
 find_package(CZMQ REQUIRED)
 IF (CZMQ_FOUND)
-include_directories(${CZMQ_INCLUDE_DIRS})
-list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
+    include_directories(${CZMQ_INCLUDE_DIRS})
+    list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
 ELSE (CZMQ_FOUND)
-message( FATAL_ERROR "CZMQ not found." )
+    message( FATAL_ERROR "CZMQ not found." )
 ENDIF (CZMQ_FOUND)
 
 ########################################################################
@@ -135,14 +154,20 @@ set (zyre_sources
     src/zyre_group.c
     src/zyre_node.c
 )
-source_group ("Source Files" FILES ${zyre_sources})
+source_group("Source Files" FILES ${zyre_sources})
 if (NOT DEFINED BUILD_SHARED_LIBS)
     SET(BUILD_SHARED_LIBS ON)
 endif()
 add_library(zyre ${zyre_sources})
-set_target_properties(zyre PROPERTIES DEFINE_SYMBOL "LIBZYRE_EXPORTS")
-set_target_properties(zyre PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
-target_link_libraries(zyre ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES})
+set_target_properties(zyre
+    PROPERTIES DEFINE_SYMBOL "LIBZYRE_EXPORTS"
+)
+set_target_properties(zyre
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+target_link_libraries(zyre
+    ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
+)
 
 install(TARGETS zyre
     LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
@@ -171,24 +196,96 @@ install(
 ########################################################################
 # executables
 ########################################################################
-add_executable(perf_local "${SOURCE_DIR}/src/perf_local.c")
-target_link_libraries(perf_local zyre ${ZEROMQ_LIBRARIES})
-set_target_properties(perf_local PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
-add_executable(perf_remote "${SOURCE_DIR}/src/perf_remote.c")
-target_link_libraries(perf_remote zyre ${ZEROMQ_LIBRARIES})
-set_target_properties(perf_remote PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
-add_executable(zpinger "${SOURCE_DIR}/src/zpinger.c")
-target_link_libraries(zpinger zyre ${ZEROMQ_LIBRARIES})
-set_target_properties(zpinger PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
-add_executable(ztester_beacon "${SOURCE_DIR}/src/ztester_beacon.c")
-target_link_libraries(ztester_beacon zyre ${ZEROMQ_LIBRARIES})
-set_target_properties(ztester_beacon PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
-add_executable(ztester_gossip "${SOURCE_DIR}/src/ztester_gossip.c")
-target_link_libraries(ztester_gossip zyre ${ZEROMQ_LIBRARIES})
-set_target_properties(ztester_gossip PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
-add_executable(zyre_selftest "${SOURCE_DIR}/src/zyre_selftest.c")
-target_link_libraries(zyre_selftest zyre ${ZEROMQ_LIBRARIES})
-set_target_properties(zyre_selftest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src")
+add_executable(
+    perf_local
+    "${SOURCE_DIR}/src/perf_local.c"
+)
+target_link_libraries(
+    perf_local
+    zyre
+    ${LIBSODIUM_LIBRARIES}
+    ${ZEROMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+)
+set_target_properties(
+    perf_local
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+add_executable(
+    perf_remote
+    "${SOURCE_DIR}/src/perf_remote.c"
+)
+target_link_libraries(
+    perf_remote
+    zyre
+    ${LIBSODIUM_LIBRARIES}
+    ${ZEROMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+)
+set_target_properties(
+    perf_remote
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+add_executable(
+    zpinger
+    "${SOURCE_DIR}/src/zpinger.c"
+)
+target_link_libraries(
+    zpinger
+    zyre
+    ${LIBSODIUM_LIBRARIES}
+    ${ZEROMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+)
+set_target_properties(
+    zpinger
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+add_executable(
+    ztester_beacon
+    "${SOURCE_DIR}/src/ztester_beacon.c"
+)
+target_link_libraries(
+    ztester_beacon
+    zyre
+    ${LIBSODIUM_LIBRARIES}
+    ${ZEROMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+)
+set_target_properties(
+    ztester_beacon
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+add_executable(
+    ztester_gossip
+    "${SOURCE_DIR}/src/ztester_gossip.c"
+)
+target_link_libraries(
+    ztester_gossip
+    zyre
+    ${LIBSODIUM_LIBRARIES}
+    ${ZEROMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+)
+set_target_properties(
+    ztester_gossip
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+add_executable(
+    zyre_selftest
+    "${SOURCE_DIR}/src/zyre_selftest.c"
+)
+target_link_libraries(
+    zyre_selftest
+    zyre
+    ${LIBSODIUM_LIBRARIES}
+    ${ZEROMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+)
+set_target_properties(
+    zyre_selftest
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
 
 ########################################################################
 # tests
@@ -197,21 +294,30 @@ set(CLASSTEST_TIMEOUT 5 CACHE STRING "Timeout of the selftest of a class")
 set(TOTAL_TIMEOUT 20 CACHE STRING "Timout of the total testsuite")
 
 set(TEST_CLASSES
-  zyre_test
-  zyre event_test
-  zre_msg_test
-  zyre_peer_test
-  zyre_group_test
-  zyre_node_test
+    zyre_test
+    zyre event_test
+    zre_msg_test
+    zyre_peer_test
+    zyre_group_test
+    zyre_node_test
 )
 
 foreach(TEST_CLASS ${TEST_CLASSES})
-  add_test(NAME ${TEST_CLASS} COMMAND zyre_selftest -e -v --test ${TEST_CLASS})
-  set_tests_properties(${TEST_CLASS} PROPERTIES TIMEOUT ${CLASSTEST_TIMEOUT})
+    add_test(
+        NAME ${TEST_CLASS}
+        COMMAND zyre_selftest -e -v --test ${TEST_CLASS}
+    )
+    set_tests_properties(
+        ${TEST_CLASS}
+        PROPERTIES TIMEOUT ${CLASSTEST_TIMEOUT}
+    )
 endforeach(TEST_CLASS)
 
 add_test(zyre_selftest zyre_selftest)
-set_tests_properties(zyre_selftest PROPERTIES TIMEOUT ${TOTAL_TIMEOUT})
+set_tests_properties(
+    zyre_selftest
+    PROPERTIES TIMEOUT ${TOTAL_TIMEOUT}
+)
 
 ########################################################################
 # summary
