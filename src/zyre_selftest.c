@@ -22,66 +22,21 @@
 
 #include "zyre_classes.h"
 
-//  -------------------------------------------------------------------------
-//  Prototype of test function
-//
-
-typedef void (*testfn_t) (bool);
-
-//  -------------------------------------------------------------------------
-//  Mapping of test class and test function.
-//
-
-typedef struct
-{
+typedef struct {
     const char *testname;
-    testfn_t test;
+    void (*test) (bool);
 } test_item_t;
 
-//  -------------------------------------------------------------------------
-//  Declaration of all tests
-//
-
-#define DECLARE_TEST(TEST) {#TEST, TEST}
-
-test_item_t all_tests [] = {
-    DECLARE_TEST(zyre_test),
-    DECLARE_TEST(zyre_event_test),
-    DECLARE_TEST(zre_msg_test),
-    DECLARE_TEST(zyre_peer_test),
-    DECLARE_TEST(zyre_group_test),
-    DECLARE_TEST(zyre_node_test),
-    {0, 0} // Null terminator
+static test_item_t
+all_tests [] = {
+    { "zyre", zyre_test },
+    { "zyre_event", zyre_event_test },
+    { "zre_msg", zre_msg_test },
+    { "zyre_peer", zyre_peer_test },
+    { "zyre_group", zyre_group_test },
+    { "zyre_node", zyre_node_test },
+    {0, 0}          //  Sentinel
 };
-
-//  -------------------------------------------------------------------------
-//  Return the number of available tests.
-//
-
-static inline unsigned
-test_get_number (void)
-{
-    unsigned count = 0;
-    test_item_t *item;
-    for (item = all_tests; item->test; item++)
-        count++;
-    return count;
-}
-
-//  -------------------------------------------------------------------------
-//  Print names of all available tests to stdout.
-//
-
-static inline void
-test_print_list (void)
-{
-    unsigned count = 0;
-    test_item_t *item;
-    for (item = all_tests; item->test; item++) {
-        count++;
-        printf ("%u:%s\n", count, item->testname);
-    }
-}
 
 //  -------------------------------------------------------------------------
 //  Test whether a test is available.
@@ -103,7 +58,7 @@ test_available (const char *testname)
 //  Run all tests.
 //
 
-static inline void
+static void
 test_runall (bool verbose)
 {
     test_item_t *item;
@@ -121,20 +76,40 @@ main (int argc, char **argv)
     test_item_t *test = 0;
     int argn;
     for (argn = 1; argn < argc; argn++) {
-        if (streq (argv [argn], "-v"))
+        if (streq (argv [argn], "--help")
+        ||  streq (argv [argn], "-h")) {
+            puts ("zyre_selftest.c [options] ...");
+            puts ("  --verbose / -v         verbose test output");
+            puts ("  --number / -n          report number of tests");
+            puts ("  --list / -l            list all tests");
+            puts ("  --test / -t [name]     run only test 'name'");
+            puts ("  --continue / -c        continue on exception (on Windows)");
+            return 0;
+        }
+        if (streq (argv [argn], "--verbose")
+        ||  streq (argv [argn], "-v"))
             verbose = true;
         else
-        if (streq (argv [argn], "--nb")) {
-            printf("%d\n", test_get_number ());
+        if (streq (argv [argn], "--number")
+        ||  streq (argv [argn], "-n")) {
+            puts ("6");
             return 0;
         }
         else
-        if (streq (argv [argn], "--list")) {
-            test_print_list ();
+        if (streq (argv [argn], "--list")
+        ||  streq (argv [argn], "-l")) {
+            puts ("Available tests:");
+            puts ("    zyre");
+            puts ("    zyre_event");
+            puts ("    zre_msg");
+            puts ("    zyre_peer");
+            puts ("    zyre_group");
+            puts ("    zyre_node");
             return 0;
         }
         else
-        if (streq (argv [argn], "--test")) {
+        if (streq (argv [argn], "--test")
+        ||  streq (argv [argn], "-t")) {
             argn++;
             if (argn >= argc) {
                 fprintf (stderr, "--test needs an argument\n");
@@ -142,12 +117,13 @@ main (int argc, char **argv)
             }
             test = test_available (argv [argn]);
             if (!test) {
-                fprintf (stderr, "%s is not available\n", argv [argn]);
+                fprintf (stderr, "%s not valid, use --list to show tests\n", argv [argn]);
                 return 1;
             }
         }
         else
-        if (streq (argv [argn], "-e")) {
+        if (streq (argv [argn], "--continue")
+        ||  streq (argv [argn], "-c")) {
 #ifdef _MSC_VER
             //  When receiving an abort signal, only print to stderr (no dialog)
             _set_abort_behavior (0, _WRITE_ABORT_MSG);
@@ -159,7 +135,7 @@ main (int argc, char **argv)
         }
     }
     if (test) {
-        printf ("Running zyre selftest '%s'...\n", test->testname);
+        printf ("Running zyre test '%s'...\n", test->testname);
         test->test (verbose);
     }
     else
