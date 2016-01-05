@@ -20,10 +20,6 @@ ZYRE_EXPORT zyre_t *
 ZYRE_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
-//  Print properties of the zyre object.
-ZYRE_EXPORT void
-    zyre_print (zyre_t *self);
-
 //  Return our node UUID string, after successful initialization
 ZYRE_EXPORT const char *
     zyre_uuid (zyre_t *self);
@@ -149,7 +145,7 @@ ZYRE_EXPORT char *
     zyre_peer_address (zyre_t *self, const char *peer);
 
 //  Return the value of a header of a conected peer. 
-//  Returns null if peer or key doesn't exist.       
+//  Returns null if peer or key doesn't exits.       
 //  The caller is responsible for destroying the return value when finished with it.
 ZYRE_EXPORT char *
     zyre_peer_header_value (zyre_t *self, const char *peer, const char *name);
@@ -158,11 +154,15 @@ ZYRE_EXPORT char *
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
+//  Print zyre node information to stdout
+ZYRE_EXPORT void
+    zyre_print (zyre_t *self);
+
 //  Return the Zyre version for run-time API detection
 ZYRE_EXPORT void
     zyre_version (int *major, int *minor, int *patch);
 
-//  Self test of this class
+//  Self test of this class.
 ZYRE_EXPORT void
     zyre_test (bool verbose);
 ----
@@ -180,7 +180,9 @@ frames provide further values:
 
     ENTER fromnode name headers ipaddress:port
         a new peer has entered the network
-    EXIT fromnode name
+    EVASIVE fromnode name
+	    a peer is being evasive (quiet for too long)
+	EXIT fromnode name
         a peer has left the network
     JOIN fromnode name groupname
         a peer has joined a specific group
@@ -190,7 +192,7 @@ frames provide further values:
         a peer has sent this node a message
     SHOUT fromnode name groupname message
         a peer has sent one of our groups a message
-        
+
 In SHOUT and WHISPER the message is zero or more frames, and can hold
 any ZeroMQ message. In ENTER, the headers frame contains a packed
 dictionary, see zhash_pack/unpack.
@@ -243,7 +245,7 @@ assert (rc == -1);
 //  Now use available name and confirm that it succeeds
 rc = zyre_set_endpoint (node2, "inproc://zyre-node2");
 assert (rc == 0);
-   
+
 //  Set up gossip network for this node
 zyre_gossip_connect (node2, "inproc://gossip-hub");
 rc = zyre_start (node2);
