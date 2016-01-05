@@ -1,6 +1,6 @@
 /*  =========================================================================
     zre_msg - work with ZRE messages
-    
+
     Codec header for zre_msg.
 
     ** WARNING *************************************************************
@@ -107,7 +107,7 @@ ZYRE_EXPORT bool
     is_zre_msg (zmsg_t *msg_p);
 
 //  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
-//  the message could not be parsed, or was NULL. Destroys msg and 
+//  the message could not be parsed, or was NULL. Destroys msg and
 //  nullifies the msg reference.
 ZYRE_EXPORT zre_msg_t *
     zre_msg_decode (zmsg_t **msg_p);
@@ -117,12 +117,12 @@ ZYRE_EXPORT zre_msg_t *
 ZYRE_EXPORT zmsg_t *
     zre_msg_encode (zre_msg_t **self_p);
 
-//  Receive and parse a zre_msg from the socket. Returns new object, 
+//  Receive and parse a zre_msg from the socket. Returns new object,
 //  or NULL if error. Will block if there's no message waiting.
 ZYRE_EXPORT zre_msg_t *
     zre_msg_recv (void *input);
 
-//  Receive and parse a zre_msg from the socket. Returns new object, 
+//  Receive and parse a zre_msg from the socket. Returns new object,
 //  or NULL either if there was no input waiting, or the recv was interrupted.
 ZYRE_EXPORT zre_msg_t *
     zre_msg_recv_nowait (void *input);
@@ -135,7 +135,7 @@ ZYRE_EXPORT int
 ZYRE_EXPORT int
     zre_msg_send_again (zre_msg_t *self, void *output);
 
-//  Encode the HELLO 
+//  Encode the HELLO
 ZYRE_EXPORT zmsg_t *
     zre_msg_encode_hello (
         uint16_t sequence,
@@ -145,39 +145,39 @@ ZYRE_EXPORT zmsg_t *
         const char *name,
         zhash_t *headers);
 
-//  Encode the WHISPER 
+//  Encode the WHISPER
 ZYRE_EXPORT zmsg_t *
     zre_msg_encode_whisper (
         uint16_t sequence,
         zmsg_t *content);
 
-//  Encode the SHOUT 
+//  Encode the SHOUT
 ZYRE_EXPORT zmsg_t *
     zre_msg_encode_shout (
         uint16_t sequence,
         const char *group,
         zmsg_t *content);
 
-//  Encode the JOIN 
+//  Encode the JOIN
 ZYRE_EXPORT zmsg_t *
     zre_msg_encode_join (
         uint16_t sequence,
         const char *group,
         byte status);
 
-//  Encode the LEAVE 
+//  Encode the LEAVE
 ZYRE_EXPORT zmsg_t *
     zre_msg_encode_leave (
         uint16_t sequence,
         const char *group,
         byte status);
 
-//  Encode the PING 
+//  Encode the PING
 ZYRE_EXPORT zmsg_t *
     zre_msg_encode_ping (
         uint16_t sequence);
 
-//  Encode the PING_OK 
+//  Encode the PING_OK
 ZYRE_EXPORT zmsg_t *
     zre_msg_encode_ping_ok (
         uint16_t sequence);
@@ -193,14 +193,14 @@ ZYRE_EXPORT int
         byte status,
         const char *name,
         zhash_t *headers);
-    
+
 //  Send the WHISPER to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 ZYRE_EXPORT int
     zre_msg_send_whisper (void *output,
         uint16_t sequence,
         zmsg_t *content);
-    
+
 //  Send the SHOUT to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 ZYRE_EXPORT int
@@ -208,7 +208,7 @@ ZYRE_EXPORT int
         uint16_t sequence,
         const char *group,
         zmsg_t *content);
-    
+
 //  Send the JOIN to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 ZYRE_EXPORT int
@@ -216,7 +216,7 @@ ZYRE_EXPORT int
         uint16_t sequence,
         const char *group,
         byte status);
-    
+
 //  Send the LEAVE to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 ZYRE_EXPORT int
@@ -224,19 +224,19 @@ ZYRE_EXPORT int
         uint16_t sequence,
         const char *group,
         byte status);
-    
+
 //  Send the PING to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 ZYRE_EXPORT int
     zre_msg_send_ping (void *output,
         uint16_t sequence);
-    
+
 //  Send the PING_OK to the output in one step
 //  WARNING, this call will fail if output is of type ZMQ_ROUTER.
 ZYRE_EXPORT int
     zre_msg_send_ping_ok (void *output,
         uint16_t sequence);
-    
+
 //  Duplicate the zre_msg message
 ZYRE_EXPORT zre_msg_t *
     zre_msg_dup (zre_msg_t *self);
@@ -312,7 +312,7 @@ ZYRE_EXPORT zhash_t *
 //  Set the headers field, transferring ownership from caller
 ZYRE_EXPORT void
     zre_msg_set_headers (zre_msg_t *self, zhash_t **headers_p);
-    
+
 //  Get/set a value in the headers dictionary
 ZYRE_EXPORT const char *
     zre_msg_headers_string (zre_msg_t *self,
@@ -343,7 +343,7 @@ ZYRE_EXPORT void
     zre_msg_set_group (zre_msg_t *self, const char *format, ...);
 
 //  Self test of this class
-ZYRE_EXPORT int
+ZYRE_EXPORT void
     zre_msg_test (bool verbose);
 //  @end
 

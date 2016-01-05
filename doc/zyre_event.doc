@@ -8,29 +8,27 @@ Please add @discuss section in ../src/zyre_event.c.
 
 This is the class interface:
 
+    // 
     typedef enum {
-        ZYRE_EVENT_ENTER = 1,
-        ZYRE_EVENT_JOIN = 2,
-        ZYRE_EVENT_LEAVE = 3,
-        ZYRE_EVENT_EXIT = 4,
-        ZYRE_EVENT_WHISPER = 5,
-        ZYRE_EVENT_SHOUT = 6,
-        ZYRE_EVENT_STOP = 7
+        ZYRE_EVENT_ENTER = 1,                                   //  
+        ZYRE_EVENT_JOIN = 2,                                    //  
+        ZYRE_EVENT_LEAVE = 3,                                   //  
+        ZYRE_EVENT_EXIT = 4,                                    //  
+        ZYRE_EVENT_WHISPER = 5,                                 //  
+        ZYRE_EVENT_SHOUT = 6,                                   //  
+        ZYRE_EVENT_STOP = 7,                                    //  
+        ZYRE_EVENT_EVASIVE = 8                                  //  
     } zyre_event_type_t;
     
     //  Constructor: receive an event from the zyre node, wraps zyre_recv.
     //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
     //  data (WHISPER, SHOUT).                                            
     ZYRE_EXPORT zyre_event_t *
-        zyre_event_new (zyre_t *self);
+        zyre_event_new (zyre_t *node);
     
     //  Destructor; destroys an event instance
     ZYRE_EXPORT void
         zyre_event_destroy (zyre_event_t **self_p);
-    
-    //  Print properties of the zyre event object.
-    ZYRE_EXPORT void
-        zyre_event_print (zyre_event_t *self);
     
     //  Returns event type, which is a zyre_event_type_t
     ZYRE_EXPORT zyre_event_type_t
@@ -65,7 +63,11 @@ This is the class interface:
     ZYRE_EXPORT zmsg_t *
         zyre_event_msg (zyre_event_t *self);
     
-    //  Self test of this class
+    //  Print event to zsys log
+    ZYRE_EXPORT void
+        zyre_event_print (zyre_event_t *self);
+    
+    //  Self test of this class.
     ZYRE_EXPORT void
         zyre_event_test (bool verbose);
 

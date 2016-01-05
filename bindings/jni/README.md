@@ -49,6 +49,10 @@ You need the Java SDK. Set the JAVA_HOME environment to the installation locatio
 
 The resulting libraries (zyrejni.dll, zyrejni.lib) are created in bindings/jni/msvc/bin.
 
+## Using the JNI API
+
+- to be written.
+
 ## License
 
 

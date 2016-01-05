@@ -31,7 +31,8 @@ echo "********  Building Android native libraries"
 echo "********  Building JNI interface & classes"
 ( cd .. && gradle build jar )
 
-cmake -v -DCMAKE_TOOLCHAIN_FILE=android_toolchain.cmake .
+rm -rf build && mkdir build && cd build
+cmake -v -DCMAKE_TOOLCHAIN_FILE=../android_toolchain.cmake ..
 
 #   CMake wrongly searches current directory and then toolchain path instead
 #   of lib path for these files, so make them available temporarily
@@ -40,19 +41,20 @@ ln -s $ANDROID_SYS_ROOT/usr/lib/crtbegin_so.o
 
 echo "********  Building JNI for Android"
 make $MAKE_OPTIONS
-rm crtend_so.o crtbegin_so.o
 
 echo "********  Building zyre.jar for Android"
 
 #   Copy class files into org/zeromq/etc.
-unzip -q ../build/libs/zyre*.jar
-unzip -q -o ../../../../czmq/bindings/jni/build/libs/czmq*.jar
+unzip -q ../../build/libs/zyre*.jar
+unzip -q -o ../../../../../czmq/bindings/jni/build/libs/czmq*.jar
 
 #   Copy native libraries into lib/armeabi
 mkdir -p lib/armeabi
 mv libzyrejni.so lib/armeabi
-cp ../../../builds/android/prefix/*/lib/*.so lib/armeabi
+cp ../../../../builds/android/prefix/*/lib/*.so lib/armeabi
 
-zip -r -m zyre-android.jar lib/ org/ META-INF/
+zip -r -m ../zyre-android.jar lib/ org/ META-INF/
+cd ..
+rm -rf build
 
 echo "********  Complete"
