@@ -272,7 +272,7 @@ is_zre_msg (zmsg_t *msg)
 
 //  --------------------------------------------------------------------------
 //  Parse a zre_msg from zmsg_t. Returns a new object, or NULL if
-//  the message could not be parsed, or was NULL. Destroys msg and 
+//  the message could not be parsed, or was NULL. Destroys msg and
 //  nullifies the msg reference.
 
 zre_msg_t *
@@ -282,11 +282,11 @@ zre_msg_decode (zmsg_t **msg_p)
     zmsg_t *msg = *msg_p;
     if (msg == NULL)
         return NULL;
-        
+
     zre_msg_t *self = zre_msg_new (0);
     //  Read and parse command in frame
     zframe_t *frame = zmsg_pop (msg);
-    if (!frame) 
+    if (!frame)
         goto empty;             //  Malformed or empty
 
     //  Get and check protocol signature
@@ -422,7 +422,7 @@ zre_msg_encode (zre_msg_t **self_p)
 {
     assert (self_p);
     assert (*self_p);
-    
+
     zre_msg_t *self = *self_p;
     zmsg_t *msg = zmsg_new ();
 
@@ -467,14 +467,14 @@ zre_msg_encode (zre_msg_t **self_p)
             }
             frame_size += self->headers_bytes;
             break;
-            
+
         case ZRE_MSG_WHISPER:
             //  version is a 1-byte integer
             frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             break;
-            
+
         case ZRE_MSG_SHOUT:
             //  version is a 1-byte integer
             frame_size += 1;
@@ -485,7 +485,7 @@ zre_msg_encode (zre_msg_t **self_p)
             if (self->group)
                 frame_size += strlen (self->group);
             break;
-            
+
         case ZRE_MSG_JOIN:
             //  version is a 1-byte integer
             frame_size += 1;
@@ -498,7 +498,7 @@ zre_msg_encode (zre_msg_t **self_p)
             //  status is a 1-byte integer
             frame_size += 1;
             break;
-            
+
         case ZRE_MSG_LEAVE:
             //  version is a 1-byte integer
             frame_size += 1;
@@ -511,21 +511,21 @@ zre_msg_encode (zre_msg_t **self_p)
             //  status is a 1-byte integer
             frame_size += 1;
             break;
-            
+
         case ZRE_MSG_PING:
             //  version is a 1-byte integer
             frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             break;
-            
+
         case ZRE_MSG_PING_OK:
             //  version is a 1-byte integer
             frame_size += 1;
             //  sequence is a 2-byte integer
             frame_size += 2;
             break;
-            
+
         default:
             zsys_error ("bad message type '%d', not sent\n", self->id);
             //  No recovery, this is a fatal application error
@@ -736,7 +736,7 @@ zre_msg_send (zre_msg_t **self_p, void *output)
 
     //  Encode zre_msg message to a single zmsg
     zmsg_t *msg = zre_msg_encode (self_p);
-    
+
     //  If we're sending to a ROUTER, send the routing_id first
     if (zsock_type (zsock_resolve (output)) == ZMQ_ROUTER) {
         assert (routing_id);
@@ -744,7 +744,7 @@ zre_msg_send (zre_msg_t **self_p, void *output)
     }
     else
         zframe_destroy (&routing_id);
-        
+
     if (msg && zmsg_send (&msg, output) == 0)
         return 0;
     else
@@ -768,7 +768,7 @@ zre_msg_send_again (zre_msg_t *self, void *output)
 //  --------------------------------------------------------------------------
 //  Encode HELLO message
 
-zmsg_t * 
+zmsg_t *
 zre_msg_encode_hello (
     uint16_t sequence,
     const char *endpoint,
@@ -793,7 +793,7 @@ zre_msg_encode_hello (
 //  --------------------------------------------------------------------------
 //  Encode WHISPER message
 
-zmsg_t * 
+zmsg_t *
 zre_msg_encode_whisper (
     uint16_t sequence,
     zmsg_t *content)
@@ -809,7 +809,7 @@ zre_msg_encode_whisper (
 //  --------------------------------------------------------------------------
 //  Encode SHOUT message
 
-zmsg_t * 
+zmsg_t *
 zre_msg_encode_shout (
     uint16_t sequence,
     const char *group,
@@ -827,7 +827,7 @@ zre_msg_encode_shout (
 //  --------------------------------------------------------------------------
 //  Encode JOIN message
 
-zmsg_t * 
+zmsg_t *
 zre_msg_encode_join (
     uint16_t sequence,
     const char *group,
@@ -844,7 +844,7 @@ zre_msg_encode_join (
 //  --------------------------------------------------------------------------
 //  Encode LEAVE message
 
-zmsg_t * 
+zmsg_t *
 zre_msg_encode_leave (
     uint16_t sequence,
     const char *group,
@@ -861,7 +861,7 @@ zre_msg_encode_leave (
 //  --------------------------------------------------------------------------
 //  Encode PING message
 
-zmsg_t * 
+zmsg_t *
 zre_msg_encode_ping (
     uint16_t sequence)
 {
@@ -874,7 +874,7 @@ zre_msg_encode_ping (
 //  --------------------------------------------------------------------------
 //  Encode PING_OK message
 
-zmsg_t * 
+zmsg_t *
 zre_msg_encode_ping_ok (
     uint16_t sequence)
 {
@@ -1018,7 +1018,7 @@ zre_msg_dup (zre_msg_t *self)
 {
     if (!self)
         return NULL;
-        
+
     zre_msg_t *copy = zre_msg_new (self->id);
     if (self->routing_id)
         copy->routing_id = zframe_dup (self->routing_id);
@@ -1115,7 +1115,7 @@ zre_msg_print (zre_msg_t *self)
             else
                 zsys_debug ("(NULL)");
             break;
-            
+
         case ZRE_MSG_WHISPER:
             zsys_debug ("ZRE_MSG_WHISPER:");
             zsys_debug ("    version=2");
@@ -1126,7 +1126,7 @@ zre_msg_print (zre_msg_t *self)
             else
                 zsys_debug ("(NULL)");
             break;
-            
+
         case ZRE_MSG_SHOUT:
             zsys_debug ("ZRE_MSG_SHOUT:");
             zsys_debug ("    version=2");
@@ -1141,7 +1141,7 @@ zre_msg_print (zre_msg_t *self)
             else
                 zsys_debug ("(NULL)");
             break;
-            
+
         case ZRE_MSG_JOIN:
             zsys_debug ("ZRE_MSG_JOIN:");
             zsys_debug ("    version=2");
@@ -1152,7 +1152,7 @@ zre_msg_print (zre_msg_t *self)
                 zsys_debug ("    group=");
             zsys_debug ("    status=%ld", (long) self->status);
             break;
-            
+
         case ZRE_MSG_LEAVE:
             zsys_debug ("ZRE_MSG_LEAVE:");
             zsys_debug ("    version=2");
@@ -1163,19 +1163,19 @@ zre_msg_print (zre_msg_t *self)
                 zsys_debug ("    group=");
             zsys_debug ("    status=%ld", (long) self->status);
             break;
-            
+
         case ZRE_MSG_PING:
             zsys_debug ("ZRE_MSG_PING:");
             zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             break;
-            
+
         case ZRE_MSG_PING_OK:
             zsys_debug ("ZRE_MSG_PING_OK:");
             zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
             break;
-            
+
     }
 }
 
@@ -1560,7 +1560,7 @@ zre_msg_set_group (zre_msg_t *self, const char *format, ...)
 //  --------------------------------------------------------------------------
 //  Selftest
 
-int
+void
 zre_msg_test (bool verbose)
 {
     printf (" * zre_msg: ");
@@ -1587,7 +1587,7 @@ zre_msg_test (bool verbose)
     int instance;
     zre_msg_t *copy;
     self = zre_msg_new (ZRE_MSG_HELLO);
-    
+
     //  Check that _dup works on empty message
     copy = zre_msg_dup (self);
     assert (copy);
@@ -1609,7 +1609,7 @@ zre_msg_test (bool verbose)
         self = zre_msg_recv (input);
         assert (self);
         assert (zre_msg_routing_id (self));
-        
+
         assert (zre_msg_sequence (self) == 123);
         assert (streq (zre_msg_endpoint (self), "Life is short but Now lasts for ever"));
         assert (zre_msg_groups_size (self) == 2);
@@ -1623,7 +1623,7 @@ zre_msg_test (bool verbose)
         zre_msg_destroy (&self);
     }
     self = zre_msg_new (ZRE_MSG_WHISPER);
-    
+
     //  Check that _dup works on empty message
     copy = zre_msg_dup (self);
     assert (copy);
@@ -1641,13 +1641,13 @@ zre_msg_test (bool verbose)
         self = zre_msg_recv (input);
         assert (self);
         assert (zre_msg_routing_id (self));
-        
+
         assert (zre_msg_sequence (self) == 123);
         assert (zmsg_size (zre_msg_content (self)) == 1);
         zre_msg_destroy (&self);
     }
     self = zre_msg_new (ZRE_MSG_SHOUT);
-    
+
     //  Check that _dup works on empty message
     copy = zre_msg_dup (self);
     assert (copy);
@@ -1666,14 +1666,14 @@ zre_msg_test (bool verbose)
         self = zre_msg_recv (input);
         assert (self);
         assert (zre_msg_routing_id (self));
-        
+
         assert (zre_msg_sequence (self) == 123);
         assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
         assert (zmsg_size (zre_msg_content (self)) == 1);
         zre_msg_destroy (&self);
     }
     self = zre_msg_new (ZRE_MSG_JOIN);
-    
+
     //  Check that _dup works on empty message
     copy = zre_msg_dup (self);
     assert (copy);
@@ -1690,14 +1690,14 @@ zre_msg_test (bool verbose)
         self = zre_msg_recv (input);
         assert (self);
         assert (zre_msg_routing_id (self));
-        
+
         assert (zre_msg_sequence (self) == 123);
         assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
         assert (zre_msg_status (self) == 123);
         zre_msg_destroy (&self);
     }
     self = zre_msg_new (ZRE_MSG_LEAVE);
-    
+
     //  Check that _dup works on empty message
     copy = zre_msg_dup (self);
     assert (copy);
@@ -1714,14 +1714,14 @@ zre_msg_test (bool verbose)
         self = zre_msg_recv (input);
         assert (self);
         assert (zre_msg_routing_id (self));
-        
+
         assert (zre_msg_sequence (self) == 123);
         assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
         assert (zre_msg_status (self) == 123);
         zre_msg_destroy (&self);
     }
     self = zre_msg_new (ZRE_MSG_PING);
-    
+
     //  Check that _dup works on empty message
     copy = zre_msg_dup (self);
     assert (copy);
@@ -1736,12 +1736,12 @@ zre_msg_test (bool verbose)
         self = zre_msg_recv (input);
         assert (self);
         assert (zre_msg_routing_id (self));
-        
+
         assert (zre_msg_sequence (self) == 123);
         zre_msg_destroy (&self);
     }
     self = zre_msg_new (ZRE_MSG_PING_OK);
-    
+
     //  Check that _dup works on empty message
     copy = zre_msg_dup (self);
     assert (copy);
@@ -1756,7 +1756,7 @@ zre_msg_test (bool verbose)
         self = zre_msg_recv (input);
         assert (self);
         assert (zre_msg_routing_id (self));
-        
+
         assert (zre_msg_sequence (self) == 123);
         zre_msg_destroy (&self);
     }
@@ -1766,5 +1766,4 @@ zre_msg_test (bool verbose)
     //  @end
 
     printf ("OK\n");
-    return 0;
 }
