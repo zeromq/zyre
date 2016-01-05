@@ -294,18 +294,18 @@ set(CLASSTEST_TIMEOUT 5 CACHE STRING "Timeout of the selftest of a class")
 set(TOTAL_TIMEOUT 20 CACHE STRING "Timout of the total testsuite")
 
 set(TEST_CLASSES
-    zyre_test
-    zyre event_test
-    zre_msg_test
-    zyre_peer_test
-    zyre_group_test
-    zyre_node_test
+    zyre
+    zyre event
+    zre_msg
+    zyre_peer
+    zyre_group
+    zyre_node
 )
 
 foreach(TEST_CLASS ${TEST_CLASSES})
     add_test(
         NAME ${TEST_CLASS}
-        COMMAND zyre_selftest -e -v --test ${TEST_CLASS}
+        COMMAND zyre_selftest --continue --verbose --test ${TEST_CLASS}
     )
     set_tests_properties(
         ${TEST_CLASS}
@@ -313,11 +313,6 @@ foreach(TEST_CLASS ${TEST_CLASSES})
     )
 endforeach(TEST_CLASS)
 
-add_test(zyre_selftest zyre_selftest)
-set_tests_properties(
-    zyre_selftest
-    PROPERTIES TIMEOUT ${TOTAL_TIMEOUT}
-)
 
 ########################################################################
 # summary
