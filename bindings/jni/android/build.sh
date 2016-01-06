@@ -10,6 +10,7 @@
 #
 #     ANDROID_NDK_ROOT=$HOME/android-ndk-r10e
 #     TOOLCHAIN_NAME=arm-linux-androideabi-4.9
+#     TOOLCHAIN_VERSION=4.9
 #     TOOLCHAIN_HOST=arm-linux-androideabi
 #     TOOLCHAIN_ARCH=arm
 #     TOOLCHAIN_PATH=$ANDROID_NDK_ROOT/toolchains/$TOOLCHAIN_NAME/prebuilt/linux-x86_64/bin
@@ -52,6 +53,7 @@ unzip -q -o ../../../../../czmq/bindings/jni/build/libs/czmq*.jar
 mkdir -p lib/armeabi
 mv libzyrejni.so lib/armeabi
 cp ../../../../builds/android/prefix/*/lib/*.so lib/armeabi
+cp $ANDROID_NDK_ROOT/sources/cxx-stl/gnu-libstdc++/$TOOLCHAIN_VERSION/libs/armeabi/libgnustl_shared.so lib/armeabi
 
 zip -r -m ../zyre-android.jar lib/ org/ META-INF/
 cd ..
