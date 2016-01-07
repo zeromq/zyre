@@ -295,7 +295,7 @@ set(TOTAL_TIMEOUT 20 CACHE STRING "Timout of the total testsuite")
 
 set(TEST_CLASSES
     zyre
-    zyre event
+    zyre_event
     zre_msg
     zyre_peer
     zyre_group
