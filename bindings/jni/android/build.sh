@@ -15,6 +15,9 @@
 #     TOOLCHAIN_ARCH=arm
 #     TOOLCHAIN_PATH=$ANDROID_NDK_ROOT/toolchains/$TOOLCHAIN_NAME/prebuilt/linux-x86_64/bin
 #
+#   Exit if any step fails
+set -e
+
 export ANDROID_API_LEVEL=android-8
 export ANDROID_SYS_ROOT=$ANDROID_NDK_ROOT/platforms/$ANDROID_API_LEVEL/arch-$TOOLCHAIN_ARCH
 if [ "$1" = "-d" ]; then
