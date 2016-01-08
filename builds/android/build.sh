@@ -53,8 +53,7 @@ fi
 (android_build_verify_so "libzyre.so" "libczmq.so" &> /dev/null) || {
     rm -rf "${cache}/zyre"
     (cp -r ../.. "${cache}/zyre" && cd "${cache}/zyre" \
-        && make clean && rm configure config.status)
-    rm
+        && make clean && rm -f configure config.status)
 
     export LIBTOOL_EXTRA_LDFLAGS='-avoid-version'
 
