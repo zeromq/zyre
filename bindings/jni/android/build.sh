@@ -27,12 +27,15 @@ fi
 source ../../../builds/android/android_build_helper.sh
 android_build_env
 
+#   Build any dependent libraries
+( cd ../../../../czmq/bindings/jni/android; ./build.sh )
+
 #   Ensure we've built dependencies for Android
-echo "********  Building Android native libraries"
+echo "********  Building zyre Android native libraries"
 ( cd ../../../builds/android && ./build.sh )
 
 #   Ensure we've built JNI interface
-echo "********  Building JNI interface & classes"
+echo "********  Building zyre JNI interface & classes"
 ( cd .. && gradle build jar )
 
 rm -rf build && mkdir build && cd build
@@ -43,19 +46,19 @@ cmake -v -DCMAKE_TOOLCHAIN_FILE=../android_toolchain.cmake ..
 ln -s $ANDROID_SYS_ROOT/usr/lib/crtend_so.o
 ln -s $ANDROID_SYS_ROOT/usr/lib/crtbegin_so.o
 
-echo "********  Building JNI for Android"
+echo "********  Building zyre JNI for Android"
 make $MAKE_OPTIONS
 
 echo "********  Building zyre.jar for Android"
-
 #   Copy class files into org/zeromq/etc.
 unzip -q ../../build/libs/zyre*.jar
-unzip -q -o ../../../../../czmq/bindings/jni/build/libs/czmq*.jar
+unzip -q -o ../../../../../czmq/bindings/jni/android/czmq-android.jar
 
 #   Copy native libraries into lib/armeabi
 mkdir -p lib/armeabi
 mv libzyrejni.so lib/armeabi
 cp ../../../../builds/android/prefix/*/lib/*.so lib/armeabi
+
 cp $ANDROID_NDK_ROOT/sources/cxx-stl/gnu-libstdc++/$TOOLCHAIN_VERSION/libs/armeabi/libgnustl_shared.so lib/armeabi
 
 zip -r -m ../zyre-android.jar lib/ org/ META-INF/
