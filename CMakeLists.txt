@@ -44,6 +44,19 @@ set(
 )
 
 ########################################################################
+# options
+########################################################################
+if (EXISTS ".git")
+    OPTION (WITH_DRAFTS "Build and install draft classes and methods" ON)
+else ()
+    OPTION (WITH_DRAFTS "Build and install draft classes and methods" OFF)
+endif ()
+
+IF (WITH_DRAFTS)
+    ADD_DEFINITIONS (-DWITH_DRAFTS)
+ENDIF (WITH_DRAFTS)
+
+########################################################################
 # platform.h
 ########################################################################
 include(CheckIncludeFile)
@@ -93,38 +106,39 @@ if (CYGWIN)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}")
+set(OPTIONAL_LIBRARIES)
 
 ########################################################################
 # LIBSODIUM dependency
 ########################################################################
-find_package(Libsodium REQUIRED)
+find_package(libsodium)
 IF (LIBSODIUM_FOUND)
     include_directories(${LIBSODIUM_INCLUDE_DIRS})
     list(APPEND MORE_LIBRARIES ${LIBSODIUM_LIBRARIES})
-ELSE (LIBSODIUM_FOUND)
-    message( FATAL_ERROR "Libsodium not found." )
+    add_definitions(-DHAVE_LIBSODIUM)
+    list(APPEND OPTIONAL_LIBRARIES ${LIBSODIUM_LIBRARIES})
 ENDIF (LIBSODIUM_FOUND)
 
 ########################################################################
 # LIBZMQ dependency
 ########################################################################
-find_package(ZeroMQ REQUIRED)
-IF (ZEROMQ_FOUND)
-    include_directories(${ZEROMQ_INCLUDE_DIRS})
-    list(APPEND MORE_LIBRARIES ${ZEROMQ_LIBRARIES})
-ELSE (ZEROMQ_FOUND)
-    message( FATAL_ERROR "ZeroMQ not found." )
-ENDIF (ZEROMQ_FOUND)
+find_package(libzmq REQUIRED)
+IF (LIBZMQ_FOUND)
+    include_directories(${LIBZMQ_INCLUDE_DIRS})
+    list(APPEND MORE_LIBRARIES ${LIBZMQ_LIBRARIES})
+ELSE (LIBZMQ_FOUND)
+    message( FATAL_ERROR "libzmq not found." )
+ENDIF (LIBZMQ_FOUND)
 
 ########################################################################
 # CZMQ dependency
 ########################################################################
-find_package(CZMQ REQUIRED)
+find_package(czmq REQUIRED)
 IF (CZMQ_FOUND)
     include_directories(${CZMQ_INCLUDE_DIRS})
     list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
 ELSE (CZMQ_FOUND)
-    message( FATAL_ERROR "CZMQ not found." )
+    message( FATAL_ERROR "czmq not found." )
 ENDIF (CZMQ_FOUND)
 
 ########################################################################
@@ -132,13 +146,19 @@ ENDIF (CZMQ_FOUND)
 ########################################################################
 set (zyre_headers
     include/zyre_library.h
-    include/zyre.h
-    include/zyre_event.h
-    include/zre_msg.h
     src/zyre_peer.h
     src/zyre_group.h
     src/zyre_node.h
 )
+
+IF (WITH_DRAFTS)
+list(APPEND zyre_headers
+    include/zyre.h
+    include/zyre_event.h
+    include/zre_msg.h
+)
+ENDIF (WITH_DRAFTS)
+
 source_group ("Header Files" FILES ${zyre_headers})
 install(FILES ${zyre_headers} DESTINATION include)
 
@@ -147,13 +167,19 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include")
 set (zyre_sources
-    src/zyre.c
-    src/zyre_event.c
-    src/zre_msg.c
     src/zyre_peer.c
     src/zyre_group.c
     src/zyre_node.c
 )
+
+IF (WITH_DRAFTS)
+list(APPEND zyre_sources
+    src/zyre.c
+    src/zyre_event.c
+    src/zre_msg.c
+)
+ENDIF (WITH_DRAFTS)
+
 source_group("Source Files" FILES ${zyre_sources})
 if (NOT DEFINED BUILD_SHARED_LIBS)
     SET(BUILD_SHARED_LIBS ON)
@@ -203,9 +229,9 @@ add_executable(
 target_link_libraries(
     perf_local
     zyre
-    ${LIBSODIUM_LIBRARIES}
-    ${ZEROMQ_LIBRARIES}
+    ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
 )
 set_target_properties(
     perf_local
@@ -218,9 +244,9 @@ add_executable(
 target_link_libraries(
     perf_remote
     zyre
-    ${LIBSODIUM_LIBRARIES}
-    ${ZEROMQ_LIBRARIES}
+    ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
 )
 set_target_properties(
     perf_remote
@@ -233,9 +259,9 @@ add_executable(
 target_link_libraries(
     zpinger
     zyre
-    ${LIBSODIUM_LIBRARIES}
-    ${ZEROMQ_LIBRARIES}
+    ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
 )
 set_target_properties(
     zpinger
@@ -248,9 +274,9 @@ add_executable(
 target_link_libraries(
     ztester_beacon
     zyre
-    ${LIBSODIUM_LIBRARIES}
-    ${ZEROMQ_LIBRARIES}
+    ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
 )
 set_target_properties(
     ztester_beacon
@@ -263,9 +289,9 @@ add_executable(
 target_link_libraries(
     ztester_gossip
     zyre
-    ${LIBSODIUM_LIBRARIES}
-    ${ZEROMQ_LIBRARIES}
+    ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
 )
 set_target_properties(
     ztester_gossip
@@ -278,9 +304,9 @@ add_executable(
 target_link_libraries(
     zyre_selftest
     zyre
-    ${LIBSODIUM_LIBRARIES}
-    ${ZEROMQ_LIBRARIES}
+    ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
 )
 set_target_properties(
     zyre_selftest
@@ -294,13 +320,18 @@ set(CLASSTEST_TIMEOUT 5 CACHE STRING "Timeout of the selftest of a class")
 set(TOTAL_TIMEOUT 20 CACHE STRING "Timout of the total testsuite")
 
 set(TEST_CLASSES
-    zyre
-    zyre_event
-    zre_msg
     zyre_peer
     zyre_group
     zyre_node
 )
+
+IF (WITH_DRAFTS)
+list(APPEND TEST_CLASSES
+    zyre
+    zyre_event
+    zre_msg
+)
+ENDIF (WITH_DRAFTS)
 
 foreach(TEST_CLASS ${TEST_CLASSES})
     add_test(

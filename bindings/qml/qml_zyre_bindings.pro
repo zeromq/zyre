@@ -25,7 +25,7 @@ android {
   }
   # Build the zyre library for android unless it is already built
   !system(bash $$ZYRE_ROOT/builds/android/build.sh) {
-    error(Failed to build the zyre C library with $$ZYRE_ROOT/builds/android/build.sh)
+    error(Failed to build the zyre library with $$ZYRE_ROOT/builds/android/build.sh)
   }
   
   VENDOR_PREFIX = $$ZYRE_ROOT/builds/android/prefix/$(TOOLCHAIN_NAME)

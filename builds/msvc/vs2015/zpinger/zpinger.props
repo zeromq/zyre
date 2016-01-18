@@ -28,26 +28,22 @@
   <!-- Dependencies -->
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)zyre.import.props" />
-    <Import Project="$(SolutionDir)libsodium.import.props" />
     <Import Project="$(SolutionDir)libzmq.import.props" />
     <Import Project="$(SolutionDir)czmq.import.props" />
   </ImportGroup>
 
   <PropertyGroup Condition="$(Configuration.IndexOf('DEXE')) != -1">
     <Linkage-zyre>dynamic</Linkage-zyre>
-    <Linkage-libsodium>dynamic</Linkage-libsodium>
     <Linkage-libzmq>dynamic</Linkage-libzmq>
     <Linkage-czmq>dynamic</Linkage-czmq>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration.IndexOf('LEXE')) != -1">
     <Linkage-zyre>ltcg</Linkage-zyre>
-    <Linkage-libsodium>ltcg</Linkage-libsodium>
     <Linkage-libzmq>ltcg</Linkage-libzmq>
     <Linkage-czmq>ltcg</Linkage-czmq>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration.IndexOf('SEXE')) != -1">
     <Linkage-zyre>static</Linkage-zyre>
-    <Linkage-libsodium>static</Linkage-libsodium>
     <Linkage-libzmq>static</Linkage-libzmq>
     <Linkage-czmq>static</Linkage-czmq>
   </PropertyGroup>
@@ -55,7 +51,6 @@
   <!-- Messages -->
   <Target Name="LinkageInfo" BeforeTargets="PrepareForBuild">
     <Message Text="Linkage-zyre                   : $(Linkage-zyre)" Importance="high"/>
-    <Message Text="Linkage-libsodium : $(Linkage-libsodium)" Importance="high"/>
     <Message Text="Linkage-libzmq : $(Linkage-libzmq)" Importance="high"/>
     <Message Text="Linkage-czmq : $(Linkage-czmq)" Importance="high"/>
   </Target>

@@ -29,7 +29,6 @@ set (zyrejni_sources
 add_library (zyrejni SHARED ${zyrejni_sources})
 target_link_libraries (zyrejni
     zyre
-    sodium
     zmq
     czmq
 )

@@ -33,29 +33,23 @@ set (CMAKE_FIND_ROOT_PATH
 # CMake will look for prefixed g++, cpp, ld, etc. automatically
 CMAKE_FORCE_C_COMPILER (${TOOLCHAIN_PATH}/arm-linux-androideabi-gcc GNU)
 
-#   Find location of Libsodium header file
-pkg_check_modules (PC_LIBSODIUM "libsodium")
-if (NOT PC_LIBSODIUM_FOUND)
-    pkg_check_modules(PC_LIBSODIUM "sodium")
-endif (NOT PC_LIBSODIUM_FOUND)
+#   Find location of zmq.h file
+pkg_check_modules (PC_LIBZMQ "libzmq")
+if (NOT PC_LIBZMQ_FOUND)
+    pkg_check_modules(PC_LIBZMQ "zmq")
+endif (NOT PC_LIBZMQ_FOUND)
 
-if (PC_LIBSODIUM_FOUND)
-    set (PC_LIBSODIUM_INCLUDE_HINTS ${PC_LIBSODIUM_INCLUDE_DIRS} ${PC_LIBSODIUM_INCLUDE_DIRS}/*)
-endif (PC_LIBSODIUM_FOUND)
-find_path (LIBSODIUM_INCLUDE_DIR NAMES sodium.h HINTS ${PC_LIBSODIUM_INCLUDE_HINTS})
+if (PC_LIBZMQ_FOUND)
+    set (PC_LIBZMQ_INCLUDE_HINTS ${PC_LIBZMQ_INCLUDE_DIRS} ${PC_LIBZMQ_INCLUDE_DIRS}/*)
+endif (PC_LIBZMQ_FOUND)
 
-#   Find location of ZeroMQ header file
-pkg_check_modules (PC_ZEROMQ "libzmq")
-if (NOT PC_ZEROMQ_FOUND)
-    pkg_check_modules(PC_ZEROMQ "zmq")
-endif (NOT PC_ZEROMQ_FOUND)
+find_path (
+    LIBZMQ_INCLUDE_DIR
+    NAMES zmq.h
+    HINTS ${PC_LIBZMQ_INCLUDE_HINTS}
+)
 
-if (PC_ZEROMQ_FOUND)
-    set (PC_ZEROMQ_INCLUDE_HINTS ${PC_ZEROMQ_INCLUDE_DIRS} ${PC_ZEROMQ_INCLUDE_DIRS}/*)
-endif (PC_ZEROMQ_FOUND)
-find_path (ZEROMQ_INCLUDE_DIR NAMES zmq.h HINTS ${PC_ZEROMQ_INCLUDE_HINTS})
-
-#   Find location of CZMQ header file
+#   Find location of czmq.h file
 pkg_check_modules (PC_CZMQ "libczmq")
 if (NOT PC_CZMQ_FOUND)
     pkg_check_modules(PC_CZMQ "czmq")
@@ -64,13 +58,17 @@ endif (NOT PC_CZMQ_FOUND)
 if (PC_CZMQ_FOUND)
     set (PC_CZMQ_INCLUDE_HINTS ${PC_CZMQ_INCLUDE_DIRS} ${PC_CZMQ_INCLUDE_DIRS}/*)
 endif (PC_CZMQ_FOUND)
-find_path (CZMQ_INCLUDE_DIR NAMES czmq.h HINTS ${PC_CZMQ_INCLUDE_HINTS})
+
+find_path (
+    CZMQ_INCLUDE_DIR
+    NAMES czmq.h
+    HINTS ${PC_CZMQ_INCLUDE_HINTS}
+)
 
 cmake_policy (SET CMP0015 NEW)   #  Use relative paths in link_directories
 
 include_directories (
-    ${LIBSODIUM_INCLUDE_DIR}
-    ${ZEROMQ_INCLUDE_DIR}
+    ${LIBZMQ_INCLUDE_DIR}
     ${CZMQ_INCLUDE_DIR}
     ../../../include
     ../../../bindings/jni/src/native/include
