@@ -67,6 +67,9 @@ if test "x${ZYRE_GCOV}" == "xyes"; then
     if test "x${ZYRE_ORIG_CFLAGS}" != "xnone"; then
         CFLAGS="${CFLAGS} ${ZYRE_ORIG_CFLAGS}"
     fi
+    AM_CONDITIONAL(WITH_GCOV, true)
+else
+    AM_CONDITIONAL(WITH_GCOV, false)
 fi
 
 PREVIOUS_CFLAGS="${CFLAGS}"
@@ -77,6 +80,7 @@ was_libsodium_check_lib_detected=no
 
 PKG_CHECK_MODULES([libsodium], [libsodium >= 0.0.0],
     [
+        AC_DEFINE(HAVE_LIBSODIUM, 1, [The libsodium library is to be used.])
     ],
     [
         AC_ARG_WITH([libsodium],
@@ -108,8 +112,9 @@ PKG_CHECK_MODULES([libsodium], [libsodium >= 0.0.0],
                 AC_SUBST([libsodium_CFLAGS],[${libsodium_synthetic_cflags}])
                 AC_SUBST([libsodium_LIBS],[${libsodium_synthetic_libs}])
                 was_libsodium_check_lib_detected=yes
+                AC_DEFINE(HAVE_LIBSODIUM, 1, [The libsodium library is to be used.])
             ],
-            [AC_MSG_ERROR([cannot link with -lsodium, install libsodium.])])
+            [])
     ])
 
 if test "x$was_libsodium_check_lib_detected" = "xno"; then
@@ -219,11 +224,14 @@ zyre_on_android="no"
 # Host specific checks
 AC_CANONICAL_HOST
 
-# Allow user to disable doc build
-AC_ARG_WITH([documentation], [AS_HELP_STRING([--without-documentation],
-    [disable documentation build even if asciidoc and xmlto are present [default=no]])])
+# Man pages are built/installed if asciidoc and xmlto are present
+#   --with-docs=no overrides this
+AC_ARG_WITH([docs],
+    AS_HELP_STRING([--with-docs],
+        [Build and install man pages [default=yes]]),
+    [with_docs=$withval])
 
-if test "x$with_documentation" = "xno"; then
+if test "x$with_docs" = "xno"; then
     zyre_build_doc="no"
     zyre_install_man="no"
 else
@@ -428,7 +436,6 @@ AC_ARG_WITH([pkgconfigdir], AS_HELP_STRING([--with-pkgconfigdir=PATH],
 AC_SUBST([pkgconfigdir])
 
 
-
 # enable specific system integration features
 AC_ARG_WITH([systemd],
     AS_HELP_STRING([--with-systemd],
@@ -442,6 +449,25 @@ AM_COND_IF([WITH_SYSTEMD],
     [PKG_CHECK_MODULES([SYSTEMD], [systemd >= 200], [],
         [AC_MSG_ERROR([Cannot find required package for systemd. Note, pkg-config is required due to specified version >= 200])])],
     [])
+
+# enable draft API by default if we're in a git repository
+# else disable it by default; then allow --with-draft=yes/no override
+AC_CHECK_FILE(.git, [gitmaster=yes], [gitmaster=no])
+
+AC_ARG_WITH([drafts],
+    AS_HELP_STRING([--with-drafts],
+        [Build and install draft classes and methods [default=yes.]]),
+    [with_drafts=$withval],
+    [with_drafts=$gitmaster])
+
+AM_CONDITIONAL([WITH_DRAFTS], [test x$with_drafts != xno])
+
+if test "x$with_drafts" = "xyes"; then
+    AC_MSG_NOTICE([building draft, stable, and legacy API])
+    AC_DEFINE(WITH_DRAFTS, 1, [Build and install draft classes and methods.])
+else
+    AC_MSG_NOTICE([building stable and legacy API (no drafts)])
+fi
 
 # Specify output files
 AC_CONFIG_FILES([Makefile

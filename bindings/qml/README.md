@@ -110,10 +110,11 @@ rake test
 ```
 
 Use this command when developing and testing the library. A copy of the 
-zyre library is installed locally where Qt can find it for 
+zyre library is installed locally where Qt can find it for
 running desktop applications that use the library, and tests are run.
 
-You will need to have the zyre C library built and installed on your machine.
+You will need to have the zyre C library built and installed
+on your machine.
 
 ### Install Locally for Android
 ```
@@ -126,15 +127,15 @@ The build will repeat for each android kit you have configured in the Qt
 Creator IDE so that the installed library is available for all kits.
 
 In order to build for android, the qml_zyre needs access to 
-an Android build of the zyre library and all its dependencies. 
+an Android build of the zyre library and all its dependencies.
 This can be done one of two ways:
 
-1. Clone the zyre library and all its dependencies from source 
+1. Clone the zyre library and all its dependencies from source
 into the same folder. If all project repos are side-by-side in the same 
 "workspace" folder (as is typical for many users' workflows), they can 
 detect eachother automatically and build in a chain when you run 
 `rake android` in the qml_zyre folder.
-2. Manually export the `ZYRE_ROOT` environment variable as the path 
+2. Manually export the `ZYRE_ROOT` environment variable as the path
 to the zyre source code root. Do the same for any other projects 
 that you are prompted for when you run `rake android`. When all environment 
 variables are resolved, they will build in a chain.
