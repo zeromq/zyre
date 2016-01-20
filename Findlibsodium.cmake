@@ -5,7 +5,7 @@
 
 if (NOT MSVC)
     include(FindPkgConfig)
-    pkg_check_modules(PC_LIBSODIUM "libsodium")
+    pkg_check_modules(PC_LIBSODIUM "sodium")
     if (NOT PC_LIBSODIUM_FOUND)
         pkg_check_modules(PC_LIBSODIUM "sodium")
     endif (NOT PC_LIBSODIUM_FOUND)
@@ -18,13 +18,13 @@ if (NOT MSVC)
     endif(PC_LIBSODIUM_FOUND)
 endif (NOT MSVC)
 
-find_path(
+find_path (
     LIBSODIUM_INCLUDE_DIRS
     NAMES sodium.h
     HINTS ${PC_LIBSODIUM_INCLUDE_HINTS}
 )
 
-find_library(
+find_library (
     LIBSODIUM_LIBRARIES
     NAMES sodium
     HINTS ${PC_LIBSODIUM_LIBRARY_HINTS}
