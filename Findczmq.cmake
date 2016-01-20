@@ -5,7 +5,7 @@
 
 if (NOT MSVC)
     include(FindPkgConfig)
-    pkg_check_modules(PC_CZMQ "libczmq")
+    pkg_check_modules(PC_CZMQ "czmq")
     if (NOT PC_CZMQ_FOUND)
         pkg_check_modules(PC_CZMQ "czmq")
     endif (NOT PC_CZMQ_FOUND)
@@ -18,13 +18,13 @@ if (NOT MSVC)
     endif(PC_CZMQ_FOUND)
 endif (NOT MSVC)
 
-find_path(
+find_path (
     CZMQ_INCLUDE_DIRS
     NAMES czmq.h
     HINTS ${PC_CZMQ_INCLUDE_HINTS}
 )
 
-find_library(
+find_library (
     CZMQ_LIBRARIES
     NAMES czmq
     HINTS ${PC_CZMQ_LIBRARY_HINTS}

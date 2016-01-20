@@ -465,8 +465,10 @@ AM_CONDITIONAL([WITH_DRAFTS], [test x$with_drafts != xno])
 if test "x$with_drafts" = "xyes"; then
     AC_MSG_NOTICE([building draft, stable, and legacy API])
     AC_DEFINE(WITH_DRAFTS, 1, [Build and install draft classes and methods.])
+    AC_SUBST(pkg_config_defines, "-DWITH_DRAFTS=1")
 else
     AC_MSG_NOTICE([building stable and legacy API (no drafts)])
+    AC_SUBST(pkg_config_defines, "")
 fi
 
 # Specify output files
