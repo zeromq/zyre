@@ -185,28 +185,28 @@ ZYRE_EXPORT int
 
 #ifdef WITH_DRAFTS
 //  Return zlist of current peer ids.
-//  The caller is responsible for destroying the return value when finished with it.
+//  The caller owns the return value and must destroy it when done with it.
 ZYRE_EXPORT zlist_t *
     zyre_peers (zyre_t *self);
 #endif // WITH_DRAFTS
 
 #ifdef WITH_DRAFTS
 //  Return zlist of currently joined groups.
-//  The caller is responsible for destroying the return value when finished with it.
+//  The caller owns the return value and must destroy it when done with it.
 ZYRE_EXPORT zlist_t *
     zyre_own_groups (zyre_t *self);
 #endif // WITH_DRAFTS
 
 #ifdef WITH_DRAFTS
 //  Return zlist of groups known through connected peers.
-//  The caller is responsible for destroying the return value when finished with it.
+//  The caller owns the return value and must destroy it when done with it.
 ZYRE_EXPORT zlist_t *
     zyre_peer_groups (zyre_t *self);
 #endif // WITH_DRAFTS
 
 #ifdef WITH_DRAFTS
 //  Return the endpoint of a connected peer.
-//  The caller is responsible for destroying the return value when finished with it.
+//  The caller owns the return value and must destroy it when done with it.
 ZYRE_EXPORT char *
     zyre_peer_address (zyre_t *self, const char *peer);
 #endif // WITH_DRAFTS
@@ -214,7 +214,7 @@ ZYRE_EXPORT char *
 #ifdef WITH_DRAFTS
 //  Return the value of a header of a conected peer. 
 //  Returns null if peer or key doesn't exits.       
-//  The caller is responsible for destroying the return value when finished with it.
+//  The caller owns the return value and must destroy it when done with it.
 ZYRE_EXPORT char *
     zyre_peer_header_value (zyre_t *self, const char *peer, const char *name);
 #endif // WITH_DRAFTS
