@@ -20,7 +20,7 @@ addons:
     - valgrind
 
 before_install:
-- if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils ; fi
+- if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils valgrind ; fi
 
 # Build and check this project according to the BUILD_TYPE
 script: ./ci_build.sh
