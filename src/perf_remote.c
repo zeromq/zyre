@@ -14,7 +14,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zyre.h"
+#include "zyre_classes.h"
 
 // to test performances, run perf_remote [node_count] first then perf_local
 

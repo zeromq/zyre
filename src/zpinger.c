@@ -22,7 +22,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zyre.h"
+#include "zyre_classes.h"
 
 int main (int argc, char *argv [])
 {

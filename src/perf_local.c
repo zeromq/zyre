@@ -14,7 +14,7 @@
 */
 
 #include <czmq.h>
-#include "../include/zyre.h"
+#include "zyre_classes.h"
 
 static bool
 s_node_recv (zyre_t *node, char* command, char* expected)
