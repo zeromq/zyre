@@ -16,7 +16,7 @@
     =========================================================================
 */
 
-#include "../include/zyre.h"
+#include "zyre_classes.h"
 
 #define MAX_GROUP 10
 

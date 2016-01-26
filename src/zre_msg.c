@@ -30,7 +30,7 @@
 @end
 */
 
-#include "../include/zyre.h"
+#include "zyre_classes.h"
 #include "../include/zre_msg.h"
 
 //  Structure of our class
