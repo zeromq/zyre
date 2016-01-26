@@ -15,7 +15,7 @@ pkgconfig_DATA = src/libzyre.pc
 include_HEADERS = \
     include/zyre_library.h
 
-if WITH_DRAFTS
+if ENABLE_DRAFTS
 include_HEADERS += \
     include/zyre.h \
     include/zyre_event.h \
@@ -28,7 +28,7 @@ src_libzyre_la_SOURCES = \
     src/zyre_node.c \
     src/platform.h
 
-if WITH_DRAFTS
+if ENABLE_DRAFTS
 src_libzyre_la_SOURCES += \
     src/zyre.c \
     src/zyre_event.c \
@@ -55,7 +55,7 @@ endif
 
 src_libzyre_la_LIBADD = ${project_libs}
 
-if WITH_PERF_LOCAL
+if ENABLE_PERF_LOCAL
 noinst_PROGRAMS += src/perf_local
 src_perf_local_CPPFLAGS = ${AM_CPPFLAGS}
 src_perf_local_LDADD = ${program_libs}
@@ -63,8 +63,8 @@ src_perf_local_SOURCES = src/perf_local.c
 if WITH_SYSTEMD
 endif #WITH_SYSTEMD
 
-endif #WITH_PERF_LOCAL
-if WITH_PERF_REMOTE
+endif #ENABLE_PERF_LOCAL
+if ENABLE_PERF_REMOTE
 noinst_PROGRAMS += src/perf_remote
 src_perf_remote_CPPFLAGS = ${AM_CPPFLAGS}
 src_perf_remote_LDADD = ${program_libs}
@@ -72,8 +72,8 @@ src_perf_remote_SOURCES = src/perf_remote.c
 if WITH_SYSTEMD
 endif #WITH_SYSTEMD
 
-endif #WITH_PERF_REMOTE
-if WITH_ZPINGER
+endif #ENABLE_PERF_REMOTE
+if ENABLE_ZPINGER
 bin_PROGRAMS += src/zpinger
 src_zpinger_CPPFLAGS = ${AM_CPPFLAGS}
 src_zpinger_LDADD = ${program_libs}
@@ -81,8 +81,8 @@ src_zpinger_SOURCES = src/zpinger.c
 if WITH_SYSTEMD
 endif #WITH_SYSTEMD
 
-endif #WITH_ZPINGER
-if WITH_ZTESTER_BEACON
+endif #ENABLE_ZPINGER
+if ENABLE_ZTESTER_BEACON
 noinst_PROGRAMS += src/ztester_beacon
 src_ztester_beacon_CPPFLAGS = ${AM_CPPFLAGS}
 src_ztester_beacon_LDADD = ${program_libs}
@@ -90,8 +90,8 @@ src_ztester_beacon_SOURCES = src/ztester_beacon.c
 if WITH_SYSTEMD
 endif #WITH_SYSTEMD
 
-endif #WITH_ZTESTER_BEACON
-if WITH_ZTESTER_GOSSIP
+endif #ENABLE_ZTESTER_BEACON
+if ENABLE_ZTESTER_GOSSIP
 noinst_PROGRAMS += src/ztester_gossip
 src_ztester_gossip_CPPFLAGS = ${AM_CPPFLAGS}
 src_ztester_gossip_LDADD = ${program_libs}
@@ -99,8 +99,7 @@ src_ztester_gossip_SOURCES = src/ztester_gossip.c
 if WITH_SYSTEMD
 endif #WITH_SYSTEMD
 
-endif #WITH_ZTESTER_GOSSIP
-if WITH_ZYRE_SELFTEST
+endif #ENABLE_ZTESTER_GOSSIP
 check_PROGRAMS += src/zyre_selftest
 noinst_PROGRAMS += src/zyre_selftest
 src_zyre_selftest_CPPFLAGS = ${AM_CPPFLAGS}
@@ -109,7 +108,6 @@ src_zyre_selftest_SOURCES = src/zyre_selftest.c
 if WITH_SYSTEMD
 endif #WITH_SYSTEMD
 
-endif #WITH_ZYRE_SELFTEST
 
 # Install api files into /usr/local/share/zproject
 apidir = @datadir@/zproject/zyre

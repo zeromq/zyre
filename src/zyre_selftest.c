@@ -32,11 +32,11 @@ all_tests [] = {
     { "zyre_peer", zyre_peer_test },
     { "zyre_group", zyre_group_test },
     { "zyre_node", zyre_node_test },
-#ifdef WITH_DRAFTS
+#ifdef ZYRE_BUILD_DRAFT_API
     { "zyre", zyre_test },
     { "zyre_event", zyre_event_test },
     { "zre_msg", zre_msg_test },
-#endif // WITH_DRAFTS
+#endif // ZYRE_BUILD_DRAFT_API
     {0, 0}          //  Sentinel
 };
 

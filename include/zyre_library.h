@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zyre - ZYRE wrapper
+    zyre - generated layer of public API
 
     Copyright (c) the Contributors as noted in the AUTHORS file.           
                                                                            
@@ -49,31 +49,27 @@
 #endif
 
 //  Opaque class structures to allow forward references
-
-//  Draft APIs, excluded by default in stable releases
-#ifdef WITH_DRAFTS
+//  These classes are stable or legacy and built in all releases
+//  Draft classes are by default not built stable releases
+#ifdef ZYRE_BUILD_DRAFT_API
 typedef struct _zyre_t zyre_t;
 #define ZYRE_T_DEFINED
 typedef struct _zyre_event_t zyre_event_t;
 #define ZYRE_EVENT_T_DEFINED
 typedef struct _zre_msg_t zre_msg_t;
 #define ZRE_MSG_T_DEFINED
-#endif // WITH_DRAFTS
+#endif // ZYRE_BUILD_DRAFT_API
 
 //  Public constants
+#ifdef ZYRE_BUILD_DRAFT_API
+#define ZRE_DISCOVERY_PORT  5670               //  IANA-assigned UDP port for ZRE
+#endif // ZYRE_BUILD_DRAFT_API
 
-//  Draft APIs, excluded by default in stable releases
-#ifdef WITH_DRAFTS
-#define ZRE_DISCOVERY_PORT	5670 //              IANA-assigned UDP port for ZRE
-#endif // WITH_DRAFTS
-
-//  Public API classes
-
-//  Draft APIs, excluded by default in stable releases
-#ifdef WITH_DRAFTS
+//  Public classes, each with its own header file
+#ifdef ZYRE_BUILD_DRAFT_API
 #include "zyre_event.h"
 #include "zre_msg.h"
-#endif // WITH_DRAFTS
+#endif // ZYRE_BUILD_DRAFT_API
 
 #endif
 /*

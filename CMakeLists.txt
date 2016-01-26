@@ -47,14 +47,14 @@ set(
 # options
 ########################################################################
 if (EXISTS ".git")
-    OPTION (WITH_DRAFTS "Build and install draft classes and methods" ON)
+    OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" ON)
 else ()
-    OPTION (WITH_DRAFTS "Build and install draft classes and methods" OFF)
+    OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" OFF)
 endif ()
 
-IF (WITH_DRAFTS)
-    ADD_DEFINITIONS (-DWITH_DRAFTS)
-ENDIF (WITH_DRAFTS)
+IF (ENABLE_DRAFTS)
+    ADD_DEFINITIONS (-DZYRE_BUILD_DRAFT_API)
+ENDIF (ENABLE_DRAFTS)
 
 ########################################################################
 # platform.h
@@ -151,13 +151,13 @@ set (zyre_headers
     src/zyre_node.h
 )
 
-IF (WITH_DRAFTS)
-list(APPEND zyre_headers
-    include/zyre.h
-    include/zyre_event.h
-    include/zre_msg.h
-)
-ENDIF (WITH_DRAFTS)
+IF (ENABLE_DRAFTS)
+    list(APPEND zyre_headers
+        include/zyre.h
+        include/zyre_event.h
+        include/zre_msg.h
+    )
+ENDIF (ENABLE_DRAFTS)
 
 source_group ("Header Files" FILES ${zyre_headers})
 install(FILES ${zyre_headers} DESTINATION include)
@@ -172,13 +172,13 @@ set (zyre_sources
     src/zyre_node.c
 )
 
-IF (WITH_DRAFTS)
-list(APPEND zyre_sources
-    src/zyre.c
-    src/zyre_event.c
-    src/zre_msg.c
-)
-ENDIF (WITH_DRAFTS)
+IF (ENABLE_DRAFTS)
+    list (APPEND zyre_sources
+        src/zyre.c
+        src/zyre_event.c
+        src/zre_msg.c
+    )
+ENDIF (ENABLE_DRAFTS)
 
 source_group("Source Files" FILES ${zyre_sources})
 if (NOT DEFINED BUILD_SHARED_LIBS)
@@ -204,16 +204,16 @@ install(TARGETS zyre
 ########################################################################
 # pkgconfig
 ########################################################################
-set(VERSION "${ZYRE_VERSION}")
-set(prefix "${CMAKE_INSTALL_PREFIX}")
-set(exec_prefix "\${prefix}")
-set(libdir "\${prefix}/lib${LIB_SUFFIX}")
-set(includedir "\${prefix}/include")
-IF (WITH_DRAFTS)
-set(pkg_config_defines "-DWITH_DRAFTS=1")
-ELSE (WITH_DRAFTS)
-set(pkg_config_defines "")
-ENDIF (WITH_DRAFTS)
+set (VERSION "${ZYRE_VERSION}")
+set (prefix "${CMAKE_INSTALL_PREFIX}")
+set (exec_prefix "\${prefix}")
+set (libdir "\${prefix}/lib${LIB_SUFFIX}")
+set (includedir "\${prefix}/include")
+IF (ENABLE_DRAFTS)
+    set (pkg_config_defines "-DZYRE_BUILD_DRAFT_API=1")
+ELSE (ENABLE_DRAFTS)
+    set (pkg_config_defines "")
+ENDIF (ENABLE_DRAFTS)
 configure_file(
     "${SOURCE_DIR}/src/libzyre.pc.in"
     "${SOURCE_DIR}/src/libzyre.pc"
@@ -330,13 +330,13 @@ set(TEST_CLASSES
     zyre_node
 )
 
-IF (WITH_DRAFTS)
-list(APPEND TEST_CLASSES
+IF (ENABLE_DRAFTS)
+    list (APPEND TEST_CLASSES
     zyre
     zyre_event
     zre_msg
-)
-ENDIF (WITH_DRAFTS)
+    )
+ENDIF (ENABLE_DRAFTS)
 
 foreach(TEST_CLASS ${TEST_CLASSES})
     add_test(

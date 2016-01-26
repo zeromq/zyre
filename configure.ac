@@ -379,64 +379,64 @@ AM_CONDITIONAL(INSTALL_MAN, test "x$zyre_install_man" = "xyes")
 AM_CONDITIONAL(BUILD_DOC, test "x$zyre_build_doc" = "xyes")
 
 # Check for perf_local intent
-AC_ARG_WITH([perf_local],
-    AS_HELP_STRING([--with-perf_local],
-        [Compile the perf_local program [default=yes].]),
-    [with_perf_local=$withval],
-    [with_perf_local=yes])
+AC_ARG_ENABLE([perf_local],
+    AS_HELP_STRING([--enable-perf_local],
+        [Compile 'perf_local' in src [default=yes].]),
+    [enable_perf_local=$enableval],
+    [enable_perf_local=yes])
 
-AM_CONDITIONAL([WITH_PERF_LOCAL], [test x$with_perf_local != xno])
-AM_COND_IF([WITH_PERF_LOCAL], [AC_MSG_NOTICE([WITH_PERF_LOCAL defined])])
+AM_CONDITIONAL([ENABLE_PERF_LOCAL], [test x$enable_perf_local != xno])
+AM_COND_IF([ENABLE_PERF_LOCAL], [AC_MSG_NOTICE([ENABLE_PERF_LOCAL defined])])
 
 # Check for perf_remote intent
-AC_ARG_WITH([perf_remote],
-    AS_HELP_STRING([--with-perf_remote],
-        [Compile the perf_remote program [default=yes].]),
-    [with_perf_remote=$withval],
-    [with_perf_remote=yes])
+AC_ARG_ENABLE([perf_remote],
+    AS_HELP_STRING([--enable-perf_remote],
+        [Compile 'perf_remote' in src [default=yes].]),
+    [enable_perf_remote=$enableval],
+    [enable_perf_remote=yes])
 
-AM_CONDITIONAL([WITH_PERF_REMOTE], [test x$with_perf_remote != xno])
-AM_COND_IF([WITH_PERF_REMOTE], [AC_MSG_NOTICE([WITH_PERF_REMOTE defined])])
+AM_CONDITIONAL([ENABLE_PERF_REMOTE], [test x$enable_perf_remote != xno])
+AM_COND_IF([ENABLE_PERF_REMOTE], [AC_MSG_NOTICE([ENABLE_PERF_REMOTE defined])])
 
 # Check for zpinger intent
-AC_ARG_WITH([zpinger],
-    AS_HELP_STRING([--with-zpinger],
-        [Compile and install the zpinger program [default=yes].]),
-    [with_zpinger=$withval],
-    [with_zpinger=yes])
+AC_ARG_ENABLE([zpinger],
+    AS_HELP_STRING([--enable-zpinger],
+        [Compile and install 'zpinger' [default=yes].]),
+    [enable_zpinger=$enableval],
+    [enable_zpinger=yes])
 
-AM_CONDITIONAL([WITH_ZPINGER], [test x$with_zpinger != xno])
-AM_COND_IF([WITH_ZPINGER], [AC_MSG_NOTICE([WITH_ZPINGER defined])])
+AM_CONDITIONAL([ENABLE_ZPINGER], [test x$enable_zpinger != xno])
+AM_COND_IF([ENABLE_ZPINGER], [AC_MSG_NOTICE([ENABLE_ZPINGER defined])])
 
 # Check for ztester_beacon intent
-AC_ARG_WITH([ztester_beacon],
-    AS_HELP_STRING([--with-ztester_beacon],
-        [Compile the ztester_beacon program [default=yes].]),
-    [with_ztester_beacon=$withval],
-    [with_ztester_beacon=yes])
+AC_ARG_ENABLE([ztester_beacon],
+    AS_HELP_STRING([--enable-ztester_beacon],
+        [Compile 'ztester_beacon' in src [default=yes].]),
+    [enable_ztester_beacon=$enableval],
+    [enable_ztester_beacon=yes])
 
-AM_CONDITIONAL([WITH_ZTESTER_BEACON], [test x$with_ztester_beacon != xno])
-AM_COND_IF([WITH_ZTESTER_BEACON], [AC_MSG_NOTICE([WITH_ZTESTER_BEACON defined])])
+AM_CONDITIONAL([ENABLE_ZTESTER_BEACON], [test x$enable_ztester_beacon != xno])
+AM_COND_IF([ENABLE_ZTESTER_BEACON], [AC_MSG_NOTICE([ENABLE_ZTESTER_BEACON defined])])
 
 # Check for ztester_gossip intent
-AC_ARG_WITH([ztester_gossip],
-    AS_HELP_STRING([--with-ztester_gossip],
-        [Compile the ztester_gossip program [default=yes].]),
-    [with_ztester_gossip=$withval],
-    [with_ztester_gossip=yes])
+AC_ARG_ENABLE([ztester_gossip],
+    AS_HELP_STRING([--enable-ztester_gossip],
+        [Compile 'ztester_gossip' in src [default=yes].]),
+    [enable_ztester_gossip=$enableval],
+    [enable_ztester_gossip=yes])
 
-AM_CONDITIONAL([WITH_ZTESTER_GOSSIP], [test x$with_ztester_gossip != xno])
-AM_COND_IF([WITH_ZTESTER_GOSSIP], [AC_MSG_NOTICE([WITH_ZTESTER_GOSSIP defined])])
+AM_CONDITIONAL([ENABLE_ZTESTER_GOSSIP], [test x$enable_ztester_gossip != xno])
+AM_COND_IF([ENABLE_ZTESTER_GOSSIP], [AC_MSG_NOTICE([ENABLE_ZTESTER_GOSSIP defined])])
 
 # Check for zyre_selftest intent
-AC_ARG_WITH([zyre_selftest],
-    AS_HELP_STRING([--with-zyre_selftest],
-        [Compile the zyre_selftest program [default=yes].]),
-    [with_zyre_selftest=$withval],
-    [with_zyre_selftest=yes])
+AC_ARG_ENABLE([zyre_selftest],
+    AS_HELP_STRING([--enable-zyre_selftest],
+        [Compile 'zyre_selftest' in src [default=yes].]),
+    [enable_zyre_selftest=$enableval],
+    [enable_zyre_selftest=yes])
 
-AM_CONDITIONAL([WITH_ZYRE_SELFTEST], [test x$with_zyre_selftest != xno])
-AM_COND_IF([WITH_ZYRE_SELFTEST], [AC_MSG_NOTICE([WITH_ZYRE_SELFTEST defined])])
+AM_CONDITIONAL([ENABLE_ZYRE_SELFTEST], [test x$enable_zyre_selftest != xno])
+AM_COND_IF([ENABLE_ZYRE_SELFTEST], [AC_MSG_NOTICE([ENABLE_ZYRE_SELFTEST defined])])
 
 # Checks for library functions.
 AC_TYPE_SIGNAL
@@ -463,24 +463,29 @@ AM_COND_IF([WITH_SYSTEMD],
         [AC_MSG_ERROR([Cannot find required package for systemd. Note, pkg-config is required due to specified version >= 200])])],
     [])
 
-# enable draft API by default if we're in a git repository
-# else disable it by default; then allow --with-draft=yes/no override
-AC_CHECK_FILE(.git, [gitmaster=yes], [gitmaster=no])
-
-AC_ARG_WITH([drafts],
-    AS_HELP_STRING([--with-drafts],
-        [Build and install draft classes and methods [default=yes.]]),
-    [with_drafts=$withval],
-    [with_drafts=$gitmaster])
-
-AM_CONDITIONAL([WITH_DRAFTS], [test x$with_drafts != xno])
-
-if test "x$with_drafts" = "xyes"; then
-    AC_MSG_NOTICE([building draft, stable, and legacy API])
-    AC_DEFINE(WITH_DRAFTS, 1, [Build and install draft classes and methods.])
-    AC_SUBST(pkg_config_defines, "-DWITH_DRAFTS=1")
+if test "x$cross_compiling" = "xyes"; then
+    #   Enable draft by default when cross-compiling
+    gitmaster=yes
 else
-    AC_MSG_NOTICE([building stable and legacy API (no drafts)])
+    # enable draft API by default if we're in a git repository
+    # else disable it by default; then allow --enable-drafts=yes/no override
+    AC_CHECK_FILE(.git, [gitmaster=yes], [gitmaster=no])
+fi
+
+AC_ARG_ENABLE([drafts],
+    AS_HELP_STRING([--enable-drafts],
+        [Build and install draft classes and methods [default=yes.]]),
+    [enable_drafts=$withval],
+    [enable_drafts=$gitmaster])
+
+AM_CONDITIONAL([ENABLE_DRAFTS], [test x$enable_drafts != xno])
+
+if test "x$enable_drafts" = "xyes"; then
+    AC_MSG_NOTICE([Building stable and legacy API + draft API])
+    AC_DEFINE(ZYRE_BUILD_DRAFT_API, 1, [Provide draft classes and methods.])
+    AC_SUBST(pkg_config_defines, "-DZYRE_BUILD_DRAFT_API=1")
+else
+    AC_MSG_NOTICE([Building stable and legacy API (no draft API)])
     AC_SUBST(pkg_config_defines, "")
 fi
 
