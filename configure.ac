@@ -493,6 +493,7 @@ fi
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  src/libzyre.pc
+                 examples/chat/Makefile
                  ])
 
 AM_COND_IF([WITH_SYSTEMD],
