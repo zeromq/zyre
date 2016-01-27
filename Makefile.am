@@ -17,8 +17,8 @@ AM_CPPFLAGS = \
 
 project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS}
 
-SUBDIRS = doc
-DIST_SUBDIRS = doc
+SUBDIRS = doc examples/chat
+DIST_SUBDIRS = doc examples/chat
 lib_LTLIBRARIES =
 bin_PROGRAMS =
 noinst_PROGRAMS =
