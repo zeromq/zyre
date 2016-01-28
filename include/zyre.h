@@ -28,10 +28,6 @@ extern "C" {
 //  This is a draft class, and may change without notice. It is disabled in
 //  stable builds by default. If you use this in applications, please ask
 //  for it to be pushed to stable state. Use --enable-drafts to enable.
-//  Self test of this class.
-ZYRE_EXPORT void
-    zyre_test (bool verbose);
-
 #ifdef ZYRE_BUILD_DRAFT_API
 //  *** Draft method, for development use, may change without warning ***
 //  Constructor, creates a new Zyre node. Note that until you start the
@@ -215,6 +211,11 @@ ZYRE_EXPORT void
 //  Return the Zyre version for run-time API detection
 ZYRE_EXPORT void
     zyre_version (int *major, int *minor, int *patch);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Self test of this class.
+ZYRE_EXPORT void
+    zyre_test (bool verbose);
 
 #endif // ZYRE_BUILD_DRAFT_API
 //  @end

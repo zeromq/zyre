@@ -38,7 +38,7 @@ public:
     const QString address ();
 
     //  Returns the event headers, or NULL if there are none
-    QZhash * headers ();
+    zhash_t * headers ();
 
     //  Returns value of a header from the message headers   
     //  obtained by ENTER. Return NULL if no value was found.
@@ -48,7 +48,7 @@ public:
     const QString group ();
 
     //  Returns the incoming message payload (currently one frame)
-    QZmsg * msg ();
+    zmsg_t * msg ();
 
     //  Print event to zsys log
     void print ();

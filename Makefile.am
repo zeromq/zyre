@@ -17,8 +17,8 @@ AM_CPPFLAGS = \
 
 project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS}
 
-SUBDIRS = doc examples/chat
-DIST_SUBDIRS = doc examples/chat
+SUBDIRS = doc
+DIST_SUBDIRS = doc
 lib_LTLIBRARIES =
 bin_PROGRAMS =
 noinst_PROGRAMS =
@@ -33,8 +33,7 @@ EXTRA_DIST = \
     src/zyre_classes.h \
     LICENSE \
     README.md \
-    CONTRIBUTING.md \
-    version.sh
+    CONTRIBUTING.md
 
 include $(srcdir)/src/Makemodule.am
 

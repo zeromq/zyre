@@ -10,6 +10,8 @@ CONFIG(debug, debug|release) {
     else:win32:QZYRE_LIBNAME = $$member(QZYRE_LIBNAME, 0)d
 }
 TEMPLATE -= fakelib
+CONFIG += link_pkgconfig
+PKGCONFIG += libzyre
 QZYRE_LIBDIR = $$PWD/lib
 unix:qzyre-uselib:!qzyre-buildlib:QMAKE_RPATHDIR += $$QZYRE_LIBDIR
 ################################################################################

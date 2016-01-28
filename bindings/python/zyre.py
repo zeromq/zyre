@@ -111,14 +111,18 @@ lib.zyre_test.restype = None
 lib.zyre_test.argtypes = [c_bool]
 
 class Zyre(object):
-    """An open-source framework for proximity-based P2P apps"""
+    """
+    An open-source framework for proximity-based P2P apps
+    """
 
     allow_destruct = False
     def __init__(self, *args):
-        """Constructor, creates a new Zyre node. Note that until you start the
+        """
+        Constructor, creates a new Zyre node. Note that until you start the
 node it is silent and invisible to other nodes on the network.
 The node name is provided to other nodes during discovery. If you
-specify NULL, Zyre generates a randomized node name from the UUID."""
+specify NULL, Zyre generates a randomized node name from the UUID.
+        """
         if len(args) == 2 and type(args[0]) is c_void_p and isinstance(args[1], bool):
             self._as_parameter_ = cast(args[0], zyre_p) # Conversion from raw type to binding
             self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
@@ -131,8 +135,10 @@ specify NULL, Zyre generates a randomized node name from the UUID."""
             self.allow_destruct = True
 
     def __del__(self):
-        """Destructor, destroys a Zyre node. When you destroy a node, any
-messages it is sending or receiving will be discarded."""
+        """
+        Destructor, destroys a Zyre node. When you destroy a node, any
+messages it is sending or receiving will be discarded.
+        """
         if self.allow_destruct:
             lib.zyre_destroy(byref(self._as_parameter_))
 
@@ -145,146 +151,202 @@ messages it is sending or receiving will be discarded."""
         return self._as_parameter_.__nonzero__()
 
     def uuid(self):
-        """Return our node UUID string, after successful initialization"""
+        """
+        Return our node UUID string, after successful initialization
+        """
         return lib.zyre_uuid(self._as_parameter_)
 
     def name(self):
-        """Return our node name, after successful initialization"""
+        """
+        Return our node name, after successful initialization
+        """
         return lib.zyre_name(self._as_parameter_)
 
     def set_header(self, name, format, *args):
-        """Set node header; these are provided to other nodes during discovery
-and come in each ENTER message."""
+        """
+        Set node header; these are provided to other nodes during discovery
+and come in each ENTER message.
+        """
         return lib.zyre_set_header(self._as_parameter_, name, format, *args)
 
     def set_verbose(self):
-        """Set verbose mode; this tells the node to log all traffic as well as 
-all major events."""
+        """
+        Set verbose mode; this tells the node to log all traffic as well as 
+all major events.
+        """
         return lib.zyre_set_verbose(self._as_parameter_)
 
     def set_port(self, port_nbr):
-        """Set UDP beacon discovery port; defaults to 5670, this call overrides 
+        """
+        Set UDP beacon discovery port; defaults to 5670, this call overrides 
 that so you can create independent clusters on the same network, for 
-e.g. development vs. production. Has no effect after zyre_start()."""
+e.g. development vs. production. Has no effect after zyre_start().
+        """
         return lib.zyre_set_port(self._as_parameter_, port_nbr)
 
     def set_interval(self, interval):
-        """Set UDP beacon discovery interval, in milliseconds. Default is instant
-beacon exploration followed by pinging every 1,000 msecs."""
+        """
+        Set UDP beacon discovery interval, in milliseconds. Default is instant
+beacon exploration followed by pinging every 1,000 msecs.
+        """
         return lib.zyre_set_interval(self._as_parameter_, interval)
 
     def set_interface(self, value):
-        """Set network interface for UDP beacons. If you do not set this, CZMQ will
+        """
+        Set network interface for UDP beacons. If you do not set this, CZMQ will
 choose an interface for you. On boxes with several interfaces you should
-specify which one you want to use, or strange things can happen."""
+specify which one you want to use, or strange things can happen.
+        """
         return lib.zyre_set_interface(self._as_parameter_, value)
 
     def set_endpoint(self, format, *args):
-        """By default, Zyre binds to an ephemeral TCP port and broadcasts the local
+        """
+        By default, Zyre binds to an ephemeral TCP port and broadcasts the local
 host name using UDP beaconing. When you call this method, Zyre will use
 gossip discovery instead of UDP beaconing. You MUST set-up the gossip
 service separately using zyre_gossip_bind() and _connect(). Note that the
 endpoint MUST be valid for both bind and connect operations. You can use
 inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address
 that is meaningful to remote as well as local nodes). Returns 0 if
-the bind was successful, else -1."""
+the bind was successful, else -1.
+        """
         return lib.zyre_set_endpoint(self._as_parameter_, format, *args)
 
     def gossip_bind(self, format, *args):
-        """Set-up gossip discovery of other nodes. At least one node in the cluster
+        """
+        Set-up gossip discovery of other nodes. At least one node in the cluster
 must bind to a well-known gossip endpoint, so other nodes can connect to
 it. Note that gossip endpoints are completely distinct from Zyre node
-endpoints, and should not overlap (they can use the same transport)."""
+endpoints, and should not overlap (they can use the same transport).
+        """
         return lib.zyre_gossip_bind(self._as_parameter_, format, *args)
 
     def gossip_connect(self, format, *args):
-        """Set-up gossip discovery of other nodes. A node may connect to multiple
+        """
+        Set-up gossip discovery of other nodes. A node may connect to multiple
 other nodes, for redundancy paths. For details of the gossip network
-design, see the CZMQ zgossip class."""
+design, see the CZMQ zgossip class.
+        """
         return lib.zyre_gossip_connect(self._as_parameter_, format, *args)
 
     def start(self):
-        """Start node, after setting header values. When you start a node it
+        """
+        Start node, after setting header values. When you start a node it
 begins discovery and connection. Returns 0 if OK, -1 if it wasn't
-possible to start the node."""
+possible to start the node.
+        """
         return lib.zyre_start(self._as_parameter_)
 
     def stop(self):
-        """Stop node; this signals to other peers that this node will go away.
+        """
+        Stop node; this signals to other peers that this node will go away.
 This is polite; however you can also just destroy the node without
-stopping it."""
+stopping it.
+        """
         return lib.zyre_stop(self._as_parameter_)
 
     def join(self, group):
-        """Join a named group; after joining a group you can send messages to
-the group and all Zyre nodes in that group will receive them."""
+        """
+        Join a named group; after joining a group you can send messages to
+the group and all Zyre nodes in that group will receive them.
+        """
         return lib.zyre_join(self._as_parameter_, group)
 
     def leave(self, group):
-        """Leave a group"""
+        """
+        Leave a group
+        """
         return lib.zyre_leave(self._as_parameter_, group)
 
     def recv(self):
-        """Receive next message from network; the message may be a control
+        """
+        Receive next message from network; the message may be a control
 message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
-Returns zmsg_t object, or NULL if interrupted"""
+Returns zmsg_t object, or NULL if interrupted
+        """
         return czmq.Zmsg(lib.zyre_recv(self._as_parameter_), False)
 
     def whisper(self, peer, msg_p):
-        """Send message to single peer, specified as a UUID string
-Destroys message after sending"""
+        """
+        Send message to single peer, specified as a UUID string
+Destroys message after sending
+        """
         return lib.zyre_whisper(self._as_parameter_, peer, byref(czmq.zmsg_p.from_param(msg_p)))
 
     def shout(self, group, msg_p):
-        """Send message to a named group
-Destroys message after sending"""
+        """
+        Send message to a named group
+Destroys message after sending
+        """
         return lib.zyre_shout(self._as_parameter_, group, byref(czmq.zmsg_p.from_param(msg_p)))
 
     def whispers(self, peer, format, *args):
-        """Send formatted string to a single peer specified as UUID string"""
+        """
+        Send formatted string to a single peer specified as UUID string
+        """
         return lib.zyre_whispers(self._as_parameter_, peer, format, *args)
 
     def shouts(self, group, format, *args):
-        """Send formatted string to a named group"""
+        """
+        Send formatted string to a named group
+        """
         return lib.zyre_shouts(self._as_parameter_, group, format, *args)
 
     def peers(self):
-        """Return zlist of current peer ids."""
+        """
+        Return zlist of current peer ids.
+        """
         return czmq.Zlist(lib.zyre_peers(self._as_parameter_), True)
 
     def own_groups(self):
-        """Return zlist of currently joined groups."""
+        """
+        Return zlist of currently joined groups.
+        """
         return czmq.Zlist(lib.zyre_own_groups(self._as_parameter_), True)
 
     def peer_groups(self):
-        """Return zlist of groups known through connected peers."""
+        """
+        Return zlist of groups known through connected peers.
+        """
         return czmq.Zlist(lib.zyre_peer_groups(self._as_parameter_), True)
 
     def peer_address(self, peer):
-        """Return the endpoint of a connected peer."""
+        """
+        Return the endpoint of a connected peer.
+        """
         return return_fresh_string(lib.zyre_peer_address(self._as_parameter_, peer))
 
     def peer_header_value(self, peer, name):
-        """Return the value of a header of a conected peer. 
-Returns null if peer or key doesn't exits."""
+        """
+        Return the value of a header of a conected peer. 
+Returns null if peer or key doesn't exits.
+        """
         return return_fresh_string(lib.zyre_peer_header_value(self._as_parameter_, peer, name))
 
     def socket(self):
-        """Return socket for talking to the Zyre node, for polling"""
+        """
+        Return socket for talking to the Zyre node, for polling
+        """
         return czmq.Zsock(lib.zyre_socket(self._as_parameter_), False)
 
     def print(self):
-        """Print zyre node information to stdout"""
+        """
+        Print zyre node information to stdout
+        """
         return lib.zyre_print(self._as_parameter_)
 
     @staticmethod
     def version(major, minor, patch):
-        """Return the Zyre version for run-time API detection"""
+        """
+        Return the Zyre version for run-time API detection
+        """
         return lib.zyre_version(byref(c_int.from_param(major)), byref(c_int.from_param(minor)), byref(c_int.from_param(patch)))
 
     @staticmethod
     def test(verbose):
-        """Self test of this class."""
+        """
+        Self test of this class.
+        """
         return lib.zyre_test(verbose)
 
 
@@ -315,7 +377,9 @@ lib.zyre_event_test.restype = None
 lib.zyre_event_test.argtypes = [c_bool]
 
 class ZyreEvent(object):
-    """Parsing Zyre messages"""
+    """
+    Parsing Zyre messages
+    """
 
     Type = {
         'enter': 1,
@@ -341,9 +405,11 @@ class ZyreEvent(object):
 
     allow_destruct = False
     def __init__(self, *args):
-        """Constructor: receive an event from the zyre node, wraps zyre_recv.
+        """
+        Constructor: receive an event from the zyre node, wraps zyre_recv.
 The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
-data (WHISPER, SHOUT)."""
+data (WHISPER, SHOUT).
+        """
         if len(args) == 2 and type(args[0]) is c_void_p and isinstance(args[1], bool):
             self._as_parameter_ = cast(args[0], zyre_event_p) # Conversion from raw type to binding
             self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
@@ -356,7 +422,9 @@ data (WHISPER, SHOUT)."""
             self.allow_destruct = True
 
     def __del__(self):
-        """Destructor; destroys an event instance"""
+        """
+        Destructor; destroys an event instance
+        """
         if self.allow_destruct:
             lib.zyre_event_destroy(byref(self._as_parameter_))
 
@@ -369,45 +437,65 @@ data (WHISPER, SHOUT)."""
         return self._as_parameter_.__nonzero__()
 
     def type(self):
-        """Returns event type, which is a zyre_event_type_t"""
+        """
+        Returns event type, which is a zyre_event_type_t
+        """
         return ZyreEvent.Type_out[lib.zyre_event_type(self._as_parameter_)]
 
     def sender(self):
-        """Return the sending peer's id as a string"""
+        """
+        Return the sending peer's id as a string
+        """
         return lib.zyre_event_sender(self._as_parameter_)
 
     def name(self):
-        """Return the sending peer's public name as a string"""
+        """
+        Return the sending peer's public name as a string
+        """
         return lib.zyre_event_name(self._as_parameter_)
 
     def address(self):
-        """Return the sending peer's ipaddress as a string"""
+        """
+        Return the sending peer's ipaddress as a string
+        """
         return lib.zyre_event_address(self._as_parameter_)
 
     def headers(self):
-        """Returns the event headers, or NULL if there are none"""
+        """
+        Returns the event headers, or NULL if there are none
+        """
         return czmq.Zhash(lib.zyre_event_headers(self._as_parameter_), False)
 
     def header(self, name):
-        """Returns value of a header from the message headers
-obtained by ENTER. Return NULL if no value was found."""
+        """
+        Returns value of a header from the message headers
+obtained by ENTER. Return NULL if no value was found.
+        """
         return lib.zyre_event_header(self._as_parameter_, name)
 
     def group(self):
-        """Returns the group name that a SHOUT event was sent to"""
+        """
+        Returns the group name that a SHOUT event was sent to
+        """
         return lib.zyre_event_group(self._as_parameter_)
 
     def msg(self):
-        """Returns the incoming message payload (currently one frame)"""
+        """
+        Returns the incoming message payload (currently one frame)
+        """
         return czmq.Zmsg(lib.zyre_event_msg(self._as_parameter_), False)
 
     def print(self):
-        """Print event to zsys log"""
+        """
+        Print event to zsys log
+        """
         return lib.zyre_event_print(self._as_parameter_)
 
     @staticmethod
     def test(verbose):
-        """Self test of this class."""
+        """
+        Self test of this class.
+        """
         return lib.zyre_event_test(verbose)
 
 ################################################################################

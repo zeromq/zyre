@@ -82,9 +82,9 @@ byte * QZframe::data ()
 ///
 //  Create a new frame that duplicates an existing frame. If frame is null,
 //  or memory was exhausted, returns null.                                 
-QZframe * QZframe::dup ()
+zframe_t * QZframe::dup ()
 {
-    QZframe *rv = new QZframe (zframe_dup (self));
+    zframe_t * rv = zframe_dup (self);
     return rv;
 }
 
@@ -157,9 +157,9 @@ void QZframe::setRoutingId (quint32 routingId)
 ///
 //  Return TRUE if two frames have identical size and data
 //  If either frame is NULL, equality is always false.    
-bool QZframe::eq (QZframe *other)
+bool QZframe::eq (zframe_t *other)
 {
-    bool rv = zframe_eq (self, other->self);
+    bool rv = zframe_eq (self, other);
     return rv;
 }
 
