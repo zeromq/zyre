@@ -173,27 +173,27 @@ int QZyre::leave (const QString &group)
 //  Receive next message from network; the message may be a control
 //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).   
 //  Returns zmsg_t object, or NULL if interrupted                  
-QZmsg * QZyre::recv ()
+zmsg_t * QZyre::recv ()
 {
-    QZmsg *rv = new QZmsg (zyre_recv (self));
+    zmsg_t * rv = zyre_recv (self);
     return rv;
 }
 
 ///
 //  Send message to single peer, specified as a UUID string
 //  Destroys message after sending                         
-int QZyre::whisper (const QString &peer, QZmsg *msgP)
+int QZyre::whisper (const QString &peer, zmsg_t **msgP)
 {
-    int rv = zyre_whisper (self, peer.toUtf8().data(), &msgP->self);
+    int rv = zyre_whisper (self, peer.toUtf8().data(), msgP);
     return rv;
 }
 
 ///
 //  Send message to a named group 
 //  Destroys message after sending
-int QZyre::shout (const QString &group, QZmsg *msgP)
+int QZyre::shout (const QString &group, zmsg_t **msgP)
 {
-    int rv = zyre_shout (self, group.toUtf8().data(), &msgP->self);
+    int rv = zyre_shout (self, group.toUtf8().data(), msgP);
     return rv;
 }
 
@@ -215,25 +215,25 @@ int QZyre::shouts (const QString &group, const QString &param)
 
 ///
 //  Return zlist of current peer ids.
-QZlist * QZyre::peers ()
+zlist_t * QZyre::peers ()
 {
-    QZlist *rv = new QZlist (zyre_peers (self));
+    zlist_t * rv = zyre_peers (self);
     return rv;
 }
 
 ///
 //  Return zlist of currently joined groups.
-QZlist * QZyre::ownGroups ()
+zlist_t * QZyre::ownGroups ()
 {
-    QZlist *rv = new QZlist (zyre_own_groups (self));
+    zlist_t * rv = zyre_own_groups (self);
     return rv;
 }
 
 ///
 //  Return zlist of groups known through connected peers.
-QZlist * QZyre::peerGroups ()
+zlist_t * QZyre::peerGroups ()
 {
-    QZlist *rv = new QZlist (zyre_peer_groups (self));
+    zlist_t * rv = zyre_peer_groups (self);
     return rv;
 }
 
@@ -260,9 +260,9 @@ QString QZyre::peerHeaderValue (const QString &peer, const QString &name)
 
 ///
 //  Return socket for talking to the Zyre node, for polling
-QZsock * QZyre::socket ()
+zsock_t * QZyre::socket ()
 {
-    QZsock *rv = new QZsock (zyre_socket (self));
+    zsock_t * rv = zyre_socket (self);
     return rv;
 }
 

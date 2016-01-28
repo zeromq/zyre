@@ -7,11 +7,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.61)
 #
-# The version number is extracted from include/zyre.h using
-# the version.sh script. Hence, it should be updated there.
-# The version in git should reflect the *next* version planned.
-#
-AC_INIT([zyre],[m4_esyscmd([./version.sh zyre.h])],[zeromq-dev@lists.zeromq.org])
+AC_INIT([zyre],[1.1.0],[zeromq-dev@lists.zeromq.org])
 
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
@@ -493,7 +489,6 @@ fi
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  src/libzyre.pc
-                 examples/chat/Makefile
                  ])
 
 AM_COND_IF([WITH_SYSTEMD],

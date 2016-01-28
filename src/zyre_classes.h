@@ -30,6 +30,21 @@
 #include "zyre_group.h"
 #include "zyre_node.h"
 
+//  *** Draft method, defined for internal use only ***
+//  Self test of this class.
+ZYRE_EXPORT void
+    zyre_peer_test (bool verbose);
+
+//  *** Draft method, defined for internal use only ***
+//  Self test of this class.
+ZYRE_EXPORT void
+    zyre_group_test (bool verbose);
+
+//  *** Draft method, defined for internal use only ***
+//  Self test of this class.
+ZYRE_EXPORT void
+    zyre_node_test (bool verbose);
+
 //  Private constants
 #define PEER_EVASIVE	10000 //                   10 seconds' silence is evasive
 #define PEER_EXPIRED	30000 //                   30 seconds' silence is expired

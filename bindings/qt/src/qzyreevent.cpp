@@ -65,9 +65,9 @@ const QString QZyreEvent::address ()
 
 ///
 //  Returns the event headers, or NULL if there are none
-QZhash * QZyreEvent::headers ()
+zhash_t * QZyreEvent::headers ()
 {
-    QZhash *rv = new QZhash (zyre_event_headers (self));
+    zhash_t * rv = zyre_event_headers (self);
     return rv;
 }
 
@@ -90,9 +90,9 @@ const QString QZyreEvent::group ()
 
 ///
 //  Returns the incoming message payload (currently one frame)
-QZmsg * QZyreEvent::msg ()
+zmsg_t * QZyreEvent::msg ()
 {
-    QZmsg *rv = new QZmsg (zyre_event_msg (self));
+    zmsg_t * rv = zyre_event_msg (self);
     return rv;
 }
 

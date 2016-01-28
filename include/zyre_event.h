@@ -26,10 +26,6 @@ extern "C" {
 //  This is a draft class, and may change without notice. It is disabled in
 //  stable builds by default. If you use this in applications, please ask
 //  for it to be pushed to stable state. Use --enable-drafts to enable.
-//  Self test of this class.
-ZYRE_EXPORT void
-    zyre_event_test (bool verbose);
-
 #ifdef ZYRE_BUILD_DRAFT_API
 // 
 typedef enum {
@@ -100,6 +96,11 @@ ZYRE_EXPORT zmsg_t *
 //  Print event to zsys log
 ZYRE_EXPORT void
     zyre_event_print (zyre_event_t *self);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Self test of this class.
+ZYRE_EXPORT void
+    zyre_event_test (bool verbose);
 
 #endif // ZYRE_BUILD_DRAFT_API
 //  @end

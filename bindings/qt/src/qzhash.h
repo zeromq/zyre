@@ -23,7 +23,7 @@ public:
     //  Unpack binary frame into a new hash table. Packed data must follow format
     //  defined by zhash_pack. Hash table is set to autofree. An empty frame     
     //  unpacks to an empty hash table.                                          
-    static QZhash* unpack (QZframe *frame, QObject *qObjParent = 0);
+    static QZhash* unpack (zframe_t *frame, QObject *qObjParent = 0);
 
     //  Destroy a hash container and all items in it
     ~QZhash ();
@@ -63,10 +63,10 @@ public:
     //  Does not copy items themselves. Rebuilds new table so may be slow on 
     //  very large tables. NOTE: only works with item values that are strings
     //  since there's no other way to know how to duplicate the item value.  
-    QZhash * dup ();
+    zhash_t * dup ();
 
     //  Return keys for items in table
-    QZlist * keys ();
+    zlist_t * keys ();
 
     //  Simple iterator; returns first item in hash table, in no given order, 
     //  or NULL if the table is empty. This method is simpler to use than the 
@@ -113,7 +113,7 @@ public:
     //                                                                       
     //  Comments are not included in the packed data. Item values MUST be    
     //  strings.                                                             
-    QZframe * pack ();
+    zframe_t * pack ();
 
     //  Save hash table to a text file in name=value format. Hash values must be
     //  printable strings; keys may not contain '=' character. Returns 0 if OK, 
@@ -134,9 +134,11 @@ public:
     //  Set hash for automatic value destruction
     void autofree ();
 
+    //  DEPRECATED as clumsy -- use zhash_first/_next instead                  
     //  Apply function to each item in the hash table. Items are iterated in no
     //  defined order. Stops if callback function returns non-zero and returns 
-    //  final return code from callback function (zero = success). Deprecated. 
+    //  final return code from callback function (zero = success).             
+    //  Callback function for zhash_foreach method                             
     int foreachNoConflict (zhash_foreach_fn callback, void *argument);
 
     //  Self test of this class.

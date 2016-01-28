@@ -26,9 +26,9 @@ QZhash::QZhash (QObject *qObjParent) : QObject (qObjParent)
 //  Unpack binary frame into a new hash table. Packed data must follow format
 //  defined by zhash_pack. Hash table is set to autofree. An empty frame     
 //  unpacks to an empty hash table.                                          
-QZhash* QZhash::unpack (QZframe *frame, QObject *qObjParent)
+QZhash* QZhash::unpack (zframe_t *frame, QObject *qObjParent)
 {
-    return new QZhash (zhash_unpack (frame->self), qObjParent);
+    return new QZhash (zhash_unpack (frame), qObjParent);
 }
 
 ///
@@ -109,17 +109,17 @@ size_t QZhash::size ()
 //  Does not copy items themselves. Rebuilds new table so may be slow on 
 //  very large tables. NOTE: only works with item values that are strings
 //  since there's no other way to know how to duplicate the item value.  
-QZhash * QZhash::dup ()
+zhash_t * QZhash::dup ()
 {
-    QZhash *rv = new QZhash (zhash_dup (self));
+    zhash_t * rv = zhash_dup (self);
     return rv;
 }
 
 ///
 //  Return keys for items in table
-QZlist * QZhash::keys ()
+zlist_t * QZhash::keys ()
 {
-    QZlist *rv = new QZlist (zhash_keys (self));
+    zlist_t * rv = zhash_keys (self);
     return rv;
 }
 
@@ -189,9 +189,9 @@ void QZhash::comment (const QString &param)
 //                                                                       
 //  Comments are not included in the packed data. Item values MUST be    
 //  strings.                                                             
-QZframe * QZhash::pack ()
+zframe_t * QZhash::pack ()
 {
-    QZframe *rv = new QZframe (zhash_pack (self));
+    zframe_t * rv = zhash_pack (self);
     return rv;
 }
 
@@ -235,9 +235,11 @@ void QZhash::autofree ()
 }
 
 ///
+//  DEPRECATED as clumsy -- use zhash_first/_next instead                  
 //  Apply function to each item in the hash table. Items are iterated in no
 //  defined order. Stops if callback function returns non-zero and returns 
-//  final return code from callback function (zero = success). Deprecated. 
+//  final return code from callback function (zero = success).             
+//  Callback function for zhash_foreach method                             
 int QZhash::foreachNoConflict (zhash_foreach_fn callback, void *argument)
 {
     int rv = zhash_foreach (self, callback, argument);

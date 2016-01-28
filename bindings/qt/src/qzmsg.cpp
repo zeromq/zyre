@@ -128,9 +128,9 @@ void QZmsg::setRoutingId (quint32 routingId)
 //  Message takes ownership of frame, will destroy it when message is sent.
 //  Returns 0 on success, -1 on error. Deprecates zmsg_push, which did not 
 //  nullify the caller's frame reference.                                  
-int QZmsg::prepend (QZframe *frameP)
+int QZmsg::prepend (zframe_t **frameP)
 {
-    int rv = zmsg_prepend (self, &frameP->self);
+    int rv = zmsg_prepend (self, frameP);
     return rv;
 }
 
@@ -139,17 +139,17 @@ int QZmsg::prepend (QZframe *frameP)
 //  Message takes ownership of frame, will destroy it when message is sent.
 //  Returns 0 on success. Deprecates zmsg_add, which did not nullify the   
 //  caller's frame reference.                                              
-int QZmsg::append (QZframe *frameP)
+int QZmsg::append (zframe_t **frameP)
 {
-    int rv = zmsg_append (self, &frameP->self);
+    int rv = zmsg_append (self, frameP);
     return rv;
 }
 
 ///
 //  Remove first frame from message, if any. Returns frame, or NULL.
-QZframe * QZmsg::pop ()
+zframe_t * QZmsg::pop ()
 {
-    QZframe *rv = new QZframe (zmsg_pop (self));
+    zframe_t * rv = zmsg_pop (self);
     return rv;
 }
 
@@ -222,52 +222,52 @@ QString QZmsg::popstr ()
 //  Push encoded message as a new frame. Message takes ownership of    
 //  submessage, so the original is destroyed in this call. Returns 0 on
 //  success, -1 on error.                                              
-int QZmsg::addmsg (QZmsg *msgP)
+int QZmsg::addmsg (zmsg_t **msgP)
 {
-    int rv = zmsg_addmsg (self, &msgP->self);
+    int rv = zmsg_addmsg (self, msgP);
     return rv;
 }
 
 ///
 //  Remove first submessage from message, if any. Returns zmsg_t, or NULL if
 //  decoding was not succesful.                                             
-QZmsg * QZmsg::popmsg ()
+zmsg_t * QZmsg::popmsg ()
 {
-    QZmsg *rv = new QZmsg (zmsg_popmsg (self));
+    zmsg_t * rv = zmsg_popmsg (self);
     return rv;
 }
 
 ///
 //  Remove specified frame from list, if present. Does not destroy frame.
-void QZmsg::remove (QZframe *frame)
+void QZmsg::remove (zframe_t *frame)
 {
-    zmsg_remove (self, frame->self);
+    zmsg_remove (self, frame);
     
 }
 
 ///
 //  Set cursor to first frame in message. Returns frame, or NULL, if the
 //  message is empty. Use this to navigate the frames as a list.        
-QZframe * QZmsg::first ()
+zframe_t * QZmsg::first ()
 {
-    QZframe *rv = new QZframe (zmsg_first (self));
+    zframe_t * rv = zmsg_first (self);
     return rv;
 }
 
 ///
 //  Return the next frame. If there are no more frames, returns NULL. To move
 //  to the first frame call zmsg_first(). Advances the cursor.               
-QZframe * QZmsg::next ()
+zframe_t * QZmsg::next ()
 {
-    QZframe *rv = new QZframe (zmsg_next (self));
+    zframe_t * rv = zmsg_next (self);
     return rv;
 }
 
 ///
 //  Return the last frame. If there are no frames, returns NULL.
-QZframe * QZmsg::last ()
+zframe_t * QZmsg::last ()
 {
-    QZframe *rv = new QZframe (zmsg_last (self));
+    zframe_t * rv = zmsg_last (self);
     return rv;
 }
 
@@ -297,9 +297,9 @@ size_t QZmsg::encode (byte **buffer)
 ///
 //  Create copy of message, as new message object. Returns a fresh zmsg_t
 //  object. If message is null, or memory was exhausted, returns null.   
-QZmsg * QZmsg::dup ()
+zmsg_t * QZmsg::dup ()
 {
-    QZmsg *rv = new QZmsg (zmsg_dup (self));
+    zmsg_t * rv = zmsg_dup (self);
     return rv;
 }
 
@@ -316,9 +316,9 @@ void QZmsg::print ()
 //  Return true if the two messages have the same number of frames and each  
 //  frame in the first message is identical to the corresponding frame in the
 //  other message. As with zframe_eq, return false if either message is NULL.
-bool QZmsg::eq (QZmsg *other)
+bool QZmsg::eq (zmsg_t *other)
 {
-    bool rv = zmsg_eq (self, other->self);
+    bool rv = zmsg_eq (self, other);
     return rv;
 }
 

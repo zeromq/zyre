@@ -38,36 +38,246 @@ module Zyre
         blocking: true  # only necessary on MRI to deal with the GIL.
       }
 
-      attach_function :zyre_new, [:string], :pointer, **opts
-      attach_function :zyre_destroy, [:pointer], :void, **opts
-      attach_function :zyre_uuid, [:pointer], :string, **opts
-      attach_function :zyre_name, [:pointer], :string, **opts
-      attach_function :zyre_set_header, [:pointer, :string, :string, :varargs], :void, **opts
-      attach_function :zyre_set_verbose, [:pointer], :void, **opts
-      attach_function :zyre_set_port, [:pointer, :int], :void, **opts
-      attach_function :zyre_set_interval, [:pointer, :size_t], :void, **opts
-      attach_function :zyre_set_interface, [:pointer, :string], :void, **opts
-      attach_function :zyre_set_endpoint, [:pointer, :string, :varargs], :int, **opts
-      attach_function :zyre_gossip_bind, [:pointer, :string, :varargs], :void, **opts
-      attach_function :zyre_gossip_connect, [:pointer, :string, :varargs], :void, **opts
-      attach_function :zyre_start, [:pointer], :int, **opts
-      attach_function :zyre_stop, [:pointer], :void, **opts
-      attach_function :zyre_join, [:pointer, :string], :int, **opts
-      attach_function :zyre_leave, [:pointer, :string], :int, **opts
-      attach_function :zyre_recv, [:pointer], :pointer, **opts
-      attach_function :zyre_whisper, [:pointer, :string, :pointer], :int, **opts
-      attach_function :zyre_shout, [:pointer, :string, :pointer], :int, **opts
-      attach_function :zyre_whispers, [:pointer, :string, :string, :varargs], :int, **opts
-      attach_function :zyre_shouts, [:pointer, :string, :string, :varargs], :int, **opts
-      attach_function :zyre_peers, [:pointer], :pointer, **opts
-      attach_function :zyre_own_groups, [:pointer], :pointer, **opts
-      attach_function :zyre_peer_groups, [:pointer], :pointer, **opts
-      attach_function :zyre_peer_address, [:pointer, :string], :pointer, **opts
-      attach_function :zyre_peer_header_value, [:pointer, :string, :string], :pointer, **opts
-      attach_function :zyre_socket, [:pointer], :pointer, **opts
-      attach_function :zyre_print, [:pointer], :void, **opts
-      attach_function :zyre_version, [:pointer, :pointer, :pointer], :void, **opts
-      attach_function :zyre_test, [:bool], :void, **opts
+      begin # DRAFT method
+        attach_function :zyre_new, [:string], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function new() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_destroy, [:pointer], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function destroy() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_uuid, [:pointer], :string, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function uuid() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_name, [:pointer], :string, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function name() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_set_header, [:pointer, :string, :string, :varargs], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function set_header() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_set_verbose, [:pointer], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function set_verbose() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_set_port, [:pointer, :int], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function set_port() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_set_interval, [:pointer, :size_t], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function set_interval() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_set_interface, [:pointer, :string], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function set_interface() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_set_endpoint, [:pointer, :string, :varargs], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function set_endpoint() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_gossip_bind, [:pointer, :string, :varargs], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function gossip_bind() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_gossip_connect, [:pointer, :string, :varargs], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function gossip_connect() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_start, [:pointer], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function start() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_stop, [:pointer], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function stop() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_join, [:pointer, :string], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function join() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_leave, [:pointer, :string], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function leave() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_recv, [:pointer], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function recv() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_whisper, [:pointer, :string, :pointer], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function whisper() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_shout, [:pointer, :string, :pointer], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function shout() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_whispers, [:pointer, :string, :string, :varargs], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function whispers() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_shouts, [:pointer, :string, :string, :varargs], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function shouts() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_peers, [:pointer], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function peers() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_own_groups, [:pointer], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function own_groups() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_peer_groups, [:pointer], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function peer_groups() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_peer_address, [:pointer, :string], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function peer_address() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_peer_header_value, [:pointer, :string, :string], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function peer_header_value() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_socket, [:pointer], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function socket() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_print, [:pointer], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function print() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_version, [:pointer, :pointer, :pointer], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function version() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_test, [:bool], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function test() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
 
       require_relative 'ffi/zyre'
 
@@ -82,18 +292,102 @@ module Zyre
         :evasive, 8,
       ]
 
-      attach_function :zyre_event_new, [:pointer], :pointer, **opts
-      attach_function :zyre_event_destroy, [:pointer], :void, **opts
-      attach_function :zyre_event_type, [:pointer], :zyre event_type, **opts
-      attach_function :zyre_event_sender, [:pointer], :string, **opts
-      attach_function :zyre_event_name, [:pointer], :string, **opts
-      attach_function :zyre_event_address, [:pointer], :string, **opts
-      attach_function :zyre_event_headers, [:pointer], :pointer, **opts
-      attach_function :zyre_event_header, [:pointer, :string], :string, **opts
-      attach_function :zyre_event_group, [:pointer], :string, **opts
-      attach_function :zyre_event_msg, [:pointer], :pointer, **opts
-      attach_function :zyre_event_print, [:pointer], :void, **opts
-      attach_function :zyre_event_test, [:bool], :void, **opts
+      begin # DRAFT method
+        attach_function :zyre_event_new, [:pointer], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function new() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_destroy, [:pointer], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function destroy() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_type, [:pointer], :zyre event_type, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function type() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_sender, [:pointer], :string, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function sender() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_name, [:pointer], :string, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function name() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_address, [:pointer], :string, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function address() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_headers, [:pointer], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function headers() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_header, [:pointer, :string], :string, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function header() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_group, [:pointer], :string, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function group() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_msg, [:pointer], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function msg() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_print, [:pointer], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function print() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_event_test, [:bool], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function test() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
 
       require_relative 'ffi/event'
     end

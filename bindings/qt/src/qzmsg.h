@@ -75,16 +75,16 @@ public:
     //  Message takes ownership of frame, will destroy it when message is sent.
     //  Returns 0 on success, -1 on error. Deprecates zmsg_push, which did not 
     //  nullify the caller's frame reference.                                  
-    int prepend (QZframe *frameP);
+    int prepend (zframe_t **frameP);
 
     //  Add frame to the end of the message, i.e. after all other frames.      
     //  Message takes ownership of frame, will destroy it when message is sent.
     //  Returns 0 on success. Deprecates zmsg_add, which did not nullify the   
     //  caller's frame reference.                                              
-    int append (QZframe *frameP);
+    int append (zframe_t **frameP);
 
     //  Remove first frame from message, if any. Returns frame, or NULL.
-    QZframe * pop ();
+    zframe_t * pop ();
 
     //  Push block of memory to front of message, as a new frame.
     //  Returns 0 on success, -1 on error.                       
@@ -117,25 +117,25 @@ public:
     //  Push encoded message as a new frame. Message takes ownership of    
     //  submessage, so the original is destroyed in this call. Returns 0 on
     //  success, -1 on error.                                              
-    int addmsg (QZmsg *msgP);
+    int addmsg (zmsg_t **msgP);
 
     //  Remove first submessage from message, if any. Returns zmsg_t, or NULL if
     //  decoding was not succesful.                                             
-    QZmsg * popmsg ();
+    zmsg_t * popmsg ();
 
     //  Remove specified frame from list, if present. Does not destroy frame.
-    void remove (QZframe *frame);
+    void remove (zframe_t *frame);
 
     //  Set cursor to first frame in message. Returns frame, or NULL, if the
     //  message is empty. Use this to navigate the frames as a list.        
-    QZframe * first ();
+    zframe_t * first ();
 
     //  Return the next frame. If there are no more frames, returns NULL. To move
     //  to the first frame call zmsg_first(). Advances the cursor.               
-    QZframe * next ();
+    zframe_t * next ();
 
     //  Return the last frame. If there are no frames, returns NULL.
-    QZframe * last ();
+    zframe_t * last ();
 
     //  Save message to an open file, return 0 if OK, else -1. The message is  
     //  saved as a series of frames, each with length and data. Note that the  
@@ -152,7 +152,7 @@ public:
 
     //  Create copy of message, as new message object. Returns a fresh zmsg_t
     //  object. If message is null, or memory was exhausted, returns null.   
-    QZmsg * dup ();
+    zmsg_t * dup ();
 
     //  Send message to zsys log sink (may be stdout, or system facility as
     //  configured by zsys_set_logstream).                                 
@@ -161,7 +161,7 @@ public:
     //  Return true if the two messages have the same number of frames and each  
     //  frame in the first message is identical to the corresponding frame in the
     //  other message. As with zframe_eq, return false if either message is NULL.
-    bool eq (QZmsg *other);
+    bool eq (zmsg_t *other);
 
     //  Return signal value, 0 or greater, if message is a signal, -1 if not.
     int signal ();
