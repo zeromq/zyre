@@ -11,6 +11,8 @@ env:
 - BUILD_TYPE=default
 - BUILD_TYPE=android
 - BUILD_TYPE=cmake
+- BUILD_TYPE=check_zproto
+- BUILD_TYPE=check_zproject
 
 addons:
   apt:
