@@ -132,9 +132,9 @@ void QZlist::remove (void *item)
 //  duplicate all items, which must be strings. Otherwise, the list will hold
 //  pointers back to the items in the original list. If list is null, returns
 //  NULL.                                                                    
-zlist_t * QZlist::dup ()
+QZlist * QZlist::dup ()
 {
-    zlist_t * rv = zlist_dup (self);
+    QZlist *rv = new QZlist (zlist_dup (self));
     return rv;
 }
 

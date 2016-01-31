@@ -12,13 +12,11 @@
   </PropertyGroup>
 
   <!-- User Interface -->
-
   <ItemGroup Label="BuildOptionsExtension">
     <PropertyPageSchema Include="$(MSBuildThisFileDirectory)zyre.import.xml" />
   </ItemGroup>
 
   <!-- Linkage -->
-
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\zyre\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -32,7 +30,6 @@
   </ItemDefinitionGroup>
 
   <!-- Copy -->
-
   <Target Name="Linkage-zyre-dynamic" AfterTargets="AfterBuild" Condition="'$(Linkage-zyre)' == 'dynamic'">
     <Copy Condition="$(Configuration.IndexOf('Debug')) != -1"
           SourceFiles="$(ProjectDir)..\..\..\..\..\zyre\bin\$(PlatformName)\Debug\$(PlatformToolset)\dynamic\libzyre.dll"
@@ -49,7 +46,6 @@
   </Target>
 
   <!-- Messages -->
-
   <Target Name="zyre-info" BeforeTargets="AfterBuild" Condition="'$(Linkage-zyre)' == 'dynamic'">
     <Message Text="Copying libzyre.dll -&gt; $(TargetDir)libzyre.dll" Importance="high"/>
     <Message Text="Copying libzyre.pdb -&gt; $(TargetDir)libzyre.pdb" Importance="high" Condition="$(Configuration.IndexOf('Debug')) != -1" />

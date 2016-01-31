@@ -27,6 +27,7 @@ set (zyrejni_sources
 )
 
 add_library (zyrejni SHARED ${zyrejni_sources})
+add_definitions (-DZYRE_BUILD_DRAFT_API)
 target_link_libraries (zyrejni
     zyre
     zmq

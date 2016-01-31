@@ -599,7 +599,7 @@ zyre_test (bool verbose)
     zyre_join (node2, "GLOBAL");
 
     //  Give time for them to interconnect
-    zclock_sleep (100);
+    zclock_sleep (250);
     if (verbose)
         zyre_dump (node1);
 
@@ -612,7 +612,7 @@ zyre_test (bool verbose)
     zyre_join (node2, "node2 group of one");
 
     // Give them time to join their groups
-    zclock_sleep (100);
+    zclock_sleep (250);
 
     zlist_t *own_groups = zyre_own_groups (node1);
     assert (own_groups);

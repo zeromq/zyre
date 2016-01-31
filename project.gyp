@@ -59,6 +59,7 @@
         'libraries': [
             '-lsodium',
             '-lzmq',
+            '-luuid',
             '-lczmq',
             '-lpthread'
         ]
@@ -75,6 +76,7 @@
         'libraries': [
             '-lsodium',
             '-lzmq',
+            '-luuid',
             '-lczmq',
             '-lpthread'
         ]
@@ -91,6 +93,7 @@
         'libraries': [
             '-lsodium',
             '-lzmq',
+            '-luuid',
             '-lczmq',
             '-lpthread'
         ]
@@ -107,6 +110,7 @@
         'libraries': [
             '-lsodium',
             '-lzmq',
+            '-luuid',
             '-lczmq',
             '-lpthread'
         ]
@@ -123,6 +127,7 @@
         'libraries': [
             '-lsodium',
             '-lzmq',
+            '-luuid',
             '-lczmq',
             '-lpthread'
         ]
@@ -139,6 +144,7 @@
         'libraries': [
             '-lsodium',
             '-lzmq',
+            '-luuid',
             '-lczmq',
             '-lpthread'
         ]

@@ -48,7 +48,7 @@ public:
 
     //  Create a new frame that duplicates an existing frame. If frame is null,
     //  or memory was exhausted, returns null.                                 
-    zframe_t * dup ();
+    QZframe * dup ();
 
     //  Return frame data encoded as printable hex string, useful for 0MQ UUIDs.
     //  Caller must free string when finished with it.                          
@@ -79,7 +79,7 @@ public:
 
     //  Return TRUE if two frames have identical size and data
     //  If either frame is NULL, equality is always false.    
-    bool eq (zframe_t *other);
+    bool eq (QZframe *other);
 
     //  Set new contents for frame
     void reset (const void *data, size_t size);

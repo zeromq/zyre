@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <jni.h>
 #include "zyre.h"
-#include "../../native/include/org_zeromq_zyre_ZyreEvent.h"
+#include "org_zeromq_zyre_ZyreEvent.h"
 
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_ZyreEvent__1_1new (JNIEnv *env, jclass c, jlong node)

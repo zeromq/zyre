@@ -26,6 +26,7 @@ BuildRequires:  pkg-config
 BuildRequires:  systemd-devel
 BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
+BuildRequires:  uuid-devel
 BuildRequires:  czmq-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
@@ -54,6 +55,7 @@ Group:          System/Libraries
 Requires:       libzyre1 = %{version}
 Requires:       libsodium-devel
 Requires:       zeromq-devel
+Requires:       uuid-devel
 Requires:       czmq-devel
 
 %description devel
