@@ -12,6 +12,7 @@ Build-Depends: bison, debhelper (>= 8),
     libtool,
     libsodium-dev,
     libzmq4-dev,
+    libuuid-dev,
     libczmq-dev,
     dh-autoreconf
 

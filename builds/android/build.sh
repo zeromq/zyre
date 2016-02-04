@@ -38,9 +38,10 @@ fi
 
     if [ ! -d "$CZMQ_ROOT" ]; then
         echo "The CZMQ_ROOT directory does not exist"
-        echo "  ${CZMQ_ROOT}"
+        echo "  ${CZMQ_ROOT}" run run
         exit 1
     fi
+    echo "Building czmq in ${CZMQ_ROOT}..."
 
     (bash ${CZMQ_ROOT}/builds/android/build.sh) || exit 1
     UPSTREAM_PREFIX=${CZMQ_ROOT}/builds/android/prefix/${TOOLCHAIN_NAME}
@@ -57,8 +58,8 @@ fi
 
     export LIBTOOL_EXTRA_LDFLAGS='-avoid-version'
 
-    (cd "${cache}/zyre" && ./autogen.sh \
-        && ./configure "${ANDROID_BUILD_OPTS[@]}" --without-documentation \
+    (cd "${cache}/zyre" && ./autogen.sh 2> /dev/null \
+        && ./configure --quiet "${ANDROID_BUILD_OPTS[@]}" --without-docs \
         && make -j 4 \
         && make install) || exit 1
 }

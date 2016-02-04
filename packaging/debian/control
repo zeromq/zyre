@@ -23,6 +23,7 @@ Build-Depends: bison, debhelper (>= 8),
     libtool,
     libsodium-dev,
     libzmq4-dev,
+    libuuid-dev,
     libczmq-dev,
     dh-autoreconf,
     systemd
@@ -39,6 +40,7 @@ Section: libdevel
 Depends:
     libsodium-dev,
     libzmq4-dev,
+    libuuid-dev,
     libczmq-dev,
     libzyre1 (= ${binary:Version})
 Description: development files for zyre

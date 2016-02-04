@@ -44,6 +44,7 @@ src/zyre_selftest.trs
 
 CMakeCache.txt
 CMakeFiles/
+Testing/
 CTestTestfile.cmake
 cmake_install.cmake
 install_manifest.txt

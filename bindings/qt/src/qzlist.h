@@ -70,7 +70,7 @@ public:
     //  duplicate all items, which must be strings. Otherwise, the list will hold
     //  pointers back to the items in the original list. If list is null, returns
     //  NULL.                                                                    
-    zlist_t * dup ();
+    QZlist * dup ();
 
     //  Purge all items from list
     void purge ();

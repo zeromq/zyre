@@ -758,7 +758,8 @@ zyre_node_recv_beacon (zyre_node_t *self)
         return;                 //  Interrupted
 
     //  Ignore anything that isn't a valid beacon
-    beacon_t beacon = { { 0 } };
+    beacon_t beacon;
+    memset (&beacon, 0, sizeof (beacon_t));
     if (zframe_size (frame) == sizeof (beacon_t))
         memcpy (&beacon, zframe_data (frame), zframe_size (frame));
     zframe_destroy (&frame);
