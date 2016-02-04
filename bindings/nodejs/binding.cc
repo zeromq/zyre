@@ -28,7 +28,6 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (New) {
         if (info.IsConstructCall ()) {
             // Invoked as constructor: `new Zyre (...)`
-//       double value = info [0]->IsUndefined () ? 0 : Nan::To <double> (info [0]).FromJust ();
             Zyre *obj = new Zyre ();
             obj->Wrap (info.This ());
             info.GetReturnValue ().Set (info.This ());
@@ -43,13 +42,13 @@ class Zyre: public Nan::ObjectWrap {
     }
 
     static NAN_METHOD (uuid) {
-//     Zyre* obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-//     info.GetReturnValue ().Set (obj->handle ());
+        Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+        info.GetReturnValue ().Set (Nan::New (zyre_uuid (obj->self)).ToLocalChecked ());
     }
 
     static NAN_METHOD (name) {
-//     Zyre* obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-//     info.GetReturnValue ().Set (obj->value_);
+        Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+        info.GetReturnValue ().Set (Nan::New (zyre_name (obj->self)).ToLocalChecked ());
     }
 
     static Nan::Persistent <v8::Function> & constructor () {
