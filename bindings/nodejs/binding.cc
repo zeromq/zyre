@@ -4,6 +4,8 @@
 class Zyre: public Nan::ObjectWrap {
     public:
         static NAN_MODULE_INIT (Init) {
+            Nan::HandleScope scope;
+
             // Prepare constructor template
             v8::Local <v8::FunctionTemplate> tpl = Nan::New <v8::FunctionTemplate> (New);
             tpl->SetClassName (Nan::New ("Zyre").ToLocalChecked ());
@@ -34,6 +36,7 @@ class Zyre: public Nan::ObjectWrap {
         }
         else {
             // Invoked as plain function `Zyre (...)`, turn into construct call.
+            Nan::HandleScope scope;
             const int argc = 1;
             v8::Local <v8::Value> argv [argc] = { info [0] };
             v8::Local <v8::Function> cons = Nan::New (constructor ());

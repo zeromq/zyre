@@ -3,22 +3,18 @@
       { 
         "target_name": "zyre",
         "sources": [
-            "binding.cc",
-            "../../src/zre_msg.c",
-            "../../src/zyre.c",
-            "../../src/zyre_event.c",
-            "../../src/zyre_group.c",
-            "../../src/zyre_node.c",
-            "../../src/zyre_peer.c"
+            "binding.cc"
         ],
         "include_dirs": [
             "<!(node -e \"require('nan')\")",
-            "../../include"
+            "../../include",
+            "../../nodejs-build/src"
         ],
         "libraries": [
-            "/home/ph/work/hintjens/zyre/builds/nodejs/lib/libczmq.a",
-            "/home/ph/work/hintjens/zyre/builds/nodejs/lib/libzmq.a",
-            "/home/ph/work/hintjens/zyre/builds/nodejs/lib/libsodium.a",
+            "lib/libzyre.a",
+            "lib/libczmq.a",
+            "lib/libzmq.a",
+            "lib/libsodium.a",
             "-luuid"
         ],
         "defines": [
