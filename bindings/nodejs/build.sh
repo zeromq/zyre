@@ -3,7 +3,7 @@
 #   Builds Zyre dependencies
 #
 #   This is an experiment. The aim is to build all Zyre dependencies
-#   into a single destination in builds/nodejs. We want to get all the
+#   into a single destination in bindings/nodejs. We want to get all the
 #   libraries and header files into lib and include.
 #
 #   We expect projects to sit as siblings under a common root. So:
@@ -14,8 +14,8 @@
 #       whatever/libsodium
 #
 #   So these are both valid patterns:
-#   - clone zyre, then in zyre/builds/nodejs, run ./build.sh (classic CI)
-#   - clone all projects, work, then build.sh in zyre/builds/nodejs
+#   - clone zyre, then in zyre/bindings/nodejs, run ./build.sh (classic CI)
+#   - clone all projects, work, then build.sh in zyre/bindings/nodejs
 #
 #   The script tries hard to recover from interrupts, so that re-running
 #   it takes the least time possible. In some cases this can get confused.
@@ -33,20 +33,25 @@ function build {
 
     #   Get project from GitHub if it's not already here
     if [ ! -d $PROJECT ]; then
-        echo "I:    cloning $PROJECT into $COMMON_ROOT/$PROJECT..."
-        git clone $QUIET $REPO
-        ( cd $PROJECT; git checkout $BRANCH )
+        if [ "$REPO" == "" ]; then
+            echo "E:    $COMMON_ROOT/$PROJECT does not exist, aborting"
+            exit
+        else
+            echo "I:    cloning $PROJECT into $COMMON_ROOT/$PROJECT..."
+            git clone $QUIET $REPO
+            ( cd $PROJECT; git checkout $BRANCH )
+        fi
     fi
 
     cd $PROJECT
     if [ ! -f configure ]; then
-        echo "I:     no configure found, running autogen.sh..."
+        echo "I:     'autogen.sh' in `pwd`..."
         ./autogen.sh 2> /dev/null 1>&2
     fi
 
     #   We do an out of source build in nodejs-build
     if [ -f Makefile ]; then
-        echo "I:     removing makefiles in `pwd`..."
+        echo "I:     'make distclean' in `pwd`..."
         make -s distclean
     fi
 
@@ -56,8 +61,8 @@ function build {
     cd nodejs-build
 
     if [ ! -f Makefile ]; then
-        echo "I:     configure in `pwd`..."
-        CONFIG_OPTS="$QUIET --disable-shared --enable-static --with-pic --prefix=$BUILD_ROOT"
+        echo "I:     'configure' in `pwd`..."
+        CONFIG_OPTS="$QUIET --disable-shared --enable-static --with-pic --prefix=$BUILD_ROOT/build"
         test -d ../doc && CONFIG_OPTS="$CONFIG_OPTS --without-docs"
         ../configure $CONFIG_OPTS
     fi
@@ -66,9 +71,9 @@ function build {
         make -j 5 all
         make install
     else
-        echo "I:     make all"
+        echo "I:     'make all' in `pwd`"
         make -j 5 all > build.log
-        echo "I:     install into $BUILD_ROOT"
+        echo "I:     'make install' into $BUILD_ROOT/build"
         make install >> build.log
     fi
 }
@@ -77,6 +82,7 @@ function build {
 
 set -e                      #   exit on any error
 BUILD_ROOT=`pwd`
+mkdir -p build
 cd ../../..
 COMMON_ROOT=`pwd`
 
@@ -105,6 +111,7 @@ echo "I: resolving dependencies for Zyre:"
 ( build libsodium https://github.com/jedisct1/libsodium.git stable )
 ( build libzmq https://github.com/zeromq/libzmq.git )
 ( build czmq https://github.com/zeromq/czmq.git )
+( build zyre )
 
 echo "I: building Node.js binding:"
 cd $BUILD_ROOT
