@@ -14,6 +14,7 @@ class Zyre: public Nan::ObjectWrap {
             // Prototypes
             Nan::SetPrototypeMethod (tpl, "uuid", uuid);
             Nan::SetPrototypeMethod (tpl, "name", name);
+            Nan::SetPrototypeMethod (tpl, "destroy", destroy);
 
             constructor ().Reset (Nan::GetFunction (tpl).ToLocalChecked ());
             Nan::Set (target, Nan::New ("Zyre").ToLocalChecked (),
@@ -22,9 +23,9 @@ class Zyre: public Nan::ObjectWrap {
     private:
         explicit Zyre (char *name = NULL) {
             self = zyre_new (name);
+            printf ("CONSTRUCTOR self=%p\n", self);
         }
         ~Zyre () {
-            zyre_destroy (&self);
         }
 
     static NAN_METHOD (New) {
@@ -52,6 +53,12 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (name) {
         Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         info.GetReturnValue ().Set (Nan::New (zyre_name (obj->self)).ToLocalChecked ());
+    }
+
+    static NAN_METHOD (destroy) {
+        Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+        printf ("DESTRUCTOR self=%p\n", obj->self);
+        zyre_destroy (&obj->self);
     }
 
     static Nan::Persistent <v8::Function> & constructor () {
