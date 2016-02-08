@@ -1,4 +1,4 @@
-#   Minimal sanity test
+//  Minimal sanity test
 
 var ZyreBinding = require ('bindings')('zyre');
 var zyre = new ZyreBinding.Zyre ();

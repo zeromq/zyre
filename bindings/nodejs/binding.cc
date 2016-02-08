@@ -23,7 +23,6 @@ class Zyre: public Nan::ObjectWrap {
     private:
         explicit Zyre (char *name = NULL) {
             self = zyre_new (name);
-            printf ("CONSTRUCTOR self=%p\n", self);
         }
         ~Zyre () {
         }
@@ -57,7 +56,6 @@ class Zyre: public Nan::ObjectWrap {
 
     static NAN_METHOD (destroy) {
         Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        printf ("DESTRUCTOR self=%p\n", obj->self);
         zyre_destroy (&obj->self);
     }
 

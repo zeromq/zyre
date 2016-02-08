@@ -11,10 +11,10 @@
             "../../nodejs-build/src"
         ],
         "libraries": [
-            "lib/libzyre.a",
-            "lib/libczmq.a",
-            "lib/libzmq.a",
-            "lib/libsodium.a",
+            "../deps/lib/libzyre.a",
+            "../deps/lib/libczmq.a",
+            "../deps/lib/libzmq.a",
+            "../deps/lib/libsodium.a",
             "-luuid"
         ],
         "defines": [

@@ -62,7 +62,7 @@ function build {
 
     if [ ! -f Makefile ]; then
         echo "I:     'configure' in `pwd`..."
-        CONFIG_OPTS="$QUIET --disable-shared --enable-static --with-pic --prefix=$BUILD_ROOT/build"
+        CONFIG_OPTS="$QUIET --disable-shared --enable-static --with-pic --prefix=$BUILD_ROOT/deps"
         test -d ../doc && CONFIG_OPTS="$CONFIG_OPTS --without-docs"
         ../configure $CONFIG_OPTS
     fi
@@ -73,7 +73,7 @@ function build {
     else
         echo "I:     'make all' in `pwd`"
         make -j 5 all > build.log
-        echo "I:     'make install' into $BUILD_ROOT/build"
+        echo "I:     'make install' into $BUILD_ROOT/deps"
         make install >> build.log
     fi
 }
@@ -88,6 +88,7 @@ COMMON_ROOT=`pwd`
 
 FORCE=0
 VERBOSE=0
+ELECTRON=0
 QUIET="--quiet"
 LOGLEVEL="--loglevel=error"
 
@@ -97,9 +98,12 @@ for ARG in $*; do
         echo " --help / -h          This help"
         echo " --force / -f         Force full rebuild"
         echo " --verbose / -v       Show build output"
+        echo " --electron / -e      Build for Electron"
         exit
     elif [ "$ARG" == "--force" -o "$ARG" == "-f" ]; then
         FORCE=1
+    elif [ "$ARG" == "--electron" -o "$ARG" == "-e" ]; then
+        ELECTRON=1
     elif [ "$ARG" == "--verbose" -o "$ARG" == "-v" ]; then
         VERBOSE=1
         QUIET=""
@@ -120,3 +124,10 @@ test ! -d node_modules/bindings && npm install bindings --save
 
 node-gyp $LOGLEVEL configure
 node-gyp $LOGLEVEL build
+
+if [ $ELECTRON -eq 1 ]; then
+    test ! -d node_modules/electron-rebuild && npm install electron-rebuild --save-dev
+    test ! -d node_modules/electron-prebuilt && npm install electron-prebuilt --save-dev
+    ./node_modules/.bin/electron-rebuild
+fi
+
