@@ -23,6 +23,9 @@ class Zyre: public Nan::ObjectWrap {
     private:
         explicit Zyre (char *name = NULL) {
             self = zyre_new (name);
+            assert (self);
+            zyre_start (self);
+            zyre_join (self, "GLOBAL");
         }
         ~Zyre () {
         }
