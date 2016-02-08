@@ -81,7 +81,7 @@ function build {
 #################################   Main   #################################
 
 set -e                      #   exit on any error
-BUILD_ROOT=`pwd`
+export BUILD_ROOT=`pwd`
 mkdir -p build
 cd ../../..
 COMMON_ROOT=`pwd`

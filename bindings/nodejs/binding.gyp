@@ -5,16 +5,19 @@
         "sources": [
             "binding.cc"
         ],
+        "variables": {
+            "BUILD_ROOT": "<!(echo $BUILD_ROOT)"
+        },
         "include_dirs": [
             "<!(node -e \"require('nan')\")",
             "../../include",
             "../../nodejs-build/src"
         ],
         "libraries": [
-            "../deps/lib/libzyre.a",
-            "../deps/lib/libczmq.a",
-            "../deps/lib/libzmq.a",
-            "../deps/lib/libsodium.a",
+            "$(BUILD_ROOT)/deps/lib/libzyre.a",
+            "$(BUILD_ROOT)/deps/lib/libczmq.a",
+            "$(BUILD_ROOT)/deps/lib/libzmq.a",
+            "$(BUILD_ROOT)/deps/lib/libsodium.a",
             "-luuid"
         ],
         "defines": [
