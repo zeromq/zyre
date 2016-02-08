@@ -122,6 +122,7 @@ cd $BUILD_ROOT
 test ! -d node_modules/nan && npm install nan@latest --save
 test ! -d node_modules/bindings && npm install bindings --save
 
+#   Still not sure of this
 if [ $ELECTRON -eq 1 ]; then
     test ! -d node_modules/electron-rebuild && npm install electron-rebuild --save-dev
     test ! -d node_modules/electron-prebuilt && npm install electron-prebuilt --save-dev
@@ -130,6 +131,7 @@ fi
 node-gyp $LOGLEVEL configure
 node-gyp $LOGLEVEL build
 
+#   Still not sure of this
 if [ $ELECTRON -eq 1 ]; then
     ./node_modules/.bin/electron-rebuild
 fi
