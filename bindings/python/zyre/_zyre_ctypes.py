@@ -142,6 +142,18 @@ messages it is sending or receiving will be discarded.
         if self.allow_destruct:
             lib.zyre_destroy(byref(self._as_parameter_))
 
+    def __eq__(self, other):
+        if type(other) == type(self):
+            return other.c_address() == self.c_address()
+        elif type(other) == c_void_p:
+            return other.value == self.c_address()
+
+    def c_address(self):
+        """
+        Return the address of the object pointer in c.  Useful for comparison.
+        """
+        return addressof(self._as_parameter_.contents)
+
     def __bool__(self):
         "Determine whether the object is valid by converting to boolean" # Python 3
         return self._as_parameter_.__bool__()
@@ -427,6 +439,18 @@ data (WHISPER, SHOUT).
         """
         if self.allow_destruct:
             lib.zyre_event_destroy(byref(self._as_parameter_))
+
+    def __eq__(self, other):
+        if type(other) == type(self):
+            return other.c_address() == self.c_address()
+        elif type(other) == c_void_p:
+            return other.value == self.c_address()
+
+    def c_address(self):
+        """
+        Return the address of the object pointer in c.  Useful for comparison.
+        """
+        return addressof(self._as_parameter_.contents)
 
     def __bool__(self):
         "Determine whether the object is valid by converting to boolean" # Python 3
