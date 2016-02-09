@@ -1,3 +1,5 @@
+//  Hello World test for Zyre in Electron
+
 'use strict';
 
 const electron = require ('electron');
@@ -7,16 +9,11 @@ const BrowserWindow = electron.BrowserWindow;
 var mainWindow = null;
 var zyre = null;
 
-var ipcMain = require('electron').ipcMain;
+var ipcMain = require ('electron').ipcMain;
 
-global.sharedObj = {prop1: "hello3"};
-
-ipcMain.on('show-prop1', function(event) {
-  console.log(global.sharedObj.prop1);
+ipcMain.on ('hello', function (event) {
+    console.log ("Hello, World");
 });
-
-
-console.log(process.versions)
 
 app.on ('window-all-closed', function () {
     if (process.platform != 'darwin') {
@@ -25,15 +22,16 @@ app.on ('window-all-closed', function () {
 });
 
 app.on ('ready', function () {
+    console.log (process.versions);
+
     var ZyreBinding = require ('zyre');
     var zyre = new ZyreBinding.Zyre ();
-    var zyrename = zyre.name ();
-    console.log ('Node name is: ' + zyrename + ' EOL');
-    global.sharedObj = {prop1: zyrename};
+
+    console.log ('Node name is: ' + zyre.name () + ' EOL');
+    global.sharedObj = { zyre_name: zyre.name () };
 
     mainWindow = new BrowserWindow ({ width:800, height:600 });
     mainWindow.loadURL ('file://' + __dirname + '/index.html');
-    mainWindow.webContents.openDevTools ();
 
     mainWindow.on ('closed', function () {
         zyre.destroy ();
