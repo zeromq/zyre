@@ -1,3 +1,17 @@
+# Node.js binding
+
+## Quick Start
+
+```
+mkdir -p $HOME/temp
+cd $HOME/temp
+git clone https://github.com/zeromq/zyre
+cd zyre/bindings/nodejs
+./build.sh
+```
+
+
+
 Problem: can't use Zyre from node.js
 
 Solution: start on binding for Zyre
