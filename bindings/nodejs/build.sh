@@ -62,6 +62,8 @@ function build {
 
     if [ ! -f Makefile ]; then
         echo "I:     'configure' in `pwd`..."
+        export CPPFLAGS="-I$BUILD_ROOT/deps/include"
+        export LDFLAGS="-L$BUILD_ROOT/deps/lib"
         CONFIG_OPTS="$QUIET --disable-shared --enable-static --with-pic --prefix=$BUILD_ROOT/deps"
         test -d ../doc && CONFIG_OPTS="$CONFIG_OPTS --without-docs"
         ../configure $CONFIG_OPTS

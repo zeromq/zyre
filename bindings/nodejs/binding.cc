@@ -14,6 +14,7 @@ class Zyre: public Nan::ObjectWrap {
             tpl->InstanceTemplate ()->SetInternalFieldCount (1);
 
             // Prototypes
+            Nan::SetPrototypeMethod (tpl, "destroy", destroy);
             Nan::SetPrototypeMethod (tpl, "uuid", uuid);
             Nan::SetPrototypeMethod (tpl, "name", name);
             Nan::SetPrototypeMethod (tpl, "start", start);
@@ -23,7 +24,9 @@ class Zyre: public Nan::ObjectWrap {
             Nan::SetPrototypeMethod (tpl, "join", join);
             Nan::SetPrototypeMethod (tpl, "leave", leave);
             Nan::SetPrototypeMethod (tpl, "print", print);
-            Nan::SetPrototypeMethod (tpl, "destroy", destroy);
+            Nan::SetPrototypeMethod (tpl, "whispers", whispers);
+            Nan::SetPrototypeMethod (tpl, "shouts", shouts);
+            Nan::SetPrototypeMethod (tpl, "recv", recv);
 
             constructor ().Reset (Nan::GetFunction (tpl).ToLocalChecked ());
             Nan::Set (target, Nan::New ("Zyre").ToLocalChecked (),
@@ -48,6 +51,11 @@ class Zyre: public Nan::ObjectWrap {
             obj = new Zyre ();
         obj->Wrap (info.This ());
         info.GetReturnValue ().Set (info.This ());
+    }
+
+    static NAN_METHOD (destroy) {
+        Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+        zyre_destroy (&obj->self);
     }
 
     static NAN_METHOD (uuid) {
@@ -107,14 +115,43 @@ class Zyre: public Nan::ObjectWrap {
             return Nan::ThrowTypeError (".leave() expects group as string");
     }
 
+    static NAN_METHOD (whispers) {
+        if (info [0]->IsString ()
+        &&  info [1]->IsString ()) {
+            Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+            Nan::Utf8String peer (info [0].As<String>());
+            Nan::Utf8String message (info [0].As<String>());
+            zyre_shouts (obj->self, *peer, "%s", *message);
+        }
+        else
+            return Nan::ThrowTypeError (".set_header() expects peer and message as strings");
+    }
+
+    static NAN_METHOD (shouts) {
+        if (info [0]->IsString ()
+        &&  info [1]->IsString ()) {
+            Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+            Nan::Utf8String group (info [0].As<String>());
+            Nan::Utf8String message (info [0].As<String>());
+            zyre_shouts (obj->self, *group, "%s", *message);
+        }
+        else
+            return Nan::ThrowTypeError (".set_header() expects group and message as strings");
+    }
+
+    static NAN_METHOD (recv) {
+        Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+        zmsg_t *msg = zyre_recv (obj->self);
+        if (msg) {
+            char *string = zmsg_popstr (msg);
+            info.GetReturnValue ().Set (Nan::New (string).ToLocalChecked ());
+            free (string);
+        }
+    }
+
     static NAN_METHOD (print) {
         Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         zyre_print (obj->self);
-    }
-
-    static NAN_METHOD (destroy) {
-        Zyre *obj = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_destroy (&obj->self);
     }
 
     static Nan::Persistent <Function> & constructor () {
