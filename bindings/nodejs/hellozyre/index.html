@@ -1,0 +1,23 @@
+<h1>Hello World!</h1>
+
+<script>
+     var remote = require('electron').remote;     
+
+     // show initial value from main process (in dev console)
+     console.log(remote.getGlobal('sharedObj').prop1);     
+
+     // change value of global prop1
+     var zyrename = remote.getGlobal('sharedObj').prop1;     
+
+     // show changed value in main process (in stdout, as a proof it was changed)
+     var ipcRenderer = require('electron').ipcRenderer;     
+     ipcRenderer.send('show-prop1');                       
+
+     // show changed value in renderer process (in dev console)
+     console.log(remote.getGlobal('sharedObj').prop1);
+</script>
+
+<script>
+document.write('<p>zyre.name: ' + zyrename + '</p>');
+document.write('<p>electron.version: ' + process.versions.node + '</p>')
+</script>
