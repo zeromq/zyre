@@ -22,17 +22,12 @@ In zyre/bindings/nodejs,
 
 ```
 ./build.sh
-node test.js        #   It crashes nicely
+node test.js
 ```
 
 # Areas you can help in
 
 * Making this work on Windows or OS/X
-* Adding more Zyre methods
-* Passing arguments to and fro correctly
-* Proper destruction of Zyre object at exit
-* Better test case (zyre pinger?)
-* Etc.
 
 ## Hints for contributors
 
