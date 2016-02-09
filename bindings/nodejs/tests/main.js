@@ -25,7 +25,7 @@ app.on ('window-all-closed', function () {
 });
 
 app.on ('ready', function () {
-    var ZyreBinding = require ('bindings')('zyre');
+    var ZyreBinding = require ('zyre');
     var zyre = new ZyreBinding.Zyre ();
     var zyrename = zyre.name ();
     console.log ('Node name is: ' + zyrename + ' EOL');
