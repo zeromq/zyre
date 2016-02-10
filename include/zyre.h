@@ -233,12 +233,6 @@ int
     zyre_shouts (zyre_t *self, const char *group, const char *format, ...) CHECK_PRINTF (3);
 //  @end
 
-
-
-
-
-
-
 #define zyre_dump(z) zyre_print((z))
 
 #ifdef __cplusplus
