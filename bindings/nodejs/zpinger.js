@@ -84,7 +84,7 @@ while (true) {
     if (event.type_name () == "ENTER") {
         //  If new peer, say hello to it and wait for it to answer us
         info ("[" + event.peer_name () + "] peer entered");
-        zyre.whisper (event.peer_id (), "Hello");
+        zyre.whisper (event.peer_uuid (), "Hello");
     }
     else
     if (event.type_name () == "EXIT") {

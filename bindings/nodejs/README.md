@@ -1,5 +1,19 @@
 # Zyre binding for Node.js
 
+## Prerequisites
+
+This is not a pre-built module. Sorry. Before running "npm install" you must build/install libsodium, libzmq, libczmq, and libzyre. Frankly it's simpler to build/install without using npm:
+
+```
+mkdir -p $HOME/temp
+cd $HOME/temp
+git clone https://github.com/zeromq/zyre
+cd zyre/bindings/nodejs
+./build.sh
+```
+
+And then copy build/Release/zyre.node to the node_modules/ directory of whatever application you want to tey it in.
+
 ## Quick Start
 
 This package wraps the Zyre library for Node.js. Here is an example of use:
@@ -22,7 +36,7 @@ while (true) {
     if (event.type_name () == "ENTER") {
         //  If new peer, say hello to it and wait for it to answer us
         console.log ("[" + event.peer_name () + "] peer entered");
-        zyre.whisper (event.peer_id (), "Hello");
+        zyre.whisper (event.peer_uuid (), "Hello");
     }
     else
     if (event.type_name () == "EXIT") {
@@ -66,7 +80,7 @@ The Zyre class has these methods:
     join (group)
     leave (group)
     print
-    whisper (peer_id, message)
+    whisper (peer_uuid, message)
     shout (group, message)
     recv
 
@@ -76,7 +90,7 @@ The ZyreEvent class has these methods:
     defined
     type
     type_name
-    peer_id
+    peer_uuid
     peer_name
     peer_addr
     header (name)
@@ -104,7 +118,7 @@ npm install -g node-gyp
 npm install -g node-pre-gyp
 ```
 
-To build:
+To build (in theory):
 
 ```
 mkdir -p $HOME/temp
