@@ -57,19 +57,19 @@ ZYRE_EXPORT zyre_event_type_t
     zyre_event_type (zyre_event_t *self);
 
 //  *** Draft method, for development use, may change without warning ***
-//  Return the sending peer's id as a string
+//  Return the sending peer's uuid as a string
 ZYRE_EXPORT const char *
-    zyre_event_sender (zyre_event_t *self);
+    zyre_event_peer_uuid (zyre_event_t *self);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Return the sending peer's public name as a string
 ZYRE_EXPORT const char *
-    zyre_event_name (zyre_event_t *self);
+    zyre_event_peer_name (zyre_event_t *self);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Return the sending peer's ipaddress as a string
 ZYRE_EXPORT const char *
-    zyre_event_address (zyre_event_t *self);
+    zyre_event_peer_addr (zyre_event_t *self);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Returns the event headers, or NULL if there are none
@@ -88,7 +88,7 @@ ZYRE_EXPORT const char *
     zyre_event_group (zyre_event_t *self);
 
 //  *** Draft method, for development use, may change without warning ***
-//  Returns the incoming message payload (currently one frame)
+//  Returns the incoming message payload
 ZYRE_EXPORT zmsg_t *
     zyre_event_msg (zyre_event_t *self);
 
@@ -104,14 +104,6 @@ ZYRE_EXPORT void
 
 #endif // ZYRE_BUILD_DRAFT_API
 //  @end
-
-
-
-
-
-
-
-
 
 #ifdef __cplusplus
 }

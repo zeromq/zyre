@@ -29,9 +29,9 @@
 
 struct _zyre_event_t {
     zyre_event_type_t type; //  Event type
-    char *sender;           //  Sender UUID as string
-    char *name;             //  Sender public name as string
-    char *address;          //  Sender ipaddress as string, for an ENTER event
+    char *peer_uuid;        //  Sender UUID as string
+    char *peer_name;        //  Sender public name as string
+    char *peer_addr;        //  Sender ipaddress as string, for an ENTER event
     zhash_t *headers;       //  Headers, for an ENTER event
     char *group;            //  Group name for a SHOUT event
     zmsg_t *msg;            //  Message payload for SHOUT or WHISPER
@@ -54,8 +54,8 @@ zyre_event_new (zyre_t *node)
     assert (self);
 
     char *type = zmsg_popstr (msg);
-    self->sender = zmsg_popstr (msg);
-    self->name = zmsg_popstr (msg);
+    self->peer_uuid = zmsg_popstr (msg);
+    self->peer_name = zmsg_popstr (msg);
 
     if (streq (type, "ENTER")) {
         self->type = ZYRE_EVENT_ENTER;
@@ -64,7 +64,7 @@ zyre_event_new (zyre_t *node)
             self->headers = zhash_unpack (headers);
             zframe_destroy (&headers);
         }
-        self->address = zmsg_popstr (msg);
+        self->peer_addr = zmsg_popstr (msg);
     }
     else
     if (streq (type, "EXIT"))
@@ -120,10 +120,10 @@ zyre_event_destroy (zyre_event_t **self_p)
         zyre_event_t *self = *self_p;
         zhash_destroy (&self->headers);
         zmsg_destroy (&self->msg);
-        free (self->sender);
-        free (self->address);
+        free (self->peer_uuid);
+        free (self->peer_name);
+        free (self->peer_addr);
         free (self->group);
-        free (self->name);
         free (self);
         *self_p = NULL;
     }
@@ -143,14 +143,15 @@ void
 zyre_event_print (zyre_event_t *self)
 {
     zsys_info ("zyre_event:");
-    zsys_info (" - from name=%s uuid=%s", zyre_event_name(self), zyre_event_sender(self));
+    zsys_info (" - from name=%s uuid=%s",
+               zyre_event_peer_name (self), zyre_event_peer_uuid (self));
 
     switch (self->type) {
         case ZYRE_EVENT_ENTER:
             zsys_info (" - type=ENTER");
             zsys_info (" - headers=%zu:", zhash_size (self->headers));
             zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_event_log_pair, self);
-            zsys_info (" - address=%s", zyre_event_address(self));
+            zsys_info (" - address=%s", zyre_event_peer_addr (self));
             break;
 
         case ZYRE_EVENT_EXIT:
@@ -203,13 +204,13 @@ zyre_event_type (zyre_event_t *self)
 
 
 //  --------------------------------------------------------------------------
-//  Return the sending peer's id as a string
+//  Return the sending peer's UUID as a string
 
 const char *
-zyre_event_sender (zyre_event_t *self)
+zyre_event_peer_uuid (zyre_event_t *self)
 {
     assert (self);
-    return self->sender;
+    return self->peer_uuid;
 }
 
 
@@ -217,10 +218,10 @@ zyre_event_sender (zyre_event_t *self)
 //  Return the sending peer's public name as a string
 
 const char *
-zyre_event_name (zyre_event_t *self)
+zyre_event_peer_name (zyre_event_t *self)
 {
     assert (self);
-    return self->name;
+    return self->peer_name;
 }
 
 
@@ -228,10 +229,10 @@ zyre_event_name (zyre_event_t *self)
 //  Return the sending peer's ipaddress as a string
 
 const char *
-zyre_event_address (zyre_event_t *self)
+zyre_event_peer_addr (zyre_event_t *self)
 {
     assert (self);
-    return self->address;
+    return self->peer_addr;
 }
 
 
@@ -324,12 +325,12 @@ zyre_event_test (bool verbose)
     //  Parse ENTER
     zyre_event_t *event = zyre_event_new (node2);
     assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
-    const char *sender = zyre_event_sender (event);
+    const char *sender = zyre_event_peer_uuid (event);
     assert (sender);
-    const char *name = zyre_event_name (event);
+    const char *name = zyre_event_peer_name (event);
     assert (name);
     assert (streq (name, "node1"));
-    const char *address = zyre_event_address (event);
+    const char *address = zyre_event_peer_addr (event);
     assert (address);
     const char *header = zyre_event_header (event, "X-HELLO");
     assert (header);
