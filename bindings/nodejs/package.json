@@ -1,9 +1,7 @@
 {
   "name": "zyre",
   "version": "0.0.1",
-  "private": true,
   "description": "Zyre",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,6 +13,6 @@
     "url": "git://github.com/zeromq/zyre.git"
   },
   "dependencies": {
-    "nan": "^2.2.0",
+    "nan": "^2.2.0"
   }
 }

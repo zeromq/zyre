@@ -1,53 +1,97 @@
-# Node.js binding
+# Zyre binding for Node.js
 
 ## Quick Start
 
-```
-mkdir -p $HOME/temp
-cd $HOME/temp
-git clone https://github.com/zeromq/zyre
-cd zyre/bindings/nodejs
-./build.sh
-```
-
-
-
-Problem: can't use Zyre from node.js
-
-Solution: start on binding for Zyre
-
-Note: this an experiment. The real binding will be generated via
-zproject. However we will first make this binding work, and then
-use it as a template.
-
-Disclaimer: I am not an expert in Node, NAN, or C++, and this is
-probably horribly done. The work is not ready for use.
-
-## How to build
-
-You need these repositories checked-out under a common root:
-
-* https://github.com/zeromq/zyre
-* https://github.com/zeromq/czmq
-* https://github.com/zeromq/libzmq
-* https://github.com/jedisct1/libsodium
-
-In zyre/bindings/nodejs,
+This package wraps the Zyre library for Node.js. Here is an example of use:
 
 ```
-./build.sh
-node test.js
+var ZyreBinding = require ('bindings')('zyre');
+var zyre = new ZyreBinding.Zyre ();
+console.log ("Create Zyre node, uuid=" + zyre.uuid () + " name=" + zyre.name ());
+
+zyre.start ();
+zyre.join ("GLOBAL");
+zyre.print ();
+
+while (true) {
+    var event = new ZyreBinding.ZyreEvent (zyre);
+    if (!event.defined ())
+        break;              //  Interrupted
+    event.print ();
+
+    if (event.type_name () == "ENTER") {
+        //  If new peer, say hello to it and wait for it to answer us
+        console.log ("[" + event.peer_name () + "] peer entered");
+        zyre.whisper (event.peer_id (), "Hello");
+    }
+    else
+    if (event.type_name () == "EXIT") {
+        console.log ("[" + event.peer_name () + "] peer exited");
+    }
+    else
+    if (event.type_name () == "WHISPER") {
+        console.log ("[" + event.peer_name () + "] received ping (WHISPER)");
+        zyre.shout ("GLOBAL", "Hello");
+    }
+    else
+    if (event.type_name () == "SHOUT") {
+        console.log ("[" + event.peer_name () + "]("
+                  + event.group () + ") received ping (SHOUT)");
+    }
+    event.destroy ();
+}
+zyre.stop ();
+zyre.destroy ();
 ```
 
-# Areas you can help in
+## Implementation
 
-* Making this work on Windows or OS/X
+This is a wrapping of the native C libzyre library. See binding.cc for the code.
 
-## Hints for contributors
+We get two classes:
+
+    Zyre        - a Zyre node instance
+    ZyreEvent   - an event from the Zyre network
+
+The Zyre class has these methods:
+
+    destroy
+    defined
+    uuid
+    name
+    start
+    stop
+    setHeader (name, value)
+    setVerbose
+    join (group)
+    leave (group)
+    print
+    whisper (peer_id, message)
+    shout (group, message)
+    recv
+
+The ZyreEvent class has these methods:
+
+    destroy
+    defined
+    type
+    type_name
+    peer_id
+    peer_name
+    peer_addr
+    header (name)
+    group
+    msg
+    print
+
+## Building from Source
 
 * You need Python (v2.7 recommended, v3.x not supported)
+* You need (ideally) nvm and Node.js.
+* If your Linux has an existing 'node' command, remove it. You need matching versions of node and node-gyp.
+* In every terminal, or .bashrc: `nvm use v5.5.0`
 
-* You need (ideally) nvm and Node.js:
+To install the necessary Node tools:
 
 ```
 sudo apt-get update
@@ -60,7 +104,19 @@ npm install -g node-gyp
 npm install -g node-pre-gyp
 ```
 
-* In every terminal, or .bashrc: `nvm use v5.5.0`
+To build:
 
-* If your Linux has an existing 'node' command, remove it. You need
-  matching versions of node and node-gyp.
+```
+mkdir -p $HOME/temp
+cd $HOME/temp
+git clone https://github.com/zeromq/zyre
+cd zyre/bindings/nodejs
+./build.sh
+```
+
+## Making Changes
+
+Note that this version of the binding is destined for destruction; we will replace it with one generated via zproject, with essentially the same API.
+
+Having said that, fixes and improvements are welcome. Please send your pull requests to `https://github.com/zeromq/zyre`.
+
