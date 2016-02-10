@@ -15,9 +15,12 @@
 
 /*
 @header
-    zpinger tells you what other nodes are running. Use this to debug network
-    issues.
+zpinger tells you what other Zyre nodes are running. Use this to debug
+network issues. Run with -v option to get more detail on Zyre's internal
+flow for each event.
 @discuss
+Note that this will detect and speak to Zyre nodes on the entire local
+network.
 @end
 */
 
@@ -26,43 +29,61 @@
 
 int main (int argc, char *argv [])
 {
-    zyre_t *node = zyre_new (NULL);
-    zyre_start (node);
-    zyre_join (node, "GLOBAL");
+    bool verbose = false;
+    int argn;
+    for (argn = 1; argn < argc; argn++) {
+        if (streq (argv [argn], "--help")
+        ||  streq (argv [argn], "-h")) {
+            puts ("zpinger [options] ...");
+            puts ("  --verbose / -v         verbose test output");
+            puts ("  --help / -h            this help");
+            return 0;
+        }
+        if (streq (argv [argn], "--verbose")
+        ||  streq (argv [argn], "-v"))
+            verbose = true;
+        else {
+            printf ("Unknown option: %s\n", argv [argn]);
+            return 1;
+        }
+    }
+    zyre_t *zyre = zyre_new (NULL);
+    zsys_info ("Create Zyre node, uuid=%s, name=%s", zyre_uuid (zyre), zyre_name (zyre));
+    if (verbose)
+        zyre_set_verbose (zyre);
+    zyre_start (zyre);
+    zyre_join (zyre, "GLOBAL");
+    if (verbose)
+        zyre_print (zyre);
 
     while (true) {
-        zmsg_t *incoming = zyre_recv (node);
-        if (!incoming)
+        zyre_event_t *event = zyre_event_new (zyre);
+        if (!event)
             break;              //  Interrupted
+        if (verbose)
+            zyre_event_print (event);
 
-        //  If new peer, say hello to it and wait for it to answer us
-        char *event = zmsg_popstr (incoming);
-        char *peer = zmsg_popstr (incoming);
-        char *name = zmsg_popstr (incoming);
-        if (streq (event, "ENTER")) {
-            printf ("I: [%s] peer entered\n", name);
-            zyre_whispers (node, peer, "Hello");
+        if (zyre_event_type (event) == ZYRE_EVENT_ENTER) {
+            //  If new peer, say hello to it and wait for it to answer us
+            zsys_info ("[%s] peer entered", zyre_event_peer_name (event));
+            zyre_whispers (zyre, zyre_event_peer_uuid (event), "Hello");
         }
         else
-        if (streq (event, "EXIT")) {
-            printf ("I: [%s] peer exited\n", name);
+        if (zyre_event_type (event) == ZYRE_EVENT_EXIT) {
+            zsys_info ("[%s] peer exited", zyre_event_peer_name (event));
         }
         else
-        if (streq (event, "WHISPER")) {
-            printf ("I: [%s] received ping (WHISPER)\n", name);
-            zyre_shouts (node, "GLOBAL", "Hello");
+        if (zyre_event_type (event) == ZYRE_EVENT_WHISPER) {
+            zsys_info ("[%s] received ping (WHISPER)", zyre_event_peer_name (event));
+            zyre_shouts (zyre, "GLOBAL", "Hello");
         }
         else
-        if (streq (event, "SHOUT")) {
-            char *group = zmsg_popstr (incoming);
-            printf ("I: [%s](%s) received ping (SHOUT)\n", name, group);
-            free (group);
+        if (zyre_event_type (event) == ZYRE_EVENT_SHOUT) {
+            zsys_info ("[%s](%s) received ping (SHOUT)",
+                       zyre_event_peer_name (event), zyre_event_group (event));
         }
-        free (event);
-        free (peer);
-        free (name);
-        zmsg_destroy (&incoming);
+        zyre_event_destroy (&event);
     }
-    zyre_destroy (&node);
+    zyre_destroy (&zyre);
     return 0;
 }
