@@ -38,17 +38,17 @@
         <return type = "enum:zyre event.type" />
     </method>
 
-    <method name = "sender">
-        Return the sending peer's id as a string
+    <method name = "peer uuid">
+        Return the sending peer's uuid as a string
         <return type = "string" />
     </method>
 
-    <method name = "name">
+    <method name = "peer name">
         Return the sending peer's public name as a string
         <return type = "string" />
     </method>
 
-    <method name = "address">
+    <method name = "peer addr">
         Return the sending peer's ipaddress as a string
         <return type = "string" />
     </method>
@@ -71,7 +71,7 @@
     </method>
 
     <method name = "msg">
-        Returns the incoming message payload (currently one frame)
+        Returns the incoming message payload
         <return type = "zmsg" />
     </method>
 

@@ -122,7 +122,7 @@ echo "I: resolving dependencies for Zyre:"
 echo "I: building Node.js binding:"
 cd $BUILD_ROOT
 test ! -d node_modules/nan && npm install nan@latest --save
-test ! -d node_modules/bindings && npm install bindings --save
+test ! -d node_modules/bindings && npm install bindings --save-dev
 
 #   Still not sure of this
 if [ $ELECTRON -eq 1 ]; then
