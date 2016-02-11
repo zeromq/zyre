@@ -18,8 +18,7 @@
             "$(BUILD_ROOT)/deps/lib/libzyre.a",
             "$(BUILD_ROOT)/deps/lib/libczmq.a",
             "$(BUILD_ROOT)/deps/lib/libzmq.a",
-            "$(BUILD_ROOT)/deps/lib/libsodium.a",
-            "-luuid"
+            "$(BUILD_ROOT)/deps/lib/libsodium.a"
         ],
         "defines": [
             "ZYRE_BUILD_DRAFT_API",

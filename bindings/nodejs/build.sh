@@ -64,7 +64,7 @@ function build {
         echo "I:     'configure' in `pwd`..."
         export CPPFLAGS="-I$BUILD_ROOT/deps/include"
         export LDFLAGS="-L$BUILD_ROOT/deps/lib"
-        export PKG_CONFIG_PATH="$BUILD_ROOT/deps"
+        export PKG_CONFIG_PATH="$BUILD_ROOT/deps/lib/pkgconfig"
         CONFIG_OPTS="$QUIET --disable-shared --enable-static --with-pic --prefix=$BUILD_ROOT/deps"
         test -d ../doc && CONFIG_OPTS="$CONFIG_OPTS --without-docs"
         ../configure $CONFIG_OPTS
@@ -115,7 +115,7 @@ for ARG in $*; do
     elif [ "$ARG" == "--xverbose" -o "$ARG" == "-x" ]; then
         VERBOSE=1
         QUIET=""
-        LOGLEVEL=""
+        LOGLEVEL="--loglevel=verbose"
         set -x
     fi
 done
