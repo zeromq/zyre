@@ -115,7 +115,7 @@ for ARG in $*; do
     elif [ "$ARG" == "--xverbose" -o "$ARG" == "-x" ]; then
         VERBOSE=1
         QUIET=""
-        LOGLEVEL=""
+        LOGLEVEL="--loglevel=verbose"
         set -x
     fi
 done
