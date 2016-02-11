@@ -101,6 +101,7 @@ for ARG in $*; do
         echo " --help / -h          This help"
         echo " --force / -f         Force full rebuild"
         echo " --verbose / -v       Show build output"
+        echo " --xverbose / -x      Extra verbose"
         echo " --electron / -e      Build for Electron"
         exit
     elif [ "$ARG" == "--force" -o "$ARG" == "-f" ]; then
@@ -111,6 +112,11 @@ for ARG in $*; do
         VERBOSE=1
         QUIET=""
         LOGLEVEL=""
+    elif [ "$ARG" == "--xverbose" -o "$ARG" == "-x" ]; then
+        VERBOSE=1
+        QUIET=""
+        LOGLEVEL=""
+        set -x
     fi
 done
 
