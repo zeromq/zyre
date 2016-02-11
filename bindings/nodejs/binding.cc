@@ -194,7 +194,7 @@ class ZyreEvent: public Nan::ObjectWrap {
             Nan::SetPrototypeMethod (tpl, "defined", defined);
             Nan::SetPrototypeMethod (tpl, "type", type);
             Nan::SetPrototypeMethod (tpl, "type_name", type_name);
-            Nan::SetPrototypeMethod (tpl, "peer_id", peer_id);
+            Nan::SetPrototypeMethod (tpl, "peer_uuid", peer_uuid);
             Nan::SetPrototypeMethod (tpl, "peer_name", peer_name);
             Nan::SetPrototypeMethod (tpl, "peer_addr", peer_addr);
             Nan::SetPrototypeMethod (tpl, "header", header);
@@ -257,9 +257,9 @@ class ZyreEvent: public Nan::ObjectWrap {
         info.GetReturnValue ().Set (Nan::New (type_name).ToLocalChecked ());
     }
 
-    static NAN_METHOD (peer_id) {
+    static NAN_METHOD (peer_uuid) {
         ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        info.GetReturnValue ().Set (Nan::New (zyre_event_peer_id (zyre_event->self)).ToLocalChecked ());
+        info.GetReturnValue ().Set (Nan::New (zyre_event_peer_uuid (zyre_event->self)).ToLocalChecked ());
     }
 
     static NAN_METHOD (peer_name) {
