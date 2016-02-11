@@ -6,7 +6,8 @@
             "binding.cc"
         ],
         "variables": {
-            "BUILD_ROOT": "<!(echo $BUILD_ROOT)"
+            #   Do at start while PRODUCT_DIR is accurate
+            "BUILD_ROOT": "<(PRODUCT_DIR)"
         },
         "include_dirs": [
             "<!(node -e \"require('nan')\")",
