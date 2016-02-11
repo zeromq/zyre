@@ -3,16 +3,20 @@
   "version": "0.0.4",
   "description": "Zyre",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "install": "prebuild --install",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "rebuild": "prebuild --compile",
+    "prebuild": "prebuild --strip --verbose"
   },
-  "author": "",
+  "author": "ZeroMQ Community",
   "license": "MPLv2",
   "gypfile": true,
   "repository": {
     "type": "git",
-    "url": "git://github.com/zeromq/zyre.git"
+    "url": "https://github.com/hintjens/zyre-nodejs"
   },
   "dependencies": {
-    "nan": "^2.2.0"
+    "nan": "^2.2.0",
+    "prebuild": "^2.8.1"
   }
 }
