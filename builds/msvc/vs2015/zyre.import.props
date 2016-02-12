@@ -20,7 +20,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\zyre\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Linkage-zyre)' == 'static' Or '$(Linkage-zyre)' == 'ltcg'">LIBZYRE_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Linkage-zyre)' == 'static' Or '$(Linkage-zyre)' == 'ltcg'">ZYRE_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies Condition="'$(Linkage-zyre)' != ''">libzyre.lib;%(AdditionalDependencies)</AdditionalDependencies>

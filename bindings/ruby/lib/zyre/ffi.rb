@@ -317,26 +317,26 @@ module Zyre
         end
       end
       begin # DRAFT method
-        attach_function :zyre_event_sender, [:pointer], :string, **opts
+        attach_function :zyre_event_peer_uuid, [:pointer], :string, **opts
       rescue ::FFI::NotFoundError
         if $VERBOSE || $DEBUG
-          warn "The function zyre_event_sender() can't be used through " +
+          warn "The function zyre_event_peer_uuid() can't be used through " +
                "this Ruby binding because it's not available."
         end
       end
       begin # DRAFT method
-        attach_function :zyre_event_name, [:pointer], :string, **opts
+        attach_function :zyre_event_peer_name, [:pointer], :string, **opts
       rescue ::FFI::NotFoundError
         if $VERBOSE || $DEBUG
-          warn "The function zyre_event_name() can't be used through " +
+          warn "The function zyre_event_peer_name() can't be used through " +
                "this Ruby binding because it's not available."
         end
       end
       begin # DRAFT method
-        attach_function :zyre_event_address, [:pointer], :string, **opts
+        attach_function :zyre_event_peer_addr, [:pointer], :string, **opts
       rescue ::FFI::NotFoundError
         if $VERBOSE || $DEBUG
-          warn "The function zyre_event_address() can't be used through " +
+          warn "The function zyre_event_peer_addr() can't be used through " +
                "this Ruby binding because it's not available."
         end
       end

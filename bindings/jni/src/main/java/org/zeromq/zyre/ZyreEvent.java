@@ -47,25 +47,25 @@ public class ZyreEvent implements AutoCloseable{
         return __type (self);
     }
     /*
-    Return the sending peer's id as a string
+    Return the sending peer's uuid as a string
     */
-    native static String __sender (long self);
-    public String sender () {
-        return __sender (self);
+    native static String __peerUuid (long self);
+    public String peerUuid () {
+        return __peerUuid (self);
     }
     /*
     Return the sending peer's public name as a string
     */
-    native static String __name (long self);
-    public String name () {
-        return __name (self);
+    native static String __peerName (long self);
+    public String peerName () {
+        return __peerName (self);
     }
     /*
     Return the sending peer's ipaddress as a string
     */
-    native static String __address (long self);
-    public String address () {
-        return __address (self);
+    native static String __peerAddr (long self);
+    public String peerAddr () {
+        return __peerAddr (self);
     }
     /*
     Returns the event headers, or NULL if there are none
@@ -90,7 +90,7 @@ public class ZyreEvent implements AutoCloseable{
         return __group (self);
     }
     /*
-    Returns the incoming message payload (currently one frame)
+    Returns the incoming message payload
     */
     native static long __msg (long self);
     public Zmsg msg () {

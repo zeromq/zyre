@@ -11,7 +11,7 @@
         },
         "include_dirs": [
             "<!(node -e \"require('nan')\")",
-            "../../include",
+            "$(BUILD_ROOT)/deps/include",
             "../../nodejs-build/src"
         ],
         "libraries": [

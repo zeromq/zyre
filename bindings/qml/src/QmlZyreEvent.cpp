@@ -15,21 +15,21 @@ zyre_event_type_t QmlZyreEvent::type () {
 };
 
 ///
-//  Return the sending peer's id as a string
-const QString QmlZyreEvent::sender () {
-    return QString (zyre_event_sender (self));
+//  Return the sending peer's uuid as a string
+const QString QmlZyreEvent::peerUuid () {
+    return QString (zyre_event_peer_uuid (self));
 };
 
 ///
 //  Return the sending peer's public name as a string
-const QString QmlZyreEvent::name () {
-    return QString (zyre_event_name (self));
+const QString QmlZyreEvent::peerName () {
+    return QString (zyre_event_peer_name (self));
 };
 
 ///
 //  Return the sending peer's ipaddress as a string
-const QString QmlZyreEvent::address () {
-    return QString (zyre_event_address (self));
+const QString QmlZyreEvent::peerAddr () {
+    return QString (zyre_event_peer_addr (self));
 };
 
 ///
@@ -52,7 +52,7 @@ const QString QmlZyreEvent::group () {
 };
 
 ///
-//  Returns the incoming message payload (currently one frame)
+//  Returns the incoming message payload
 zmsg_t *QmlZyreEvent::msg () {
     return zyre_event_msg (self);
 };

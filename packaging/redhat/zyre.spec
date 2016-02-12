@@ -24,7 +24,6 @@ BuildRequires:  autoconf
 BuildRequires:  libtool
 BuildRequires:  pkg-config
 BuildRequires:  systemd-devel
-BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
 BuildRequires:  uuid-devel
 BuildRequires:  czmq-devel
@@ -53,7 +52,6 @@ This package contains shared library.
 Summary:        an open-source framework for proximity-based p2p apps
 Group:          System/Libraries
 Requires:       libzyre1 = %{version}
-Requires:       libsodium-devel
 Requires:       zeromq-devel
 Requires:       uuid-devel
 Requires:       czmq-devel

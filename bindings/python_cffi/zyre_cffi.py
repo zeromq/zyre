@@ -216,17 +216,17 @@ void
 zyre_event_type_t
     zyre_event_type (zyre_event_t *self);
 
-// Return the sending peer's id as a string
+// Return the sending peer's uuid as a string
 const char *
-    zyre_event_sender (zyre_event_t *self);
+    zyre_event_peer_uuid (zyre_event_t *self);
 
 // Return the sending peer's public name as a string
 const char *
-    zyre_event_name (zyre_event_t *self);
+    zyre_event_peer_name (zyre_event_t *self);
 
 // Return the sending peer's ipaddress as a string
 const char *
-    zyre_event_address (zyre_event_t *self);
+    zyre_event_peer_addr (zyre_event_t *self);
 
 // Returns the event headers, or NULL if there are none
 zhash_t *
@@ -241,7 +241,7 @@ const char *
 const char *
     zyre_event_group (zyre_event_t *self);
 
-// Returns the incoming message payload (currently one frame)
+// Returns the incoming message payload
 zmsg_t *
     zyre_event_msg (zyre_event_t *self);
 

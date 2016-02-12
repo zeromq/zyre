@@ -104,33 +104,33 @@ module Zyre
         result
       end
 
-      # Return the sending peer's id as a string
+      # Return the sending peer's uuid as a string
       #
       # @return [String]
-      def sender()
+      def peer_uuid()
         raise DestroyedError unless @ptr
         self_p = @ptr
-        result = ::Zyre::FFI.zyre_event_sender(self_p)
+        result = ::Zyre::FFI.zyre_event_peer_uuid(self_p)
         result
       end
 
       # Return the sending peer's public name as a string
       #
       # @return [String]
-      def name()
+      def peer_name()
         raise DestroyedError unless @ptr
         self_p = @ptr
-        result = ::Zyre::FFI.zyre_event_name(self_p)
+        result = ::Zyre::FFI.zyre_event_peer_name(self_p)
         result
       end
 
       # Return the sending peer's ipaddress as a string
       #
       # @return [String]
-      def address()
+      def peer_addr()
         raise DestroyedError unless @ptr
         self_p = @ptr
-        result = ::Zyre::FFI.zyre_event_address(self_p)
+        result = ::Zyre::FFI.zyre_event_peer_addr(self_p)
         result
       end
 
@@ -166,7 +166,7 @@ module Zyre
         result
       end
 
-      # Returns the incoming message payload (currently one frame)
+      # Returns the incoming message payload
       #
       # @return [::FFI::Pointer]
       def msg()

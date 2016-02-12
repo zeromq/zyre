@@ -28,14 +28,14 @@ public:
     //  Returns event type, which is a zyre_event_type_t
     zyre_event_type_t type ();
 
-    //  Return the sending peer's id as a string
-    const QString sender ();
+    //  Return the sending peer's uuid as a string
+    const QString peerUuid ();
 
     //  Return the sending peer's public name as a string
-    const QString name ();
+    const QString peerName ();
 
     //  Return the sending peer's ipaddress as a string
-    const QString address ();
+    const QString peerAddr ();
 
     //  Returns the event headers, or NULL if there are none
     QZhash * headers ();
@@ -47,7 +47,7 @@ public:
     //  Returns the group name that a SHOUT event was sent to
     const QString group ();
 
-    //  Returns the incoming message payload (currently one frame)
+    //  Returns the incoming message payload
     QZmsg * msg ();
 
     //  Print event to zsys log
