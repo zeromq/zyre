@@ -26,9 +26,6 @@
 #define ZYRE_BUILD_DRAFT_API
 
 #if defined ZYRE_HAVE_WINDOWS
-#   define ZYRE_STATIC
-#   define ZMQ_STATIC
-#   define CZMQ_STATIC
 
 #elif defined ZYRE_HAVE_OSX
 #   define ZYRE_HAVE_IFADDRS

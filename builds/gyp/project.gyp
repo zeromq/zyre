@@ -7,9 +7,9 @@
 {
   'target_defaults': {
     'include_dirs': [
-      '../../include',
       '../../../libzmq/include',
       '../../../czmq/include',
+      '../../include',
       '.'
     ],
     'defines': [
@@ -18,7 +18,10 @@
     'conditions': [
       [ 'OS=="win"', {
         'defines': [
-          'ZYRE_HAVE_WINDOWS'
+          'ZYRE_HAVE_WINDOWS',
+          'ZMQ_STATIC',
+          'CZMQ_STATIC',
+          'ZYRE_STATIC'
         ],
         'libraries': [
           'ws2_32',
