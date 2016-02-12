@@ -33,26 +33,26 @@ Java_org_zeromq_zyre_ZyreEvent__1_1type (JNIEnv *env, jclass c, jlong self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_zeromq_zyre_ZyreEvent__1_1sender (JNIEnv *env, jclass c, jlong self)
+Java_org_zeromq_zyre_ZyreEvent__1_1peerUuid (JNIEnv *env, jclass c, jlong self)
 {
-    char *sender_ = (char *) zyre_event_sender ((zyre_event_t *) (intptr_t) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, sender_);
+    char *peer_uuid_ = (char *) zyre_event_peer_uuid ((zyre_event_t *) (intptr_t) self);
+    jstring return_string_ = (*env)->NewStringUTF (env, peer_uuid_);
     return return_string_;
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_zeromq_zyre_ZyreEvent__1_1name (JNIEnv *env, jclass c, jlong self)
+Java_org_zeromq_zyre_ZyreEvent__1_1peerName (JNIEnv *env, jclass c, jlong self)
 {
-    char *name_ = (char *) zyre_event_name ((zyre_event_t *) (intptr_t) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, name_);
+    char *peer_name_ = (char *) zyre_event_peer_name ((zyre_event_t *) (intptr_t) self);
+    jstring return_string_ = (*env)->NewStringUTF (env, peer_name_);
     return return_string_;
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_zeromq_zyre_ZyreEvent__1_1address (JNIEnv *env, jclass c, jlong self)
+Java_org_zeromq_zyre_ZyreEvent__1_1peerAddr (JNIEnv *env, jclass c, jlong self)
 {
-    char *address_ = (char *) zyre_event_address ((zyre_event_t *) (intptr_t) self);
-    jstring return_string_ = (*env)->NewStringUTF (env, address_);
+    char *peer_addr_ = (char *) zyre_event_peer_addr ((zyre_event_t *) (intptr_t) self);
+    jstring return_string_ = (*env)->NewStringUTF (env, peer_addr_);
     return return_string_;
 }
 

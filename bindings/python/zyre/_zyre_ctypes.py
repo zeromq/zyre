@@ -369,12 +369,12 @@ lib.zyre_event_destroy.restype = None
 lib.zyre_event_destroy.argtypes = [POINTER(zyre_event_p)]
 lib.zyre_event_type.restype = c_int
 lib.zyre_event_type.argtypes = [zyre_event_p]
-lib.zyre_event_sender.restype = c_char_p
-lib.zyre_event_sender.argtypes = [zyre_event_p]
-lib.zyre_event_name.restype = c_char_p
-lib.zyre_event_name.argtypes = [zyre_event_p]
-lib.zyre_event_address.restype = c_char_p
-lib.zyre_event_address.argtypes = [zyre_event_p]
+lib.zyre_event_peer_uuid.restype = c_char_p
+lib.zyre_event_peer_uuid.argtypes = [zyre_event_p]
+lib.zyre_event_peer_name.restype = c_char_p
+lib.zyre_event_peer_name.argtypes = [zyre_event_p]
+lib.zyre_event_peer_addr.restype = c_char_p
+lib.zyre_event_peer_addr.argtypes = [zyre_event_p]
 lib.zyre_event_headers.restype = czmq.zhash_p
 lib.zyre_event_headers.argtypes = [zyre_event_p]
 lib.zyre_event_header.restype = c_char_p
@@ -466,23 +466,23 @@ data (WHISPER, SHOUT).
         """
         return ZyreEvent.Type_out[lib.zyre_event_type(self._as_parameter_)]
 
-    def sender(self):
+    def peer_uuid(self):
         """
-        Return the sending peer's id as a string
+        Return the sending peer's uuid as a string
         """
-        return lib.zyre_event_sender(self._as_parameter_)
+        return lib.zyre_event_peer_uuid(self._as_parameter_)
 
-    def name(self):
+    def peer_name(self):
         """
         Return the sending peer's public name as a string
         """
-        return lib.zyre_event_name(self._as_parameter_)
+        return lib.zyre_event_peer_name(self._as_parameter_)
 
-    def address(self):
+    def peer_addr(self):
         """
         Return the sending peer's ipaddress as a string
         """
-        return lib.zyre_event_address(self._as_parameter_)
+        return lib.zyre_event_peer_addr(self._as_parameter_)
 
     def headers(self):
         """
@@ -505,7 +505,7 @@ obtained by ENTER. Return NULL if no value was found.
 
     def msg(self):
         """
-        Returns the incoming message payload (currently one frame)
+        Returns the incoming message payload
         """
         return czmq.Zmsg(lib.zyre_event_msg(self._as_parameter_), False)
 

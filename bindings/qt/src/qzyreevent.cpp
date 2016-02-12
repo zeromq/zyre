@@ -40,26 +40,26 @@ zyre_event_type_t QZyreEvent::type ()
 }
 
 ///
-//  Return the sending peer's id as a string
-const QString QZyreEvent::sender ()
+//  Return the sending peer's uuid as a string
+const QString QZyreEvent::peerUuid ()
 {
-    const QString rv = QString (zyre_event_sender (self));
+    const QString rv = QString (zyre_event_peer_uuid (self));
     return rv;
 }
 
 ///
 //  Return the sending peer's public name as a string
-const QString QZyreEvent::name ()
+const QString QZyreEvent::peerName ()
 {
-    const QString rv = QString (zyre_event_name (self));
+    const QString rv = QString (zyre_event_peer_name (self));
     return rv;
 }
 
 ///
 //  Return the sending peer's ipaddress as a string
-const QString QZyreEvent::address ()
+const QString QZyreEvent::peerAddr ()
 {
-    const QString rv = QString (zyre_event_address (self));
+    const QString rv = QString (zyre_event_peer_addr (self));
     return rv;
 }
 
@@ -89,7 +89,7 @@ const QString QZyreEvent::group ()
 }
 
 ///
-//  Returns the incoming message payload (currently one frame)
+//  Returns the incoming message payload
 QZmsg * QZyreEvent::msg ()
 {
     QZmsg *rv = new QZmsg (zyre_event_msg (self));

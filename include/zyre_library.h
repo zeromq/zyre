@@ -37,9 +37,9 @@
     ZYRE_MAKE_VERSION(ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
 
 #if defined (__WINDOWS__)
-#   if defined LIBZYRE_STATIC
+#   if defined ZYRE_STATIC
 #       define ZYRE_EXPORT
-#   elif defined LIBZYRE_EXPORTS
+#   elif defined ZYRE_EXPORTS
 #       define ZYRE_EXPORT __declspec(dllexport)
 #   else
 #       define ZYRE_EXPORT __declspec(dllimport)
