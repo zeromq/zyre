@@ -24,8 +24,7 @@ network.
 @end
 */
 
-#include <czmq.h>
-#include "zyre_classes.h"
+#include "zyre.h"
 
 int main (int argc, char *argv [])
 {
