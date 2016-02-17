@@ -1,6 +1,6 @@
 {
   "name": "zyre",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Zyre",
   "scripts": {
     "install": "prebuild --install",
@@ -9,14 +9,17 @@
     "prebuild": "prebuild --strip --verbose"
   },
   "author": "ZeroMQ Community",
-  "license": "MPLv2",
+  "license": "MPL-2.0",
   "gypfile": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/hintjens/zyre-nodejs"
   },
   "dependencies": {
-    "nan": "^2.2.0",
-    "prebuild": "^2.8.1"
+    "bindings": "^1.2.1",
+    "prebuild": "^3.0.3"
+  },
+  "devDependencies": {
+    "nan": "^2.2.0"
   }
 }
