@@ -30,18 +30,24 @@ network.
 int main (int argc, char *argv [])
 {
     bool verbose = false;
+    char *iface = NULL;
     int argn;
     for (argn = 1; argn < argc; argn++) {
         if (streq (argv [argn], "--help")
         ||  streq (argv [argn], "-h")) {
             puts ("zpinger [options] ...");
-            puts ("  --verbose / -v         verbose test output");
             puts ("  --help / -h            this help");
+            puts ("  --verbose / -v         verbose test output");
+            puts ("  --interface / -i       use this interface");
             return 0;
         }
         if (streq (argv [argn], "--verbose")
         ||  streq (argv [argn], "-v"))
             verbose = true;
+        else
+        if (streq (argv [argn], "--interface")
+        ||  streq (argv [argn], "-i"))
+            iface = argv [++argn];
         else {
             printf ("Unknown option: %s\n", argv [argn]);
             return 1;
@@ -51,6 +57,8 @@ int main (int argc, char *argv [])
     zsys_info ("Create Zyre node, uuid=%s, name=%s", zyre_uuid (zyre), zyre_name (zyre));
     if (verbose)
         zyre_set_verbose (zyre);
+    if (iface)
+        zyre_set_interface (zyre, iface);
     zyre_start (zyre);
     zyre_join (zyre, "GLOBAL");
     if (verbose)
