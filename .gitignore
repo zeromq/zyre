@@ -20,6 +20,7 @@ tools/.deps/
 doc/*.1
 doc/*.3
 .libs/
+.dirstamp
 *.o
 *.lo
 *.la

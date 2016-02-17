@@ -116,6 +116,8 @@ ENDIF (CZMQ_FOUND)
 ########################################################################
 set (zyre_headers
     include/zyre_library.h
+    include/zyre.h
+    include/zyre_event.h
     src/zyre_peer.h
     src/zyre_group.h
     src/zyre_node.h
@@ -123,8 +125,6 @@ set (zyre_headers
 
 IF (ENABLE_DRAFTS)
     list(APPEND zyre_headers
-        include/zyre.h
-        include/zyre_event.h
         include/zre_msg.h
     )
 ENDIF (ENABLE_DRAFTS)
@@ -137,6 +137,8 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include")
 set (zyre_sources
+    src/zyre.c
+    src/zyre_event.c
     src/zyre_peer.c
     src/zyre_group.c
     src/zyre_node.c
@@ -144,8 +146,6 @@ set (zyre_sources
 
 IF (ENABLE_DRAFTS)
     list (APPEND zyre_sources
-        src/zyre.c
-        src/zyre_event.c
         src/zre_msg.c
     )
 ENDIF (ENABLE_DRAFTS)
@@ -295,6 +295,8 @@ set(CLASSTEST_TIMEOUT 5 CACHE STRING "Timeout of the selftest of a class")
 set(TOTAL_TIMEOUT 20 CACHE STRING "Timout of the total testsuite")
 
 set(TEST_CLASSES
+    zyre
+    zyre_event
     zyre_peer
     zyre_group
     zyre_node
@@ -302,8 +304,6 @@ set(TEST_CLASSES
 
 IF (ENABLE_DRAFTS)
     list (APPEND TEST_CLASSES
-    zyre
-    zyre_event
     zre_msg
     )
 ENDIF (ENABLE_DRAFTS)

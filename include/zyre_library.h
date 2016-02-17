@@ -50,12 +50,12 @@
 
 //  Opaque class structures to allow forward references
 //  These classes are stable or legacy and built in all releases
-//  Draft classes are by default not built stable releases
-#ifdef ZYRE_BUILD_DRAFT_API
 typedef struct _zyre_t zyre_t;
 #define ZYRE_T_DEFINED
 typedef struct _zyre_event_t zyre_event_t;
 #define ZYRE_EVENT_T_DEFINED
+//  Draft classes are by default not built stable releases
+#ifdef ZYRE_BUILD_DRAFT_API
 typedef struct _zre_msg_t zre_msg_t;
 #define ZRE_MSG_T_DEFINED
 #endif // ZYRE_BUILD_DRAFT_API
@@ -66,8 +66,8 @@ typedef struct _zre_msg_t zre_msg_t;
 #endif // ZYRE_BUILD_DRAFT_API
 
 //  Public classes, each with its own header file
-#ifdef ZYRE_BUILD_DRAFT_API
 #include "zyre_event.h"
+#ifdef ZYRE_BUILD_DRAFT_API
 #include "zre_msg.h"
 #endif // ZYRE_BUILD_DRAFT_API
 
