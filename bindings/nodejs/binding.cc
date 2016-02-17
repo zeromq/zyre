@@ -1,3 +1,19 @@
+/*  =========================================================================
+    zyre.node - node.js binding for Zyre
+
+    -------------------------------------------------------------------------
+    Copyright (c) the Contributors as noted in the AUTHORS file.
+
+    This file is part of Zyre, an open-source framework for proximity-based
+    peer-to-peer applications -- See http://zyre.org.
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    =========================================================================
+*/
+
+#define ZYRE_BUILD_DRAFT_API
 #include "zyre.h"
 #include "nan.h"
 
@@ -315,53 +331,6 @@ class ZyreEvent: public Nan::ObjectWrap {
             return self;
         }
 };
-
-
-// <class name = "zyre event">
-//     <!--
-//     Copyright (c) the Contributors as noted in the AUTHORS file.
-//
-//     This file is part of Zyre, an open-source framework for proximity-based
-//     peer-to-peer applications -- See http://zyre.org.
-//
-//     This Source Code Form is subject to the terms of the Mozilla Public
-//     License, v. 2.0. If a copy of the MPL was not distributed with this
-//     file, You can obtain one at http://mozilla.org/MPL/2.0/.
-//     -->
-//     Parsing Zyre messages
-//
-//     <enum name = "type">
-//         <constant name = "enter" value = "1" />
-//         <constant name = "join" value = "2" />
-//         <constant name = "leave" value = "3" />
-//         <constant name = "exit" value = "4" />
-//         <constant name = "whisper" value = "5" />
-//         <constant name = "shout" value = "6" />
-//         <constant name = "stop" value = "7" />
-//         <constant name = "evasive" value = "8" />
-//     </enum>
-//
-//     <method name = "header">
-//         Returns value of a header from the message headers
-//         obtained by ENTER. Return NULL if no value was found.
-//         <argument name = "name" type = "string" />
-//         <return type = "string" />
-//     </method>
-//
-//     <method name = "group">
-//         Returns the group name that a SHOUT event was sent to
-//         <return type = "string" />
-//     </method>
-//
-//     <method name = "msg">
-//         Returns the incoming message payload (currently one frame)
-//         <return type = "zmsg" />
-//     </method>
-//
-//     <method name = "print">
-//         Print event to zsys log
-//     </method>
-// </class>
 
 
 extern "C" NAN_MODULE_INIT (zyre_initialize)
