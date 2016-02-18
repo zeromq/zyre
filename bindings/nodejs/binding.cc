@@ -113,7 +113,7 @@ class Zyre: public Nan::ObjectWrap {
         &&  info [1]->IsString ()) {
             Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
             Nan::Utf8String name (info [0].As<String>());
-            Nan::Utf8String value (info [0].As<String>());
+            Nan::Utf8String value (info [1].As<String>());
             zyre_set_header (zyre->self, *name, "%s", *value);
         }
         else
@@ -145,7 +145,7 @@ class Zyre: public Nan::ObjectWrap {
         &&  info [1]->IsString ()) {
             Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
             Nan::Utf8String peer (info [0].As<String>());
-            Nan::Utf8String string (info [0].As<String>());
+            Nan::Utf8String string (info [1].As<String>());
             zmsg_t *msg = zmsg_new ();
             zmsg_pushstr (msg, *string);
             zyre_whisper (zyre->self, *peer, &msg);
