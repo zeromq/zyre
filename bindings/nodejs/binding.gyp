@@ -12,6 +12,8 @@
       ],
       'include_dirs': [
           "<!(node -e \"require('nan')\")",
+          '../../../czmq/include',
+          '../../../libzmq/include',
           '../../include'
       ],
       'dependencies': [
