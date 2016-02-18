@@ -186,17 +186,17 @@ ZYRE_EXPORT void
     zyre_test (bool verbose);
 
 //  @ignore
-void
+ZYRE_EXPORT void
     zyre_set_header (zyre_t *self, const char *name, const char *format, ...) CHECK_PRINTF (3);
-int
+ZYRE_EXPORT int
     zyre_set_endpoint (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
-void
+ZYRE_EXPORT void
     zyre_gossip_bind (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
-void
+ZYRE_EXPORT void
     zyre_gossip_connect (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
-int
+ZYRE_EXPORT int
     zyre_whispers (zyre_t *self, const char *peer, const char *format, ...) CHECK_PRINTF (3);
-int
+ZYRE_EXPORT int
     zyre_shouts (zyre_t *self, const char *group, const char *format, ...) CHECK_PRINTF (3);
 //  @end
 
