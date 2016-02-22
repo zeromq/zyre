@@ -16,6 +16,11 @@
           '../../../libzmq/include',
           '../../include'
       ],
+      'defines': [
+        'ZMQ_STATIC',
+        'CZMQ_STATIC',
+        'ZYRE_STATIC'
+       ],
       'dependencies': [
           '../../builds/gyp/project.gyp:libzyre'
       ]
