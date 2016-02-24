@@ -1,4 +1,4 @@
-<class name = "zyre" state = "stable">
+<class name = "zyre">
     <!--
     Copyright (c) the Contributors as noted in the AUTHORS file.
 
@@ -16,7 +16,7 @@
         node it is silent and invisible to other nodes on the network.
         The node name is provided to other nodes during discovery. If you
         specify NULL, Zyre generates a randomized node name from the UUID.
-        <argument name = "name" type = "string" />
+        <argument name = "name" type = "string" optional = "1" />
     </constructor>
 
     <destructor>
@@ -34,39 +34,39 @@
         <return type = "string" />
     </method>
 
-    <method name = "set_header">
+    <method name = "set header">
         Set node header; these are provided to other nodes during discovery
         and come in each ENTER message.
         <argument name = "name" type = "string" />
         <argument name = "format" type = "format" />
     </method>
 
-    <method name = "set_verbose">
+    <method name = "set verbose">
         Set verbose mode; this tells the node to log all traffic as well as 
         all major events.
     </method>
 
-    <method name = "set_port">
+    <method name = "set port">
         Set UDP beacon discovery port; defaults to 5670, this call overrides 
         that so you can create independent clusters on the same network, for 
         e.g. development vs. production. Has no effect after zyre_start().
-        <argument name = "port_nbr" type = "integer" />
+        <argument name = "port nbr" type = "integer" />
     </method>
 
-    <method name = "set_interval">
+    <method name = "set interval">
         Set UDP beacon discovery interval, in milliseconds. Default is instant
         beacon exploration followed by pinging every 1,000 msecs.
         <argument name = "interval" type = "size" />
     </method>
 
-    <method name = "set_interface">
+    <method name = "set interface">
         Set network interface for UDP beacons. If you do not set this, CZMQ will
         choose an interface for you. On boxes with several interfaces you should
         specify which one you want to use, or strange things can happen.
         <argument name = "value" type = "string" />
     </method>
 
-    <method name = "set_endpoint">
+    <method name = "set endpoint">
         By default, Zyre binds to an ephemeral TCP port and broadcasts the local
         host name using UDP beaconing. When you call this method, Zyre will use
         gossip discovery instead of UDP beaconing. You MUST set-up the gossip
@@ -79,7 +79,7 @@
         <return type = "integer" />
     </method>
 
-    <method name = "gossip_bind">
+    <method name = "gossip bind">
         Set-up gossip discovery of other nodes. At least one node in the cluster
         must bind to a well-known gossip endpoint, so other nodes can connect to
         it. Note that gossip endpoints are completely distinct from Zyre node
@@ -87,7 +87,7 @@
         <argument name = "format" type = "format" />
     </method>
 
-    <method name = "gossip_connect">
+    <method name = "gossip connect">
         Set-up gossip discovery of other nodes. A node may connect to multiple
         other nodes, for redundancy paths. For details of the gossip network
         design, see the CZMQ zgossip class. 
@@ -162,23 +162,23 @@
         <return type = "zlist" fresh = "1" />
     </method>
 
-    <method name = "own_groups">
+    <method name = "own groups">
         Return zlist of currently joined groups. 
         <return type = "zlist" fresh = "1" />
     </method>
 
-    <method name = "peer_groups">
+    <method name = "peer groups">
         Return zlist of groups known through connected peers. 
         <return type = "zlist" fresh = "1" />
     </method>
 
-    <method name = "peer_address">
+    <method name = "peer address">
         Return the endpoint of a connected peer. 
         <argument name = "peer" type = "string" />
         <return type = "string" fresh = "1" />
     </method>
 
-    <method name = "peer_header_value">
+    <method name = "peer header value">
         Return the value of a header of a conected peer. 
         Returns null if peer or key doesn't exits. 
         <argument name = "peer" type = "string" />
