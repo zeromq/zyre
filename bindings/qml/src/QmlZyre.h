@@ -147,8 +147,9 @@ public:
     };
     
 public slots:
-    //  Return the Zyre version for run-time API detection
-    void version (int *major, int *minor, int *patch);
+    //  Return the Zyre version for run-time API detection; returns
+    //  major * 10000 + minor * 100 + patch, as a single integer.  
+    int version ();
 
     //  Self test of this class.
     void test (bool verbose);

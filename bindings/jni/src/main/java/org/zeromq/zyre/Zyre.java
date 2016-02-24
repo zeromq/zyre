@@ -253,11 +253,12 @@ public class Zyre implements AutoCloseable{
         __print (self);
     }
     /*
-    Return the Zyre version for run-time API detection
+    Return the Zyre version for run-time API detection; returns
+    major * 10000 + minor * 100 + patch, as a single integer.  
     */
-    native static void __version (int major, int minor, int patch);
-    public void version (int major, int minor, int patch) {
-        __version (major, minor, patch);
+    native static int __version ();
+    public int version () {
+        return __version ();
     }
     /*
     Self test of this class.

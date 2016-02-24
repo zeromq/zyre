@@ -530,13 +530,13 @@ zyre_print (zyre_t *self)
 
 
 //  --------------------------------------------------------------------------
-//  Return the Zyre version for run-time API detection
+//  Return the Zyre version for run-time API detection; returns
+//  major * 10000 + minor * 100 + patch, as a single integer.
 
-void zyre_version (int *major, int *minor, int *patch)
+uint64_t
+zyre_version (void)
 {
-    *major = ZYRE_VERSION_MAJOR;
-    *minor = ZYRE_VERSION_MINOR;
-    *patch = ZYRE_VERSION_PATCH;
+    return ZYRE_VERSION;
 }
 
 
@@ -553,11 +553,10 @@ zyre_test (bool verbose)
     //  @selftest
     //  We'll use inproc gossip discovery so that this works without networking
 
-    int major, minor, patch;
-    zyre_version (&major, &minor, &patch);
-    assert (major == ZYRE_VERSION_MAJOR);
-    assert (minor == ZYRE_VERSION_MINOR);
-    assert (patch == ZYRE_VERSION_PATCH);
+    uint64_t version = zyre_version ();
+    assert ((version / 10000) % 100 == ZYRE_VERSION_MAJOR);
+    assert ((version / 100) % 100 == ZYRE_VERSION_MINOR);
+    assert (version % 100 == ZYRE_VERSION_PATCH);
 
     //  Create two nodes
     zyre_t *node1 = zyre_new ("node1");

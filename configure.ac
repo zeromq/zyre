@@ -54,7 +54,7 @@ PKG_PROG_PKG_CONFIG
 
 # Code coverage
 AC_ARG_WITH(gcov, [AS_HELP_STRING([--with-gcov=yes/no],
-                  [With GCC Code Coverage reporting.])],
+                  [With GCC Code Coverage reporting])],
                   [ZYRE_GCOV="$withval"])
 
 if test "x${ZYRE_GCOV}" == "xyes"; then
@@ -108,7 +108,7 @@ PKG_CHECK_MODULES([libzmq], [libzmq >= 0.0.0],
                 AC_SUBST([libzmq_LIBS],[${libzmq_synthetic_libs}])
                 was_libzmq_check_lib_detected=yes
             ],
-            [AC_MSG_ERROR([cannot link with -lzmq, install libzmq.])])
+            [AC_MSG_ERROR([cannot link with -lzmq, install libzmq])])
     ])
 
 if test "x$was_libzmq_check_lib_detected" = "xno"; then
@@ -120,7 +120,7 @@ was_uuid_check_lib_detected=no
 
 PKG_CHECK_MODULES([uuid], [uuid >= 0.0.0],
     [
-        AC_DEFINE(HAVE_UUID, 1, [The uuid library is to be used.])
+        AC_DEFINE(HAVE_UUID, 1, [The uuid library is to be used])
     ],
     [
         AC_ARG_WITH([uuid],
@@ -152,7 +152,7 @@ PKG_CHECK_MODULES([uuid], [uuid >= 0.0.0],
                 AC_SUBST([uuid_CFLAGS],[${uuid_synthetic_cflags}])
                 AC_SUBST([uuid_LIBS],[${uuid_synthetic_libs}])
                 was_uuid_check_lib_detected=yes
-                AC_DEFINE(HAVE_UUID, 1, [The uuid library is to be used.])
+                AC_DEFINE(HAVE_UUID, 1, [The uuid library is to be used])
             ],
             [])
     ])
@@ -198,7 +198,7 @@ PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
                 AC_SUBST([czmq_LIBS],[${czmq_synthetic_libs}])
                 was_czmq_check_lib_detected=yes
             ],
-            [AC_MSG_ERROR([cannot link with -lczmq, install libczmq.])])
+            [AC_MSG_ERROR([cannot link with -lczmq, install libczmq])])
     ])
 
 if test "x$was_czmq_check_lib_detected" = "xno"; then
@@ -329,7 +329,7 @@ case "${host_os}" in
         zyre_on_gnu="yes"
         ;;
     *)
-        AC_MSG_ERROR([unsupported system: ${host_os}.])
+        AC_MSG_ERROR([unsupported system: ${host_os}])
         ;;
 esac
 
@@ -374,7 +374,7 @@ AM_CONDITIONAL(BUILD_DOC, test "x$zyre_build_doc" = "xyes")
 # Check for perf_local intent
 AC_ARG_ENABLE([perf_local],
     AS_HELP_STRING([--enable-perf_local],
-        [Compile 'perf_local' in src [default=yes].]),
+        [Compile 'perf_local' in src [default=yes]]),
     [enable_perf_local=$enableval],
     [enable_perf_local=yes])
 
@@ -384,7 +384,7 @@ AM_COND_IF([ENABLE_PERF_LOCAL], [AC_MSG_NOTICE([ENABLE_PERF_LOCAL defined])])
 # Check for perf_remote intent
 AC_ARG_ENABLE([perf_remote],
     AS_HELP_STRING([--enable-perf_remote],
-        [Compile 'perf_remote' in src [default=yes].]),
+        [Compile 'perf_remote' in src [default=yes]]),
     [enable_perf_remote=$enableval],
     [enable_perf_remote=yes])
 
@@ -394,7 +394,7 @@ AM_COND_IF([ENABLE_PERF_REMOTE], [AC_MSG_NOTICE([ENABLE_PERF_REMOTE defined])])
 # Check for zpinger intent
 AC_ARG_ENABLE([zpinger],
     AS_HELP_STRING([--enable-zpinger],
-        [Compile and install 'zpinger' [default=yes].]),
+        [Compile and install 'zpinger' [default=yes]]),
     [enable_zpinger=$enableval],
     [enable_zpinger=yes])
 
@@ -404,7 +404,7 @@ AM_COND_IF([ENABLE_ZPINGER], [AC_MSG_NOTICE([ENABLE_ZPINGER defined])])
 # Check for ztester_beacon intent
 AC_ARG_ENABLE([ztester_beacon],
     AS_HELP_STRING([--enable-ztester_beacon],
-        [Compile 'ztester_beacon' in src [default=yes].]),
+        [Compile 'ztester_beacon' in src [default=yes]]),
     [enable_ztester_beacon=$enableval],
     [enable_ztester_beacon=yes])
 
@@ -414,7 +414,7 @@ AM_COND_IF([ENABLE_ZTESTER_BEACON], [AC_MSG_NOTICE([ENABLE_ZTESTER_BEACON define
 # Check for ztester_gossip intent
 AC_ARG_ENABLE([ztester_gossip],
     AS_HELP_STRING([--enable-ztester_gossip],
-        [Compile 'ztester_gossip' in src [default=yes].]),
+        [Compile 'ztester_gossip' in src [default=yes]]),
     [enable_ztester_gossip=$enableval],
     [enable_ztester_gossip=yes])
 
@@ -424,7 +424,7 @@ AM_COND_IF([ENABLE_ZTESTER_GOSSIP], [AC_MSG_NOTICE([ENABLE_ZTESTER_GOSSIP define
 # Check for zyre_selftest intent
 AC_ARG_ENABLE([zyre_selftest],
     AS_HELP_STRING([--enable-zyre_selftest],
-        [Compile 'zyre_selftest' in src [default=yes].]),
+        [Compile 'zyre_selftest' in src [default=yes]]),
     [enable_zyre_selftest=$enableval],
     [enable_zyre_selftest=yes])
 
@@ -443,9 +443,9 @@ AC_SUBST([pkgconfigdir])
 
 
 # enable specific system integration features
-AC_ARG_WITH([systemd],
+AC_ARG_WITH([systemd-units],
     AS_HELP_STRING([--with-systemd-units],
-    [Build and install with systemd units integration [default=no].]),
+    [Build and install with systemd units integration [default=no]]),
     [with_systemd_units=$withval],
     [with_systemd_units=no])
 
@@ -456,26 +456,13 @@ AM_COND_IF([WITH_SYSTEMD_UNITS],
     AC_SUBST(WITH_SYSTEMD_UNITS)],
     [])
 
-if test "x$cross_compiling" = "xyes"; then
-    #   Enable draft by default when cross-compiling
-    gitmaster=yes
-else
-    # enable draft API by default if we're in a git repository
-    # else disable it by default; then allow --enable-drafts=yes/no override
-    AC_CHECK_FILE($srcdir/.git, [gitmaster=yes], [gitmaster=no])
-fi
-
-AC_ARG_ENABLE([drafts],
-    AS_HELP_STRING([--enable-drafts],
-        [Build and install draft classes and methods [default=yes.]]),
-    [enable_drafts=$enableval],
-    [enable_drafts=$gitmaster])
-
+#   Project has no stable classes so enable draft API by default
+enable_drafts=yes
 AM_CONDITIONAL([ENABLE_DRAFTS], [test x$enable_drafts != xno])
 
 if test "x$enable_drafts" = "xyes"; then
     AC_MSG_NOTICE([Building stable and legacy API + draft API])
-    AC_DEFINE(ZYRE_BUILD_DRAFT_API, 1, [Provide draft classes and methods.])
+    AC_DEFINE(ZYRE_BUILD_DRAFT_API, 1, [Provide draft classes and methods])
     AC_SUBST(pkg_config_defines, "-DZYRE_BUILD_DRAFT_API=1")
 else
     AC_MSG_NOTICE([Building stable and legacy API (no draft API)])
