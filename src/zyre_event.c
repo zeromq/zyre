@@ -28,7 +28,8 @@
 //  Structure of zyre_event class
 
 struct _zyre_event_t {
-    zyre_event_type_t type; //  Event type
+    int type;               //  Event type as integer
+    char *type_name;        //  Event type as string
     char *peer_uuid;        //  Sender UUID as string
     char *peer_name;        //  Sender public name as string
     char *peer_addr;        //  Sender ipaddress as string, for an ENTER event
@@ -53,11 +54,11 @@ zyre_event_new (zyre_t *node)
     zyre_event_t *self = (zyre_event_t *) zmalloc (sizeof (zyre_event_t));
     assert (self);
 
-    char *type = zmsg_popstr (msg);
+    self->type_name = zmsg_popstr (msg);
     self->peer_uuid = zmsg_popstr (msg);
     self->peer_name = zmsg_popstr (msg);
 
-    if (streq (type, "ENTER")) {
+    if (streq (self->type_name, "ENTER")) {
         self->type = ZYRE_EVENT_ENTER;
         zframe_t *headers = zmsg_pop (msg);
         if (headers) {
@@ -67,43 +68,42 @@ zyre_event_new (zyre_t *node)
         self->peer_addr = zmsg_popstr (msg);
     }
     else
-    if (streq (type, "EXIT"))
+    if (streq (self->type_name, "EXIT"))
         self->type = ZYRE_EVENT_EXIT;
     else
-    if (streq (type, "JOIN")) {
+    if (streq (self->type_name, "JOIN")) {
         self->type = ZYRE_EVENT_JOIN;
         self->group = zmsg_popstr (msg);
     }
     else
-    if (streq (type, "LEAVE")) {
+    if (streq (self->type_name, "LEAVE")) {
         self->type = ZYRE_EVENT_LEAVE;
         self->group = zmsg_popstr (msg);
     }
     else
-    if (streq (type, "WHISPER")) {
+    if (streq (self->type_name, "WHISPER")) {
         self->type = ZYRE_EVENT_WHISPER;
         self->msg = msg;
         msg = NULL;
     }
     else
-    if (streq (type, "SHOUT")) {
+    if (streq (self->type_name, "SHOUT")) {
         self->type = ZYRE_EVENT_SHOUT;
         self->group = zmsg_popstr (msg);
         self->msg = msg;
         msg = NULL;
     }
     else
-    if (streq (type, "STOP")) {
+    if (streq (self->type_name, "STOP")) {
         self->type = ZYRE_EVENT_STOP;
     }
     else
-    if (streq (type, "EVASIVE")) {
+    if (streq (self->type_name, "EVASIVE")) {
         self->type = ZYRE_EVENT_EVASIVE;
     }
     else
-        zsys_warning ("bad message received from node: %s\n", type);
+        zsys_warning ("bad message received from node: %s\n", self->type_name);
 
-    free (type);
     zmsg_destroy (&msg);
     return self;
 }
@@ -124,6 +124,7 @@ zyre_event_destroy (zyre_event_t **self_p)
         free (self->peer_name);
         free (self->peer_addr);
         free (self->group);
+        free (self->type_name);
         free (self);
         *self_p = NULL;
     }
@@ -193,13 +194,24 @@ zyre_event_print (zyre_event_t *self)
 }
 
 //  --------------------------------------------------------------------------
-//  Returns event type, which is a zyre_event_type_t
+//  Returns event type as an integer
 
-zyre_event_type_t
+int
 zyre_event_type (zyre_event_t *self)
 {
     assert (self);
     return self->type;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Returns event type as a string
+
+const char *
+zyre_event_type_name (zyre_event_t *self)
+{
+    assert (self);
+    return self->type_name;
 }
 
 
