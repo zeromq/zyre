@@ -124,7 +124,7 @@
         Receive next message from network; the message may be a control
         message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
         Returns zmsg_t object, or NULL if interrupted
-        <return type = "zmsg" />
+        <return type = "zmsg" fresh = "1" />
     </method>
 
     <method name = "whisper">

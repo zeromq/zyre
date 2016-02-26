@@ -28,8 +28,7 @@
 //  Structure of zyre_event class
 
 struct _zyre_event_t {
-    int type;               //  Event type as integer
-    char *type_name;        //  Event type as string
+    char *type;             //  Event type as string
     char *peer_uuid;        //  Sender UUID as string
     char *peer_name;        //  Sender public name as string
     char *peer_addr;        //  Sender ipaddress as string, for an ENTER event
@@ -54,12 +53,11 @@ zyre_event_new (zyre_t *node)
     zyre_event_t *self = (zyre_event_t *) zmalloc (sizeof (zyre_event_t));
     assert (self);
 
-    self->type_name = zmsg_popstr (msg);
+    self->type = zmsg_popstr (msg);
     self->peer_uuid = zmsg_popstr (msg);
     self->peer_name = zmsg_popstr (msg);
 
-    if (streq (self->type_name, "ENTER")) {
-        self->type = ZYRE_EVENT_ENTER;
+    if (streq (self->type, "ENTER")) {
         zframe_t *headers = zmsg_pop (msg);
         if (headers) {
             self->headers = zhash_unpack (headers);
@@ -68,42 +66,22 @@ zyre_event_new (zyre_t *node)
         self->peer_addr = zmsg_popstr (msg);
     }
     else
-    if (streq (self->type_name, "EXIT"))
-        self->type = ZYRE_EVENT_EXIT;
-    else
-    if (streq (self->type_name, "JOIN")) {
-        self->type = ZYRE_EVENT_JOIN;
+    if (streq (self->type, "JOIN"))
         self->group = zmsg_popstr (msg);
-    }
     else
-    if (streq (self->type_name, "LEAVE")) {
-        self->type = ZYRE_EVENT_LEAVE;
+    if (streq (self->type, "LEAVE"))
         self->group = zmsg_popstr (msg);
-    }
     else
-    if (streq (self->type_name, "WHISPER")) {
-        self->type = ZYRE_EVENT_WHISPER;
+    if (streq (self->type, "WHISPER")) {
         self->msg = msg;
         msg = NULL;
     }
     else
-    if (streq (self->type_name, "SHOUT")) {
-        self->type = ZYRE_EVENT_SHOUT;
+    if (streq (self->type, "SHOUT")) {
         self->group = zmsg_popstr (msg);
         self->msg = msg;
         msg = NULL;
     }
-    else
-    if (streq (self->type_name, "STOP")) {
-        self->type = ZYRE_EVENT_STOP;
-    }
-    else
-    if (streq (self->type_name, "EVASIVE")) {
-        self->type = ZYRE_EVENT_EVASIVE;
-    }
-    else
-        zsys_warning ("bad message received from node: %s\n", self->type_name);
-
     zmsg_destroy (&msg);
     return self;
 }
@@ -124,7 +102,7 @@ zyre_event_destroy (zyre_event_t **self_p)
         free (self->peer_name);
         free (self->peer_addr);
         free (self->group);
-        free (self->type_name);
+        free (self->type);
         free (self);
         *self_p = NULL;
     }
@@ -133,9 +111,10 @@ zyre_event_destroy (zyre_event_t **self_p)
 static int
 zyre_event_log_pair (const char *key, void *item, void *argument)
 {
-    zsys_info ("   - %s: %s", key, (const char *)item);
+    zsys_info ("   - %s: %s", key, (char *) item);
     return 0;
 }
+
 
 //  --------------------------------------------------------------------------
 //  Print event to zsys log
@@ -145,73 +124,44 @@ zyre_event_print (zyre_event_t *self)
 {
     zsys_info ("zyre_event:");
     zsys_info (" - from name=%s uuid=%s",
-               zyre_event_peer_name (self), zyre_event_peer_uuid (self));
+        zyre_event_peer_name (self),
+        zyre_event_peer_uuid (self));
+    zsys_info (" - type=%s", self->type);
 
-    switch (self->type) {
-        case ZYRE_EVENT_ENTER:
-            zsys_info (" - type=ENTER");
-            zsys_info (" - headers=%zu:", zhash_size (self->headers));
-            zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_event_log_pair, self);
-            zsys_info (" - address=%s", zyre_event_peer_addr (self));
-            break;
-
-        case ZYRE_EVENT_EXIT:
-            zsys_info (" - type=EXIT");
-            break;
-
-        case ZYRE_EVENT_STOP:
-            zsys_info (" - type=STOP");
-            break;
-
-        case ZYRE_EVENT_JOIN:
-            zsys_info (" - type=JOIN");
-            zsys_info (" - group=%s", zyre_event_group(self));
-            break;
-
-        case ZYRE_EVENT_LEAVE:
-            zsys_info (" - type=LEAVE");
-            zsys_info (" - group=%s", zyre_event_group(self));
-            break;
-
-        case ZYRE_EVENT_SHOUT:
-            zsys_info (" - type=SHOUT");
-            zsys_info (" - message:");
-            zmsg_print (self->msg);
-            break;
-
-        case ZYRE_EVENT_WHISPER:
-            zsys_info (" - type=WHISPER");
-            zsys_info (" - message:");
-            zmsg_print (self->msg);
-            break;
-        case ZYRE_EVENT_EVASIVE:
-            zsys_info (" - type=EVASIVE");
-            break;
-        default:
-            zsys_info (" - type=UNKNOWN");
-            break;
+    if (streq (self->type, "ENTER")) {
+        zsys_info (" - headers=%zu:", zhash_size (self->headers));
+        zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_event_log_pair, self);
+        zsys_info (" - address=%s", zyre_event_peer_addr (self));
+    }
+    else
+    if (streq (self->type, "JOIN")) {
+        zsys_info (" - group=%s", zyre_event_group(self));
+    }
+    else
+    if (streq (self->type, "LEAVE")) {
+        zsys_info (" - group=%s", zyre_event_group(self));
+    }
+    else
+    if (streq (self->type, "SHOUT")) {
+        zsys_info (" - message:");
+        zmsg_print (self->msg);
+    }
+    else
+    if (streq (self->type, "WHISPER")) {
+        zsys_info (" - message:");
+        zmsg_print (self->msg);
     }
 }
 
-//  --------------------------------------------------------------------------
-//  Returns event type as an integer
 
-int
+//  --------------------------------------------------------------------------
+//  Returns event type, as printable uppercase string
+
+const char *
 zyre_event_type (zyre_event_t *self)
 {
     assert (self);
     return self->type;
-}
-
-
-//  --------------------------------------------------------------------------
-//  Returns event type as a string
-
-const char *
-zyre_event_type_name (zyre_event_t *self)
-{
-    assert (self);
-    return self->type_name;
 }
 
 
@@ -336,7 +286,7 @@ zyre_event_test (bool verbose)
 
     //  Parse ENTER
     zyre_event_t *event = zyre_event_new (node2);
-    assert (zyre_event_type (event) == ZYRE_EVENT_ENTER);
+    assert (streq (zyre_event_type (event), "ENTER"));
     const char *sender = zyre_event_peer_uuid (event);
     assert (sender);
     const char *name = zyre_event_peer_name (event);
@@ -352,11 +302,11 @@ zyre_event_test (bool verbose)
     //  We tolerate other events, which we can get if there are instances
     //  of Zyre running somewhere on the network.
     event = zyre_event_new (node2);
-    if (zyre_event_type (event) == ZYRE_EVENT_JOIN) {
+    if (streq (zyre_event_type (event), "JOIN")) {
         //  Parse SHOUT
         zyre_event_destroy (&event);
         event = zyre_event_new (node2);
-        if (zyre_event_type (event) == ZYRE_EVENT_SHOUT) {
+        if (streq (zyre_event_type (event), "SHOUT")) {
             assert (streq (zyre_event_group (event), "GLOBAL"));
             msg = zyre_event_msg (event);
             char *string = zmsg_popstr (msg);

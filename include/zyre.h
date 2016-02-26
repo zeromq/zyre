@@ -141,6 +141,7 @@ ZYRE_EXPORT int
 //  Receive next message from network; the message may be a control
 //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).   
 //  Returns zmsg_t object, or NULL if interrupted                  
+//  Caller owns return value and must destroy it when done.
 ZYRE_EXPORT zmsg_t *
     zyre_recv (zyre_t *self);
 

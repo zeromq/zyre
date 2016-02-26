@@ -7,7 +7,6 @@
     <include filename = "license.xml" />
     <version major = "1" minor = "1" patch = "0" />
     <use project = "czmq" />
-    <target name = "*" />
 
     <class name = "zyre" />
     <class name = "zyre_event" />
@@ -22,6 +21,12 @@
     <main name = "zpinger" />
     <main name = "ztester_beacon" private = "1" />
     <main name = "ztester_gossip" private = "1" />
+
+    <target name = "*" />
+    <target name = "nodejs">
+        <option name = "version" value = "0.0.6" />
+        <option name = "repo" value = "https://github.com/hintjens/zyre-nodejs" />
+    </target>
 
     <constant name = "ZRE_DISCOVERY_PORT" value = "5670">IANA-assigned UDP port for ZRE</constant>
     <constant name = "PEER_EVASIVE" value = "10000" private = "1" >10 seconds' silence is evasive</constant>

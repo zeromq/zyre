@@ -27,15 +27,6 @@ extern "C" {
 //  stable builds by default. If you use this in applications, please ask
 //  for it to be pushed to stable state. Use --enable-drafts to enable.
 #ifdef ZYRE_BUILD_DRAFT_API
-#define ZYRE_EVENT_ENTER 1                  // 
-#define ZYRE_EVENT_JOIN 2                   // 
-#define ZYRE_EVENT_LEAVE 3                  // 
-#define ZYRE_EVENT_EXIT 4                   // 
-#define ZYRE_EVENT_WHISPER 5                // 
-#define ZYRE_EVENT_SHOUT 6                  // 
-#define ZYRE_EVENT_STOP 7                   // 
-#define ZYRE_EVENT_EVASIVE 8                // 
-
 //  *** Draft method, for development use, may change without warning ***
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.
 //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
@@ -49,14 +40,9 @@ ZYRE_EXPORT void
     zyre_event_destroy (zyre_event_t **self_p);
 
 //  *** Draft method, for development use, may change without warning ***
-//  Returns event type as an integer
-ZYRE_EXPORT int
-    zyre_event_type (zyre_event_t *self);
-
-//  *** Draft method, for development use, may change without warning ***
-//  Returns event type as a string
+//  Returns event type, as printable uppercase string
 ZYRE_EXPORT const char *
-    zyre_event_type_name (zyre_event_t *self);
+    zyre_event_type (zyre_event_t *self);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Return the sending peer's uuid as a string

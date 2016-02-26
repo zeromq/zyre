@@ -12,15 +12,37 @@
       ],
       'include_dirs': [
           "<!(node -e \"require('nan')\")",
-          '../../../czmq/include',
           '../../../libzmq/include',
+          '../../../czmq/include',
           '../../include'
       ],
-      'defines': [
-        'ZMQ_STATIC',
-        'CZMQ_STATIC',
-        'ZYRE_STATIC'
-       ],
+      'conditions': [
+        [ 'OS=="win"', {
+          'defines': [
+            'ZMQ_STATIC',
+            'CZMQ_STATIC',
+            'ZYRE_STATIC'
+          ],
+          'libraries': [
+            'ws2_32',
+            'advapi32',
+            'iphlpapi',
+            'Rpcrt4'
+          ]
+        }],
+        [ 'OS=="mac"', {
+        }],
+        [ 'OS=="linux"', {
+          'xcode_settings': {
+            'OTHER_CFLAGS': [
+              '-fPIC'
+            ],
+          },
+          'libraries': [
+            '-lpthread'
+          ]
+        }],
+      ],
       'dependencies': [
           '../../builds/gyp/project.gyp:libzyre'
       ]

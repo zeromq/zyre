@@ -11,16 +11,6 @@
     -->
     Parsing Zyre messages
 
-    <!-- Event types -->
-    <constant name = "enter" value = "1" />
-    <constant name = "join" value = "2" />
-    <constant name = "leave" value = "3" />
-    <constant name = "exit" value = "4" />
-    <constant name = "whisper" value = "5" />
-    <constant name = "shout" value = "6" />
-    <constant name = "stop" value = "7" />
-    <constant name = "evasive" value = "8" />
-
     <constructor>
         Constructor: receive an event from the zyre node, wraps zyre_recv.
         The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
@@ -33,12 +23,7 @@
     </destructor>
 
     <method name = "type">
-        Returns event type as an integer
-        <return type = "integer" />
-    </method>
-
-    <method name = "type name">
-        Returns event type as a string
+        Returns event type, as printable uppercase string
         <return type = "string" />
     </method>
 
