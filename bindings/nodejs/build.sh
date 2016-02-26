@@ -2,7 +2,6 @@
 #
 #   Builds zyre.node package from a fresh git clone
 #
-
 set -e                      #   exit on any error
 FORCE=0
 VERBOSE=0
@@ -35,23 +34,25 @@ BUILD_ROOT=`pwd`
 cd ../../..
 
 #   Check dependent projects
-if [ ! -d czmq ]; then
-    echo "I:    cloning CZMQ into `pwd`/czmq..."
-    git clone $QUIET https://github.com/zeromq/czmq
-fi
-if [ ! -f czmq/builds/gyp/project.gyp ]; then
-    echo "E:    CZMQ is not up to date (builds/gyp/project.gyp missing)"
-    exit
-fi
-
 if [ ! -d libzmq ]; then
-    echo "I:    cloning libzmq into `pwd`/libzmq..."
+    echo "I:    cloning https://github.com/zeromq/libzmq into `pwd`/libzmq..."
     git clone $QUIET https://github.com/zeromq/libzmq
 fi
 if [ ! -f libzmq/builds/gyp/project.gyp ]; then
-    echo "E:    libzmq is not up to date (builds/gyp/project.gyp missing)"
+    echo "E:    `pwd`/libzmq out of date (builds/gyp/project.gyp missing)"
     exit
 fi
+
+#   Check dependent projects
+if [ ! -d czmq ]; then
+    echo "I:    cloning https://github.com/zeromq/czmq into `pwd`/czmq..."
+    git clone $QUIET https://github.com/zeromq/czmq
+fi
+if [ ! -f czmq/builds/gyp/project.gyp ]; then
+    echo "E:    `pwd`/czmq out of date (builds/gyp/project.gyp missing)"
+    exit
+fi
+
 
 #   Check Node.js dependencies
 cd $BUILD_ROOT
@@ -77,6 +78,7 @@ export JOBS=$([[ $(uname) = 'Darwin' ]] \
     && sysctl -n hw.logicalcpu_max \
     || lscpu -p | egrep -v '^#' | wc -l)
 
-#   Build the binding using node-ninja
+#   Build the binding using node-ninja directly, not prebuild
 echo "I: building Node.js binding:"
-prebuild --all --backend=node-ninja
+node-ninja configure
+node-ninja build

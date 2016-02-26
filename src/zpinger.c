@@ -70,22 +70,22 @@ int main (int argc, char *argv [])
         if (verbose)
             zyre_event_print (event);
 
-        if (zyre_event_type (event) == ZYRE_EVENT_ENTER) {
+        if (streq (zyre_event_type (event), "ENTER")) {
             //  If new peer, say hello to it and wait for it to answer us
             zsys_info ("[%s] peer entered", zyre_event_peer_name (event));
             zyre_whispers (zyre, zyre_event_peer_uuid (event), "Hello");
         }
         else
-        if (zyre_event_type (event) == ZYRE_EVENT_EXIT) {
+        if (streq (zyre_event_type (event), "EXIT")) {
             zsys_info ("[%s] peer exited", zyre_event_peer_name (event));
         }
         else
-        if (zyre_event_type (event) == ZYRE_EVENT_WHISPER) {
+        if (streq (zyre_event_type (event), "WHISPER")) {
             zsys_info ("[%s] received ping (WHISPER)", zyre_event_peer_name (event));
             zyre_shouts (zyre, "GLOBAL", "Hello");
         }
         else
-        if (zyre_event_type (event) == ZYRE_EVENT_SHOUT) {
+        if (streq (zyre_event_type (event), "SHOUT")) {
             zsys_info ("[%s](%s) received ping (SHOUT)",
                        zyre_event_peer_name (event), zyre_event_group (event));
         }

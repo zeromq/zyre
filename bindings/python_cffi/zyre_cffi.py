@@ -193,9 +193,10 @@ zsock_t *
 void
     zyre_print (zyre_t *self);
 
-// Return the Zyre version for run-time API detection
-void
-    zyre_version (int *major, int *minor, int *patch);
+// Return the Zyre version for run-time API detection; returns
+// major * 10000 + minor * 100 + patch, as a single integer.  
+int
+    zyre_version (void);
 
 // Self test of this class.
 void

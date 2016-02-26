@@ -65,41 +65,39 @@ var ZyreBinding = require ('bindings')('zyre');
 var zyre = new ZyreBinding.Zyre ();
 info ("Create Zyre node, uuid=" + zyre.uuid () + " name=" + zyre.name ());
 
-if (verbose) {
+if (verbose)
     zyre.setVerbose ();
-}
+
 zyre.start ();
 zyre.join ("GLOBAL");
-if (verbose) {
+if (verbose)
     zyre.print ();
-}
 
 while (true) {
     var event = new ZyreBinding.ZyreEvent (zyre);
     if (!event.defined ())
         break;              //  Interrupted
-    if (verbose) {
+    if (verbose)
         event.print ();
-    }
-    if (event.type_name () == "ENTER") {
+
+    if (event.type () == "ENTER") {
         //  If new peer, say hello to it and wait for it to answer us
-        info ("[" + event.peer_name () + "] peer entered");
-        zyre.whisper (event.peer_uuid (), "Hello");
+        info ("[" + event.peerName () + "] peer entered");
+        zyre.whispers (event.peerUuid (), "Hello");
     }
     else
-    if (event.type_name () == "EXIT") {
-        info ("[" + event.peer_name () + "] peer exited");
+    if (event.type () == "EXIT")
+        info ("[" + event.peerName () + "] peer exited");
+    else
+    if (event.type () == "WHISPER") {
+        info ("[" + event.peerName () + "] received ping (WHISPER)");
+        zyre.shouts ("GLOBAL", "Hello");
     }
     else
-    if (event.type_name () == "WHISPER") {
-        info ("[" + event.peer_name () + "] received ping (WHISPER)");
-        zyre.shout ("GLOBAL", "Hello");
-    }
-    else
-    if (event.type_name () == "SHOUT") {
-        info ("[" + event.peer_name () + "]("
+    if (event.type () == "SHOUT")
+        info ("[" + event.peerName () + "]("
                   + event.group () + ") received ping (SHOUT)");
-    }
+
     event.destroy ();
 }
 zyre.stop ();

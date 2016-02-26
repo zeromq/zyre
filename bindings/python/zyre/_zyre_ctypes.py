@@ -105,8 +105,8 @@ lib.zyre_socket.restype = czmq.zsock_p
 lib.zyre_socket.argtypes = [zyre_p]
 lib.zyre_print.restype = None
 lib.zyre_print.argtypes = [zyre_p]
-lib.zyre_version.restype = None
-lib.zyre_version.argtypes = [POINTER(c_int), POINTER(c_int), POINTER(c_int)]
+lib.zyre_version.restype = c_int
+lib.zyre_version.argtypes = []
 lib.zyre_test.restype = None
 lib.zyre_test.argtypes = [c_bool]
 
@@ -348,11 +348,12 @@ Returns null if peer or key doesn't exits.
         return lib.zyre_print(self._as_parameter_)
 
     @staticmethod
-    def version(major, minor, patch):
+    def version():
         """
-        Return the Zyre version for run-time API detection
+        Return the Zyre version for run-time API detection; returns
+major * 10000 + minor * 100 + patch, as a single integer.
         """
-        return lib.zyre_version(byref(c_int.from_param(major)), byref(c_int.from_param(minor)), byref(c_int.from_param(patch)))
+        return lib.zyre_version()
 
     @staticmethod
     def test(verbose):

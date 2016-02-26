@@ -240,10 +240,11 @@ Java_org_zeromq_zyre_Zyre__1_1print (JNIEnv *env, jclass c, jlong self)
     zyre_print ((zyre_t *) (intptr_t) self);
 }
 
-JNIEXPORT void JNICALL
-Java_org_zeromq_zyre_Zyre__1_1version (JNIEnv *env, jclass c, jint major, jint minor, jint patch)
+JNIEXPORT jint JNICALL
+Java_org_zeromq_zyre_Zyre__1_1version (JNIEnv *env, jclass c)
 {
-    zyre_version ((int *) (intptr_t) &major, (int *) (intptr_t) &minor, (int *) (intptr_t) &patch);
+    jint version_ = (jint) zyre_version ();
+    return version_;
 }
 
 JNIEXPORT void JNICALL

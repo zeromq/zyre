@@ -13,18 +13,16 @@ lib_LTLIBRARIES += src/libzyre.la
 pkgconfig_DATA = src/libzyre.pc
 
 include_HEADERS = \
-    include/zyre.h \
-    include/zyre_event.h \
     include/zyre_library.h
 
 if ENABLE_DRAFTS
 include_HEADERS += \
+    include/zyre.h \
+    include/zyre_event.h \
     include/zre_msg.h
 
 endif
 src_libzyre_la_SOURCES = \
-    src/zyre.c \
-    src/zyre_event.c \
     src/zyre_peer.c \
     src/zyre_group.c \
     src/zyre_node.c \
@@ -32,6 +30,8 @@ src_libzyre_la_SOURCES = \
 
 if ENABLE_DRAFTS
 src_libzyre_la_SOURCES += \
+    src/zyre.c \
+    src/zyre_event.c \
     src/zre_msg.c
 
 endif

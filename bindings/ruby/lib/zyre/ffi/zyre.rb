@@ -415,14 +415,12 @@ module Zyre
         result
       end
 
-      # Return the Zyre version for run-time API detection
+      # Return the Zyre version for run-time API detection; returns
+      # major * 10000 + minor * 100 + patch, as a single integer.  
       #
-      # @param major [::FFI::Pointer, #to_ptr]
-      # @param minor [::FFI::Pointer, #to_ptr]
-      # @param patch [::FFI::Pointer, #to_ptr]
-      # @return [void]
-      def self.version(major, minor, patch)
-        result = ::Zyre::FFI.zyre_version(major, minor, patch)
+      # @return [Integer]
+      def self.version()
+        result = ::Zyre::FFI.zyre_version()
         result
       end
 
