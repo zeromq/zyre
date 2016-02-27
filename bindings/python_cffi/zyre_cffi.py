@@ -37,16 +37,6 @@ typedef struct _zlist_t zlist_t;
 typedef struct _zsock_t zsock_t;
 typedef struct _zyre_event_t zyre_event_t;
 typedef struct _zhash_t zhash_t;
-typedef enum {
-    ZYRE_EVENT_ENTER = 1,                                   //  
-    ZYRE_EVENT_JOIN = 2,                                    //  
-    ZYRE_EVENT_LEAVE = 3,                                   //  
-    ZYRE_EVENT_EXIT = 4,                                    //  
-    ZYRE_EVENT_WHISPER = 5,                                 //  
-    ZYRE_EVENT_SHOUT = 6,                                   //  
-    ZYRE_EVENT_STOP = 7,                                    //  
-    ZYRE_EVENT_EVASIVE = 8                                  //  
-} zyre_event_type_t;
 // CLASS: zyre
 // Constructor, creates a new Zyre node. Note that until you start the
 // node it is silent and invisible to other nodes on the network.     
@@ -195,7 +185,7 @@ void
 
 // Return the Zyre version for run-time API detection; returns
 // major * 10000 + minor * 100 + patch, as a single integer.  
-int
+uint64_t
     zyre_version (void);
 
 // Self test of this class.
@@ -213,8 +203,8 @@ zyre_event_t *
 void
     zyre_event_destroy (zyre_event_t **self_p);
 
-// Returns event type, which is a zyre_event_type_t
-zyre_event_type_t
+// Returns event type, as printable uppercase string
+const char *
     zyre_event_type (zyre_event_t *self);
 
 // Return the sending peer's uuid as a string

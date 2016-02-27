@@ -32,10 +32,10 @@ QZyreEvent::~QZyreEvent ()
 }
 
 ///
-//  Returns event type, which is a zyre_event_type_t
-zyre_event_type_t QZyreEvent::type ()
+//  Returns event type, as printable uppercase string
+const QString QZyreEvent::type ()
 {
-    zyre_event_type_t rv = zyre_event_type (self);
+    const QString rv = QString (zyre_event_type (self));
     return rv;
 }
 

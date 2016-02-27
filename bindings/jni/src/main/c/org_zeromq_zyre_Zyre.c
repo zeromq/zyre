@@ -240,10 +240,10 @@ Java_org_zeromq_zyre_Zyre__1_1print (JNIEnv *env, jclass c, jlong self)
     zyre_print ((zyre_t *) (intptr_t) self);
 }
 
-JNIEXPORT jint JNICALL
+JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_Zyre__1_1version (JNIEnv *env, jclass c)
 {
-    jint version_ = (jint) zyre_version ();
+    jlong version_ = (jlong) zyre_version ();
     return version_;
 }
 

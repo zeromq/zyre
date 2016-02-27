@@ -63,7 +63,7 @@ process.argv.forEach (function (value, index, array) {
 
 var ZyreBinding = require ('bindings')('zyre');
 var zyre = new ZyreBinding.Zyre ();
-info ("Create Zyre node, uuid=" + zyre.uuid () + " name=" + zyre.name ());
+info ("Create Zyre node, uuid=" + zyre.uuid () + ", name=" + zyre.name ());
 
 if (verbose)
     zyre.setVerbose ();

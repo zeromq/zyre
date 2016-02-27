@@ -263,7 +263,7 @@ module Zyre
         end
       end
       begin # DRAFT method
-        attach_function :zyre_version, [], :int, **opts
+        attach_function :zyre_version, [], :uint64, **opts
       rescue ::FFI::NotFoundError
         if $VERBOSE || $DEBUG
           warn "The function zyre_version() can't be used through " +
@@ -280,17 +280,6 @@ module Zyre
       end
 
       require_relative 'ffi/zyre'
-
-      enum :zyre_event_type, [
-        :enter, 1,
-        :join, 2,
-        :leave, 3,
-        :exit, 4,
-        :whisper, 5,
-        :shout, 6,
-        :stop, 7,
-        :evasive, 8,
-      ]
 
       begin # DRAFT method
         attach_function :zyre_event_new, [:pointer], :pointer, **opts
@@ -309,7 +298,7 @@ module Zyre
         end
       end
       begin # DRAFT method
-        attach_function :zyre_event_type, [:pointer], :zyre event_type, **opts
+        attach_function :zyre_event_type, [:pointer], :string, **opts
       rescue ::FFI::NotFoundError
         if $VERBOSE || $DEBUG
           warn "The function zyre_event_type() can't be used through " +

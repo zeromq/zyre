@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zyre Node.js binding
+    zyre Node.js binding implementation
 
     Copyright (c) the Contributors as noted in the AUTHORS file.           
                                                                            
@@ -12,8 +12,7 @@
     =========================================================================
 */
 
-#include "zyre.h"
-#include "nan.h"
+#include "binding.h"
 
 using namespace v8;
 using namespace Nan;
@@ -408,7 +407,7 @@ class Zyre: public Nan::ObjectWrap {
         zyre_test (verbose);
     }
 
-    static Nan::Persistent <Function> & constructor () {
+    static Nan::Persistent <Function> &constructor () {
         static Nan::Persistent <Function> my_constructor;
         return my_constructor;
     }
@@ -548,7 +547,7 @@ class ZyreEvent: public Nan::ObjectWrap {
         zyre_event_test (verbose);
     }
 
-    static Nan::Persistent <Function> & constructor () {
+    static Nan::Persistent <Function> &constructor () {
         static Nan::Persistent <Function> my_constructor;
         return my_constructor;
     }
