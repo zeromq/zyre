@@ -28,8 +28,8 @@ public:
     static QObject* qmlAttachedProperties(QObject* object); // defined in QmlZyreEvent.cpp
     
 public slots:
-    //  Returns event type, which is a zyre_event_type_t
-    zyre_event_type_t type ();
+    //  Returns event type, as printable uppercase string
+    const QString type ();
 
     //  Return the sending peer's uuid as a string
     const QString peerUuid ();

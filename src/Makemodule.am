@@ -102,8 +102,8 @@ endif #ENABLE_ZYRE_SELFTEST
 # Install api files into /usr/local/share/zproject
 apidir = @datadir@/zproject/zyre
 dist_api_DATA = \
-    api/zyre.xml \
-    api/zyre_event.xml
+    api/zyre.api \
+    api/zyre_event.api
 
 # define custom target for all products of /src
 src:

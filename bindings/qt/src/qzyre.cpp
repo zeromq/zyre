@@ -277,9 +277,9 @@ void QZyre::print ()
 ///
 //  Return the Zyre version for run-time API detection; returns
 //  major * 10000 + minor * 100 + patch, as a single integer.  
-int QZyre::version ()
+quint64 QZyre::version ()
 {
-    int rv = zyre_version ();
+    uint64_t rv = zyre_version ();
     return rv;
 }
 

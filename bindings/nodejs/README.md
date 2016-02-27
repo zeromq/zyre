@@ -44,4 +44,3 @@ We get these classes:
 
 * Zyre - An open-source framework for proximity-based P2P apps
 * ZyreEvent - Parsing Zyre messages
-

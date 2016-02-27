@@ -208,7 +208,7 @@ QObject* QmlZyre::qmlAttachedProperties(QObject* object) {
 ///
 //  Return the Zyre version for run-time API detection; returns
 //  major * 10000 + minor * 100 + patch, as a single integer.  
-int QmlZyreAttached::version () {
+uint64_t QmlZyreAttached::version () {
     return zyre_version ();
 };
 

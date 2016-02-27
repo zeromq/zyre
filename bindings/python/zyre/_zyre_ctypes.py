@@ -105,7 +105,7 @@ lib.zyre_socket.restype = czmq.zsock_p
 lib.zyre_socket.argtypes = [zyre_p]
 lib.zyre_print.restype = None
 lib.zyre_print.argtypes = [zyre_p]
-lib.zyre_version.restype = c_int
+lib.zyre_version.restype = c_long
 lib.zyre_version.argtypes = []
 lib.zyre_test.restype = None
 lib.zyre_test.argtypes = [c_bool]
@@ -276,7 +276,7 @@ the group and all Zyre nodes in that group will receive them.
 message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
 Returns zmsg_t object, or NULL if interrupted
         """
-        return czmq.Zmsg(lib.zyre_recv(self._as_parameter_), False)
+        return czmq.Zmsg(lib.zyre_recv(self._as_parameter_), True)
 
     def whisper(self, peer, msg_p):
         """
@@ -368,7 +368,7 @@ lib.zyre_event_new.restype = zyre_event_p
 lib.zyre_event_new.argtypes = [zyre_p]
 lib.zyre_event_destroy.restype = None
 lib.zyre_event_destroy.argtypes = [POINTER(zyre_event_p)]
-lib.zyre_event_type.restype = c_int
+lib.zyre_event_type.restype = c_char_p
 lib.zyre_event_type.argtypes = [zyre_event_p]
 lib.zyre_event_peer_uuid.restype = c_char_p
 lib.zyre_event_peer_uuid.argtypes = [zyre_event_p]
@@ -393,28 +393,6 @@ class ZyreEvent(object):
     """
     Parsing Zyre messages
     """
-
-    Type = {
-        'enter': 1,
-        'join': 2,
-        'leave': 3,
-        'exit': 4,
-        'whisper': 5,
-        'shout': 6,
-        'stop': 7,
-        'evasive': 8,
-    }
-
-    Type_out = {
-         1: 'enter',
-         2: 'join',
-         3: 'leave',
-         4: 'exit',
-         5: 'whisper',
-         6: 'shout',
-         7: 'stop',
-         8: 'evasive',
-    }
 
     allow_destruct = False
     def __init__(self, *args):
@@ -463,9 +441,9 @@ data (WHISPER, SHOUT).
 
     def type(self):
         """
-        Returns event type, which is a zyre_event_type_t
+        Returns event type, as printable uppercase string
         """
-        return ZyreEvent.Type_out[lib.zyre_event_type(self._as_parameter_)]
+        return lib.zyre_event_type(self._as_parameter_)
 
     def peer_uuid(self):
         """

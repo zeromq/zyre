@@ -94,9 +94,9 @@ module Zyre
         result
       end
 
-      # Returns event type, which is a zyre_event_type_t
+      # Returns event type, as printable uppercase string
       #
-      # @return [Symbol]
+      # @return [String]
       def type()
         raise DestroyedError unless @ptr
         self_p = @ptr

@@ -40,10 +40,10 @@ public class ZyreEvent implements AutoCloseable{
         self = 0;
     }
     /*
-    Returns event type, which is a zyre_event_type_t
+    Returns event type, as printable uppercase string
     */
-    native static int __type (long self);
-    public int type () {
+    native static String __type (long self);
+    public String type () {
         return __type (self);
     }
     /*
