@@ -17,59 +17,57 @@
 using namespace v8;
 using namespace Nan;
 
-class Zyre: public Nan::ObjectWrap {
-    public:
-        static NAN_MODULE_INIT (Init) {
-            Nan::HandleScope scope;
+NAN_MODULE_INIT (Zyre::Init) {
+    Nan::HandleScope scope;
 
-            // Prepare constructor template
-            Local <FunctionTemplate> tpl = Nan::New <FunctionTemplate> (New);
-            tpl->SetClassName (Nan::New ("Zyre").ToLocalChecked ());
-            tpl->InstanceTemplate ()->SetInternalFieldCount (1);
+    // Prepare constructor template
+    Local <FunctionTemplate> tpl = Nan::New <FunctionTemplate> (New);
+    tpl->SetClassName (Nan::New ("Zyre").ToLocalChecked ());
+    tpl->InstanceTemplate ()->SetInternalFieldCount (1);
 
-            // Prototypes
-            Nan::SetPrototypeMethod (tpl, "destroy", destroy);
-            Nan::SetPrototypeMethod (tpl, "defined", defined);
-            Nan::SetPrototypeMethod (tpl, "uuid", uuid);
-            Nan::SetPrototypeMethod (tpl, "name", name);
-            Nan::SetPrototypeMethod (tpl, "setHeader", set_header);
-            Nan::SetPrototypeMethod (tpl, "setVerbose", set_verbose);
-            Nan::SetPrototypeMethod (tpl, "setPort", set_port);
-            Nan::SetPrototypeMethod (tpl, "setInterval", set_interval);
-            Nan::SetPrototypeMethod (tpl, "setInterface", set_interface);
-            Nan::SetPrototypeMethod (tpl, "setEndpoint", set_endpoint);
-            Nan::SetPrototypeMethod (tpl, "gossipBind", gossip_bind);
-            Nan::SetPrototypeMethod (tpl, "gossipConnect", gossip_connect);
-            Nan::SetPrototypeMethod (tpl, "start", start);
-            Nan::SetPrototypeMethod (tpl, "stop", stop);
-            Nan::SetPrototypeMethod (tpl, "join", join);
-            Nan::SetPrototypeMethod (tpl, "leave", leave);
-            Nan::SetPrototypeMethod (tpl, "recv", recv);
-            Nan::SetPrototypeMethod (tpl, "whispers", whispers);
-            Nan::SetPrototypeMethod (tpl, "shouts", shouts);
-            Nan::SetPrototypeMethod (tpl, "peers", peers);
-            Nan::SetPrototypeMethod (tpl, "ownGroups", own_groups);
-            Nan::SetPrototypeMethod (tpl, "peerGroups", peer_groups);
-            Nan::SetPrototypeMethod (tpl, "peerAddress", peer_address);
-            Nan::SetPrototypeMethod (tpl, "peerHeaderValue", peer_header_value);
-            Nan::SetPrototypeMethod (tpl, "socket", socket);
-            Nan::SetPrototypeMethod (tpl, "print", print);
-            Nan::SetPrototypeMethod (tpl, "version", version);
-            Nan::SetPrototypeMethod (tpl, "test", test);
+    // Prototypes
+    Nan::SetPrototypeMethod (tpl, "destroy", destroy);
+    Nan::SetPrototypeMethod (tpl, "defined", defined);
+    Nan::SetPrototypeMethod (tpl, "uuid", uuid);
+    Nan::SetPrototypeMethod (tpl, "name", name);
+    Nan::SetPrototypeMethod (tpl, "setHeader", set_header);
+    Nan::SetPrototypeMethod (tpl, "setVerbose", set_verbose);
+    Nan::SetPrototypeMethod (tpl, "setPort", set_port);
+    Nan::SetPrototypeMethod (tpl, "setInterval", set_interval);
+    Nan::SetPrototypeMethod (tpl, "setInterface", set_interface);
+    Nan::SetPrototypeMethod (tpl, "setEndpoint", set_endpoint);
+    Nan::SetPrototypeMethod (tpl, "gossipBind", gossip_bind);
+    Nan::SetPrototypeMethod (tpl, "gossipConnect", gossip_connect);
+    Nan::SetPrototypeMethod (tpl, "start", start);
+    Nan::SetPrototypeMethod (tpl, "stop", stop);
+    Nan::SetPrototypeMethod (tpl, "join", join);
+    Nan::SetPrototypeMethod (tpl, "leave", leave);
+    Nan::SetPrototypeMethod (tpl, "whispers", whispers);
+    Nan::SetPrototypeMethod (tpl, "shouts", shouts);
+    Nan::SetPrototypeMethod (tpl, "peerAddress", peer_address);
+    Nan::SetPrototypeMethod (tpl, "peerHeaderValue", peer_header_value);
+    Nan::SetPrototypeMethod (tpl, "print", print);
+    Nan::SetPrototypeMethod (tpl, "version", version);
+    Nan::SetPrototypeMethod (tpl, "test", test);
 
-            constructor ().Reset (Nan::GetFunction (tpl).ToLocalChecked ());
-            Nan::Set (target, Nan::New ("Zyre").ToLocalChecked (),
-            Nan::GetFunction (tpl).ToLocalChecked ());
-        }
-    private:
-        explicit Zyre (const char *name) {
-            self = zyre_new (name);
-        }
-        ~Zyre () {
-        }
+    constructor ().Reset (Nan::GetFunction (tpl).ToLocalChecked ());
+    Nan::Set (target, Nan::New ("Zyre").ToLocalChecked (),
+    Nan::GetFunction (tpl).ToLocalChecked ());
+}
 
-    static NAN_METHOD (New) {
-        assert (info.IsConstructCall ());
+Zyre::Zyre (const char *name) {
+    self = zyre_new (name);
+}
+
+Zyre::Zyre (zyre_t *self_) {
+    self = self_;
+}
+
+Zyre::~Zyre () {
+}
+
+NAN_METHOD (Zyre::New) {
+    assert (info.IsConstructCall ());
         char *name;
         if (info [0]->IsUndefined ())
             name = NULL;
@@ -80,37 +78,38 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String name_utf8 (info [0].As<String>());
             name = *name_utf8;
         }
-        Zyre *zyre = new Zyre (name);
-        if (zyre) {
-            zyre->Wrap (info.This ());
-            info.GetReturnValue ().Set (info.This ());
-        }
+    Zyre *zyre = new Zyre (name);
+    if (zyre) {
+        zyre->Wrap (info.This ());
+        info.GetReturnValue ().Set (info.This ());
     }
+}
 
-    static NAN_METHOD (destroy) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_destroy (&zyre->self);
-    }
+NAN_METHOD (Zyre::destroy) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    zyre_destroy (&zyre->self);
+}
 
-    static NAN_METHOD (defined) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        info.GetReturnValue ().Set (Nan::New (zyre->self != NULL));
-    }
 
-    static NAN_METHOD (uuid) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        const char * return_value = zyre_uuid (zyre->self);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+NAN_METHOD (Zyre::defined) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    info.GetReturnValue ().Set (Nan::New (zyre->self != NULL));
+}
 
-    static NAN_METHOD (name) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        const char * return_value = zyre_name (zyre->self);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+NAN_METHOD (Zyre::uuid) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    const char * return_value = zyre_uuid (zyre->self);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (set_header) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::name) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    const char * return_value = zyre_name (zyre->self);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
+
+NAN_METHOD (Zyre::set_header) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *name;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `name`");
@@ -131,16 +130,16 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String format_utf8 (info [1].As<String>());
             format = *format_utf8;
         }
-        zyre_set_header (zyre->self, name, "%s", format);
-    }
+    zyre_set_header (zyre->self, name, "%s", format);
+}
 
-    static NAN_METHOD (set_verbose) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_set_verbose (zyre->self);
-    }
+NAN_METHOD (Zyre::set_verbose) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    zyre_set_verbose (zyre->self);
+}
 
-    static NAN_METHOD (set_port) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::set_port) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `port nbr`");
         else
@@ -148,11 +147,11 @@ class Zyre: public Nan::ObjectWrap {
             return Nan::ThrowTypeError ("`port nbr` must be a number");
         int port_nbr = Nan::To<int>(info [0]).FromJust ();
 
-        zyre_set_port (zyre->self, port_nbr);
-    }
+    zyre_set_port (zyre->self, port_nbr);
+}
 
-    static NAN_METHOD (set_interval) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::set_interval) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `interval`");
         else
@@ -160,11 +159,11 @@ class Zyre: public Nan::ObjectWrap {
             return Nan::ThrowTypeError ("`interval` must be a number");
         size_t interval = Nan::To<int64_t>(info [0]).FromJust ();
 
-        zyre_set_interval (zyre->self, interval);
-    }
+    zyre_set_interval (zyre->self, interval);
+}
 
-    static NAN_METHOD (set_interface) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::set_interface) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *value;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `value`");
@@ -175,11 +174,11 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String value_utf8 (info [0].As<String>());
             value = *value_utf8;
         }
-        zyre_set_interface (zyre->self, value);
-    }
+    zyre_set_interface (zyre->self, value);
+}
 
-    static NAN_METHOD (set_endpoint) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::set_endpoint) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *format;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `format`");
@@ -190,12 +189,12 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String format_utf8 (info [0].As<String>());
             format = *format_utf8;
         }
-        int return_value = zyre_set_endpoint (zyre->self, "%s", format);
-        info.GetReturnValue().Set (Nan::New<Number>(return_value));
-    }
+    int return_value = zyre_set_endpoint (zyre->self, "%s", format);
+    info.GetReturnValue().Set (Nan::New<Number>(return_value));
+}
 
-    static NAN_METHOD (gossip_bind) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::gossip_bind) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *format;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `format`");
@@ -206,11 +205,11 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String format_utf8 (info [0].As<String>());
             format = *format_utf8;
         }
-        zyre_gossip_bind (zyre->self, "%s", format);
-    }
+    zyre_gossip_bind (zyre->self, "%s", format);
+}
 
-    static NAN_METHOD (gossip_connect) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::gossip_connect) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *format;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `format`");
@@ -221,22 +220,22 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String format_utf8 (info [0].As<String>());
             format = *format_utf8;
         }
-        zyre_gossip_connect (zyre->self, "%s", format);
-    }
+    zyre_gossip_connect (zyre->self, "%s", format);
+}
 
-    static NAN_METHOD (start) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        int return_value = zyre_start (zyre->self);
-        info.GetReturnValue().Set (Nan::New<Number>(return_value));
-    }
+NAN_METHOD (Zyre::start) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    int return_value = zyre_start (zyre->self);
+    info.GetReturnValue().Set (Nan::New<Number>(return_value));
+}
 
-    static NAN_METHOD (stop) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_stop (zyre->self);
-    }
+NAN_METHOD (Zyre::stop) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    zyre_stop (zyre->self);
+}
 
-    static NAN_METHOD (join) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::join) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *group;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `group`");
@@ -247,12 +246,12 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String group_utf8 (info [0].As<String>());
             group = *group_utf8;
         }
-        int return_value = zyre_join (zyre->self, group);
-        info.GetReturnValue().Set (Nan::New<Number>(return_value));
-    }
+    int return_value = zyre_join (zyre->self, group);
+    info.GetReturnValue().Set (Nan::New<Number>(return_value));
+}
 
-    static NAN_METHOD (leave) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::leave) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *group;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `group`");
@@ -263,17 +262,12 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String group_utf8 (info [0].As<String>());
             group = *group_utf8;
         }
-        int return_value = zyre_leave (zyre->self, group);
-        info.GetReturnValue().Set (Nan::New<Number>(return_value));
-    }
+    int return_value = zyre_leave (zyre->self, group);
+    info.GetReturnValue().Set (Nan::New<Number>(return_value));
+}
 
-    static NAN_METHOD (recv) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_recv (zyre->self);
-    }
-
-    static NAN_METHOD (whispers) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::whispers) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *peer;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `peer`");
@@ -294,12 +288,12 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String format_utf8 (info [1].As<String>());
             format = *format_utf8;
         }
-        int return_value = zyre_whispers (zyre->self, peer, "%s", format);
-        info.GetReturnValue().Set (Nan::New<Number>(return_value));
-    }
+    int return_value = zyre_whispers (zyre->self, peer, "%s", format);
+    info.GetReturnValue().Set (Nan::New<Number>(return_value));
+}
 
-    static NAN_METHOD (shouts) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::shouts) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *group;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `group`");
@@ -320,27 +314,12 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String format_utf8 (info [1].As<String>());
             format = *format_utf8;
         }
-        int return_value = zyre_shouts (zyre->self, group, "%s", format);
-        info.GetReturnValue().Set (Nan::New<Number>(return_value));
-    }
+    int return_value = zyre_shouts (zyre->self, group, "%s", format);
+    info.GetReturnValue().Set (Nan::New<Number>(return_value));
+}
 
-    static NAN_METHOD (peers) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_peers (zyre->self);
-    }
-
-    static NAN_METHOD (own_groups) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_own_groups (zyre->self);
-    }
-
-    static NAN_METHOD (peer_groups) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_peer_groups (zyre->self);
-    }
-
-    static NAN_METHOD (peer_address) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::peer_address) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *peer;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `peer`");
@@ -351,12 +330,12 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String peer_utf8 (info [0].As<String>());
             peer = *peer_utf8;
         }
-        char * return_value = zyre_peer_address (zyre->self, peer);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+    char * return_value = zyre_peer_address (zyre->self, peer);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (peer_header_value) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+NAN_METHOD (Zyre::peer_header_value) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
         char *peer;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `peer`");
@@ -377,26 +356,21 @@ class Zyre: public Nan::ObjectWrap {
             Nan::Utf8String name_utf8 (info [1].As<String>());
             name = *name_utf8;
         }
-        char * return_value = zyre_peer_header_value (zyre->self, peer, name);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+    char * return_value = zyre_peer_header_value (zyre->self, peer, name);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (socket) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_socket (zyre->self);
-    }
+NAN_METHOD (Zyre::print) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    zyre_print (zyre->self);
+}
 
-    static NAN_METHOD (print) {
-        Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-        zyre_print (zyre->self);
-    }
+NAN_METHOD (Zyre::version) {
+    uint64_t return_value = zyre_version ();
+    info.GetReturnValue().Set (Nan::New<Number>(return_value));
+}
 
-    static NAN_METHOD (version) {
-        uint64_t return_value = zyre_version ();
-        info.GetReturnValue().Set (Nan::New<Number>(return_value));
-    }
-
-    static NAN_METHOD (test) {
+NAN_METHOD (Zyre::test) {
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `verbose`");
         else
@@ -404,108 +378,103 @@ class Zyre: public Nan::ObjectWrap {
             return Nan::ThrowTypeError ("`verbose` must be a number");
         bool verbose = Nan::To<bool>(info [0]).FromJust ();
 
-        zyre_test (verbose);
-    }
+    zyre_test (verbose);
+}
 
-    static Nan::Persistent <Function> &constructor () {
-        static Nan::Persistent <Function> my_constructor;
-        return my_constructor;
-    }
+Nan::Persistent <Function> &Zyre::constructor () {
+    static Nan::Persistent <Function> my_constructor;
+    return my_constructor;
+}
 
-    zyre_t *self;
-    public:
-        zyre_t *get_self () {
-            return self;
-        }
-};
 
-class ZyreEvent: public Nan::ObjectWrap {
-    public:
-        static NAN_MODULE_INIT (Init) {
-            Nan::HandleScope scope;
+zyre_t *Zyre::get_self () {
+    return self;
+}
 
-            // Prepare constructor template
-            Local <FunctionTemplate> tpl = Nan::New <FunctionTemplate> (New);
-            tpl->SetClassName (Nan::New ("ZyreEvent").ToLocalChecked ());
-            tpl->InstanceTemplate ()->SetInternalFieldCount (1);
+NAN_MODULE_INIT (ZyreEvent::Init) {
+    Nan::HandleScope scope;
 
-            // Prototypes
-            Nan::SetPrototypeMethod (tpl, "destroy", destroy);
-            Nan::SetPrototypeMethod (tpl, "defined", defined);
-            Nan::SetPrototypeMethod (tpl, "type", type);
-            Nan::SetPrototypeMethod (tpl, "peerUuid", peer_uuid);
-            Nan::SetPrototypeMethod (tpl, "peerName", peer_name);
-            Nan::SetPrototypeMethod (tpl, "peerAddr", peer_addr);
-            Nan::SetPrototypeMethod (tpl, "headers", headers);
-            Nan::SetPrototypeMethod (tpl, "header", header);
-            Nan::SetPrototypeMethod (tpl, "group", group);
-            Nan::SetPrototypeMethod (tpl, "msg", msg);
-            Nan::SetPrototypeMethod (tpl, "print", print);
-            Nan::SetPrototypeMethod (tpl, "test", test);
+    // Prepare constructor template
+    Local <FunctionTemplate> tpl = Nan::New <FunctionTemplate> (New);
+    tpl->SetClassName (Nan::New ("ZyreEvent").ToLocalChecked ());
+    tpl->InstanceTemplate ()->SetInternalFieldCount (1);
 
-            constructor ().Reset (Nan::GetFunction (tpl).ToLocalChecked ());
-            Nan::Set (target, Nan::New ("ZyreEvent").ToLocalChecked (),
-            Nan::GetFunction (tpl).ToLocalChecked ());
-        }
-    private:
-        explicit ZyreEvent (zyre_t *node) {
-            self = zyre_event_new (node);
-        }
-        ~ZyreEvent () {
-        }
+    // Prototypes
+    Nan::SetPrototypeMethod (tpl, "destroy", destroy);
+    Nan::SetPrototypeMethod (tpl, "defined", defined);
+    Nan::SetPrototypeMethod (tpl, "type", type);
+    Nan::SetPrototypeMethod (tpl, "peerUuid", peer_uuid);
+    Nan::SetPrototypeMethod (tpl, "peerName", peer_name);
+    Nan::SetPrototypeMethod (tpl, "peerAddr", peer_addr);
+    Nan::SetPrototypeMethod (tpl, "header", header);
+    Nan::SetPrototypeMethod (tpl, "group", group);
+    Nan::SetPrototypeMethod (tpl, "print", print);
+    Nan::SetPrototypeMethod (tpl, "test", test);
 
-    static NAN_METHOD (New) {
-        assert (info.IsConstructCall ());
+    constructor ().Reset (Nan::GetFunction (tpl).ToLocalChecked ());
+    Nan::Set (target, Nan::New ("ZyreEvent").ToLocalChecked (),
+    Nan::GetFunction (tpl).ToLocalChecked ());
+}
+
+ZyreEvent::ZyreEvent (zyre_t *node) {
+    self = zyre_event_new (node);
+}
+
+ZyreEvent::ZyreEvent (zyre_event_t *self_) {
+    self = self_;
+}
+
+ZyreEvent::~ZyreEvent () {
+}
+
+NAN_METHOD (ZyreEvent::New) {
+    assert (info.IsConstructCall ());
         Zyre *node = Nan::ObjectWrap::Unwrap<Zyre>(info [0].As<Object>());
 
-        ZyreEvent *zyre_event = new ZyreEvent (node->get_self ());
-        if (zyre_event) {
-            zyre_event->Wrap (info.This ());
-            info.GetReturnValue ().Set (info.This ());
-        }
+    ZyreEvent *zyre_event = new ZyreEvent (node->get_self ());
+    if (zyre_event) {
+        zyre_event->Wrap (info.This ());
+        info.GetReturnValue ().Set (info.This ());
     }
+}
 
-    static NAN_METHOD (destroy) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        zyre_event_destroy (&zyre_event->self);
-    }
+NAN_METHOD (ZyreEvent::destroy) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    zyre_event_destroy (&zyre_event->self);
+}
 
-    static NAN_METHOD (defined) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        info.GetReturnValue ().Set (Nan::New (zyre_event->self != NULL));
-    }
 
-    static NAN_METHOD (type) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        const char * return_value = zyre_event_type (zyre_event->self);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+NAN_METHOD (ZyreEvent::defined) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    info.GetReturnValue ().Set (Nan::New (zyre_event->self != NULL));
+}
 
-    static NAN_METHOD (peer_uuid) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        const char * return_value = zyre_event_peer_uuid (zyre_event->self);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+NAN_METHOD (ZyreEvent::type) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    const char * return_value = zyre_event_type (zyre_event->self);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (peer_name) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        const char * return_value = zyre_event_peer_name (zyre_event->self);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+NAN_METHOD (ZyreEvent::peer_uuid) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    const char * return_value = zyre_event_peer_uuid (zyre_event->self);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (peer_addr) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        const char * return_value = zyre_event_peer_addr (zyre_event->self);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+NAN_METHOD (ZyreEvent::peer_name) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    const char * return_value = zyre_event_peer_name (zyre_event->self);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (headers) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        zyre_event_headers (zyre_event->self);
-    }
+NAN_METHOD (ZyreEvent::peer_addr) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    const char * return_value = zyre_event_peer_addr (zyre_event->self);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (header) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+NAN_METHOD (ZyreEvent::header) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
         char *name;
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `name`");
@@ -516,27 +485,22 @@ class ZyreEvent: public Nan::ObjectWrap {
             Nan::Utf8String name_utf8 (info [0].As<String>());
             name = *name_utf8;
         }
-        const char * return_value = zyre_event_header (zyre_event->self, name);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+    const char * return_value = zyre_event_header (zyre_event->self, name);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (group) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        const char * return_value = zyre_event_group (zyre_event->self);
-        info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
-    }
+NAN_METHOD (ZyreEvent::group) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    const char * return_value = zyre_event_group (zyre_event->self);
+    info.GetReturnValue ().Set (Nan::New (return_value).ToLocalChecked ());
+}
 
-    static NAN_METHOD (msg) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        zyre_event_msg (zyre_event->self);
-    }
+NAN_METHOD (ZyreEvent::print) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    zyre_event_print (zyre_event->self);
+}
 
-    static NAN_METHOD (print) {
-        ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
-        zyre_event_print (zyre_event->self);
-    }
-
-    static NAN_METHOD (test) {
+NAN_METHOD (ZyreEvent::test) {
         if (info [0]->IsUndefined ())
             return Nan::ThrowTypeError ("method requires a `verbose`");
         else
@@ -544,21 +508,18 @@ class ZyreEvent: public Nan::ObjectWrap {
             return Nan::ThrowTypeError ("`verbose` must be a number");
         bool verbose = Nan::To<bool>(info [0]).FromJust ();
 
-        zyre_event_test (verbose);
-    }
+    zyre_event_test (verbose);
+}
 
-    static Nan::Persistent <Function> &constructor () {
-        static Nan::Persistent <Function> my_constructor;
-        return my_constructor;
-    }
+Nan::Persistent <Function> &ZyreEvent::constructor () {
+    static Nan::Persistent <Function> my_constructor;
+    return my_constructor;
+}
 
-    zyre_event_t *self;
-    public:
-        zyre_event_t *get_self () {
-            return self;
-        }
-};
 
+zyre_event_t *ZyreEvent::get_self () {
+    return self;
+}
 
 extern "C" NAN_MODULE_INIT (zyre_initialize)
 {

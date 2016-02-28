@@ -18,12 +18,19 @@
 #include "zyre.h"
 #include "nan.h"
 
+using namespace v8;
+using namespace Nan;
+
 class Zyre: public Nan::ObjectWrap {
     public:
         static NAN_MODULE_INIT (Init);
+        zyre_t *get_self ();
     private:
         explicit Zyre (const char *name);
+        explicit Zyre (zyre_t *self);
         ~Zyre ();
+    zyre_t *self;
+    static Nan::Persistent <Function> &constructor ();
 
     static NAN_METHOD (New);
     static NAN_METHOD (destroy);
@@ -42,29 +49,25 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (stop);
     static NAN_METHOD (join);
     static NAN_METHOD (leave);
-    static NAN_METHOD (recv);
     static NAN_METHOD (whispers);
     static NAN_METHOD (shouts);
-    static NAN_METHOD (peers);
-    static NAN_METHOD (own_groups);
-    static NAN_METHOD (peer_groups);
     static NAN_METHOD (peer_address);
     static NAN_METHOD (peer_header_value);
-    static NAN_METHOD (socket);
     static NAN_METHOD (print);
     static NAN_METHOD (version);
     static NAN_METHOD (test);
-    zyre_t *self;
-    public:
-        zyre_t *get_self ();
 };
 
 class ZyreEvent: public Nan::ObjectWrap {
     public:
         static NAN_MODULE_INIT (Init);
+        zyre_event_t *get_self ();
     private:
         explicit ZyreEvent (zyre_t *node);
+        explicit ZyreEvent (zyre_event_t *self);
         ~ZyreEvent ();
+    zyre_event_t *self;
+    static Nan::Persistent <Function> &constructor ();
 
     static NAN_METHOD (New);
     static NAN_METHOD (destroy);
@@ -73,15 +76,10 @@ class ZyreEvent: public Nan::ObjectWrap {
     static NAN_METHOD (peer_uuid);
     static NAN_METHOD (peer_name);
     static NAN_METHOD (peer_addr);
-    static NAN_METHOD (headers);
     static NAN_METHOD (header);
     static NAN_METHOD (group);
-    static NAN_METHOD (msg);
     static NAN_METHOD (print);
     static NAN_METHOD (test);
-    zyre_event_t *self;
-    public:
-        zyre_event_t *get_self ();
 };
 
 #endif
