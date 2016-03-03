@@ -1,0 +1,158 @@
+.set GIT=https://github.com/zeromq/zyre
+.sub 0MQ=ØMQ
+
+# Zyre - Local Area Clustering for Peer-to-Peer Applications
+
+[![Build Status](https://travis-ci.org/zeromq/zyre.svg?branch=master)](https://travis-ci.org/zeromq/zyre)
+
+## Contents
+
+.toc 3
+
+## Overview
+
+### Scope and Goals
+
+Zyre provides reliable group messaging over local area networks. It has these key characteristics:
+
+* Zyre needs no administration or configuration.
+* Peers may join and leave the network at any time.
+* Peers talk to each other without any central brokers or servers.
+* Peers can talk directly to each other.
+* Peers can join groups, and then talk to groups.
+* Zyre is reliable, and loses no messages even when the network is heavily loaded.
+* Zyre is fast and has low latency, requiring no consensus protocols.
+* Zyre is designed for WiFi networks, yet also works well on Ethernet networks.
+* Time for a new peer to join a network is about one second.
+
+Typical use cases for Zyre are:
+
+* Local service discovery.
+* Clustering of a set of services on the same Ethernet network.
+* Controlling a network of smart devices (Internet of Things).
+* Multi-user mobile applications (like smart classrooms).
+
+Technical details:
+
+* Uses RFC 36 (http://rfc.zeromq.org/spec:36/ZRE) protocol for discovery and heartbeating.
+* Uses reliable Dealer-Router pattern for interconnection, assuring that messages are not lost unless a peer application terminates.
+* Optimized for WiFi, using UDP broadcasts for discovery and heartbeating…
+* Offers alternative discovery mechanism (gossip) for Ethernet networks.
+
+### Ownership and License
+
+The contributors are listed in AUTHORS. This project uses the MPL v2 license, see LICENSE.
+
+Zyre uses the [C4.1 (Collective Code Construction Contract)](http://rfc.zeromq.org/spec:22) process for contributions.
+
+Zyre uses the [CLASS (C Language Style for Scalabilty)](http://rfc.zeromq.org/spec:21) guide for code style.
+
+To report an issue, use the [Zyre issue tracker](https://github.com/zeromq/zyre/issues) at github.com.
+
+## Using Zyre
+
+### Building on Linux
+
+To start with, you need at least these packages:
+
+* {{git-all}} -- git is how we share code with other people.
+
+* {{build-essential}}, {{libtool}}, {{pkg-config}} - the C compiler and related tools.
+
+* {{autotools-dev}}, {{autoconf}}, {{automake}} - the GNU autoconf makefile generators.
+
+* {{cmake}} - the CMake makefile generators (an alternative to autoconf).
+
+Plus some others:
+
+* {{uuid-dev}}, {{libpcre3-dev}} - utility libraries.
+
+* {{valgrind}} - a useful tool for checking your code.
+
+Which we install like this (using the Debian-style apt-get package manager):
+
+```
+sudo apt-get update
+sudo apt-get install -y \
+    git-all build-essential libtool \
+    pkg-config autotools-dev autoconf automake cmake \
+    asciidoc uuid-dev libpcre3-dev valgrind
+```
+
+Here's how to build Zyre from GitHub:
+
+```
+git clone git://github.com/zeromq/libzmq.git
+cd libzmq
+./autogen.sh && ./configure && make check
+sudo make install && ldconfig
+cd ..
+
+git clone git://github.com/zeromq/czmq.git
+cd czmq
+./autogen.sh && ./configure && make check
+sudo make install && ldconfig
+cd ..
+
+git clone git://github.com/zeromq/zyre.git
+cd zyre
+./autogen.sh && ./configure && make check
+sudo make install && ldconfig
+cd ..
+```
+
+Test by running the `zpinger` command, from two or more PCs.
+
+### Building on Windows
+
+To start with, you need MS Visual Studio (C/C++). The free community edition works well.
+
+Then, install git, and make sure it works from a command prompt:
+
+```
+git
+```
+
+Now let's build Zyre from GitHub:
+
+```
+git clone git://github.com/zeromq/libzmq.git
+git clone git://github.com/zeromq/czmq.git
+git clone git://github.com/zeromq/zyre.git
+cd zyre\builds\msvc
+\.\configure
+\.\build
+```
+
+Let's test by running `zpinger`:
+
+```
+where are the executables?\zpinger
+```
+
+### Linking with an Application
+
+Include `zyre.h` in your application and link with libzyre. Here is a typical gcc link command:
+
+    gcc -lzyre -lczmq -lzmq myapp.c -o myapp
+
+### API Summary
+
+This is the API provided by Zyre 2.x, in alphabetical order.
+
+.pull doc/zyre.doc
+.pull doc/zyre_event.doc
+
+### Hints to Contributors
+
+Zyre is a nice, neat library, and you may not immediately appreciate why. Read the CLASS style guide please, and write your code to make it indistinguishable from the rest of the code in the library. That is the only real criteria for good style: it's invisible.
+
+Don't include system headers in source files. The right place for these is CZMQ.
+
+Do read your code after you write it and ask, "Can I make this simpler?" We do use a nice minimalist and yet readable style. Learn it, adopt it, use it.
+
+Before opening a pull request read our [contribution guidelines](https://github.com/zeromq/zyre/blob/master/CONTRIBUTING.md). Thanks!
+
+### This Document
+
+This document is originally at README.txt and is built using [gitdown](http://github.com/imatix/gitdown).
