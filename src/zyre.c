@@ -26,8 +26,8 @@
         ENTER fromnode name headers ipaddress:port
             a new peer has entered the network
         EVASIVE fromnode name
-	    a peer is being evasive (quiet for too long)
-	EXIT fromnode name
+            a peer is being evasive (quiet for too long)
+        EXIT fromnode name
             a peer has left the network
         JOIN fromnode name groupname
             a peer has joined a specific group
