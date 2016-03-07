@@ -219,7 +219,7 @@ zyre_event_header (zyre_event_t *self, const char *name)
     assert (self);
     if (!self->headers)
         return NULL;
-    return (const char *)zhash_lookup (self->headers, name);
+    return (const char *) zhash_lookup (self->headers, name);
 }
 
 
@@ -235,13 +235,29 @@ zyre_event_group (zyre_event_t *self)
 
 
 //  --------------------------------------------------------------------------
-//  Returns the incoming message payload (currently one frame)
+//  Returns the incoming message payload; the caller can modify the message
+//  but does not own it and should not destroy it.
 
 zmsg_t *
 zyre_event_msg (zyre_event_t *self)
 {
     assert (self);
     return self->msg;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Returns the incoming message payload, and pass ownership to the caller.
+//  The caller must destroy the message when finished with it. After called
+//  on the given event, further calls will return NULL.
+
+zmsg_t *
+zyre_event_get_msg (zyre_event_t *self)
+{
+    assert (self);
+    zmsg_t *msg = self->msg;
+    self->msg = NULL;
+    return msg;
 }
 
 
@@ -308,8 +324,9 @@ zyre_event_test (bool verbose)
         event = zyre_event_new (node2);
         if (streq (zyre_event_type (event), "SHOUT")) {
             assert (streq (zyre_event_group (event), "GLOBAL"));
-            msg = zyre_event_msg (event);
+            zmsg_t *msg = zyre_event_get_msg (event);
             char *string = zmsg_popstr (msg);
+            zmsg_destroy (&msg);
             assert (streq (string, "Hello, World"));
             free (string);
         }
