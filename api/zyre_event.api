@@ -60,8 +60,16 @@
     </method>
 
     <method name = "msg">
-        Returns the incoming message payload
+        Returns the incoming message payload; the caller can modify the
+        message but does not own it and should not destroy it.
         <return type = "zmsg" />
+    </method>
+
+    <method name = "get msg">
+        Returns the incoming message payload, and pass ownership to the
+        caller. The caller must destroy the message when finished with it.
+        After called on the given event, further calls will return NULL.
+        <return type = "zmsg" fresh = "1" />
     </method>
 
     <method name = "print">
