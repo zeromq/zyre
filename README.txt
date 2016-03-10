@@ -124,7 +124,6 @@ Test by running the `zpinger` command, from two or more PCs.
 
     zyre\src\.libs\zpinger
 
-<A name="toc3-112" title="Building on Windows" />
 ### Building on Windows
 
 To start with, you need MS Visual Studio (C/C++). The free community edition works well.
@@ -170,7 +169,6 @@ Test by running `zpinger` from two or more PCs:
     zyre\builds\msvc\vs2013\ReleaseDEXE\zpinger.exe
 ```
 
-<A name="toc3-140" title="Linking with an Application" />
 ### Linking with an Application
 
 Include `zyre.h` in your application and link with libzyre. Here is a typical gcc link command:
