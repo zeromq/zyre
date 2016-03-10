@@ -7,28 +7,31 @@
 <A name="toc2-8" title="Contents" />
 ## Contents
 
-
-**<a href="#toc2-13">Overview</a>**
+&emsp;<a href="#toc2-13">Overview</a>
 
 **<a href="#toc3-16">Scope and Goals</a>**
 
 **<a href="#toc3-45">Ownership and License</a>**
-
-**<a href="#toc2-56">Using Zyre</a>**
+&emsp;<a href="#toc2-56">Using Zyre</a>
 
 **<a href="#toc3-59">Building on Linux</a>**
+&emsp;<a href="#toc1-87">only execute this next line if interested in updating the man pages as well (adds to build time):</a>
 
 **<a href="#toc3-112">Building on Windows</a>**
 
+**<a href="#toc3-135">Building on Windows</a>**
+
 **<a href="#toc3-140">Linking with an Application</a>**
 
-**<a href="#toc3-147">API Summary</a>**
-&emsp;<a href="#toc4-152">zyre - API wrapping one Zyre node</a>
-&emsp;<a href="#toc4-531">zyre_event - no title found</a>
+**<a href="#toc3-182">Linking with an Application</a>**
 
-**<a href="#toc3-676">Hints to Contributors</a>**
+**<a href="#toc3-189">API Summary</a>**
+*  <a href="#toc4-194">zyre - API wrapping one Zyre node</a>
+*  <a href="#toc4-574">zyre_event - no title found</a>
 
-**<a href="#toc3-687">This Document</a>**
+**<a href="#toc3-719">Hints to Contributors</a>**
+
+**<a href="#toc3-730">This Document</a>**
 
 <A name="toc2-13" title="Overview" />
 ## Overview
@@ -104,6 +107,7 @@ sudo apt-get install -y \
     pkg-config autotools-dev autoconf automake cmake \
     uuid-dev libpcre3-dev valgrind
 
+<A name="toc1-87" title="only execute this next line if interested in updating the man pages as well (adds to build time):" />
 # only execute this next line if interested in updating the man pages as well (adds to build time):
 sudo apt-get install -y asciidoc
 ```
@@ -151,6 +155,7 @@ Test by running the `zpinger` command, from two or more PCs.
     zyre\src\.libs\zpinger
 
 <A name="toc3-112" title="Building on Windows" />
+<A name="toc3-135" title="Building on Windows" />
 ### Building on Windows
 
 To start with, you need MS Visual Studio (C/C++). The free community edition works well.
@@ -197,18 +202,19 @@ Test by running `zpinger` from two or more PCs:
 ```
 
 <A name="toc3-140" title="Linking with an Application" />
+<A name="toc3-182" title="Linking with an Application" />
 ### Linking with an Application
 
 Include `zyre.h` in your application and link with libzyre. Here is a typical gcc link command:
 
     gcc -lzyre -lczmq -lzmq myapp.c -o myapp
 
-<A name="toc3-147" title="API Summary" />
+<A name="toc3-189" title="API Summary" />
 ### API Summary
 
 This is the API provided by Zyre 2.x, in alphabetical order.
 
-<A name="toc4-152" title="zyre - API wrapping one Zyre node" />
+<A name="toc4-194" title="zyre - API wrapping one Zyre node" />
 #### zyre - API wrapping one Zyre node
 
 Zyre does local area discovery and clustering. A Zyre node broadcasts
@@ -247,7 +253,9 @@ Todo: allow multipart contents
 
 This is the class interface:
 
-    //  This API is a draft, and may change without notice.
+    //  This is a draft class, and may change without notice. It is disabled in
+    //  stable builds by default. If you use this in applications, please ask
+    //  for it to be pushed to stable state. Use --enable-drafts to enable.
     #ifdef ZYRE_BUILD_DRAFT_API
     //  *** Draft method, for development use, may change without warning ***
     //  Constructor, creates a new Zyre node. Note that until you start the
@@ -361,7 +369,6 @@ This is the class interface:
     //  Receive next message from network; the message may be a control
     //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).   
     //  Returns zmsg_t object, or NULL if interrupted                  
-    //  Caller owns return value and must destroy it when done.
     ZYRE_EXPORT zmsg_t *
         zyre_recv (zyre_t *self);
     
@@ -429,10 +436,9 @@ This is the class interface:
         zyre_print (zyre_t *self);
     
     //  *** Draft method, for development use, may change without warning ***
-    //  Return the Zyre version for run-time API detection; returns
-    //  major * 10000 + minor * 100 + patch, as a single integer.  
-    ZYRE_EXPORT uint64_t
-        zyre_version (void);
+    //  Return the Zyre version for run-time API detection
+    ZYRE_EXPORT void
+        zyre_version (int *major, int *minor, int *patch);
     
     //  *** Draft method, for development use, may change without warning ***
     //  Self test of this class.
@@ -445,10 +451,11 @@ This is the class self test code:
 
     //  We'll use inproc gossip discovery so that this works without networking
     
-    uint64_t version = zyre_version ();
-    assert ((version / 10000) % 100 == ZYRE_VERSION_MAJOR);
-    assert ((version / 100) % 100 == ZYRE_VERSION_MINOR);
-    assert (version % 100 == ZYRE_VERSION_PATCH);
+    int major, minor, patch;
+    zyre_version (&major, &minor, &patch);
+    assert (major == ZYRE_VERSION_MAJOR);
+    assert (minor == ZYRE_VERSION_MINOR);
+    assert (patch == ZYRE_VERSION_PATCH);
     
     //  Create two nodes
     zyre_t *node1 = zyre_new ("node1");
@@ -587,7 +594,7 @@ This is the class self test code:
     zyre_destroy (&node1);
     zyre_destroy (&node2);
 
-<A name="toc4-531" title="zyre_event - no title found" />
+<A name="toc4-574" title="zyre_event - no title found" />
 #### zyre_event - no title found
 
 This class provides a higher-level API to the zyre_recv call, by doing
@@ -732,7 +739,7 @@ This is the class self test code:
     zyre_destroy (&node2);
 
 
-<A name="toc3-676" title="Hints to Contributors" />
+<A name="toc3-719" title="Hints to Contributors" />
 ### Hints to Contributors
 
 Zyre is a nice, neat library, and you may not immediately appreciate why. Read the CLASS style guide please, and write your code to make it indistinguishable from the rest of the code in the library. That is the only real criteria for good style: it's invisible.
@@ -743,7 +750,9 @@ Do read your code after you write it and ask, "Can I make this simpler?" We do u
 
 Before opening a pull request read our [contribution guidelines](https://github.com/zeromq/zyre/blob/master/CONTRIBUTING.md). Thanks!
 
-<A name="toc3-687" title="This Document" />
+<A name="toc3-730" title="This Document" />
 ### This Document
 
 This document is originally at README.txt and is built using [gitdown](http://github.com/imatix/gitdown).
+
+_This documentation was generated using [Gitdown](https://github.com/zeromq/gitdown)_
