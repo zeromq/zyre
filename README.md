@@ -15,19 +15,18 @@
 &emsp;<a href="#toc2-56">Using Zyre</a>
 
 **<a href="#toc3-59">Building on Linux</a>**
-&emsp;<a href="#toc1-87">only execute this next line if interested in updating the man pages as well (adds to build time):</a>
 
-**<a href="#toc3-134">Building on Windows</a>**
+**<a href="#toc3-135">Building on Windows</a>**
 
-**<a href="#toc3-180">Linking with an Application</a>**
+**<a href="#toc3-181">Linking with an Application</a>**
 
-**<a href="#toc3-187">API Summary</a>**
-*  <a href="#toc4-192">zyre - API wrapping one Zyre node</a>
-*  <a href="#toc4-572">zyre_event - no title found</a>
+**<a href="#toc3-188">API Summary</a>**
+*  <a href="#toc4-193">zyre - API wrapping one Zyre node</a>
+*  <a href="#toc4-573">zyre_event - no title found</a>
 
-**<a href="#toc3-717">Hints to Contributors</a>**
+**<a href="#toc3-718">Hints to Contributors</a>**
 
-**<a href="#toc3-728">This Document</a>**
+**<a href="#toc3-729">This Document</a>**
 
 <A name="toc2-13" title="Overview" />
 ## Overview
@@ -97,15 +96,15 @@ Plus some others:
 Which we install like this (using the Debian-style apt-get package manager):
 
 ```
-sudo apt-get update
-sudo apt-get install -y \
+    sudo apt-get update
+    sudo apt-get install -y \
     git-all build-essential libtool \
     pkg-config autotools-dev autoconf automake cmake \
     uuid-dev libpcre3-dev valgrind
 
-<A name="toc1-87" title="only execute this next line if interested in updating the man pages as well (adds to build time):" />
-# only execute this next line if interested in updating the man pages as well (adds to build time):
-sudo apt-get install -y asciidoc
+    # only execute this next line if interested in updating the man pages as
+    # well (adds to build time):
+    sudo apt-get install -y asciidoc
 ```
 Here's how to build Zyre from GitHub (building from packages is very similar, you don't clone a repo but unpack a tarball), including the libsodium (for security) and libzmq (ZeroMQ core) libraries:
 
@@ -119,7 +118,8 @@ Here's how to build Zyre from GitHub (building from packages is very similar, yo
     git clone git://github.com/zeromq/libzmq.git
     cd libzmq
     ./autogen.sh
-    # do not specify "--with-libsodium" if you prefer to use internal tweetnacl security implementation (recommended for development)
+    # do not specify "--with-libsodium" if you prefer to use internal tweetnacl
+    # security implementation (recommended for development)
     ./configure --with-libsodium
     make check
     sudo make install
@@ -150,7 +150,7 @@ Test by running the `zpinger` command, from two or more PCs.
 
     zyre\src\.libs\zpinger
 
-<A name="toc3-134" title="Building on Windows" />
+<A name="toc3-135" title="Building on Windows" />
 ### Building on Windows
 
 To start with, you need MS Visual Studio (C/C++). The free community edition works well.
@@ -196,19 +196,19 @@ Test by running `zpinger` from two or more PCs:
     zyre\builds\msvc\vs2013\ReleaseDEXE\zpinger.exe
 ```
 
-<A name="toc3-180" title="Linking with an Application" />
+<A name="toc3-181" title="Linking with an Application" />
 ### Linking with an Application
 
 Include `zyre.h` in your application and link with libzyre. Here is a typical gcc link command:
 
     gcc -lzyre -lczmq -lzmq myapp.c -o myapp
 
-<A name="toc3-187" title="API Summary" />
+<A name="toc3-188" title="API Summary" />
 ### API Summary
 
 This is the API provided by Zyre 2.x, in alphabetical order.
 
-<A name="toc4-192" title="zyre - API wrapping one Zyre node" />
+<A name="toc4-193" title="zyre - API wrapping one Zyre node" />
 #### zyre - API wrapping one Zyre node
 
 Zyre does local area discovery and clustering. A Zyre node broadcasts
@@ -588,7 +588,7 @@ This is the class self test code:
     zyre_destroy (&node1);
     zyre_destroy (&node2);
 
-<A name="toc4-572" title="zyre_event - no title found" />
+<A name="toc4-573" title="zyre_event - no title found" />
 #### zyre_event - no title found
 
 This class provides a higher-level API to the zyre_recv call, by doing
@@ -733,7 +733,7 @@ This is the class self test code:
     zyre_destroy (&node2);
 
 
-<A name="toc3-717" title="Hints to Contributors" />
+<A name="toc3-718" title="Hints to Contributors" />
 ### Hints to Contributors
 
 Zyre is a nice, neat library, and you may not immediately appreciate why. Read the CLASS style guide please, and write your code to make it indistinguishable from the rest of the code in the library. That is the only real criteria for good style: it's invisible.
@@ -744,7 +744,7 @@ Do read your code after you write it and ask, "Can I make this simpler?" We do u
 
 Before opening a pull request read our [contribution guidelines](https://github.com/zeromq/zyre/blob/master/CONTRIBUTING.md). Thanks!
 
-<A name="toc3-728" title="This Document" />
+<A name="toc3-729" title="This Document" />
 ### This Document
 
 _This documentation was generated using [Gitdown](https://github.com/zeromq/gitdown)_

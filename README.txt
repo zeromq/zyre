@@ -72,14 +72,15 @@ Plus some others:
 Which we install like this (using the Debian-style apt-get package manager):
 
 ```
-sudo apt-get update
-sudo apt-get install -y \
+    sudo apt-get update
+    sudo apt-get install -y \
     git-all build-essential libtool \
     pkg-config autotools-dev autoconf automake cmake \
     uuid-dev libpcre3-dev valgrind
 
-# only execute this next line if interested in updating the man pages as well (adds to build time):
-sudo apt-get install -y asciidoc
+    # only execute this next line if interested in updating the man pages as
+    # well (adds to build time):
+    sudo apt-get install -y asciidoc
 ```
 Here's how to build Zyre from GitHub (building from packages is very similar, you don't clone a repo but unpack a tarball), including the libsodium (for security) and libzmq (ZeroMQ core) libraries:
 
@@ -93,7 +94,8 @@ Here's how to build Zyre from GitHub (building from packages is very similar, yo
     git clone git://github.com/zeromq/libzmq.git
     cd libzmq
     ./autogen.sh
-    # do not specify "--with-libsodium" if you prefer to use internal tweetnacl security implementation (recommended for development)
+    # do not specify "--with-libsodium" if you prefer to use internal tweetnacl
+    # security implementation (recommended for development)
     ./configure --with-libsodium
     make check
     sudo make install
