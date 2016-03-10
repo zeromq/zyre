@@ -102,39 +102,60 @@ sudo apt-get update
 sudo apt-get install -y \
     git-all build-essential libtool \
     pkg-config autotools-dev autoconf automake cmake \
-    asciidoc uuid-dev libpcre3-dev valgrind
+    uuid-dev libpcre3-dev valgrind
+
+# only execute this next line if interested in updating the man pages as well (adds to build time):
+sudo apt-get install -y asciidoc
+```
+Here's how to build Zyre from GitHub (building from packages is very similar, you don't clone a repo but unpack a tarball), including the libsodium (for security) and libzmq (ZeroMQ core) libraries:
+
+```
+    git clone --depth 1 -b stable https://github.com/jedisct1/libsodium.git
+    cd libsodium
+    ./autogen.sh && ./configure && make check
+    sudo make install
+    cd ..
+
+    git clone git://github.com/zeromq/libzmq.git
+    cd libzmq
+    ./autogen.sh
+    # do not specify "--with-libsodium" if you prefer to use internal tweetnacl security implementation (recommended for development)
+    ./configure --with-libsodium
+    make check
+    sudo make install
+    sudo ldconfig
+    cd ..
+
+    git clone git://github.com/zeromq/czmq.git
+    cd czmq
+    ./autogen.sh && ./configure && make check
+    sudo make install
+    sudo ldconfig
+    cd ..
+
+    git clone git://github.com/zeromq/zyre.git
+    cd zyre
+    ./autogen.sh && ./configure && make check
+    sudo make install
+    sudo ldconfig
+    cd ..
 ```
 
-Here's how to build Zyre from GitHub:
 
-```
-git clone git://github.com/zeromq/libzmq.git
-cd libzmq
-./autogen.sh && ./configure && make check
-sudo make install && ldconfig
-cd ..
+Test by running the `zyre_selftest` command:
 
-git clone git://github.com/zeromq/czmq.git
-cd czmq
-./autogen.sh && ./configure && make check
-sudo make install && ldconfig
-cd ..
-
-git clone git://github.com/zeromq/zyre.git
-cd zyre
-./autogen.sh && ./configure && make check
-sudo make install && ldconfig
-cd ..
-```
+    zyre\src\.libs\zyre_selftest
 
 Test by running the `zpinger` command, from two or more PCs.
+
+    zyre\src\.libs\zpinger
 
 <A name="toc3-112" title="Building on Windows" />
 ### Building on Windows
 
 To start with, you need MS Visual Studio (C/C++). The free community edition works well.
 
-Then, install git, and make sure it works from a command prompt:
+Then, install git, and make sure it works from a DevStudio command prompt:
 
 ```
 git
@@ -143,18 +164,36 @@ git
 Now let's build Zyre from GitHub:
 
 ```
-git clone git://github.com/zeromq/libzmq.git
-git clone git://github.com/zeromq/czmq.git
-git clone git://github.com/zeromq/zyre.git
-cd zyre\builds\msvc
-\.\configure
-\.\build
+    git clone --depth 1 -b stable https://github.com/jedisct1/libsodium.git
+    git clone git://github.com/zeromq/libzmq.git
+    git clone git://github.com/zeromq/czmq.git
+    git clone git://github.com/zeromq/zyre.git
+    cd zyre\builds\msvc
+    configure.bat
+    cd build
+    buildall.bat
+    cd ..\..\..\..
 ```
 
-Let's test by running `zpinger`:
+Test by running the `zyre_selftest` command:
+```
+    dir/s/b zyre_selftest.exe
+    zyre\builds\msvc\vs2013\DebugDEXE\zyre_selftest.exe
+    zyre\builds\msvc\vs2013\ReleaseDEXE\zyre_selftest.exe
+
+    :: select your choice and run it
+    zyre\builds\msvc\vs2013\DebugDEXE\zyre_selftest.exe
+```
+Test by running `zpinger` from two or more PCs:
 
 ```
-where are the executables?\zpinger
+    dir/s/b zpinger.exe
+    zyre\builds\msvc\vs2013\DebugDEXE\zpinger.exe
+    zyre\builds\msvc\vs2013\ReleaseDEXE\zpinger.exe
+    zyre\builds\msvc\vs2013\x64\DebugDEXE\zpinger.exe
+
+    :: select your choice and run it
+    zyre\builds\msvc\vs2013\ReleaseDEXE\zpinger.exe
 ```
 
 <A name="toc3-140" title="Linking with an Application" />

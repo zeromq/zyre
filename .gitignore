@@ -67,6 +67,8 @@ zyre.includes
 *.opensdf
 bin/
 obj/
+builds/msvc/**/*Debug
+builds/msvc/**/*Release
 
 # eclipse setting
 .cproject
