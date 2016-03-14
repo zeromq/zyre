@@ -30,6 +30,7 @@ EXTRA_DIST = \
     src/zyre_group.h \
     src/zyre_node.h \
     LICENSE \
+    README.txt \
     README.md \
     CONTRIBUTING.md \
     src/zyre_classes.h
