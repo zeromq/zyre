@@ -15,6 +15,9 @@
 #ifndef ZYRE_BINDING_H_INCLUDED
 #define ZYRE_BINDING_H_INCLUDED
 
+#define ZYRE_BUILD_DRAFT_API
+
+#include "../../../czmq/bindings/nodejs/binding.h"
 #include "zyre.h"
 #include "nan.h"
 
@@ -24,62 +27,58 @@ using namespace Nan;
 class Zyre: public Nan::ObjectWrap {
     public:
         static NAN_MODULE_INIT (Init);
-        zyre_t *get_self ();
-    private:
         explicit Zyre (const char *name);
         explicit Zyre (zyre_t *self);
+        zyre_t *self;
+    private:
         ~Zyre ();
-    zyre_t *self;
     static Nan::Persistent <Function> &constructor ();
 
     static NAN_METHOD (New);
     static NAN_METHOD (destroy);
     static NAN_METHOD (defined);
-    static NAN_METHOD (uuid);
-    static NAN_METHOD (name);
-    static NAN_METHOD (set_header);
-    static NAN_METHOD (set_verbose);
-    static NAN_METHOD (set_port);
-    static NAN_METHOD (set_interval);
-    static NAN_METHOD (set_interface);
-    static NAN_METHOD (set_endpoint);
-    static NAN_METHOD (gossip_bind);
-    static NAN_METHOD (gossip_connect);
-    static NAN_METHOD (start);
-    static NAN_METHOD (stop);
-    static NAN_METHOD (join);
-    static NAN_METHOD (leave);
-    static NAN_METHOD (whispers);
-    static NAN_METHOD (shouts);
-    static NAN_METHOD (peer_address);
-    static NAN_METHOD (peer_header_value);
-    static NAN_METHOD (print);
-    static NAN_METHOD (version);
-    static NAN_METHOD (test);
+    static NAN_METHOD (_uuid);
+    static NAN_METHOD (_name);
+    static NAN_METHOD (_set_endpoint);
+    static NAN_METHOD (_start);
+    static NAN_METHOD (_join);
+    static NAN_METHOD (_leave);
+    static NAN_METHOD (_recv);
+    static NAN_METHOD (_whisper);
+    static NAN_METHOD (_shout);
+    static NAN_METHOD (_whispers);
+    static NAN_METHOD (_shouts);
+    static NAN_METHOD (_peers);
+    static NAN_METHOD (_own_groups);
+    static NAN_METHOD (_peer_groups);
+    static NAN_METHOD (_peer_address);
+    static NAN_METHOD (_peer_header_value);
+    static NAN_METHOD (_socket);
+    static NAN_METHOD (_version);
 };
 
 class ZyreEvent: public Nan::ObjectWrap {
     public:
         static NAN_MODULE_INIT (Init);
-        zyre_event_t *get_self ();
-    private:
         explicit ZyreEvent (zyre_t *node);
         explicit ZyreEvent (zyre_event_t *self);
+        zyre_event_t *self;
+    private:
         ~ZyreEvent ();
-    zyre_event_t *self;
     static Nan::Persistent <Function> &constructor ();
 
     static NAN_METHOD (New);
     static NAN_METHOD (destroy);
     static NAN_METHOD (defined);
-    static NAN_METHOD (type);
-    static NAN_METHOD (peer_uuid);
-    static NAN_METHOD (peer_name);
-    static NAN_METHOD (peer_addr);
-    static NAN_METHOD (header);
-    static NAN_METHOD (group);
-    static NAN_METHOD (print);
-    static NAN_METHOD (test);
+    static NAN_METHOD (_type);
+    static NAN_METHOD (_peer_uuid);
+    static NAN_METHOD (_peer_name);
+    static NAN_METHOD (_peer_addr);
+    static NAN_METHOD (_headers);
+    static NAN_METHOD (_header);
+    static NAN_METHOD (_group);
+    static NAN_METHOD (_msg);
+    static NAN_METHOD (_get_msg);
 };
 
 #endif

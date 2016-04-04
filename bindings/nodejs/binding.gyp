@@ -8,6 +8,7 @@
     {
       'target_name': 'zyre',
       'sources': [
+          '../../../czmq/bindings/nodejs/binding.cc',
           'binding.cc'
       ],
       'include_dirs': [
