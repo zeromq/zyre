@@ -13,19 +13,16 @@
 Source:         zyre
 Section:        net
 Priority:       optional
-Maintainer:     John Doe <John.Doe@example.com>
-Uploaders:      John Doe <John.Doe@example.com>
-Standards-Version: 3.9.5
-Build-Depends: bison, debhelper (>= 8),
+Maintainer:     zyre Developers <zeromq-dev@lists.zeromq.org>
+Standards-Version: 3.9.7
+Build-Depends: debhelper (>= 9),
     pkg-config,
-    automake,
-    autoconf,
-    libtool,
-    libzmq4-dev,
-    uuid-dev,
+    dh-autoreconf,
+    libzmq5-dev,
     libczmq-dev,
     dh-autoreconf,
-    systemd
+    systemd,
+    dh-systemd
 
 Package: libzyre1
 Architecture: any
@@ -33,12 +30,11 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: zyre
  This package contains shared library for zyre: an open-source framework for proximity-based p2p apps
 
-Package: zyre-dev
-Architecture: all
+Package: libzyre-dev
+Architecture: any
 Section: libdevel
 Depends:
-    libzmq4-dev,
-    uuid-dev,
+    libzmq5-dev,
     libczmq-dev,
     libzyre1 (= ${binary:Version})
 Description: development files for zyre
