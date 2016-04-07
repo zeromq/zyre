@@ -25,7 +25,6 @@ BuildRequires:  libtool
 BuildRequires:  pkg-config
 BuildRequires:  systemd-devel
 BuildRequires:  zeromq-devel
-BuildRequires:  uuid-devel
 BuildRequires:  czmq-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
@@ -53,7 +52,6 @@ Summary:        an open-source framework for proximity-based p2p apps
 Group:          System/Libraries
 Requires:       libzyre1 = %{version}
 Requires:       zeromq-devel
-Requires:       uuid-devel
 Requires:       czmq-devel
 
 %description devel
@@ -71,7 +69,7 @@ This package contains development files.
 
 %build
 sh autogen.sh
-%{configure} --with-systemd
+%{configure} --with-systemd-units
 make %{_smp_mflags}
 
 %install
@@ -84,6 +82,7 @@ find %{buildroot} -name '*.la' | xargs rm -f
 %files
 %defattr(-,root,root)
 %doc README.md
+%doc README.txt
 %{_bindir}/zpinger
 
 
