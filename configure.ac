@@ -99,7 +99,7 @@ PKG_CHECK_MODULES([libzmq], [libzmq >= 0.0.0],
         fi
 
 
-        AC_CHECK_LIB([libzmq], [zmq_init],
+        AC_CHECK_LIB([zmq], [zmq_init],
             [
                 CFLAGS="${libzmq_synthetic_cflags} ${CFLAGS}"
                 LDFLAGS="${libzmq_synthetic_libs} ${LDFLAGS}"
@@ -144,7 +144,7 @@ PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
         fi
 
 
-        AC_CHECK_LIB([libczmq], [zctx_test],
+        AC_CHECK_LIB([czmq], [zctx_test],
             [
                 CFLAGS="${czmq_synthetic_cflags} ${CFLAGS}"
                 LDFLAGS="${czmq_synthetic_libs} ${LDFLAGS}"

@@ -35,8 +35,16 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "defined", defined);
     Nan::SetPrototypeMethod (tpl, "uuid", _uuid);
     Nan::SetPrototypeMethod (tpl, "name", _name);
+    Nan::SetPrototypeMethod (tpl, "setHeader", _set_header);
+    Nan::SetPrototypeMethod (tpl, "setVerbose", _set_verbose);
+    Nan::SetPrototypeMethod (tpl, "setPort", _set_port);
+    Nan::SetPrototypeMethod (tpl, "setInterval", _set_interval);
+    Nan::SetPrototypeMethod (tpl, "setInterface", _set_interface);
     Nan::SetPrototypeMethod (tpl, "setEndpoint", _set_endpoint);
+    Nan::SetPrototypeMethod (tpl, "gossipBind", _gossip_bind);
+    Nan::SetPrototypeMethod (tpl, "gossipConnect", _gossip_connect);
     Nan::SetPrototypeMethod (tpl, "start", _start);
+    Nan::SetPrototypeMethod (tpl, "stop", _stop);
     Nan::SetPrototypeMethod (tpl, "join", _join);
     Nan::SetPrototypeMethod (tpl, "leave", _leave);
     Nan::SetPrototypeMethod (tpl, "recv", _recv);
@@ -50,7 +58,9 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "peerAddress", _peer_address);
     Nan::SetPrototypeMethod (tpl, "peerHeaderValue", _peer_header_value);
     Nan::SetPrototypeMethod (tpl, "socket", _socket);
+    Nan::SetPrototypeMethod (tpl, "print", _print);
     Nan::SetPrototypeMethod (tpl, "version", _version);
+    Nan::SetPrototypeMethod (tpl, "test", _test);
 
     constructor ().Reset (Nan::GetFunction (tpl).ToLocalChecked ());
     Nan::Set (target, Nan::New ("Zyre").ToLocalChecked (),
@@ -110,6 +120,75 @@ NAN_METHOD (Zyre::_name) {
     info.GetReturnValue ().Set (Nan::New (result).ToLocalChecked ());
 }
 
+NAN_METHOD (Zyre::_set_header) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *name;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `name`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`name` must be a string");
+    else {
+        Nan::Utf8String name_utf8 (info [0].As<String>());
+        name = *name_utf8;
+    }
+    char *format;
+    if (info [1]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `format`");
+    else
+    if (!info [1]->IsString ())
+        return Nan::ThrowTypeError ("`format` must be a string");
+    else {
+        Nan::Utf8String format_utf8 (info [1].As<String>());
+        format = *format_utf8;
+    }
+    zyre_set_header (zyre->self, (const char *)name, "%s", format);
+}
+
+NAN_METHOD (Zyre::_set_verbose) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    zyre_set_verbose (zyre->self);
+}
+
+NAN_METHOD (Zyre::_set_port) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `port nbr`");
+
+    int port_nbr;
+    if (info [0]->IsNumber ())
+        port_nbr = Nan::To<int>(info [0]).FromJust ();
+    else
+        return Nan::ThrowTypeError ("`port nbr` must be a number");
+    zyre_set_port (zyre->self, (int) port_nbr);
+}
+
+NAN_METHOD (Zyre::_set_interval) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `interval`");
+    else
+    if (!info [0]->IsNumber ())
+        return Nan::ThrowTypeError ("`interval` must be a number");
+    size_t interval = Nan::To<int64_t>(info [0]).FromJust ();
+    zyre_set_interval (zyre->self, (size_t) interval);
+}
+
+NAN_METHOD (Zyre::_set_interface) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *value;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `value`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`value` must be a string");
+    else {
+        Nan::Utf8String value_utf8 (info [0].As<String>());
+        value = *value_utf8;
+    }
+    zyre_set_interface (zyre->self, (const char *)value);
+}
+
 NAN_METHOD (Zyre::_set_endpoint) {
     Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
     char *format;
@@ -126,10 +205,45 @@ NAN_METHOD (Zyre::_set_endpoint) {
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
 
+NAN_METHOD (Zyre::_gossip_bind) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *format;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `format`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`format` must be a string");
+    else {
+        Nan::Utf8String format_utf8 (info [0].As<String>());
+        format = *format_utf8;
+    }
+    zyre_gossip_bind (zyre->self, "%s", format);
+}
+
+NAN_METHOD (Zyre::_gossip_connect) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *format;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `format`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`format` must be a string");
+    else {
+        Nan::Utf8String format_utf8 (info [0].As<String>());
+        format = *format_utf8;
+    }
+    zyre_gossip_connect (zyre->self, "%s", format);
+}
+
 NAN_METHOD (Zyre::_start) {
     Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
     int result = zyre_start (zyre->self);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
+}
+
+NAN_METHOD (Zyre::_stop) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    zyre_stop (zyre->self);
 }
 
 NAN_METHOD (Zyre::_join) {
@@ -352,9 +466,26 @@ NAN_METHOD (Zyre::_socket) {
     }
 }
 
+NAN_METHOD (Zyre::_print) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    zyre_print (zyre->self);
+}
+
 NAN_METHOD (Zyre::_version) {
     uint64_t result = zyre_version ();
     info.GetReturnValue ().Set (Nan::New<Number>(result));
+}
+
+NAN_METHOD (Zyre::_test) {
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `verbose`");
+
+    bool verbose;
+    if (info [0]->IsBoolean ())
+        verbose = Nan::To<bool>(info [0]).FromJust ();
+    else
+        return Nan::ThrowTypeError ("`verbose` must be a Boolean");
+    zyre_test ((bool) verbose);
 }
 
 Nan::Persistent <Function> &Zyre::constructor () {
@@ -383,6 +514,8 @@ NAN_MODULE_INIT (ZyreEvent::Init) {
     Nan::SetPrototypeMethod (tpl, "group", _group);
     Nan::SetPrototypeMethod (tpl, "msg", _msg);
     Nan::SetPrototypeMethod (tpl, "getMsg", _get_msg);
+    Nan::SetPrototypeMethod (tpl, "print", _print);
+    Nan::SetPrototypeMethod (tpl, "test", _test);
 
     constructor ().Reset (Nan::GetFunction (tpl).ToLocalChecked ());
     Nan::Set (target, Nan::New ("ZyreEvent").ToLocalChecked (),
@@ -501,6 +634,23 @@ NAN_METHOD (ZyreEvent::_get_msg) {
     //      info.GetReturnValue ().Set (info.This ());
         info.GetReturnValue ().Set (Nan::New<Boolean>(true));
     }
+}
+
+NAN_METHOD (ZyreEvent::_print) {
+    ZyreEvent *zyre_event = Nan::ObjectWrap::Unwrap <ZyreEvent> (info.Holder ());
+    zyre_event_print (zyre_event->self);
+}
+
+NAN_METHOD (ZyreEvent::_test) {
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `verbose`");
+
+    bool verbose;
+    if (info [0]->IsBoolean ())
+        verbose = Nan::To<bool>(info [0]).FromJust ();
+    else
+        return Nan::ThrowTypeError ("`verbose` must be a Boolean");
+    zyre_event_test ((bool) verbose);
 }
 
 Nan::Persistent <Function> &ZyreEvent::constructor () {

@@ -30,6 +30,9 @@
 #include "zyre_group.h"
 #include "zyre_node.h"
 
+//  *** To avoid double-definitions, only define if building without draft ***
+#ifndef ZYRE_BUILD_DRAFT_API
+
 //  *** Draft method, defined for internal use only ***
 //  Self test of this class.
 ZYRE_EXPORT void
@@ -44,6 +47,8 @@ ZYRE_EXPORT void
 //  Self test of this class.
 ZYRE_EXPORT void
     zyre_node_test (bool verbose);
+
+#endif // ZYRE_BUILD_DRAFT_API
 
 //  Private constants
 #define PEER_EVASIVE	10000 //                   10 seconds' silence is evasive
