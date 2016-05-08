@@ -44,8 +44,16 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (defined);
     static NAN_METHOD (_uuid);
     static NAN_METHOD (_name);
+    static NAN_METHOD (_set_header);
+    static NAN_METHOD (_set_verbose);
+    static NAN_METHOD (_set_port);
+    static NAN_METHOD (_set_interval);
+    static NAN_METHOD (_set_interface);
     static NAN_METHOD (_set_endpoint);
+    static NAN_METHOD (_gossip_bind);
+    static NAN_METHOD (_gossip_connect);
     static NAN_METHOD (_start);
+    static NAN_METHOD (_stop);
     static NAN_METHOD (_join);
     static NAN_METHOD (_leave);
     static NAN_METHOD (_recv);
@@ -59,7 +67,9 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (_peer_address);
     static NAN_METHOD (_peer_header_value);
     static NAN_METHOD (_socket);
+    static NAN_METHOD (_print);
     static NAN_METHOD (_version);
+    static NAN_METHOD (_test);
 };
 
 class ZyreEvent: public Nan::ObjectWrap {
@@ -84,6 +94,8 @@ class ZyreEvent: public Nan::ObjectWrap {
     static NAN_METHOD (_group);
     static NAN_METHOD (_msg);
     static NAN_METHOD (_get_msg);
+    static NAN_METHOD (_print);
+    static NAN_METHOD (_test);
 };
 
 #endif
