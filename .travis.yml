@@ -1,5 +1,5 @@
 # Travis CI script
-language: c
+language: java
 
 os:
 - linux
@@ -11,24 +11,12 @@ services:
 - docker
 
 env:
-- BUILD_TYPE=default
-- BUILD_TYPE=android
-- BUILD_TYPE=cmake
-- BUILD_TYPE=check_zproto
-- BUILD_TYPE=check_zproject
-
-addons:
-  apt:
-    packages:
-    - uuid-dev
-    - valgrind
-    - git
-
-before_install:
-- if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils valgrind ; fi
-
-# Build and check this project according to the BUILD_TYPE
-script: ./ci_build.sh
+  - BUILD_TYPE=default
+  - BUILD_TYPE=android
+  - BUILD_TYPE=cmake
+  - BUILD_TYPE=check_zproto
+  - BUILD_TYPE=check_zproject
+  - BUILD_TYPE=bindings BINDING=jni
 
 # osx environment does not have docker
 matrix:
@@ -37,3 +25,18 @@ matrix:
     env: BUILD_TYPE=check_zproto
   - os: osx
     env: BUILD_TYPE=check_zproject
+  - os: osx
+    env: BUILD_TYPE=bindings BINDING=jni
+
+addons:
+  apt:
+    packages:
+    - uuid-dev
+    - valgrind
+
+before_install:
+- if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils valgrind ; fi
+
+# Build and check this project according to the BUILD_TYPE
+script: ./ci_build.sh
+
