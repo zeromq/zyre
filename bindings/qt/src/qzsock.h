@@ -74,6 +74,12 @@ public:
     //  Create a DISH socket. Default action is connect.
     static QZsock* newDish (const QString &endpoint, QObject *qObjParent = 0);
 
+    //  Create a GATHER socket. Default action is bind.
+    static QZsock* newGather (const QString &endpoint, QObject *qObjParent = 0);
+
+    //  Create a SCATTER socket. Default action is connect.
+    static QZsock* newScatter (const QString &endpoint, QObject *qObjParent = 0);
+
     //  Destroy the socket. You must use this for any socket created via the
     //  zsock_new method.                                                   
     ~QZsock ();
@@ -261,11 +267,11 @@ public:
     //  Set socket option `heartbeat_timeout`.
     void setHeartbeatTimeout (int heartbeatTimeout);
 
-    //  Get socket option `pre_allocated_fd`.
-    int preAllocatedFd ();
+    //  Get socket option `use_fd`.
+    int useFd ();
 
-    //  Set socket option `pre_allocated_fd`.
-    void setPreAllocatedFd (int preAllocatedFd);
+    //  Set socket option `use_fd`.
+    void setUseFd (int useFd);
 
     //  Get socket option `tos`.
     int tos ();

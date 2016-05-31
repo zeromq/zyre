@@ -26,6 +26,9 @@ noinst_LTLIBRARIES =
 TESTS =
 
 EXTRA_DIST = \
+    CMakeLists.txt \
+    Findlibzmq.cmake \
+    Findczmq.cmake \
     src/zyre_peer.h \
     src/zyre_group.h \
     src/zyre_node.h \

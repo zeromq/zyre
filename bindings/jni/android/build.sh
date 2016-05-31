@@ -17,6 +17,7 @@
 #
 #   Exit if any step fails
 set -e
+set -x
 
 export ANDROID_API_LEVEL=android-8
 export ANDROID_SYS_ROOT=$ANDROID_NDK_ROOT/platforms/$ANDROID_API_LEVEL/arch-$TOOLCHAIN_ARCH
@@ -36,9 +37,11 @@ echo "********  Building zyre Android native libraries"
 
 #   Ensure we've built JNI interface
 echo "********  Building zyre JNI interface & classes"
-( cd .. && gradle build jar )
+( cd .. && ./gradlew build jar )
 
+echo "********  Building zyre JNI for Android"
 rm -rf build && mkdir build && cd build
+export ANDROID_BUILD_PREFIX=$ANDROID_BUILD_PREFIX
 cmake -v -DCMAKE_TOOLCHAIN_FILE=../android_toolchain.cmake ..
 
 #   CMake wrongly searches current directory and then toolchain path instead
@@ -46,12 +49,11 @@ cmake -v -DCMAKE_TOOLCHAIN_FILE=../android_toolchain.cmake ..
 ln -s $ANDROID_SYS_ROOT/usr/lib/crtend_so.o
 ln -s $ANDROID_SYS_ROOT/usr/lib/crtbegin_so.o
 
-echo "********  Building zyre JNI for Android"
 make $MAKE_OPTIONS
 
 echo "********  Building zyre.jar for Android"
 #   Copy class files into org/zeromq/etc.
-unzip -q ../../build/libs/zyre*.jar
+unzip -q ../../build/libs/zyre-jni-1.1.0.jar
 unzip -q -o ../../../../../czmq/bindings/jni/android/czmq-android.jar
 
 #   Copy native libraries into lib/armeabi

@@ -44,7 +44,6 @@ This package contains shared library.
 
 %files -n libzyre1
 %defattr(-,root,root)
-%doc COPYING
 %{_libdir}/libzyre.so.*
 
 %package devel
@@ -84,6 +83,5 @@ find %{buildroot} -name '*.la' | xargs rm -f
 %doc README.md
 %doc README.txt
 %{_bindir}/zpinger
-
 
 %changelog
