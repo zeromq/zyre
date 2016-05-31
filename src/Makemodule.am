@@ -121,31 +121,31 @@ code:
 	cd $(srcdir); gsl -target:- project.xml
 
 check-local: src/zyre_selftest
-	$(LIBTOOL) --mode=execute $(srcdir)/src/zyre_selftest
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest
 
 check-verbose: src/zyre_selftest
-	$(LIBTOOL) --mode=execute $(srcdir)/src/zyre_selftest -v
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v
 
 # Run the selftest binary under valgrind to check for memory leaks
 memcheck: src/zyre_selftest
 	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
 		--leak-check=full --show-reachable=yes --error-exitcode=1 \
 		--suppressions=$(srcdir)/src/.valgrind.supp \
-		$(srcdir)/src/zyre_selftest
+		$(builddir)/src/zyre_selftest
 
 # Run the selftest binary under valgrind to check for performance leaks
 callcheck: src/zyre_selftest
 	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
-		$(srcdir)/src/zyre_selftest
+		$(builddir)/src/zyre_selftest
 
 # Run the selftest binary under gdb for debugging
 debug: src/zyre_selftest
 	$(LIBTOOL) --mode=execute gdb -q \
-		$(srcdir)/src/zyre_selftest
+		$(builddir)/src/zyre_selftest
 
 # Run the selftest binary with verbose switch for tracing
 animate: src/zyre_selftest
-	$(LIBTOOL) --mode=execute $(srcdir)/src/zyre_selftest -v
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v
 
 if WITH_GCOV
 coverage: src/zyre_selftest

@@ -141,6 +141,20 @@ QZsock* QZsock::newDish (const QString &endpoint, QObject *qObjParent)
 }
 
 ///
+//  Create a GATHER socket. Default action is bind.
+QZsock* QZsock::newGather (const QString &endpoint, QObject *qObjParent)
+{
+    return new QZsock (zsock_new_gather (endpoint.toUtf8().data()), qObjParent);
+}
+
+///
+//  Create a SCATTER socket. Default action is connect.
+QZsock* QZsock::newScatter (const QString &endpoint, QObject *qObjParent)
+{
+    return new QZsock (zsock_new_scatter (endpoint.toUtf8().data()), qObjParent);
+}
+
+///
 //  Destroy the socket. You must use this for any socket created via the
 //  zsock_new method.                                                   
 QZsock::~QZsock ()
@@ -473,18 +487,18 @@ void QZsock::setHeartbeatTimeout (int heartbeatTimeout)
 }
 
 ///
-//  Get socket option `pre_allocated_fd`.
-int QZsock::preAllocatedFd ()
+//  Get socket option `use_fd`.
+int QZsock::useFd ()
 {
-    int rv = zsock_pre_allocated_fd (self);
+    int rv = zsock_use_fd (self);
     return rv;
 }
 
 ///
-//  Set socket option `pre_allocated_fd`.
-void QZsock::setPreAllocatedFd (int preAllocatedFd)
+//  Set socket option `use_fd`.
+void QZsock::setUseFd (int useFd)
 {
-    zsock_set_pre_allocated_fd (self, preAllocatedFd);
+    zsock_set_use_fd (self, useFd);
     
 }
 
