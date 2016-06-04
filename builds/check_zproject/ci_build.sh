@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-cd ..
+cd $REPO_DIR/..
 git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
 git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
 cd -
