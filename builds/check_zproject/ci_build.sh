@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -ex
 
-cd $REPO_DIR/..
+cd ..
 git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
 git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
+cd -
 
 git clone --quiet --depth 1 https://github.com/zeromq/zproject
 cd zproject
@@ -35,4 +36,3 @@ export PATH=$PATH:`pwd`
         exit 1
     fi
 }
-
