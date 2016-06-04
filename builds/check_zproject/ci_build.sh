@@ -4,9 +4,20 @@ set -ex
 cd $REPO_DIR/..
 git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
 git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
-cd -
+git clone --quiet --depth 1 https://github.com/zeromq/zproject
+cd zproject
+export PATH=$PATH:`pwd`
 
-docker run -v "$REPO_DIR":/gsl zeromqorg/zproject project.xml
+cd -
+git clone https://github.com/imatix/gsl.git
+cd gsl/src
+make && make install
+export PATH=$PATH:`pwd`
+
+cd $REPO_DIR
+gsl project.xml
+
+#docker run -v "$REPO_DIR":/gsl zeromqorg/zproject project.xml
 
 # keep an eye on git version used by CI
 git --version
@@ -20,3 +31,4 @@ if [[ $(git status -s) ]]; then
     echo "zproject generated new files!"
     exit 1
 fi
+ 
