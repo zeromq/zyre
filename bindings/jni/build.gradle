@@ -5,14 +5,19 @@
 ################################################################################
 */
 
-apply plugin: 'java'
-apply plugin: 'maven'
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id "com.jfrog.bintray" version "1.6"
+}
+
 group = "org.zeromq"
 version = "1.1.0"
 
 repositories {
     mavenLocal()
     mavenCentral()
+    jcenter()
 }
 
 sourceCompatibility = 1.7
@@ -25,7 +30,7 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.8'
+    gradleVersion = '2.13'
 }
 
 //  ------------------------------------------------------------------
@@ -54,7 +59,7 @@ jar.dependsOn buildNative
 test.dependsOn buildNative
 
 //  ------------------------------------------------------------------
-//  Install section
+//  Install and Publish section
 
 task sourcesJar(type: Jar, dependsOn: 'classes') {
     classifier = 'sources'
@@ -66,9 +71,51 @@ task javadocJar(type: Jar, dependsOn: 'javadoc') {
     from javadoc.destinationDir
 }
 
-artifacts {
-    archives sourcesJar
-    archives javadocJar
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom.withXml {
+                asNode().appendNode('packaging', 'jar')
+                asNode().appendNode('name', 'zyre-jni')
+                asNode().appendNode('description', 'an open-source framework for proximity-based P2P apps')
+                asNode().appendNode('url', 'http://github.com/zeromq/zyre')
+
+                def license = asNode().appendNode('licenses').appendNode('license')
+                license.appendNode('name', 'Mozilla Public License Version 2.0')
+                license.appendNode('url', 'https://www.mozilla.org/en-US/MPL/2.0/')
+
+                def scm = asNode().appendNode('scm')
+                scm.appendNode('connection', 'http://github.com/zeromq/zyre.git')
+                scm.appendNode('developerConnection', 'http://github.com/zeromq/zyre.git')
+                scm.appendNode('url', 'http://github.com/zeromq/zyre')
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publications = ['mavenJava']
+    publish = true
+    pkg {
+        repo = "maven"
+        name = "zyre-jni"
+        desc = "an open-source framework for proximity-based P2P apps"
+        userOrg = System.getenv('BINTRAY_USER_ORG')
+        licenses = ["MPL-2.0"]
+        websiteUrl = 'http://github.com/zeromq/zyre'
+        issueTrackerUrl = 'http://github.com/zeromq/zyre/issues'
+        vcsUrl = 'http://github.com/zeromq/zyre.git'
+        githubRepo = System.getenv('BINTRAY_USER_ORG') + '/zyre'
+        version {
+            name = '1.1.0'
+            vcsTag= '1.1.0'
+        }
+    }
 }
 
 //  ------------------------------------------------------------------
@@ -76,4 +123,5 @@ artifacts {
 
 clean.doFirst {
     delete "${rootDir}/CMakeCache.txt"
+    delete "${rootDir}/libczmqjni.so"
 }

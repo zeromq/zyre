@@ -38,6 +38,12 @@
 #if defined (__WINDOWS__)
 #   if defined ZYRE_STATIC
 #       define ZYRE_EXPORT
+#   elif defined ZYRE_INTERNAL_BUILD
+#       if defined DLL_EXPORT
+#           define ZYRE_EXPORT __declspec(dllexport)
+#       else
+#           define ZYRE_EXPORT
+#       endif
 #   elif defined ZYRE_EXPORTS
 #       define ZYRE_EXPORT __declspec(dllexport)
 #   else

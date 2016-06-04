@@ -209,7 +209,7 @@ AC_MSG_CHECKING([whether to install manpages])
 AC_MSG_RESULT([$zyre_install_man])
 
 # Set some default features required by libzyre code.
-CPPFLAGS="-D_REENTRANT -D_THREAD_SAFE $CPPFLAGS"
+CPPFLAGS="-DZYRE_INTERNAL_BUILD -D_REENTRANT -D_THREAD_SAFE $CPPFLAGS"
 
 # OS-specific tests
 case "${host_os}" in
@@ -264,6 +264,16 @@ case "${host_os}" in
         AC_DEFINE(ZYRE_HAVE_HPUX, 1, [Have HPUX OS])
         ;;
     *mingw32*)
+        AC_DEFINE(ZYRE_HAVE_WINDOWS, 1, [Have Windows OS])
+        AC_DEFINE(ZYRE_HAVE_MINGW32, 1, [Have MinGW32])
+        AC_CHECK_HEADERS(windows.h)
+        zyre_on_mingw32="yes"
+        zyre_install_man="no"
+        ;;
+    *mingw64*)
+        # Define on MINGW64 to enable all libeary features
+        # Disable format error due to incomplete ANSI C
+        CPPFLAGS="-Wno-error=format -D_XOPEN_SOURCE $CPPFLAGS"
         AC_DEFINE(ZYRE_HAVE_WINDOWS, 1, [Have Windows OS])
         AC_DEFINE(ZYRE_HAVE_MINGW32, 1, [Have MinGW32])
         AC_CHECK_HEADERS(windows.h)
