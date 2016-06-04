@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -ex
 
+cd ..
+git clone -depth 1 http://github.com/zeromq/libzmq
+git clone -depth 1 http://github.com/zeromq/libczmq
+cd -
+
 docker run -v "$REPO_DIR":/gsl zeromqorg/zproject project.xml
 
 # keep an eye on git version used by CI
