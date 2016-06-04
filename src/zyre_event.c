@@ -274,6 +274,8 @@ zyre_event_test (bool verbose)
     zyre_t *node1 = zyre_new ("node1");
     assert (node1);
     zyre_set_header (node1, "X-HELLO", "World");
+    // use gossiping instead of beaconing, suits Travis better
+    zyre_gossip_bind (node1, "inproc://gossip-hub");
     if (verbose)
         zyre_set_verbose (node1);
     if (zyre_start (node1)) {
@@ -287,6 +289,8 @@ zyre_event_test (bool verbose)
     assert (node2);
     if (verbose)
         zyre_set_verbose (node2);
+    // use gossiping instead of beaconing, suits Travis better
+    zyre_gossip_connect (node2, "inproc://gossip-hub");
     int rc = zyre_start (node2);
     assert (rc == 0);
     zyre_join (node2, "GLOBAL");
