@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
-cd ..
-git clone -depth 1 http://github.com/zeromq/libzmq
-git clone -depth 1 http://github.com/zeromq/libczmq
-cd -
+git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
+git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
 
 docker run -v "$REPO_DIR":/gsl zeromqorg/zproject project.xml
 
