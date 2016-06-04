@@ -11,7 +11,7 @@ export PATH=$PATH:`pwd`
 cd -
 git clone https://github.com/imatix/gsl.git
 cd gsl/src
-make && make install
+make
 export PATH=$PATH:`pwd`
 
 cd $REPO_DIR
