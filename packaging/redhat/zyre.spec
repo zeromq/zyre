@@ -16,14 +16,16 @@ Version:        1.1.0
 Release:        1
 Summary:        an open-source framework for proximity-based p2p apps
 License:        MIT
-URL:            http://example.com/
+URL:            http://github.com/zeromq/zyre
 Source0:        %{name}-%{version}.tar.gz
 Group:          System/Libraries
+BuildRequires:  asciidoc
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
 BuildRequires:  pkg-config
 BuildRequires:  systemd-devel
+BuildRequires:  xmlto
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -62,6 +64,8 @@ This package contains development files.
 %{_includedir}/*
 %{_libdir}/libzyre.so
 %{_libdir}/pkgconfig/libzyre.pc
+%{_mandir}/man3/*
+%{_mandir}/man7/*
 
 %prep
 %setup -q
@@ -83,5 +87,6 @@ find %{buildroot} -name '*.la' | xargs rm -f
 %doc README.md
 %doc README.txt
 %{_bindir}/zpinger
+%{_mandir}/man1/zpinger*
 
 %changelog
