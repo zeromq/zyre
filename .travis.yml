@@ -27,15 +27,24 @@ matrix:
     env: BUILD_TYPE=check_zproject
   - os: osx
     env: BUILD_TYPE=bindings BINDING=jni
+  include:
+  - env: BUILD_TYPE=valgrind
+    os: linux
+    dist: trusty
+    sudo: required
+    addons:
+      apt:
+        packages:
+        - uuid-dev
+        - valgrind
 
 addons:
   apt:
     packages:
     - uuid-dev
-    - valgrind
 
 before_install:
-- if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils valgrind ; fi
+- if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils ; fi
 
 # Build and check this project according to the BUILD_TYPE
 script: ./ci_build.sh
