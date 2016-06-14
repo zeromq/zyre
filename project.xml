@@ -4,6 +4,7 @@
     script = "zproject.gsl"
     email = "zeromq-dev@lists.zeromq.org"
     url = "http://github.com/zeromq/zyre"
+    repository = "http://github.com/zeromq/zyre"
     >
     <include filename = "license.xml" />
     <version major = "1" minor = "1" patch = "0" />
