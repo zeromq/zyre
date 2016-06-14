@@ -63,14 +63,14 @@ const char *
 void
     zyre_set_header (zyre_t *self, const char *name, const char *format, ...);
 
-// Set verbose mode; this tells the node to log all traffic as well as 
-// all major events.                                                   
+// Set verbose mode; this tells the node to log all traffic as well as
+// all major events.                                                  
 void
     zyre_set_verbose (zyre_t *self);
 
-// Set UDP beacon discovery port; defaults to 5670, this call overrides 
-// that so you can create independent clusters on the same network, for 
-// e.g. development vs. production. Has no effect after zyre_start().   
+// Set UDP beacon discovery port; defaults to 5670, this call overrides
+// that so you can create independent clusters on the same network, for
+// e.g. development vs. production. Has no effect after zyre_start().  
 void
     zyre_set_port (zyre_t *self, int port_nbr);
 
@@ -158,6 +158,10 @@ int
 zlist_t *
     zyre_peers (zyre_t *self);
 
+// Return zlist of current peers of this group.
+zlist_t *
+    zyre_peers_by_group (zyre_t *self, const char *name);
+
 // Return zlist of currently joined groups.
 zlist_t *
     zyre_own_groups (zyre_t *self);
@@ -170,8 +174,8 @@ zlist_t *
 char *
     zyre_peer_address (zyre_t *self, const char *peer);
 
-// Return the value of a header of a conected peer. 
-// Returns null if peer or key doesn't exits.       
+// Return the value of a header of a conected peer.
+// Returns null if peer or key doesn't exits.      
 char *
     zyre_peer_header_value (zyre_t *self, const char *peer, const char *name);
 

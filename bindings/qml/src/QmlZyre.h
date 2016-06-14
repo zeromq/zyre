@@ -38,13 +38,13 @@ public slots:
     //  and come in each ENTER message.                                    
     void setHeader (const QString &name, const QString &format);
 
-    //  Set verbose mode; this tells the node to log all traffic as well as 
-    //  all major events.                                                   
+    //  Set verbose mode; this tells the node to log all traffic as well as
+    //  all major events.                                                  
     void setVerbose ();
 
-    //  Set UDP beacon discovery port; defaults to 5670, this call overrides 
-    //  that so you can create independent clusters on the same network, for 
-    //  e.g. development vs. production. Has no effect after zyre_start().   
+    //  Set UDP beacon discovery port; defaults to 5670, this call overrides
+    //  that so you can create independent clusters on the same network, for
+    //  e.g. development vs. production. Has no effect after zyre_start().  
     void setPort (int portNbr);
 
     //  Set UDP beacon discovery interval, in milliseconds. Default is instant
@@ -116,6 +116,9 @@ public slots:
     //  Return zlist of current peer ids.
     zlist_t *peers ();
 
+    //  Return zlist of current peers of this group.
+    zlist_t *peersByGroup (const QString &name);
+
     //  Return zlist of currently joined groups.
     zlist_t *ownGroups ();
 
@@ -125,8 +128,8 @@ public slots:
     //  Return the endpoint of a connected peer.
     QString peerAddress (const QString &peer);
 
-    //  Return the value of a header of a conected peer. 
-    //  Returns null if peer or key doesn't exits.       
+    //  Return the value of a header of a conected peer.
+    //  Returns null if peer or key doesn't exits.      
     QString peerHeaderValue (const QString &peer, const QString &name);
 
     //  Return socket for talking to the Zyre node, for polling

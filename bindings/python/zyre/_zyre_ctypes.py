@@ -93,6 +93,8 @@ lib.zyre_shouts.restype = c_int
 lib.zyre_shouts.argtypes = [zyre_p, c_char_p, c_char_p]
 lib.zyre_peers.restype = czmq.zlist_p
 lib.zyre_peers.argtypes = [zyre_p]
+lib.zyre_peers_by_group.restype = czmq.zlist_p
+lib.zyre_peers_by_group.argtypes = [zyre_p, c_char_p]
 lib.zyre_own_groups.restype = czmq.zlist_p
 lib.zyre_own_groups.argtypes = [zyre_p]
 lib.zyre_peer_groups.restype = czmq.zlist_p
@@ -183,15 +185,15 @@ and come in each ENTER message.
 
     def set_verbose(self):
         """
-        Set verbose mode; this tells the node to log all traffic as well as 
+        Set verbose mode; this tells the node to log all traffic as well as
 all major events.
         """
         return lib.zyre_set_verbose(self._as_parameter_)
 
     def set_port(self, port_nbr):
         """
-        Set UDP beacon discovery port; defaults to 5670, this call overrides 
-that so you can create independent clusters on the same network, for 
+        Set UDP beacon discovery port; defaults to 5670, this call overrides
+that so you can create independent clusters on the same network, for
 e.g. development vs. production. Has no effect after zyre_start().
         """
         return lib.zyre_set_port(self._as_parameter_, port_nbr)
@@ -310,6 +312,12 @@ Destroys message after sending
         """
         return czmq.Zlist(lib.zyre_peers(self._as_parameter_), True)
 
+    def peers_by_group(self, name):
+        """
+        Return zlist of current peers of this group.
+        """
+        return czmq.Zlist(lib.zyre_peers_by_group(self._as_parameter_, name), True)
+
     def own_groups(self):
         """
         Return zlist of currently joined groups.
@@ -330,7 +338,7 @@ Destroys message after sending
 
     def peer_header_value(self, peer, name):
         """
-        Return the value of a header of a conected peer. 
+        Return the value of a header of a conected peer.
 Returns null if peer or key doesn't exits.
         """
         return return_fresh_string(lib.zyre_peer_header_value(self._as_parameter_, peer, name))

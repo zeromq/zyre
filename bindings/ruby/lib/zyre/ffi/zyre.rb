@@ -129,8 +129,8 @@ module Zyre
         result
       end
 
-      # Set verbose mode; this tells the node to log all traffic as well as 
-      # all major events.                                                   
+      # Set verbose mode; this tells the node to log all traffic as well as
+      # all major events.                                                  
       #
       # @return [void]
       def set_verbose()
@@ -140,9 +140,9 @@ module Zyre
         result
       end
 
-      # Set UDP beacon discovery port; defaults to 5670, this call overrides 
-      # that so you can create independent clusters on the same network, for 
-      # e.g. development vs. production. Has no effect after zyre_start().   
+      # Set UDP beacon discovery port; defaults to 5670, this call overrides
+      # that so you can create independent clusters on the same network, for
+      # e.g. development vs. production. Has no effect after zyre_start().  
       #
       # @param port_nbr [Integer, #to_int, #to_i]
       # @return [void]
@@ -349,6 +349,17 @@ module Zyre
         result
       end
 
+      # Return zlist of current peers of this group.
+      #
+      # @param name [String, #to_s, nil]
+      # @return [::FFI::Pointer]
+      def peers_by_group(name)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_peers_by_group(self_p, name)
+        result
+      end
+
       # Return zlist of currently joined groups.
       #
       # @return [::FFI::Pointer]
@@ -381,8 +392,8 @@ module Zyre
         result
       end
 
-      # Return the value of a header of a conected peer. 
-      # Returns null if peer or key doesn't exits.       
+      # Return the value of a header of a conected peer.
+      # Returns null if peer or key doesn't exits.      
       #
       # @param peer [String, #to_s, nil]
       # @param name [String, #to_s, nil]

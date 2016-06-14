@@ -28,16 +28,16 @@ void QmlZyre::setHeader (const QString &name, const QString &format) {
 };
 
 ///
-//  Set verbose mode; this tells the node to log all traffic as well as 
-//  all major events.                                                   
+//  Set verbose mode; this tells the node to log all traffic as well as
+//  all major events.                                                  
 void QmlZyre::setVerbose () {
     zyre_set_verbose (self);
 };
 
 ///
-//  Set UDP beacon discovery port; defaults to 5670, this call overrides 
-//  that so you can create independent clusters on the same network, for 
-//  e.g. development vs. production. Has no effect after zyre_start().   
+//  Set UDP beacon discovery port; defaults to 5670, this call overrides
+//  that so you can create independent clusters on the same network, for
+//  e.g. development vs. production. Has no effect after zyre_start().  
 void QmlZyre::setPort (int portNbr) {
     zyre_set_port (self, portNbr);
 };
@@ -157,6 +157,12 @@ zlist_t *QmlZyre::peers () {
 };
 
 ///
+//  Return zlist of current peers of this group.
+zlist_t *QmlZyre::peersByGroup (const QString &name) {
+    return zyre_peers_by_group (self, name.toUtf8().data());
+};
+
+///
 //  Return zlist of currently joined groups.
 zlist_t *QmlZyre::ownGroups () {
     return zyre_own_groups (self);
@@ -178,8 +184,8 @@ QString QmlZyre::peerAddress (const QString &peer) {
 };
 
 ///
-//  Return the value of a header of a conected peer. 
-//  Returns null if peer or key doesn't exits.       
+//  Return the value of a header of a conected peer.
+//  Returns null if peer or key doesn't exits.      
 QString QmlZyre::peerHeaderValue (const QString &peer, const QString &name) {
     char *retStr_ = zyre_peer_header_value (self, peer.toUtf8().data(), name.toUtf8().data());
     QString retQStr_ = QString (retStr_);

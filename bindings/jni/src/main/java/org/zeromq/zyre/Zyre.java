@@ -64,17 +64,17 @@ public class Zyre implements AutoCloseable{
         __setHeader (self, name, format);
     }
     /*
-    Set verbose mode; this tells the node to log all traffic as well as 
-    all major events.                                                   
+    Set verbose mode; this tells the node to log all traffic as well as
+    all major events.                                                  
     */
     native static void __setVerbose (long self);
     public void setVerbose () {
         __setVerbose (self);
     }
     /*
-    Set UDP beacon discovery port; defaults to 5670, this call overrides 
-    that so you can create independent clusters on the same network, for 
-    e.g. development vs. production. Has no effect after zyre_start().   
+    Set UDP beacon discovery port; defaults to 5670, this call overrides
+    that so you can create independent clusters on the same network, for
+    e.g. development vs. production. Has no effect after zyre_start().  
     */
     native static void __setPort (long self, int portNbr);
     public void setPort (int portNbr) {
@@ -210,6 +210,13 @@ public class Zyre implements AutoCloseable{
         return new Zlist (__peers (self));
     }
     /*
+    Return zlist of current peers of this group.
+    */
+    native static long __peersByGroup (long self, String name);
+    public Zlist peersByGroup (String name) {
+        return new Zlist (__peersByGroup (self, name));
+    }
+    /*
     Return zlist of currently joined groups.
     */
     native static long __ownGroups (long self);
@@ -231,8 +238,8 @@ public class Zyre implements AutoCloseable{
         return __peerAddress (self, peer);
     }
     /*
-    Return the value of a header of a conected peer. 
-    Returns null if peer or key doesn't exits.       
+    Return the value of a header of a conected peer.
+    Returns null if peer or key doesn't exits.      
     */
     native static String __peerHeaderValue (long self, String peer, String name);
     public String peerHeaderValue (String peer, String name) {
