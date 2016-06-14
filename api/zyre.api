@@ -42,13 +42,13 @@
     </method>
 
     <method name = "set verbose">
-        Set verbose mode; this tells the node to log all traffic as well as 
+        Set verbose mode; this tells the node to log all traffic as well as
         all major events.
     </method>
 
     <method name = "set port">
-        Set UDP beacon discovery port; defaults to 5670, this call overrides 
-        that so you can create independent clusters on the same network, for 
+        Set UDP beacon discovery port; defaults to 5670, this call overrides
+        that so you can create independent clusters on the same network, for
         e.g. development vs. production. Has no effect after zyre_start().
         <argument name = "port nbr" type = "integer" />
     </method>
@@ -90,7 +90,7 @@
     <method name = "gossip connect">
         Set-up gossip discovery of other nodes. A node may connect to multiple
         other nodes, for redundancy paths. For details of the gossip network
-        design, see the CZMQ zgossip class. 
+        design, see the CZMQ zgossip class.
         <argument name = "format" type = "format" />
     </method>
 
@@ -158,29 +158,35 @@
     </method>
 
     <method name = "peers">
-        Return zlist of current peer ids. 
+        Return zlist of current peer ids.
+        <return type = "zlist" fresh = "1" />
+    </method>
+
+    <method name = "peers by group">
+        Return zlist of current peers of this group.
+        <argument name = "name" type = "string" />
         <return type = "zlist" fresh = "1" />
     </method>
 
     <method name = "own groups">
-        Return zlist of currently joined groups. 
+        Return zlist of currently joined groups.
         <return type = "zlist" fresh = "1" />
     </method>
 
     <method name = "peer groups">
-        Return zlist of groups known through connected peers. 
+        Return zlist of groups known through connected peers.
         <return type = "zlist" fresh = "1" />
     </method>
 
     <method name = "peer address">
-        Return the endpoint of a connected peer. 
+        Return the endpoint of a connected peer.
         <argument name = "peer" type = "string" />
         <return type = "string" fresh = "1" />
     </method>
 
     <method name = "peer header value">
-        Return the value of a header of a conected peer. 
-        Returns null if peer or key doesn't exits. 
+        Return the value of a header of a conected peer.
+        Returns null if peer or key doesn't exits.
         <argument name = "peer" type = "string" />
         <argument name = "name" type = "string" />
         <return type = "string" fresh = "1" />

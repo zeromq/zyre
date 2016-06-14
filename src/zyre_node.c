@@ -295,8 +295,11 @@ zyre_node_dump (zyre_node_t *self)
     zsys_info (" - peers=%zu:", zhash_size (self->peers));
     zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_log_item, self);
 
-    zsys_info (" - groups=%zu:", zhash_size (self->own_groups));
+    zsys_info (" - own groups=%zu:", zhash_size (self->own_groups));
     zhash_foreach (self->own_groups, (zhash_foreach_fn *) zyre_node_log_item, self);
+
+    zsys_info (" - peer groups=%zu:", zhash_size (self->peer_groups));
+    zhash_foreach (self->peer_groups, (zhash_foreach_fn *) zyre_node_log_item, self);
 }
 
 
@@ -446,6 +449,17 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "PEERS"))
         zsock_send (self->pipe, "p", zhash_keys (self->peers));
+    else
+    if (streq (command, "GROUP PEERS")) {
+        char *name = zmsg_popstr (request);
+        zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->own_groups, name);
+        if (group)
+            zsock_send (self->pipe, "p", zyre_group_peers (group));
+        else
+            zsock_send (self->pipe, "p", NULL);
+
+        zstr_free (&name);
+    }
     else
     if (streq (command, "PEER ENDPOINT")) {
         char *uuid = zmsg_popstr (request);

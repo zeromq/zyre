@@ -450,6 +450,22 @@ zyre_peers (zyre_t *self)
     return peers;
 }
 
+
+//  --------------------------------------------------------------------------
+//  Return zlist of current peers of this group. The caller owns this list and
+//  should destroy it when finished with it.
+
+zlist_t *
+zyre_peers_by_group (zyre_t *self, const char *group)
+{
+    zlist_t *peers;
+    zstr_sendm (self->actor, "GROUP PEERS");
+    zstr_send (self->actor, group);
+    zsock_recv (self->actor, "p", &peers);
+    return peers;
+}
+
+
 //  --------------------------------------------------------------------------
 //  Return the endpoint of a connected peer. Caller owns the string.
 

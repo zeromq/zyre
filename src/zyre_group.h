@@ -42,6 +42,11 @@ void
 void
     zyre_group_send (zyre_group_t *self, zre_msg_t **msg_p);
 
+//  Return zlist of peer ids currently in this group
+//  Caller owns return value and must destroy it when done.
+zlist_t *
+   zyre_group_peers (zyre_group_t *self);
+
 //  Self test of this class
 ZYRE_EXPORT void
     zyre_group_test (bool verbose);
