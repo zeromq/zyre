@@ -53,6 +53,7 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "whispers", _whispers);
     Nan::SetPrototypeMethod (tpl, "shouts", _shouts);
     Nan::SetPrototypeMethod (tpl, "peers", _peers);
+    Nan::SetPrototypeMethod (tpl, "peersByGroup", _peers_by_group);
     Nan::SetPrototypeMethod (tpl, "ownGroups", _own_groups);
     Nan::SetPrototypeMethod (tpl, "peerGroups", _peer_groups);
     Nan::SetPrototypeMethod (tpl, "peerAddress", _peer_address);
@@ -379,6 +380,28 @@ NAN_METHOD (Zyre::_shouts) {
 NAN_METHOD (Zyre::_peers) {
     Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
     zlist_t *result = zyre_peers (zyre->self);
+    Zlist *zlist_result = new Zlist (result);
+    if (zlist_result) {
+    //  Don't yet know how to return a new object
+    //      zlist->Wrap (info.This ());
+    //      info.GetReturnValue ().Set (info.This ());
+        info.GetReturnValue ().Set (Nan::New<Boolean>(true));
+    }
+}
+
+NAN_METHOD (Zyre::_peers_by_group) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *name;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `name`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`name` must be a string");
+    else {
+        Nan::Utf8String name_utf8 (info [0].As<String>());
+        name = *name_utf8;
+    }
+    zlist_t *result = zyre_peers_by_group (zyre->self, (const char *)name);
     Zlist *zlist_result = new Zlist (result);
     if (zlist_result) {
     //  Don't yet know how to return a new object

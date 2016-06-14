@@ -119,6 +119,17 @@ zyre_group_send (zyre_group_t *self, zre_msg_t **msg_p)
 
 
 //  --------------------------------------------------------------------------
+//  Return zlist of peer ids currently in this group
+//  Caller owns return value and must destroy it when done.
+
+zlist_t *
+zyre_group_peers (zyre_group_t *self)
+{
+    return zhash_keys (self->peers);
+}
+
+
+//  --------------------------------------------------------------------------
 //  Self test of this class
 
 void

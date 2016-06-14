@@ -1,33 +1,38 @@
-FROM ubuntu:14.04
+FROM ubuntu:trusty
+MAINTAINER zyre Developers <zeromq-dev@lists.zeromq.org>
 
-MAINTAINER ZeroMQ Project <zeromq@imatix.com>
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -y -q
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y -q --force-yes build-essential git-core libtool autotools-dev autoconf automake pkg-config unzip libkrb5-dev cmake
 
-# Update repositories
-RUN apt-get update
+RUN useradd -d /home/zmq -m -s /bin/bash zmq
+RUN echo "zmq ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/zmq
+RUN chmod 0440 /etc/sudoers.d/zmq
 
-# Install dependencies to build ZeroMQ libraries
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y git build-essential libtool autoconf automake pkg-config unzip libkrb5-dev
+USER zmq
 
-# Clone, build and install libsodium support for ZeroMQ
-RUN cd /tmp && git clone git://github.com/jedisct1/libsodium.git && cd libsodium && git checkout e2a30a && ./autogen.sh && ./configure && make check && make install && ldconfig
+WORKDIR /home/zmq
+RUN git clone --quiet https://github.com/zeromq/libzmq.git
+WORKDIR /home/zmq/libzmq
+RUN ./autogen.sh 2> /dev/null
+RUN ./configure --quiet --without-docs
+RUN make
+RUN sudo make install
+RUN sudo ldconfig
 
-# Clone, build and install ZeroMQ
-RUN cd /tmp && git clone git://github.com/zeromq/libzmq.git && cd libzmq && ./autogen.sh && ./configure && make && make install && ldconfig
+WORKDIR /home/zmq
+RUN git clone --quiet https://github.com/zeromq/czmq.git
+WORKDIR /home/zmq/czmq
+RUN ./autogen.sh 2> /dev/null
+RUN ./configure --quiet --without-docs
+RUN make
+RUN sudo make install
+RUN sudo ldconfig
 
-# Clone, build and install CZMQ
-RUN cd /tmp && git clone git://github.com/zeromq/czmq.git && cd czmq && ./autogen.sh && ./configure && make && make install && ldconfig
-
-# Clone, build and install Zyre
-RUN cd /tmp && git clone git://github.com/zeromq/zyre.git && cd zyre && ./autogen.sh && ./configure && make && make install && ldconfig
-
-# Copy chat C-code to home directory
-RUN cp /tmp/zyre/examples/chat/chat.c ~/
-
-# Remove all temporary files
-RUN rm /tmp/* -rf 
-
-# Compile chat code
-RUN cd && gcc chat.c -lczmq -lzyre -o chat
-RUN cd && cp chat /usr/bin/
-# Run the chat client
-ENTRYPOINT ["chat"]
+WORKDIR /home/zmq
+RUN git clone --quiet git://github.com/zeromq/zyre.git
+WORKDIR /home/zmq/zyre
+RUN ./autogen.sh 2> /dev/null
+RUN ./configure --quiet --without-docs
+RUN make
+RUN sudo make install
+RUN sudo ldconfig

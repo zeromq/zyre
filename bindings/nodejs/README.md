@@ -83,15 +83,15 @@ and come in each ENTER message.
 nothing my_zyre.setVerbose ()
 ```
 
-Set verbose mode; this tells the node to log all traffic as well as 
+Set verbose mode; this tells the node to log all traffic as well as
 all major events.
 
 ```
 nothing my_zyre.setPort (Number)
 ```
 
-Set UDP beacon discovery port; defaults to 5670, this call overrides 
-that so you can create independent clusters on the same network, for 
+Set UDP beacon discovery port; defaults to 5670, this call overrides
+that so you can create independent clusters on the same network, for
 e.g. development vs. production. Has no effect after zyre_start().
 
 ```
@@ -209,6 +209,12 @@ zlist my_zyre.peers ()
 Return zlist of current peer ids.
 
 ```
+zlist my_zyre.peersByGroup (String)
+```
+
+Return zlist of current peers of this group.
+
+```
 zlist my_zyre.ownGroups ()
 ```
 
@@ -230,7 +236,7 @@ Return the endpoint of a connected peer.
 string my_zyre.peerHeaderValue (String, String)
 ```
 
-Return the value of a header of a conected peer. 
+Return the value of a header of a conected peer.
 Returns null if peer or key doesn't exits.
 
 ```

@@ -215,6 +215,14 @@ module Zyre
         end
       end
       begin # DRAFT method
+        attach_function :zyre_peers_by_group, [:pointer, :string], :pointer, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function zyre_peers_by_group() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
         attach_function :zyre_own_groups, [:pointer], :pointer, **opts
       rescue ::FFI::NotFoundError
         if $VERBOSE || $DEBUG
