@@ -299,7 +299,22 @@ zyre_node_dump (zyre_node_t *self)
     zhash_foreach (self->own_groups, (zhash_foreach_fn *) zyre_node_log_item, self);
 
     zsys_info (" - peer groups=%zu:", zhash_size (self->peer_groups));
-    zhash_foreach (self->peer_groups, (zhash_foreach_fn *) zyre_node_log_item, self);
+    zlist_t *groups = zhash_keys (self->peer_groups);
+    const char *group = (const char *) zlist_first (groups);
+    while (group) {
+        zsys_info ("   - %s", group);
+        zyre_group_t *rgroup = (zyre_group_t *) zhash_lookup (self->peer_groups, group);
+        zlist_t *neighbors = zyre_group_peers (rgroup);
+        char *neighbor = (char *) zlist_first (neighbors);
+        while (neighbor) {
+            zsys_info ("     - %s", neighbor);
+            neighbor = (char *) zlist_next (neighbors);
+        }
+        zlist_destroy (&neighbors);
+        group = (const char *) zlist_next (groups);
+    }
+    zlist_destroy (&groups);
+
 }
 
 
