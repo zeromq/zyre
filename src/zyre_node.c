@@ -37,7 +37,7 @@ struct _zyre_node_t {
     byte status;                //  Our own change counter
     zhash_t *peers;             //  Hash of known peers, fast lookup
     zhash_t *peer_groups;       //  Groups that our peers are in
-    zhash_t *own_groups;        //  Groups that we are in
+    zlist_t *own_groups;        //  Groups that we are in
     zhash_t *headers;           //  Our header values
     zactor_t *gossip;           //  Gossip discovery service, if any
     char *gossip_bind;          //  Gossip bind endpoint, if any
@@ -60,6 +60,16 @@ typedef struct {
     uint16_t port;
 } beacon_t;
 
+//  --------------------------------------------------------------------------
+//  Local helper
+
+static int
+s_string_compare (void *item1, void *item2)
+{
+    const char *str1 = (const char *) item1;
+    const char *str2 = (const char *) item2;
+    return strcmp (str1, str2);
+}
 
 //  --------------------------------------------------------------------------
 //  Constructor
@@ -86,7 +96,9 @@ zyre_node_new (zsock_t *pipe, void *args)
     self->uuid = zuuid_new ();
     self->peers = zhash_new ();
     self->peer_groups = zhash_new ();
-    self->own_groups = zhash_new ();
+    self->own_groups = zlist_new ();
+    zlist_autofree (self->own_groups);
+    zlist_comparefn (self->own_groups, s_string_compare);
     self->headers = zhash_new ();
     zhash_autofree (self->headers);
 
@@ -111,7 +123,7 @@ zyre_node_destroy (zyre_node_t **self_p)
         zuuid_destroy (&self->uuid);
         zhash_destroy (&self->peers);
         zhash_destroy (&self->peer_groups);
-        zhash_destroy (&self->own_groups);
+        zlist_destroy (&self->own_groups);
         zhash_destroy (&self->headers);
         zsock_destroy (&self->inbox);
         zsock_destroy (&self->outbox);
@@ -295,12 +307,16 @@ zyre_node_dump (zyre_node_t *self)
     zsys_info (" - peers=%zu:", zhash_size (self->peers));
     zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_log_item, self);
 
-    zsys_info (" - own groups=%zu:", zhash_size (self->own_groups));
-    zhash_foreach (self->own_groups, (zhash_foreach_fn *) zyre_node_log_item, self);
+    zsys_info (" - own groups=%zu:", zlist_size (self->own_groups));
+    const char *group = (const char *) zlist_first (self->own_groups);
+    while (group) {
+        zsys_info ("   - %s", group);
+        group = (const char *) zlist_next (self->own_groups);
+    }
 
     zsys_info (" - peer groups=%zu:", zhash_size (self->peer_groups));
     zlist_t *groups = zhash_keys (self->peer_groups);
-    const char *group = (const char *) zlist_first (groups);
+    group = (const char *) zlist_first (groups);
     while (group) {
         zsys_info ("   - %s", group);
         zyre_group_t *rgroup = (zyre_group_t *) zhash_lookup (self->peer_groups, group);
@@ -428,10 +444,9 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "JOIN")) {
         char *name = zmsg_popstr (request);
-        zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->own_groups, name);
-        if (!group) {
+        if (!zlist_exists (self->own_groups, name)) {
             //  Only send if we're not already in group
-            group = zyre_group_new (name, self->own_groups);
+            zlist_append (self->own_groups, name);
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_JOIN);
             zre_msg_set_group (msg, name);
             //  Update status before sending command
@@ -446,8 +461,7 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "LEAVE")) {
         char *name = zmsg_popstr (request);
-        zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->own_groups, name);
-        if (group) {
+        if (zlist_exists (self->own_groups, name)) {
             //  Only send if we are actually in group
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_LEAVE);
             zre_msg_set_group (msg, name);
@@ -455,7 +469,7 @@ zyre_node_recv_api (zyre_node_t *self)
             zre_msg_set_status (msg, ++(self->status));
             zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_send_peer, msg);
             zre_msg_destroy (&msg);
-            zhash_delete (self->own_groups, name);
+            zlist_remove (self->own_groups, name);
             if (self->verbose)
                 zsys_info ("(%s) LEAVE group=%s", self->name, name);
         }
@@ -467,7 +481,7 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "GROUP PEERS")) {
         char *name = zmsg_popstr (request);
-        zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->own_groups, name);
+        zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->peer_groups, name);
         if (group)
             zsock_send (self->pipe, "p", zyre_group_peers (group));
         else
@@ -508,7 +522,7 @@ zyre_node_recv_api (zyre_node_t *self)
         zsock_send (self->pipe, "p", zhash_keys (self->peer_groups));
     else
     if (streq (command, "OWN GROUPS"))
-        zsock_send (self->pipe, "p", zhash_keys (self->own_groups));
+        zsock_send (self->pipe, "p", zlist_dup (self->own_groups));
     else
     if (streq (command, "DUMP"))
         zyre_node_dump (self);
@@ -555,7 +569,7 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         zyre_peer_connect (peer, self->uuid, endpoint);
 
         //  Handshake discovery by sending HELLO as first message
-        zlist_t *groups = zhash_keys (self->own_groups);
+        zlist_t *groups = zlist_dup (self->own_groups);
         zhash_t *headers = zhash_dup (self->headers);
         zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
         zre_msg_set_endpoint (msg, self->endpoint);
