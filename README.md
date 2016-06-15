@@ -23,12 +23,12 @@
 **<a href="#toc3-181">Linking with an Application</a>**
 
 **<a href="#toc3-188">API Summary</a>**
-&emsp;<a href="#toc4-193">zyre - API wrapping one Zyre node</a>
-&emsp;<a href="#toc4-573">zyre_event - no title found</a>
+*  <a href="#toc4-193"> - API wrapping one Zyre node</a>
+*  <a href="#toc4-578"> - no title found</a>
 
-**<a href="#toc3-718">Hints to Contributors</a>**
+**<a href="#toc3-737">Hints to Contributors</a>**
 
-**<a href="#toc3-729">This Document</a>**
+**<a href="#toc3-748">This Document</a>**
 
 <A name="toc2-13" title="Overview" />
 ## Overview
@@ -210,8 +210,8 @@ Include `zyre.h` in your application and link with libzyre. Here is a typical gc
 
 This is the API provided by Zyre 2.x, in alphabetical order.
 
-<A name="toc4-193" title="zyre - API wrapping one Zyre node" />
-#### zyre - API wrapping one Zyre node
+<A name="toc4-193" title=" - API wrapping one Zyre node" />
+####  - API wrapping one Zyre node
 
 Zyre does local area discovery and clustering. A Zyre node broadcasts
 UDP beacons, and connects to peers that it finds. This class wraps a
@@ -224,8 +224,8 @@ frames provide further values:
     ENTER fromnode name headers ipaddress:port
         a new peer has entered the network
     EVASIVE fromnode name
-	    a peer is being evasive (quiet for too long)
-	EXIT fromnode name
+        a peer is being evasive (quiet for too long)
+    EXIT fromnode name
         a peer has left the network
     JOIN fromnode name groupname
         a peer has joined a specific group
@@ -249,9 +249,7 @@ Todo: allow multipart contents
 
 This is the class interface:
 
-    //  This is a draft class, and may change without notice. It is disabled in
-    //  stable builds by default. If you use this in applications, please ask
-    //  for it to be pushed to stable state. Use --enable-drafts to enable.
+    //  This API is a draft, and may change without notice.
     #ifdef ZYRE_BUILD_DRAFT_API
     //  *** Draft method, for development use, may change without warning ***
     //  Constructor, creates a new Zyre node. Note that until you start the
@@ -284,15 +282,15 @@ This is the class interface:
         zyre_set_header (zyre_t *self, const char *name, const char *format, ...);
     
     //  *** Draft method, for development use, may change without warning ***
-    //  Set verbose mode; this tells the node to log all traffic as well as 
-    //  all major events.                                                   
+    //  Set verbose mode; this tells the node to log all traffic as well as
+    //  all major events.                                                  
     ZYRE_EXPORT void
         zyre_set_verbose (zyre_t *self);
     
     //  *** Draft method, for development use, may change without warning ***
-    //  Set UDP beacon discovery port; defaults to 5670, this call overrides 
-    //  that so you can create independent clusters on the same network, for 
-    //  e.g. development vs. production. Has no effect after zyre_start().   
+    //  Set UDP beacon discovery port; defaults to 5670, this call overrides
+    //  that so you can create independent clusters on the same network, for
+    //  e.g. development vs. production. Has no effect after zyre_start().  
     ZYRE_EXPORT void
         zyre_set_port (zyre_t *self, int port_nbr);
     
@@ -365,6 +363,7 @@ This is the class interface:
     //  Receive next message from network; the message may be a control
     //  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).   
     //  Returns zmsg_t object, or NULL if interrupted                  
+    //  Caller owns return value and must destroy it when done.
     ZYRE_EXPORT zmsg_t *
         zyre_recv (zyre_t *self);
     
@@ -397,6 +396,12 @@ This is the class interface:
         zyre_peers (zyre_t *self);
     
     //  *** Draft method, for development use, may change without warning ***
+    //  Return zlist of current peers of this group.
+    //  Caller owns return value and must destroy it when done.
+    ZYRE_EXPORT zlist_t *
+        zyre_peers_by_group (zyre_t *self, const char *name);
+    
+    //  *** Draft method, for development use, may change without warning ***
     //  Return zlist of currently joined groups.
     //  Caller owns return value and must destroy it when done.
     ZYRE_EXPORT zlist_t *
@@ -415,8 +420,8 @@ This is the class interface:
         zyre_peer_address (zyre_t *self, const char *peer);
     
     //  *** Draft method, for development use, may change without warning ***
-    //  Return the value of a header of a conected peer. 
-    //  Returns null if peer or key doesn't exits.       
+    //  Return the value of a header of a conected peer.
+    //  Returns null if peer or key doesn't exits.      
     //  Caller owns return value and must destroy it when done.
     ZYRE_EXPORT char *
         zyre_peer_header_value (zyre_t *self, const char *peer, const char *name);
@@ -432,9 +437,10 @@ This is the class interface:
         zyre_print (zyre_t *self);
     
     //  *** Draft method, for development use, may change without warning ***
-    //  Return the Zyre version for run-time API detection
-    ZYRE_EXPORT void
-        zyre_version (int *major, int *minor, int *patch);
+    //  Return the Zyre version for run-time API detection; returns
+    //  major * 10000 + minor * 100 + patch, as a single integer.  
+    ZYRE_EXPORT uint64_t
+        zyre_version (void);
     
     //  *** Draft method, for development use, may change without warning ***
     //  Self test of this class.
@@ -447,11 +453,10 @@ This is the class self test code:
 
     //  We'll use inproc gossip discovery so that this works without networking
     
-    int major, minor, patch;
-    zyre_version (&major, &minor, &patch);
-    assert (major == ZYRE_VERSION_MAJOR);
-    assert (minor == ZYRE_VERSION_MINOR);
-    assert (patch == ZYRE_VERSION_PATCH);
+    uint64_t version = zyre_version ();
+    assert ((version / 10000) % 100 == ZYRE_VERSION_MAJOR);
+    assert ((version / 100) % 100 == ZYRE_VERSION_MINOR);
+    assert (version % 100 == ZYRE_VERSION_PATCH);
     
     //  Create two nodes
     zyre_t *node1 = zyre_new ("node1");
@@ -590,8 +595,8 @@ This is the class self test code:
     zyre_destroy (&node1);
     zyre_destroy (&node2);
 
-<A name="toc4-573" title="zyre_event - no title found" />
-#### zyre_event - no title found
+<A name="toc4-578" title=" - no title found" />
+####  - no title found
 
 This class provides a higher-level API to the zyre_recv call, by doing
 work that you will want to do in many cases, such as unpacking the peer
@@ -652,9 +657,18 @@ This is the class interface:
         zyre_event_group (zyre_event_t *self);
     
     //  *** Draft method, for development use, may change without warning ***
-    //  Returns the incoming message payload
+    //  Returns the incoming message payload; the caller can modify the
+    //  message but does not own it and should not destroy it.         
     ZYRE_EXPORT zmsg_t *
         zyre_event_msg (zyre_event_t *self);
+    
+    //  *** Draft method, for development use, may change without warning ***
+    //  Returns the incoming message payload, and pass ownership to the   
+    //  caller. The caller must destroy the message when finished with it.
+    //  After called on the given event, further calls will return NULL.  
+    //  Caller owns return value and must destroy it when done.
+    ZYRE_EXPORT zmsg_t *
+        zyre_event_get_msg (zyre_event_t *self);
     
     //  *** Draft method, for development use, may change without warning ***
     //  Print event to zsys log
@@ -674,6 +688,8 @@ This is the class self test code:
     zyre_t *node1 = zyre_new ("node1");
     assert (node1);
     zyre_set_header (node1, "X-HELLO", "World");
+    // use gossiping instead of beaconing, suits Travis better
+    zyre_gossip_bind (node1, "inproc://gossip-hub");
     if (verbose)
         zyre_set_verbose (node1);
     if (zyre_start (node1)) {
@@ -687,6 +703,8 @@ This is the class self test code:
     assert (node2);
     if (verbose)
         zyre_set_verbose (node2);
+    // use gossiping instead of beaconing, suits Travis better
+    zyre_gossip_connect (node2, "inproc://gossip-hub");
     int rc = zyre_start (node2);
     assert (rc == 0);
     zyre_join (node2, "GLOBAL");
@@ -724,8 +742,9 @@ This is the class self test code:
         event = zyre_event_new (node2);
         if (streq (zyre_event_type (event), "SHOUT")) {
             assert (streq (zyre_event_group (event), "GLOBAL"));
-            msg = zyre_event_msg (event);
+            zmsg_t *msg = zyre_event_get_msg (event);
             char *string = zmsg_popstr (msg);
+            zmsg_destroy (&msg);
             assert (streq (string, "Hello, World"));
             free (string);
         }
@@ -735,7 +754,7 @@ This is the class self test code:
     zyre_destroy (&node2);
 
 
-<A name="toc3-718" title="Hints to Contributors" />
+<A name="toc3-737" title="Hints to Contributors" />
 ### Hints to Contributors
 
 Zyre is a nice, neat library, and you may not immediately appreciate why. Read the CLASS style guide please, and write your code to make it indistinguishable from the rest of the code in the library. That is the only real criteria for good style: it's invisible.
@@ -746,5 +765,7 @@ Do read your code after you write it and ask, "Can I make this simpler?" We do u
 
 Before opening a pull request read our [contribution guidelines](https://github.com/zeromq/zyre/blob/master/CONTRIBUTING.md). Thanks!
 
-<A name="toc3-729" title="This Document" />
+<A name="toc3-748" title="This Document" />
 ### This Document
+
+_This documentation was generated from zyre/README.txt using [Gitdown](https://github.com/zeromq/gitdown)_

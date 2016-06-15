@@ -14,10 +14,12 @@ Please add @interface section in ../src/zpinger.c.
 DESCRIPTION
 -----------
 
-zpinger tells you what other nodes are running. Use this to debug network
-issues.
+zpinger tells you what other Zyre nodes are running. Use this to debug
+network issues. Run with -v option to get more detail on Zyre's internal
+flow for each event.
 
-Please add @discuss section in ../src/zpinger.c.
+Note that this will detect and speak to Zyre nodes on the entire local
+network.
 
 EXAMPLE
 -------

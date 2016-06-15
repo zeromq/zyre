@@ -59,9 +59,18 @@ ZYRE_EXPORT const char *
     zyre_event_group (zyre_event_t *self);
 
 //  *** Draft method, for development use, may change without warning ***
-//  Returns the incoming message payload
+//  Returns the incoming message payload; the caller can modify the
+//  message but does not own it and should not destroy it.         
 ZYRE_EXPORT zmsg_t *
     zyre_event_msg (zyre_event_t *self);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Returns the incoming message payload, and pass ownership to the   
+//  caller. The caller must destroy the message when finished with it.
+//  After called on the given event, further calls will return NULL.  
+//  Caller owns return value and must destroy it when done.
+ZYRE_EXPORT zmsg_t *
+    zyre_event_get_msg (zyre_event_t *self);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Print event to zsys log
@@ -93,6 +102,8 @@ EXAMPLE
 zyre_t *node1 = zyre_new ("node1");
 assert (node1);
 zyre_set_header (node1, "X-HELLO", "World");
+// use gossiping instead of beaconing, suits Travis better
+zyre_gossip_bind (node1, "inproc://gossip-hub");
 if (verbose)
     zyre_set_verbose (node1);
 if (zyre_start (node1)) {
@@ -106,6 +117,8 @@ zyre_t *node2 = zyre_new ("node2");
 assert (node2);
 if (verbose)
     zyre_set_verbose (node2);
+// use gossiping instead of beaconing, suits Travis better
+zyre_gossip_connect (node2, "inproc://gossip-hub");
 int rc = zyre_start (node2);
 assert (rc == 0);
 zyre_join (node2, "GLOBAL");
@@ -143,8 +156,9 @@ if (streq (zyre_event_type (event), "JOIN")) {
     event = zyre_event_new (node2);
     if (streq (zyre_event_type (event), "SHOUT")) {
         assert (streq (zyre_event_group (event), "GLOBAL"));
-        msg = zyre_event_msg (event);
+        zmsg_t *msg = zyre_event_get_msg (event);
         char *string = zmsg_popstr (msg);
+        zmsg_destroy (&msg);
         assert (streq (string, "Hello, World"));
         free (string);
     }
