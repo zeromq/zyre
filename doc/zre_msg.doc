@@ -1,4 +1,4 @@
-####  - work with ZRE messages
+#### zre_msg - work with ZRE messages
 
 zre_msg - work with ZRE messages
 
@@ -6,6 +6,7 @@ Please add @discuss section in ../src/zre_msg.c.
 
 This is the class interface:
 
+```h
     //  Create a new zre_msg
     ZYRE_EXPORT zre_msg_t *
         zre_msg_new (int id);
@@ -259,9 +260,11 @@ This is the class interface:
     //  Self test of this class
     ZYRE_EXPORT void
         zre_msg_test (bool verbose);
+```
 
 This is the class self test code:
 
+```c
     //  Simple create/destroy test
     zre_msg_t *self = zre_msg_new (0);
     assert (self);
@@ -456,4 +459,5 @@ This is the class self test code:
     
     zsock_destroy (&input);
     zsock_destroy (&output);
+```
 

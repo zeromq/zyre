@@ -1,4 +1,4 @@
-####  - no title found
+#### zyre_event - no title found
 
 This class provides a higher-level API to the zyre_recv call, by doing
 work that you will want to do in many cases, such as unpacking the peer
@@ -8,6 +8,7 @@ Please add @discuss section in ../src/zyre_event.c.
 
 This is the class interface:
 
+```h
     //  This API is a draft, and may change without notice.
     #ifdef ZYRE_BUILD_DRAFT_API
     //  *** Draft method, for development use, may change without warning ***
@@ -83,9 +84,11 @@ This is the class interface:
         zyre_event_test (bool verbose);
     
     #endif // ZYRE_BUILD_DRAFT_API
+```
 
 This is the class self test code:
 
+```c
     //  Create two nodes
     zyre_t *node1 = zyre_new ("node1");
     assert (node1);
@@ -154,4 +157,5 @@ This is the class self test code:
     }
     zyre_destroy (&node1);
     zyre_destroy (&node2);
+```
 
