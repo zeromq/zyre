@@ -1,4 +1,4 @@
-####  - ping other peers in a ZRE network
+#### zpinger - ping other peers in a ZRE network
 
 zpinger tells you what other Zyre nodes are running. Use this to debug
 network issues. Run with -v option to get more detail on Zyre's internal

@@ -1,4 +1,4 @@
-####  - API wrapping one Zyre node
+#### zyre - API wrapping one Zyre node
 
 Zyre does local area discovery and clustering. A Zyre node broadcasts
 UDP beacons, and connects to peers that it finds. This class wraps a
@@ -36,6 +36,7 @@ Todo: allow multipart contents
 
 This is the class interface:
 
+```h
     //  This API is a draft, and may change without notice.
     #ifdef ZYRE_BUILD_DRAFT_API
     //  *** Draft method, for development use, may change without warning ***
@@ -235,9 +236,11 @@ This is the class interface:
         zyre_test (bool verbose);
     
     #endif // ZYRE_BUILD_DRAFT_API
+```
 
 This is the class self test code:
 
+```c
     //  We'll use inproc gossip discovery so that this works without networking
     
     uint64_t version = zyre_version ();
@@ -381,4 +384,5 @@ This is the class self test code:
     
     zyre_destroy (&node1);
     zyre_destroy (&node2);
+```
 

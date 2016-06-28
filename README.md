@@ -23,12 +23,12 @@
 **<a href="#toc3-181">Linking with an Application</a>**
 
 **<a href="#toc3-188">API Summary</a>**
-*  <a href="#toc4-193"> - API wrapping one Zyre node</a>
-*  <a href="#toc4-578"> - no title found</a>
+*  <a href="#toc4-193">zyre - API wrapping one Zyre node</a>
+*  <a href="#toc4-582">zyre_event - no title found</a>
 
-**<a href="#toc3-737">Hints to Contributors</a>**
+**<a href="#toc3-745">Hints to Contributors</a>**
 
-**<a href="#toc3-748">This Document</a>**
+**<a href="#toc3-756">This Document</a>**
 
 <A name="toc2-13" title="Overview" />
 ## Overview
@@ -210,8 +210,8 @@ Include `zyre.h` in your application and link with libzyre. Here is a typical gc
 
 This is the API provided by Zyre 2.x, in alphabetical order.
 
-<A name="toc4-193" title=" - API wrapping one Zyre node" />
-####  - API wrapping one Zyre node
+<A name="toc4-193" title="zyre - API wrapping one Zyre node" />
+#### zyre - API wrapping one Zyre node
 
 Zyre does local area discovery and clustering. A Zyre node broadcasts
 UDP beacons, and connects to peers that it finds. This class wraps a
@@ -249,6 +249,7 @@ Todo: allow multipart contents
 
 This is the class interface:
 
+```h
     //  This API is a draft, and may change without notice.
     #ifdef ZYRE_BUILD_DRAFT_API
     //  *** Draft method, for development use, may change without warning ***
@@ -448,9 +449,11 @@ This is the class interface:
         zyre_test (bool verbose);
     
     #endif // ZYRE_BUILD_DRAFT_API
+```
 
 This is the class self test code:
 
+```c
     //  We'll use inproc gossip discovery so that this works without networking
     
     uint64_t version = zyre_version ();
@@ -594,9 +597,10 @@ This is the class self test code:
     
     zyre_destroy (&node1);
     zyre_destroy (&node2);
+```
 
-<A name="toc4-578" title=" - no title found" />
-####  - no title found
+<A name="toc4-582" title="zyre_event - no title found" />
+#### zyre_event - no title found
 
 This class provides a higher-level API to the zyre_recv call, by doing
 work that you will want to do in many cases, such as unpacking the peer
@@ -606,6 +610,7 @@ Please add @discuss section in ../src/zyre_event.c.
 
 This is the class interface:
 
+```h
     //  This API is a draft, and may change without notice.
     #ifdef ZYRE_BUILD_DRAFT_API
     //  *** Draft method, for development use, may change without warning ***
@@ -681,9 +686,11 @@ This is the class interface:
         zyre_event_test (bool verbose);
     
     #endif // ZYRE_BUILD_DRAFT_API
+```
 
 This is the class self test code:
 
+```c
     //  Create two nodes
     zyre_t *node1 = zyre_new ("node1");
     assert (node1);
@@ -752,9 +759,10 @@ This is the class self test code:
     }
     zyre_destroy (&node1);
     zyre_destroy (&node2);
+```
 
 
-<A name="toc3-737" title="Hints to Contributors" />
+<A name="toc3-745" title="Hints to Contributors" />
 ### Hints to Contributors
 
 Zyre is a nice, neat library, and you may not immediately appreciate why. Read the CLASS style guide please, and write your code to make it indistinguishable from the rest of the code in the library. That is the only real criteria for good style: it's invisible.
@@ -765,7 +773,7 @@ Do read your code after you write it and ask, "Can I make this simpler?" We do u
 
 Before opening a pull request read our [contribution guidelines](https://github.com/zeromq/zyre/blob/master/CONTRIBUTING.md). Thanks!
 
-<A name="toc3-748" title="This Document" />
+<A name="toc3-756" title="This Document" />
 ### This Document
 
 _This documentation was generated from zyre/README.txt using [Gitdown](https://github.com/zeromq/gitdown)_
