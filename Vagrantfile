@@ -75,7 +75,6 @@ VAGRANTFILE_LOCAL = 'Vagrantfile.local'
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = 'ubuntu/trusty64'
   config.vm.provision "shell", inline: $script
-  config.vm.network "public_network"
 
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--cpus", "2", "--ioapic", "on", "--memory", "512" ]
