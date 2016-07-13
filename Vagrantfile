@@ -66,9 +66,6 @@ cd ..
 
 cd /vagrant
 ./autogen.sh && ./configure && make && make check
-
-echo 'running self test...'
-src/zyre_selftest
 SCRIPT
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
