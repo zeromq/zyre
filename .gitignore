@@ -79,3 +79,9 @@ builds/android/prefix/
 
 # Python bindings
 *.pyc
+
+# vagrant
+.vagrant
+
+# CLion
+.idea
