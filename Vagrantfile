@@ -1,71 +1,43 @@
 #e -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# This will setup a clean Ubuntu1404 LTS env with a python virtualenv called "pyre" for testing
+# This will setup a clean Ubuntu1404 LTS env
 
 $script = <<SCRIPT
-apt-get update
 add-apt-repository ppa:fkrull/deadsnakes-python2.7
 apt-get update
 apt-get install -y python-pip python-dev git htop virtualenvwrapper python2.7 python-virtualenv python-support cython \
-git-all build-essential libtool pkg-config autotools-dev autoconf automake cmake uuid-dev libpcre3-dev valgrind \
+git build-essential libtool pkg-config autotools-dev autoconf automake cmake uuid-dev libpcre3-dev valgrind \
 libffi-dev
 
 # only execute this next line if interested in updating the man pages as well (adds to build time):
 # sudo apt-get install -y asciidoc
 
-cd /vagrant
-if [ ! -d gs1 ]; then
-    git clone https://github.com/imatix/gsl.git
-fi
-cd gsl/src
-make
-sudo make install
-
-cd /vagrant
-if [ ! -d zproject ]; then 
-    git clone https://github.com/zeromq/zproject.git
-fi
-cd zproject
+cd /home/vagrant
+git clone --quiet https://github.com/zeromq/libzmq.git
+cd /home/vagrant/libzmq
 ./autogen.sh
 ./configure
 make
-sudo make install
+make install
+ldconfig
 
-cd /vagrant
-if [ ! -d libsodium ]; then
-    git clone --depth 1 -b stable https://github.com/jedisct1/libsodium.git
-fi
-cd libsodium
-./autogen.sh && ./configure && make && make check
-sudo make install
-sudo ldconfig
-cd ..
-
-if [ ! -d libzmq ]; then
-    git clone git://github.com/zeromq/libzmq.git
-fi
-cd libzmq
+cd /home/vagrant
+git clone --quiet https://github.com/zeromq/czmq.git
+cd /home/vagrant/czmq
 ./autogen.sh
-# do not specify "--with-libsodium" if you prefer to use internal tweetnacl
-# security implementation (recommended for development)
-./configure --with-libsodium && make && make check
-sudo make install
-sudo ldconfig
-cd ..
-
-if [ ! -d czmq ]; then
-    git clone git://github.com/zeromq/czmq.git
-fi
-cd czmq
-./autogen.sh && ./configure && make && make check
-sudo make install
-sudo ldconfig
-sudo python setup.py install
-cd ..
+./configure
+make
+make install
+ldconfig
 
 cd /vagrant
-./autogen.sh && ./configure && make && make check
+./autogen.sh
+./configure
+make
+make check
+make install
+ldconfig
 SCRIPT
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
