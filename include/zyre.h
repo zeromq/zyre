@@ -71,6 +71,22 @@ ZYRE_EXPORT void
     zyre_set_port (zyre_t *self, int port_nbr);
 
 //  *** Draft method, for development use, may change without warning ***
+//  Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+//  This can be tuned in order to deal with expected network conditions
+//  and the response time expected by the application. This is tied to 
+//  the beacon interval and rate of messages received.                 
+ZYRE_EXPORT void
+    zyre_set_evasive_timeout (zyre_t *self, int interval);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Set the peer expiration timeout, in milliseconds. Default is 30000.
+//  This can be tuned in order to deal with expected network conditions
+//  and the response time expected by the application. This is tied to 
+//  the beacon interval and rate of messages received.                 
+ZYRE_EXPORT void
+    zyre_set_expired_timeout (zyre_t *self, int interval);
+
+//  *** Draft method, for development use, may change without warning ***
 //  Set UDP beacon discovery interval, in milliseconds. Default is instant
 //  beacon exploration followed by pinging every 1,000 msecs.             
 ZYRE_EXPORT void

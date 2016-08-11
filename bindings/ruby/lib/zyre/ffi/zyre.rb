@@ -154,6 +154,36 @@ module Zyre
         result
       end
 
+      # Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+      # This can be tuned in order to deal with expected network conditions
+      # and the response time expected by the application. This is tied to 
+      # the beacon interval and rate of messages received.                 
+      #
+      # @param interval [Integer, #to_int, #to_i]
+      # @return [void]
+      def set_evasive_timeout(interval)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        interval = Integer(interval)
+        result = ::Zyre::FFI.zyre_set_evasive_timeout(self_p, interval)
+        result
+      end
+
+      # Set the peer expiration timeout, in milliseconds. Default is 30000.
+      # This can be tuned in order to deal with expected network conditions
+      # and the response time expected by the application. This is tied to 
+      # the beacon interval and rate of messages received.                 
+      #
+      # @param interval [Integer, #to_int, #to_i]
+      # @return [void]
+      def set_expired_timeout(interval)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        interval = Integer(interval)
+        result = ::Zyre::FFI.zyre_set_expired_timeout(self_p, interval)
+        result
+      end
+
       # Set UDP beacon discovery interval, in milliseconds. Default is instant
       # beacon exploration followed by pinging every 1,000 msecs.             
       #

@@ -94,7 +94,9 @@ module Zyre
         result
       end
 
-      # Returns event type, as printable uppercase string
+      # Returns event type, as printable uppercase string. Choices are:   
+      # "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
+      # and for the local node: "STOP"                                    
       #
       # @return [String]
       def type()

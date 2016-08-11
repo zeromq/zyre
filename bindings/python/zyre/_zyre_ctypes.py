@@ -63,6 +63,10 @@ lib.zyre_set_verbose.restype = None
 lib.zyre_set_verbose.argtypes = [zyre_p]
 lib.zyre_set_port.restype = None
 lib.zyre_set_port.argtypes = [zyre_p, c_int]
+lib.zyre_set_evasive_timeout.restype = None
+lib.zyre_set_evasive_timeout.argtypes = [zyre_p, c_int]
+lib.zyre_set_expired_timeout.restype = None
+lib.zyre_set_expired_timeout.argtypes = [zyre_p, c_int]
 lib.zyre_set_interval.restype = None
 lib.zyre_set_interval.argtypes = [zyre_p, c_size_t]
 lib.zyre_set_interface.restype = None
@@ -197,6 +201,24 @@ that so you can create independent clusters on the same network, for
 e.g. development vs. production. Has no effect after zyre_start().
         """
         return lib.zyre_set_port(self._as_parameter_, port_nbr)
+
+    def set_evasive_timeout(self, interval):
+        """
+        Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+This can be tuned in order to deal with expected network conditions
+and the response time expected by the application. This is tied to
+the beacon interval and rate of messages received.
+        """
+        return lib.zyre_set_evasive_timeout(self._as_parameter_, interval)
+
+    def set_expired_timeout(self, interval):
+        """
+        Set the peer expiration timeout, in milliseconds. Default is 30000.
+This can be tuned in order to deal with expected network conditions
+and the response time expected by the application. This is tied to
+the beacon interval and rate of messages received.
+        """
+        return lib.zyre_set_expired_timeout(self._as_parameter_, interval)
 
     def set_interval(self, interval):
         """
@@ -451,7 +473,9 @@ data (WHISPER, SHOUT).
 
     def type(self):
         """
-        Returns event type, as printable uppercase string
+        Returns event type, as printable uppercase string. Choices are:
+"ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
+and for the local node: "STOP"
         """
         return lib.zyre_event_type(self._as_parameter_)
 

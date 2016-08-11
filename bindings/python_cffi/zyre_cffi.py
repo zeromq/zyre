@@ -74,6 +74,20 @@ void
 void
     zyre_set_port (zyre_t *self, int port_nbr);
 
+// Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+// This can be tuned in order to deal with expected network conditions
+// and the response time expected by the application. This is tied to 
+// the beacon interval and rate of messages received.                 
+void
+    zyre_set_evasive_timeout (zyre_t *self, int interval);
+
+// Set the peer expiration timeout, in milliseconds. Default is 30000.
+// This can be tuned in order to deal with expected network conditions
+// and the response time expected by the application. This is tied to 
+// the beacon interval and rate of messages received.                 
+void
+    zyre_set_expired_timeout (zyre_t *self, int interval);
+
 // Set UDP beacon discovery interval, in milliseconds. Default is instant
 // beacon exploration followed by pinging every 1,000 msecs.             
 void
@@ -207,7 +221,9 @@ zyre_event_t *
 void
     zyre_event_destroy (zyre_event_t **self_p);
 
-// Returns event type, as printable uppercase string
+// Returns event type, as printable uppercase string. Choices are:   
+// "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
+// and for the local node: "STOP"                                    
 const char *
     zyre_event_type (zyre_event_t *self);
 

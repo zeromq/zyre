@@ -78,6 +78,28 @@ void QZyre::setPort (int portNbr)
 }
 
 ///
+//  Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+//  This can be tuned in order to deal with expected network conditions
+//  and the response time expected by the application. This is tied to 
+//  the beacon interval and rate of messages received.                 
+void QZyre::setEvasiveTimeout (int interval)
+{
+    zyre_set_evasive_timeout (self, interval);
+    
+}
+
+///
+//  Set the peer expiration timeout, in milliseconds. Default is 30000.
+//  This can be tuned in order to deal with expected network conditions
+//  and the response time expected by the application. This is tied to 
+//  the beacon interval and rate of messages received.                 
+void QZyre::setExpiredTimeout (int interval)
+{
+    zyre_set_expired_timeout (self, interval);
+    
+}
+
+///
 //  Set UDP beacon discovery interval, in milliseconds. Default is instant
 //  beacon exploration followed by pinging every 1,000 msecs.             
 void QZyre::setInterval (size_t interval)

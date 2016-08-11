@@ -31,8 +31,6 @@
     </target>
 
     <constant name = "ZRE_DISCOVERY_PORT" value = "5670">IANA-assigned UDP port for ZRE</constant>
-    <constant name = "PEER_EVASIVE" value = "10000" private = "1" >10 seconds' silence is evasive</constant>
-    <constant name = "PEER_EXPIRED" value = "30000" private = "1" >30 seconds' silence is expired</constant>
     <constant name = "REAP_INTERVAL" value = "1000" private = "1" >Once per second</constant>
 </project>
 

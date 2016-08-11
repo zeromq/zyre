@@ -147,7 +147,7 @@ zyre_group_test (bool verbose)
     zuuid_t *me = zuuid_new ();
     zyre_peer_t *peer = zyre_peer_new (peers, you);
     assert (!zyre_peer_connected (peer));
-    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5552");
+    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5552", 30000);
     assert (zyre_peer_connected (peer));
 
     zyre_group_join (group, peer);
