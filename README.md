@@ -230,7 +230,7 @@ frames provide further values:
     JOIN fromnode name groupname
         a peer has joined a specific group
     LEAVE fromnode name groupname
-        a peer has joined a specific group
+        a peer has left a specific group
     WHISPER fromnode name message
         a peer has sent this node a message
     SHOUT fromnode name groupname message
