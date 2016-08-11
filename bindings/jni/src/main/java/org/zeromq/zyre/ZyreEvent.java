@@ -40,7 +40,9 @@ public class ZyreEvent implements AutoCloseable{
         self = 0;
     }
     /*
-    Returns event type, as printable uppercase string
+    Returns event type, as printable uppercase string. Choices are:   
+    "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
+    and for the local node: "STOP"                                    
     */
     native static String __type (long self);
     public String type () {

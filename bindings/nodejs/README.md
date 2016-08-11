@@ -285,7 +285,9 @@ Methods:
 string my_zyre_event.type ()
 ```
 
-Returns event type, as printable uppercase string
+Returns event type, as printable uppercase string. Choices are:
+"ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
+and for the local node: "STOP"
 
 ```
 string my_zyre_event.peerUuid ()

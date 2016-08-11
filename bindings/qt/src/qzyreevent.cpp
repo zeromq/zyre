@@ -32,7 +32,9 @@ QZyreEvent::~QZyreEvent ()
 }
 
 ///
-//  Returns event type, as printable uppercase string
+//  Returns event type, as printable uppercase string. Choices are:   
+//  "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
+//  and for the local node: "STOP"                                    
 const QString QZyreEvent::type ()
 {
     const QString rv = QString (zyre_event_type (self));

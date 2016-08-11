@@ -28,7 +28,9 @@ public:
     static QObject* qmlAttachedProperties(QObject* object); // defined in QmlZyreEvent.cpp
     
 public slots:
-    //  Returns event type, as printable uppercase string
+    //  Returns event type, as printable uppercase string. Choices are:   
+    //  "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
+    //  and for the local node: "STOP"                                    
     const QString type ();
 
     //  Return the sending peer's uuid as a string
