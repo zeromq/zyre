@@ -38,6 +38,8 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "setHeader", _set_header);
     Nan::SetPrototypeMethod (tpl, "setVerbose", _set_verbose);
     Nan::SetPrototypeMethod (tpl, "setPort", _set_port);
+    Nan::SetPrototypeMethod (tpl, "setEvasiveTimeout", _set_evasive_timeout);
+    Nan::SetPrototypeMethod (tpl, "setExpiredTimeout", _set_expired_timeout);
     Nan::SetPrototypeMethod (tpl, "setInterval", _set_interval);
     Nan::SetPrototypeMethod (tpl, "setInterface", _set_interface);
     Nan::SetPrototypeMethod (tpl, "setEndpoint", _set_endpoint);
@@ -162,6 +164,32 @@ NAN_METHOD (Zyre::_set_port) {
     else
         return Nan::ThrowTypeError ("`port nbr` must be a number");
     zyre_set_port (zyre->self, (int) port_nbr);
+}
+
+NAN_METHOD (Zyre::_set_evasive_timeout) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `interval`");
+
+    int interval;
+    if (info [0]->IsNumber ())
+        interval = Nan::To<int>(info [0]).FromJust ();
+    else
+        return Nan::ThrowTypeError ("`interval` must be a number");
+    zyre_set_evasive_timeout (zyre->self, (int) interval);
+}
+
+NAN_METHOD (Zyre::_set_expired_timeout) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `interval`");
+
+    int interval;
+    if (info [0]->IsNumber ())
+        interval = Nan::To<int>(info [0]).FromJust ();
+    else
+        return Nan::ThrowTypeError ("`interval` must be a number");
+    zyre_set_expired_timeout (zyre->self, (int) interval);
 }
 
 NAN_METHOD (Zyre::_set_interval) {

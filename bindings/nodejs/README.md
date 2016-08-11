@@ -95,6 +95,24 @@ that so you can create independent clusters on the same network, for
 e.g. development vs. production. Has no effect after zyre_start().
 
 ```
+nothing my_zyre.setEvasiveTimeout (Number)
+```
+
+Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+This can be tuned in order to deal with expected network conditions
+and the response time expected by the application. This is tied to
+the beacon interval and rate of messages received.
+
+```
+nothing my_zyre.setExpiredTimeout (Number)
+```
+
+Set the peer expiration timeout, in milliseconds. Default is 30000.
+This can be tuned in order to deal with expected network conditions
+and the response time expected by the application. This is tied to
+the beacon interval and rate of messages received.
+
+```
 nothing my_zyre.setInterval ()
 ```
 

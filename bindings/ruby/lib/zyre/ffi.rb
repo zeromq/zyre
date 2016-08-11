@@ -95,6 +95,22 @@ module Zyre
         end
       end
       begin # DRAFT method
+        attach_function :zyre_set_evasive_timeout, [:pointer, :int], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function zyre_set_evasive_timeout() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_set_expired_timeout, [:pointer, :int], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The function zyre_set_expired_timeout() can't be used through " +
+               "this Ruby binding because it's not available."
+        end
+      end
+      begin # DRAFT method
         attach_function :zyre_set_interval, [:pointer, :size_t], :void, **opts
       rescue ::FFI::NotFoundError
         if $VERBOSE || $DEBUG

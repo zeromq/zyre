@@ -94,7 +94,7 @@ zyre_peer_destroy (zyre_peer_t **self_p)
 //  Configures mailbox and connects to peer's router endpoint
 
 void
-zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint)
+zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint64_t expired_timeout)
 {
     assert (self);
     assert (!self->connected);
@@ -117,7 +117,7 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint)
     assert (rc == 0);
 
     //  Set a high-water mark that allows for reasonable activity
-    zsock_set_sndhwm (self->mailbox, PEER_EXPIRED * 100);
+    zsock_set_sndhwm (self->mailbox, expired_timeout * 100);
 
     //  Send messages immediately or return EAGAIN
     zsock_set_sndtimeo (self->mailbox, 0);
@@ -240,11 +240,11 @@ zyre_peer_endpoint (zyre_peer_t *self)
 //  Register activity at peer
 
 void
-zyre_peer_refresh (zyre_peer_t *self)
+zyre_peer_refresh (zyre_peer_t *self, uint64_t evasive_timeout, uint64_t expired_timeout)
 {
     assert (self);
-    self->evasive_at = zclock_mono () + PEER_EVASIVE;
-    self->expired_at = zclock_mono () + PEER_EXPIRED;
+    self->evasive_at = zclock_mono () + evasive_timeout;
+    self->expired_at = zclock_mono () + expired_timeout;
 }
 
 
@@ -452,7 +452,7 @@ zyre_peer_test (bool verbose)
     zuuid_t *me = zuuid_new ();
     zyre_peer_t *peer = zyre_peer_new (peers, you);
     assert (!zyre_peer_connected (peer));
-    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5551");
+    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5551", 30000);
     assert (zyre_peer_connected (peer));
     zyre_peer_set_name (peer, "peer");
     assert (streq (zyre_peer_name (peer), "peer"));

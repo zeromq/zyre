@@ -51,7 +51,5 @@ ZYRE_EXPORT void
 #endif // ZYRE_BUILD_DRAFT_API
 
 //  Private constants
-#define PEER_EVASIVE	10000 //                   10 seconds' silence is evasive
-#define PEER_EXPIRED	30000 //                   30 seconds' silence is expired
 #define REAP_INTERVAL	1000 //                   Once per second
 #endif

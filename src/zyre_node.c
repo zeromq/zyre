@@ -26,6 +26,8 @@ struct _zyre_node_t {
     bool terminated;            //  API shut us down
     bool verbose;               //  Log all traffic
     int beacon_port;            //  Beacon port number
+    uint64_t evasive_timeout;   //  Time since a message is received before a peer is considered evasive
+    uint64_t expired_timeout;   //  Time since a message is received before a peer is considered gone
     size_t interval;            //  Beacon interval
     zpoller_t *poller;          //  Socket poller
     zactor_t *beacon;           //  Beacon actor
@@ -92,6 +94,8 @@ zyre_node_new (zsock_t *pipe, void *args)
     self->outbox = (zsock_t *) args;
     self->poller = zpoller_new (self->pipe, NULL);
     self->beacon_port = ZRE_DISCOVERY_PORT;
+    self->evasive_timeout = 5000;
+    self->expired_timeout = 30000;
     self->interval = 0;         //  Use default
     self->uuid = zuuid_new ();
     self->peers = zhash_new ();
@@ -374,6 +378,18 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&value);
     }
     else
+    if (streq (command, "SET EVASIVE TIMEOUT")) {
+        char *value = zmsg_popstr (request);
+        self->evasive_timeout = atoi (value);
+        zstr_free (&value);
+    }
+    else
+    if (streq (command, "SET EXPIRED TIMEOUT")) {
+        char *value = zmsg_popstr (request);
+        self->expired_timeout = atoi (value);
+        zstr_free (&value);
+    }
+    else
     if (streq (command, "SET INTERVAL")) {
         char *value = zmsg_popstr (request);
         self->interval = atol (value);
@@ -566,7 +582,7 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         assert (peer);
         zyre_peer_set_origin (peer, self->name);
         zyre_peer_set_verbose (peer, self->verbose);
-        zyre_peer_connect (peer, self->uuid, endpoint);
+        zyre_peer_connect (peer, self->uuid, endpoint, self->expired_timeout);
 
         //  Handshake discovery by sending HELLO as first message
         zlist_t *groups = zlist_dup (self->own_groups);
@@ -786,7 +802,7 @@ zyre_node_recv_peer (zyre_node_t *self)
     zre_msg_destroy (&msg);
 
     //  Activity from peer resets peer timers
-    zyre_peer_refresh (peer);
+    zyre_peer_refresh (peer, self->evasive_timeout, self->expired_timeout);
 }
 
 //  Handle beacon data
@@ -820,7 +836,7 @@ zyre_node_recv_beacon (zyre_node_t *self)
         else
             sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
         zyre_peer_t *peer = zyre_node_require_peer (self, uuid, endpoint);
-        zyre_peer_refresh (peer);
+        zyre_peer_refresh (peer, self->evasive_timeout, self->expired_timeout);
     }
     else {
         //  Zero port means peer is going away; remove it if

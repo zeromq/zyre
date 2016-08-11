@@ -53,6 +53,22 @@
         <argument name = "port nbr" type = "integer" />
     </method>
 
+    <method name = "set evasive timeout">
+        Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+        This can be tuned in order to deal with expected network conditions
+        and the response time expected by the application. This is tied to
+        the beacon interval and rate of messages received.
+        <argument name = "interval" type = "integer" />
+    </method>
+
+    <method name = "set expired timeout">
+        Set the peer expiration timeout, in milliseconds. Default is 30000.
+        This can be tuned in order to deal with expected network conditions
+        and the response time expected by the application. This is tied to
+        the beacon interval and rate of messages received.
+        <argument name = "interval" type = "integer" />
+    </method>
+
     <method name = "set interval">
         Set UDP beacon discovery interval, in milliseconds. Default is instant
         beacon exploration followed by pinging every 1,000 msecs.

@@ -81,6 +81,26 @@ public class Zyre implements AutoCloseable{
         __setPort (self, portNbr);
     }
     /*
+    Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+    This can be tuned in order to deal with expected network conditions
+    and the response time expected by the application. This is tied to 
+    the beacon interval and rate of messages received.                 
+    */
+    native static void __setEvasiveTimeout (long self, int interval);
+    public void setEvasiveTimeout (int interval) {
+        __setEvasiveTimeout (self, interval);
+    }
+    /*
+    Set the peer expiration timeout, in milliseconds. Default is 30000.
+    This can be tuned in order to deal with expected network conditions
+    and the response time expected by the application. This is tied to 
+    the beacon interval and rate of messages received.                 
+    */
+    native static void __setExpiredTimeout (long self, int interval);
+    public void setExpiredTimeout (int interval) {
+        __setExpiredTimeout (self, interval);
+    }
+    /*
     Set UDP beacon discovery interval, in milliseconds. Default is instant
     beacon exploration followed by pinging every 1,000 msecs.             
     */
