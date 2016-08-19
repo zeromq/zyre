@@ -1,0 +1,16 @@
+Format: 3.0 (quilt)
+Binary: zyre
+Source: zyre
+Version: 1.1.0
+Maintainer: zyre Developers <zeromq-dev@lists.zeromq.org>
+Architecture: any
+Build-Depends: debhelper (>= 9),
+    pkg-config,
+    dh-autoreconf,
+    libzmq3-dev,
+    libczmq-dev,
+Build-Depends-Indep: asciidoc,
+                     xmlto
+
+Files:
+ 7697688bf65a35bc33ae2db51ebb0e3b 818110 zyre.tar.gz

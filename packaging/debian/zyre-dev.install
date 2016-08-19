@@ -1,3 +1,0 @@
-debian/tmp/usr/include/*
-debian/tmp/usr/lib/*/libzyre.so
-debian/tmp/usr/lib/*/pkgconfig/libzyre.pc
