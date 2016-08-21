@@ -19,12 +19,15 @@ License:        MIT
 URL:            http://github.com/zeromq/zyre
 Source0:        %{name}-%{version}.tar.gz
 Group:          System/Libraries
+# Note: ghostscript is required by graphviz which is required by
+#       asciidoc. On Fedora 24 the ghostscript dependencies cannot
+#       be resolved automatically. Thus add working dependency here!
+BuildRequires:  ghostscript
 BuildRequires:  asciidoc
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-BuildRequires:  pkg-config
-BuildRequires:  systemd-devel
+BuildRequires:  pkgconfig
 BuildRequires:  xmlto
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel
@@ -65,14 +68,15 @@ This package contains development files.
 %{_libdir}/libzyre.so
 %{_libdir}/pkgconfig/libzyre.pc
 %{_mandir}/man3/*
-%{_mandir}/man7/*
+%{_datadir}/zproject/
+%{_datadir}/zproject/zyre/
 
 %prep
 %setup -q
 
 %build
 sh autogen.sh
-%{configure} --with-systemd-units
+%{configure}
 make %{_smp_mflags}
 
 %install

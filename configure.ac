@@ -409,19 +409,6 @@ AC_SUBST([pkgconfigdir])
 
 
 # enable specific system integration features
-AC_ARG_WITH([systemd-units],
-    AS_HELP_STRING([--with-systemd-units],
-    [Build and install with systemd units integration [default=no]]),
-    [with_systemd_units=$withval],
-    [with_systemd_units=no])
-
-AM_CONDITIONAL([WITH_SYSTEMD_UNITS], [test x$with_systemd_units != xno])
-
-AM_COND_IF([WITH_SYSTEMD_UNITS],
-    [AC_DEFINE(WITH_SYSTEMD_UNITS, 1, [systemd units are going to be installed])
-    AC_SUBST(WITH_SYSTEMD_UNITS)],
-    [])
-
 #   Project has no stable classes so enable draft API by default
 enable_drafts=yes
 AM_CONDITIONAL([ENABLE_DRAFTS], [test x$enable_drafts != xno])
@@ -440,11 +427,6 @@ AC_CONFIG_FILES([Makefile
                  doc/Makefile
                  src/libzyre.pc
                  ])
-
-AM_COND_IF([WITH_SYSTEMD_UNITS],
-    [AC_CONFIG_FILES([
-    ])],
-    [])
 
 
 AC_OUTPUT

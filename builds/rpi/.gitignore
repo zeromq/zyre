@@ -1,0 +1,9 @@
+libzmq
+czmq
+raspbian-boot
+raspbian-root
+tmp/
+tools/
+
+*.img
+*.zip
