@@ -2,21 +2,21 @@
 
 Cross compile environment for the Raspberry Pi (all models)
 
-## Cross compiling for Raspbian
+## Cross compile for Raspbian
 
 Simply run
 
     ./build.sh
 
-Once the build script finishes everything is install at `tmp/`. You can use
-rsync to copy everything onto your Pi. At you'll have to make sure rsync is
-installed on the Raspberry Pi
+Once the build script finishes the installation data is located at `tmp/`.
+To copy those files to your Raspberry Pi you can use `rsync`. Therefore
+you'll have to make sure rsync is installed on the Raspberry Pi
 
-    sudo apt-get install rsync
+    apt-get install rsync
 
-Next make sure your Pi user has sufficient rights to copy data to `/usr/local`.
-To force this you can use the following command to change the ownership of the
-directory accordingly.
+Next make sure your Pi user has sufficient access rights to copy data to
+`/usr/local`. To force this you can use the following command to change
+the ownership of the directory accordingly.
 
     chown -R root:users /usr/local/
 
@@ -28,10 +28,10 @@ The first time you install a library onto the Raspberry Pi you'll need to run
 
     sudo ldconfig
 
-## Cross compile and install into Raspbian image
+## Cross compile and install to Raspbian image
 
-This requires sudo rights. Also make sure you have `kpartx`, `qemu-user` and
-`proot` installed.
+This requires sudo access rights on your local maschine. Also make sure
+you have `kpartx`, `qemu-user` and `proot` installed.
 
 To cross compile and install this project to an raspbian image run
 
