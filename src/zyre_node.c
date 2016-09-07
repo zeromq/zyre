@@ -187,7 +187,13 @@ zyre_node_start (zyre_node_t *self)
         zstr_free (&hostname);
         assert (self->port > 0);    //  Die on bad interface or port exhaustion
         assert (!self->endpoint);   //  If caller set this, we'd be using gossip
-        self->endpoint = strdup (zsock_endpoint (self->inbox));
+        if (streq (zsys_interface (), "*")) {
+            char *hostname = zsys_hostname ();
+            self->endpoint = zsys_sprintf ("tcp://%s:%d", hostname, self->port);
+            zstr_free (&hostname);
+        }
+        else
+            self->endpoint = strdup (zsock_endpoint (self->inbox));
 
         //  Set broadcast/listen beacon
         beacon_t beacon;
