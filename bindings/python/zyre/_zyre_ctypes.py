@@ -23,21 +23,37 @@ def return_fresh_string(char_p):
     return s
 
 # zyre
+lib = None
 try:
-    # If LD_LIBRARY_PATH or your OSs equivalent is set, this is the only way to
-    # load the library.  If we use find_library below, we get the wrong result.
-    if os.name == 'posix':
-        if sys.platform == 'darwin':
-            lib = cdll.LoadLibrary('libzyre.1.dylib')
-        else:
-            lib = cdll.LoadLibrary("libzyre.so.1")
-    elif os.name == 'nt':
-        lib = cdll.LoadLibrary('libzyre.dll')
-except OSError:
-    libpath = find_library("zyre")
-    if not libpath:
-        raise ImportError("Unable to find libzyre")
-    lib = cdll.LoadLibrary(libpath)
+    # check to see if the shared object was embedded locally, attempt to load it
+    # if not, try to load it using the default system paths...
+    # we need to use os.chdir instead of trying to modify $LD_LIBRARY_PATH and reloading the interpreter
+    t = os.getcwd()
+    p = os.path.join(os.path.dirname(__file__), '..')  # find the path to our $project_ctypes.py
+    os.chdir(p)  # change directories briefly
+
+    from zyre import libzyre                        # attempt to import the shared lib if it exists
+    lib = CDLL(libzyre.__file__)             # if it exists try to load the shared lib
+    os.chdir(t)  # switch back to orig dir
+except ImportError:
+    pass
+
+if not lib:
+    try:
+        # If LD_LIBRARY_PATH or your OSs equivalent is set, this is the only way to
+        # load the library.  If we use find_library below, we get the wrong result.
+        if os.name == 'posix':
+            if sys.platform == 'darwin':
+                lib = cdll.LoadLibrary('libzyre.1.dylib')
+            else:
+                lib = cdll.LoadLibrary("libzyre.so.1")
+        elif os.name == 'nt':
+            lib = cdll.LoadLibrary('libzyre.dll')
+    except OSError:
+        libpath = find_library("zyre")
+        if not libpath:
+            raise ImportError("Unable to find libzyre")
+        lib = cdll.LoadLibrary(libpath)
 
 class zyre_t(Structure):
     pass # Empty - only for type checking
