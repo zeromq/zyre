@@ -22,8 +22,10 @@ module Zyre
 
     begin
       lib_name = 'libzyre'
-      lib_paths = ['/usr/local/lib', '/opt/local/lib', '/usr/lib64']
-        .map { |path| "#{path}/#{lib_name}.#{::FFI::Platform::LIBSUFFIX}" }
+      lib_dirs = ['/usr/local/lib', '/opt/local/lib', '/usr/lib64']
+      env_name = "#{lib_name.upcase}_PATH"
+      lib_dirs = [*ENV[env_name].split(':'), *lib_dirs] if ENV[env_name]
+      lib_paths = lib_dirs.map { |path| "#{path}/#{lib_name}.#{::FFI::Platform::LIBSUFFIX}" }
       ffi_lib lib_paths + [lib_name]
       @available = true
     rescue LoadError

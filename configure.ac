@@ -68,6 +68,9 @@ else
     AM_CONDITIONAL(WITH_GCOV, false)
 fi
 
+# Will be used to add flags to pkg-config useful when apps want to statically link
+PKGCFG_LIBS_PRIVATE=""
+
 PREVIOUS_CFLAGS="${CFLAGS}"
 PREVIOUS_LIBS="${LIBS}"
 
@@ -76,6 +79,7 @@ was_libzmq_check_lib_detected=no
 
 PKG_CHECK_MODULES([libzmq], [libzmq >= 0.0.0],
     [
+        PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE $libzmq_LIBS"
     ],
     [
         AC_ARG_WITH([libzmq],
@@ -108,6 +112,7 @@ PKG_CHECK_MODULES([libzmq], [libzmq >= 0.0.0],
                 AC_SUBST([libzmq_CFLAGS],[${libzmq_synthetic_cflags}])
                 AC_SUBST([libzmq_LIBS],[${libzmq_synthetic_libs}])
                 was_libzmq_check_lib_detected=yes
+                PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE -lzmq"
             ],
             [AC_MSG_ERROR([cannot link with -lzmq, install libzmq])])
     ])
@@ -121,6 +126,7 @@ was_czmq_check_lib_detected=no
 
 PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
     [
+        PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE $czmq_LIBS"
     ],
     [
         AC_ARG_WITH([libczmq],
@@ -153,6 +159,7 @@ PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
                 AC_SUBST([czmq_CFLAGS],[${czmq_synthetic_cflags}])
                 AC_SUBST([czmq_LIBS],[${czmq_synthetic_libs}])
                 was_czmq_check_lib_detected=yes
+                PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE -lczmq"
             ],
             [AC_MSG_ERROR([cannot link with -lczmq, install libczmq])])
     ])
@@ -164,6 +171,8 @@ fi
 
 CFLAGS="${PREVIOUS_CFLAGS}"
 LIBS="${PREVIOUS_LIBS}"
+
+AC_SUBST(pkg_config_libs_private, $PKGCFG_LIBS_PRIVATE)
 
 # Platform specific checks
 zyre_on_mingw32="no"

@@ -16,6 +16,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 # Select flags
 SET(CMAKE_C_FLAGS_RELEASE "-O3")
 
+# Will be used to add flags to pkg-config useful when apps want to statically link
+set(pkg_config_libs_private "")
+
 ########################################################################
 # options
 ########################################################################
@@ -83,6 +86,7 @@ find_package(libzmq REQUIRED)
 IF (LIBZMQ_FOUND)
     include_directories(${LIBZMQ_INCLUDE_DIRS})
     list(APPEND MORE_LIBRARIES ${LIBZMQ_LIBRARIES})
+    set(pkg_config_libs_private "${pkg_config_libs_private} -lzmq")
 ELSE (LIBZMQ_FOUND)
     message( FATAL_ERROR "libzmq not found." )
 ENDIF (LIBZMQ_FOUND)
@@ -94,6 +98,7 @@ find_package(czmq REQUIRED)
 IF (CZMQ_FOUND)
     include_directories(${CZMQ_INCLUDE_DIRS})
     list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
+    set(pkg_config_libs_private "${pkg_config_libs_private} -lczmq")
 ELSE (CZMQ_FOUND)
     message( FATAL_ERROR "czmq not found." )
 ENDIF (CZMQ_FOUND)
@@ -143,7 +148,7 @@ if (NOT DEFINED BUILD_SHARED_LIBS)
 endif()
 add_library(zyre ${zyre_sources})
 set_target_properties(zyre
-    PROPERTIES DEFINE_SYMBOL "LIBZYRE_EXPORTS"
+    PROPERTIES DEFINE_SYMBOL "ZYRE_EXPORTS"
 )
 set_target_properties(zyre
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"

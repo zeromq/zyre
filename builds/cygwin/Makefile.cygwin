@@ -8,7 +8,7 @@ CC=gcc
 PREFIX=/usr/local
 INCDIR=-I$(PREFIX)/include -I.
 LIBDIR=-L$(PREFIX)/lib
-CFLAGS=-Wall -Os -g -DLIBZYRE_EXPORTS $(INCDIR)
+CFLAGS=-Wall -Os -g -DZYRE_EXPORTS $(INCDIR)
 
 OBJS = zyre.o zyre_event.o zre_msg.o zyre_peer.o zyre_group.o zyre_node.o
 %.o: ../../src/%.c
