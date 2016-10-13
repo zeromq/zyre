@@ -81,12 +81,11 @@ node_actor (zsock_t *pipe, void *args)
                 cookie = zmsg_popstr (incoming);
                 //  Send peer response 1/3rd the time
                 if (randof (3) > 0) {
-                    free (to_peer);
                     to_peer = NULL;
                 }
                 //  Send group response 1/3rd the time
                 if (randof (3) > 0) {
-                    free (to_group);
+                    zstr_free (&to_group);
                     to_group = NULL;
                 }
             }
@@ -94,34 +93,33 @@ node_actor (zsock_t *pipe, void *args)
             if (streq (event, "JOIN")) {
                 char *group = zmsg_popstr (incoming);
                 printf ("I: %s joined %s\n", name, group);
-                free (group);
+                zstr_free (&group);
             }
             else
             if (streq (event, "LEAVE")) {
                 char *group = zmsg_popstr (incoming);
                 printf ("I: %s left %s\n", name, group);
-                free (group);
+                zstr_free (&group);
             }
-            free (event);
-            free (peer);
-            free (name);
+            zstr_free (&event);
+            zstr_free (&name);
             zmsg_destroy (&incoming);
 
             //  Send outgoing messages if needed
             if (to_peer) {
                 zyre_whispers (node, to_peer, "%d", counter++);
-                free (to_peer);
                 to_peer = NULL;
             }
             if (to_group) {
                 zyre_shouts (node, to_group, "%d", counter++);
-                free (to_group);
+                zstr_free (&to_group);
                 to_group = NULL;
             }
             if (cookie) {
-                free (cookie);
+                zstr_free (&cookie);
                 cookie = NULL;
             }
+            zstr_free (&peer);
         }
         if (zclock_mono () >= trigger) {
             trigger = zclock_mono () + 1000;
