@@ -837,7 +837,7 @@ zyre_node_recv_beacon (zyre_node_t *self)
         char endpoint [100];
         const char *iface = zsys_interface ();
 
-        if (iface && !streq (iface, "") && !streq (iface, "*"))
+        if (zsys_ipv6 () && iface && !streq (iface, "") && !streq (iface, "*"))
             sprintf (endpoint, "tcp://%s%%%s:%d", ipaddress, iface, ntohs (beacon.port));
         else
             sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
