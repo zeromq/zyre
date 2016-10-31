@@ -53,19 +53,12 @@
 #   define ZYRE_EXPORT
 #endif
 
-//  Project has no stable classes, so we build the draft API
-#undef  ZYRE_BUILD_DRAFT_API
-#define ZYRE_BUILD_DRAFT_API
-
 //  Opaque class structures to allow forward references
 //  These classes are stable or legacy and built in all releases
-//  Draft classes are by default not built in stable releases
-#ifdef ZYRE_BUILD_DRAFT_API
 typedef struct _zyre_t zyre_t;
 #define ZYRE_T_DEFINED
 typedef struct _zyre_event_t zyre_event_t;
 #define ZYRE_EVENT_T_DEFINED
-#endif // ZYRE_BUILD_DRAFT_API
 
 //  Public constants
 #ifdef ZYRE_BUILD_DRAFT_API
@@ -73,9 +66,7 @@ typedef struct _zyre_event_t zyre_event_t;
 #endif // ZYRE_BUILD_DRAFT_API
 
 //  Public classes, each with its own header file
-#ifdef ZYRE_BUILD_DRAFT_API
 #include "zyre_event.h"
-#endif // ZYRE_BUILD_DRAFT_API
 
 #endif
 /*

@@ -22,7 +22,18 @@ set(pkg_config_libs_private "")
 ########################################################################
 # options
 ########################################################################
-OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" ON)
+if (NOT CMAKE_BUILD_TYPE)
+    if (EXISTS "${SOURCE_DIR}/.git")
+        set (CMAKE_BUILD_TYPE Debug)
+    else ()
+        set (CMAKE_BUILD_TYPE Release)
+    endif ()
+endif ()
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" ON)
+else ()
+    OPTION (ENABLE_DRAFTS "Build and install draft classes and methods" OFF)
+endif ()
 IF (ENABLE_DRAFTS)
     ADD_DEFINITIONS (-DZYRE_BUILD_DRAFT_API)
 ENDIF (ENABLE_DRAFTS)
@@ -108,18 +119,13 @@ ENDIF (CZMQ_FOUND)
 ########################################################################
 set (zyre_headers
     include/zyre_library.h
+    include/zyre.h
+    include/zyre_event.h
     src/zre_msg.h
     src/zyre_peer.h
     src/zyre_group.h
     src/zyre_node.h
 )
-
-IF (ENABLE_DRAFTS)
-    list(APPEND zyre_headers
-        include/zyre.h
-        include/zyre_event.h
-    )
-ENDIF (ENABLE_DRAFTS)
 
 source_group ("Header Files" FILES ${zyre_headers})
 install(FILES ${zyre_headers} DESTINATION include)
@@ -129,19 +135,13 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include")
 set (zyre_sources
+    src/zyre.c
+    src/zyre_event.c
     src/zre_msg.c
     src/zyre_peer.c
     src/zyre_group.c
     src/zyre_node.c
 )
-
-IF (ENABLE_DRAFTS)
-    list (APPEND zyre_sources
-        src/zyre.c
-        src/zyre_event.c
-    )
-ENDIF (ENABLE_DRAFTS)
-
 source_group("Source Files" FILES ${zyre_sources})
 if (NOT DEFINED BUILD_SHARED_LIBS)
     SET(BUILD_SHARED_LIBS ON)
@@ -294,18 +294,13 @@ if(UNIX)
 endif()
 
 set(TEST_CLASSES
+    zyre
+    zyre_event
     zre_msg
     zyre_peer
     zyre_group
     zyre_node
 )
-
-IF (ENABLE_DRAFTS)
-    list (APPEND TEST_CLASSES
-    zyre
-    zyre_event
-    )
-ENDIF (ENABLE_DRAFTS)
 
 foreach(TEST_CLASS ${TEST_CLASSES})
     add_test(
