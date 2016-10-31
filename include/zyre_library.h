@@ -65,8 +65,6 @@ typedef struct _zyre_t zyre_t;
 #define ZYRE_T_DEFINED
 typedef struct _zyre_event_t zyre_event_t;
 #define ZYRE_EVENT_T_DEFINED
-typedef struct _zre_msg_t zre_msg_t;
-#define ZRE_MSG_T_DEFINED
 #endif // ZYRE_BUILD_DRAFT_API
 
 //  Public constants
@@ -77,7 +75,6 @@ typedef struct _zre_msg_t zre_msg_t;
 //  Public classes, each with its own header file
 #ifdef ZYRE_BUILD_DRAFT_API
 #include "zyre_event.h"
-#include "zre_msg.h"
 #endif // ZYRE_BUILD_DRAFT_API
 
 #endif

@@ -12,7 +12,7 @@
 
     <class name = "zyre" />
     <class name = "zyre_event" />
-    <class name = "zre_msg" />
+    <class name = "zre_msg" private = "1" />
     <class name = "zyre_peer" private = "1" />
     <class name = "zyre_group" private = "1" />
     <class name = "zyre_node" private = "1" />

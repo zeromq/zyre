@@ -3,7 +3,7 @@
 #  Read the zproject/README.md for information about making permanent changes. #
 ################################################################################
 MAN1 = zpinger.1
-MAN3 = zyre.3 zyre_event.3 zre_msg.3
+MAN3 = zyre.3 zyre_event.3
 MAN7 = 
 MAN_DOC = $(MAN1) $(MAN3) $(MAN7)
 
@@ -38,15 +38,12 @@ zyre.txt:
 	./mkman $@
 zyre_event.txt:
 	./mkman $@
-zre_msg.txt:
-	./mkman $@
 zpinger.txt:
 	./mkman zpinger $@
 clean:
 	rm -f *.1 *.3 *.7
 	./mkman zyre
 	./mkman zyre_event
-	./mkman zre_msg
 	./mkman zpinger zpinger
 
 endif

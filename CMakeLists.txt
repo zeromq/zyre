@@ -108,6 +108,7 @@ ENDIF (CZMQ_FOUND)
 ########################################################################
 set (zyre_headers
     include/zyre_library.h
+    src/zre_msg.h
     src/zyre_peer.h
     src/zyre_group.h
     src/zyre_node.h
@@ -117,7 +118,6 @@ IF (ENABLE_DRAFTS)
     list(APPEND zyre_headers
         include/zyre.h
         include/zyre_event.h
-        include/zre_msg.h
     )
 ENDIF (ENABLE_DRAFTS)
 
@@ -129,6 +129,7 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include")
 set (zyre_sources
+    src/zre_msg.c
     src/zyre_peer.c
     src/zyre_group.c
     src/zyre_node.c
@@ -138,7 +139,6 @@ IF (ENABLE_DRAFTS)
     list (APPEND zyre_sources
         src/zyre.c
         src/zyre_event.c
-        src/zre_msg.c
     )
 ENDIF (ENABLE_DRAFTS)
 
@@ -294,6 +294,7 @@ if(UNIX)
 endif()
 
 set(TEST_CLASSES
+    zre_msg
     zyre_peer
     zyre_group
     zyre_node
@@ -303,7 +304,6 @@ IF (ENABLE_DRAFTS)
     list (APPEND TEST_CLASSES
     zyre
     zyre_event
-    zre_msg
     )
 ENDIF (ENABLE_DRAFTS)
 

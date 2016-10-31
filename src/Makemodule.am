@@ -18,11 +18,11 @@ include_HEADERS = \
 if ENABLE_DRAFTS
 include_HEADERS += \
     include/zyre.h \
-    include/zyre_event.h \
-    include/zre_msg.h
+    include/zyre_event.h
 
 endif
 src_libzyre_la_SOURCES = \
+    src/zre_msg.c \
     src/zyre_peer.c \
     src/zyre_group.c \
     src/zyre_node.c \
@@ -31,8 +31,7 @@ src_libzyre_la_SOURCES = \
 if ENABLE_DRAFTS
 src_libzyre_la_SOURCES += \
     src/zyre.c \
-    src/zyre_event.c \
-    src/zre_msg.c
+    src/zyre_event.c
 
 endif
 
