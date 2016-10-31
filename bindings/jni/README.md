@@ -49,7 +49,7 @@ Then in the android directory, run:
 This does the following:
 
 * It compiles the zyre C sources for Android, into a native library libzyre.so in builds/android/
-* It compiles the JNI Java classes into a jar file zyre-jni-1.1.0.jar in bindings/jni/build/libs
+* It compiles the JNI Java classes into a jar file zyre-jni-1.3.0.jar in bindings/jni/build/libs
 * It compiles the JNI C sources for Android, into a native library libzyrejni.so.
 * It takes czmq-jni-*.jar, which must already be built in ../czmq/bindings/jni/build/libs/
 * It combines all these into zyre-android.jar, which you can use in your Android projects.

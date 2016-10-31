@@ -3,7 +3,7 @@
 #  Read the zproject/README.md for information about making permanent changes. #
 ################################################################################
 TEMPLATE = lib
-VERSION = 1.1.0
+VERSION = 1.3.0
 CONFIG += qt dll qzyre-buildlib
 mac:CONFIG += absolute_library_soname
 win32|mac:!wince*:!win32-msvc:!macx-xcode:CONFIG += debug_and_release build_all

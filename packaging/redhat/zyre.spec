@@ -22,7 +22,7 @@
 %define DRAFTS no
 %endif
 Name:           zyre
-Version:        1.1.0
+Version:        1.3.0
 Release:        1
 Summary:        an open-source framework for proximity-based p2p apps
 License:        MIT

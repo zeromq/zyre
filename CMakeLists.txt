@@ -166,7 +166,7 @@ install(TARGETS zyre
 ########################################################################
 # pkgconfig
 ########################################################################
-set (VERSION "1.1.0")
+set (VERSION "1.3.0")
 set (prefix "${CMAKE_INSTALL_PREFIX}")
 set (exec_prefix "\${prefix}")
 set (libdir "\${prefix}/lib${LIB_SUFFIX}")
