@@ -61,9 +61,7 @@ typedef struct _zyre_event_t zyre_event_t;
 #define ZYRE_EVENT_T_DEFINED
 
 //  Public constants
-#ifdef ZYRE_BUILD_DRAFT_API
 #define ZRE_DISCOVERY_PORT  5670               //  IANA-assigned UDP port for ZRE
-#endif // ZYRE_BUILD_DRAFT_API
 
 //  Public classes, each with its own header file
 #include "zyre_event.h"
