@@ -58,7 +58,7 @@
         'platform.h',
         '../../include/zyre.h',
         '../../src/zre_msg.c',
-        '../../include/zre_msg.h',
+        '../../src/zre_msg.h',
         '../../src/zyre.c',
         '../../include/zyre.h',
         '../../src/zyre_event.c',

@@ -418,8 +418,21 @@ AC_SUBST([pkgconfigdir])
 
 
 # enable specific system integration features
-#   Project has no stable classes so enable draft API by default
-enable_drafts=yes
+if test "x$cross_compiling" = "xyes"; then
+    #   Enable draft by default when cross-compiling
+    defaultval=yes
+else
+    # enable draft API by default if we're in a git repository
+    # else disable it by default; then allow --enable-drafts=yes/no override
+    AC_CHECK_FILE($srcdir/.git, [defaultval=yes], [defaultval=no])
+fi
+
+AC_ARG_ENABLE([drafts],
+    AS_HELP_STRING([--enable-drafts],
+        [Build and install draft classes and methods [default=yes]]),
+    [enable_drafts=$enableval],
+    [enable_drafts=$defaultval])
+
 AM_CONDITIONAL([ENABLE_DRAFTS], [test x$enable_drafts != xno])
 
 if test "x$enable_drafts" = "xyes"; then
@@ -506,6 +519,8 @@ echo "                           (requires zproject and zproto)"
 echo "    - 'make debug'         run the project's selftest under gdb"
 echo "    - 'make memcheck'      run the project's selftest with valgrind to"
 echo "                           check for memory leaks"
+echo "    - 'make coverage'      generate project's selftest coverage report"
+echo "                           expects --with-gcov option for configure"
 echo
 ])
 

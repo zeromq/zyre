@@ -12,7 +12,7 @@
 
     <class name = "zyre" />
     <class name = "zyre_event" />
-    <class name = "zre_msg" />
+    <class name = "zre_msg" private = "1" />
     <class name = "zyre_peer" private = "1" />
     <class name = "zyre_group" private = "1" />
     <class name = "zyre_node" private = "1" />
@@ -30,7 +30,7 @@
         <option name = "repo" value = "https://github.com/hintjens/zyre-nodejs" />
     </target>
 
-    <constant name = "ZRE_DISCOVERY_PORT" value = "5670">IANA-assigned UDP port for ZRE</constant>
+    <constant name = "ZRE_DISCOVERY_PORT" value = "5670" state = "stable">IANA-assigned UDP port for ZRE</constant>
     <constant name = "REAP_INTERVAL" value = "1000" private = "1" >Once per second</constant>
 </project>
 

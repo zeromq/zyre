@@ -26,12 +26,18 @@
 #include "../include/zyre.h"
 
 //  Internal API
+#include "zre_msg.h"
 #include "zyre_peer.h"
 #include "zyre_group.h"
 #include "zyre_node.h"
 
 //  *** To avoid double-definitions, only define if building without draft ***
 #ifndef ZYRE_BUILD_DRAFT_API
+
+//  *** Draft method, defined for internal use only ***
+//  Self test of this class.
+ZYRE_EXPORT void
+    zre_msg_test (bool verbose);
 
 //  *** Draft method, defined for internal use only ***
 //  Self test of this class.

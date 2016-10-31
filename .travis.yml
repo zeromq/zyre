@@ -1,5 +1,6 @@
 # Travis CI script
-language: java
+
+language: c
 
 os:
 - linux
@@ -11,6 +12,16 @@ services:
 - docker
 
 env:
+  global:
+    # Note: Secure variables must be global!
+    #
+    # Bintray upload credentials. (BINTRAY_USER and BINTRAY_KEY are encrypted!)
+    # These are used to publish the czmq jni bindings to bintray when the deploy
+    # step is triggered.
+    - secure: Dm9Hg0hqE1K9uDSrfW/fWj0ehzBTeevlP87J/d4bXQ2HHTqn7JoJpXFu2b0CkCquZ/raZIOQIXPA0heGmVyafNKIHl1Wotb1TVxB7VS6cLb67BxH9M7LIxwU2vPk/qpsSUGqRt73uDe6HNIqOQubokyWHJ/KwIDVCDa8sP1CpEs=
+    - secure: LZxtiweZGsN2Eu1ck7yDBYDRmcE4+q7SWuFSUZzYeXhyZIilBCUwuvKa3FNkC3SwoUpBfZ+T5wyKfSvhZKFUn0p3FVykpbEZxpDCke5sclu9Q9uDP2t3926/Wf8kFT3NG51qxAJwgk9vXh5Rz9JcIlyPJY6/MCm5n/HBo+BpJ9A=
+    - BINTRAY_USER_ORG=zeromq
+  matrix:
   - BUILD_TYPE=default
   - BUILD_TYPE=android
   - BUILD_TYPE=cmake
@@ -48,5 +59,16 @@ before_install:
 - if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils ; fi
 
 # Build and check this project according to the BUILD_TYPE
-script: ./ci_build.sh
-
+script: "./ci_build.sh"
+before_deploy: . ./ci_deploy.sh
+deploy:
+  provider: releases
+  api_key:
+    secure: "k0AHi/KbT5uRiugRQdHG4B8Le5Q/clTFM7dwS3V+c5xjCsAa8UOgi4Q/rYEm2EfjnsItg/qtRYn9rJ/9XqahBcIhQKwMFHntblUY7gRYz6CCT0EpRnZkU+hczUvXjzTIIxs1d3goMCdFlfmIz+9aRh/o8LyzgoIF5Fd6AJWX4JY="
+  file_glob: true
+  file: ${ZYRE_DEPLOYMENT}
+  skip_cleanup: true
+  on:
+    branch: master
+    tags: true
+    condition: $TRAVIS_OS_NAME =~ (linux) && $BUILD_TYPE =~ (default|bindings)
