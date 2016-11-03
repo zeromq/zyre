@@ -265,7 +265,7 @@ zyre_node_stop (zyre_node_t *self)
 }
 
 
-//  Send message to one peer; called via zhash_foreach
+//  Send message to one peer; called while looping over zhash
 
 static int
 zyre_node_send_peer (const char *key, void *item, void *argument)
@@ -297,6 +297,8 @@ zyre_node_log_pair (const char *key, void *item, void *argument)
 static void
 zyre_node_dump (zyre_node_t *self)
 {
+    void *item;
+
     zsys_info ("zyre_node: dump state");
     zsys_info (" - name=%s uuid=%s", self->name, zuuid_str (self->uuid));
 
@@ -312,10 +314,14 @@ zyre_node_dump (zyre_node_t *self)
             zsys_info ("   - connect endpoint=%s", self->gossip_connect);
     }
     zsys_info (" - headers=%zu:", zhash_size (self->headers));
-    zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_node_log_pair, self);
+    for (item = zhash_first (self->headers); item != NULL;
+            item = zhash_next (self->headers))
+        zyre_node_log_pair (zhash_cursor (self->headers), item, self);
 
     zsys_info (" - peers=%zu:", zhash_size (self->peers));
-    zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_log_item, self);
+    for (item = zhash_first (self->peers); item != NULL;
+            item = zhash_next (self->peers))
+        zyre_node_log_item (zhash_cursor (self->peers), item, self);
 
     zsys_info (" - own groups=%zu:", zlist_size (self->own_groups));
     const char *group = (const char *) zlist_first (self->own_groups);
@@ -467,13 +473,16 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "JOIN")) {
         char *name = zmsg_popstr (request);
         if (!zlist_exists (self->own_groups, name)) {
+            void *item;
             //  Only send if we're not already in group
             zlist_append (self->own_groups, name);
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_JOIN);
             zre_msg_set_group (msg, name);
             //  Update status before sending command
             zre_msg_set_status (msg, ++(self->status));
-            zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_send_peer, msg);
+            for (item = zhash_first (self->peers); item != NULL;
+                    item = zhash_next (self->peers))
+                zyre_node_send_peer (zhash_cursor (self->peers), item, msg);
             zre_msg_destroy (&msg);
             if (self->verbose)
                 zsys_info ("(%s) JOIN group=%s", self->name, name);
@@ -484,12 +493,15 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "LEAVE")) {
         char *name = zmsg_popstr (request);
         if (zlist_exists (self->own_groups, name)) {
+            void *item;
             //  Only send if we are actually in group
             zre_msg_t *msg = zre_msg_new (ZRE_MSG_LEAVE);
             zre_msg_set_group (msg, name);
             //  Update status before sending command
             zre_msg_set_status (msg, ++(self->status));
-            zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_send_peer, msg);
+            for (item = zhash_first (self->peers); item != NULL;
+                    item = zhash_next (self->peers))
+                zyre_node_send_peer (zhash_cursor (self->peers), item, msg);
             zre_msg_destroy (&msg);
             zlist_remove (self->own_groups, name);
             if (self->verbose)
@@ -582,7 +594,10 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (!peer) {
         //  Purge any previous peer on same endpoint
-        zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_purge_peer, (char *) endpoint);
+        void *item;
+        for (item = zhash_first (self->peers); item != NULL;
+                item = zhash_next (self->peers))
+            zyre_node_purge_peer (zhash_cursor (self->peers), item, (char *) endpoint);
 
         peer = zyre_peer_new (self->peers, uuid);
         assert (peer);
@@ -621,6 +636,7 @@ zyre_node_delete_peer (const char *key, void *item, void *argument)
 static void
 zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 {
+    void *item;
     //  Tell the calling application the peer has gone
     zstr_sendm (self->outbox, "EXIT");
     zstr_sendm (self->outbox, zyre_peer_identity (peer));
@@ -631,7 +647,9 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
 
     //  Remove peer from any groups we've got it in
-    zhash_foreach (self->peer_groups, (zhash_foreach_fn *) zyre_node_delete_peer, peer);
+    for (item = zhash_first (self->peer_groups); item != NULL;
+            item = zhash_next (self->peer_groups))
+        zyre_node_delete_peer (zhash_cursor (self->peer_groups), item, peer);
     //  To destroy peer, we remove from peers hash table
     zhash_delete (self->peers, zyre_peer_identity (peer));
 }
@@ -965,9 +983,12 @@ zyre_node_actor (zsock_t *pipe, void *args)
         else
         if (zpoller_expired (self->poller)) {
             if (zclock_mono () >= reap_at) {
+                void *item;
                 reap_at = zclock_mono () + REAP_INTERVAL;
                 //  Ping all peers and reap any expired ones
-                zhash_foreach (self->peers, (zhash_foreach_fn *) zyre_node_ping_peer, self);
+                for (item = zhash_first (self->peers); item != NULL;
+                        item = zhash_next (self->peers))
+                    zyre_node_ping_peer (zhash_cursor (self->peers), item, self);
             }
         }
     }
