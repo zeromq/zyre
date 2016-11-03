@@ -129,8 +129,11 @@ zyre_event_print (zyre_event_t *self)
     zsys_info (" - type=%s", self->type);
 
     if (streq (self->type, "ENTER")) {
+        void *item;
         zsys_info (" - headers=%zu:", zhash_size (self->headers));
-        zhash_foreach (self->headers, (zhash_foreach_fn *) zyre_event_log_pair, self);
+        for (item = zhash_first (self->headers); item != NULL;
+                item = zhash_next (self->headers))
+            zyre_event_log_pair (zhash_cursor (self->headers), item, self);
         zsys_info (" - address=%s", zyre_event_peer_addr (self));
     }
     else

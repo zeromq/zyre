@@ -112,8 +112,11 @@ s_peer_send (const char *key, void *item, void *argument)
 void
 zyre_group_send (zyre_group_t *self, zre_msg_t **msg_p)
 {
+    void *item;
     assert (self);
-    zhash_foreach (self->peers, (zhash_foreach_fn *) s_peer_send, *msg_p);
+    for (item = zhash_first (self->peers); item != NULL;
+            item = zhash_next (self->peers))
+        s_peer_send (zhash_cursor (self->peers), item, *msg_p);
     zre_msg_destroy (msg_p);
 }
 
