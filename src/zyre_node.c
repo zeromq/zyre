@@ -172,41 +172,6 @@ zyre_node_start (zyre_node_t *self)
 
         if (self->verbose)
             zsock_send (self->beacon, "s", "VERBOSE");
-
-        //  Our hostname is provided by zbeacon
-        zsock_send (self->beacon, "si", "CONFIGURE", self->beacon_port);
-        char *hostname = zstr_recv (self->beacon);
-        if (streq (hostname, ""))
-            return -1;              //  No UDP broadcast interface available
-
-        if (zsys_ipv6 ())
-            self->port = zsock_bind (self->inbox, "tcp://%s%%%s:*", zsys_ipv6_address (), zsys_interface ());
-        else
-            self->port = zsock_bind (self->inbox, "tcp://%s:*", hostname);
-
-        zstr_free (&hostname);
-        assert (self->port > 0);    //  Die on bad interface or port exhaustion
-        assert (!self->endpoint);   //  If caller set this, we'd be using gossip
-        if (streq (zsys_interface (), "*")) {
-            char *hostname = zsys_hostname ();
-            self->endpoint = zsys_sprintf ("tcp://%s:%d", hostname, self->port);
-            zstr_free (&hostname);
-        }
-        else
-            self->endpoint = strdup (zsock_endpoint (self->inbox));
-
-        //  Set broadcast/listen beacon
-        beacon_t beacon;
-        beacon.protocol [0] = 'Z';
-        beacon.protocol [1] = 'R';
-        beacon.protocol [2] = 'E';
-        beacon.version = BEACON_VERSION;
-        beacon.port = htons (self->port);
-        zuuid_export (self->uuid, beacon.uuid);
-        zsock_send (self->beacon, "sbi", "PUBLISH",
-            (byte *) &beacon, sizeof (beacon_t), self->interval);
-        zsock_send (self->beacon, "sb", "SUBSCRIBE", (byte *) "ZRE", 3);
-        zpoller_add (self->poller, self->beacon);
     }
     else {
         //  Start gossip discovery
@@ -228,9 +193,9 @@ zyre_node_start (zyre_node_t *self)
         zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->endpoint, NULL);
         //  Start polling on zgossip
         zpoller_add (self->poller, self->gossip);
+        //  Start polling on inbox
+        zpoller_add(self->poller, self->inbox);
     }
-    //  Start polling on inbox
-    zpoller_add (self->poller, self->inbox);
     return 0;
 }
 
@@ -956,6 +921,51 @@ zyre_node_actor (zsock_t *pipe, void *args)
     //  Loop until the agent is terminated one way or another
     int64_t reap_at = zclock_mono () + REAP_INTERVAL;
     while (!self->terminated) {
+
+        // Start beacon as soon as we can
+        if (self->beacon && self->port <= 0) {
+            //  Our hostname is provided by zbeacon
+            zsock_send(self->beacon, "si", "CONFIGURE", self->beacon_port);
+            char *hostname = zstr_recv(self->beacon);
+
+            // Is UDP broadcast interface available?
+            if (!streq(hostname, "")) {
+                if (zsys_ipv6())
+                    self->port = zsock_bind(self->inbox, "tcp://%s%%%s:*", zsys_ipv6_address(), zsys_interface());
+                else
+                    self->port = zsock_bind(self->inbox, "tcp://%s:*", hostname);
+
+                if (self->port > 0) {
+                    assert(!self->endpoint);   //  If caller set this, we'd be using gossip
+                    if (streq(zsys_interface(), "*")) {
+                        char *hostname = zsys_hostname();
+                        self->endpoint = zsys_sprintf("tcp://%s:%d", hostname, self->port);
+                        zstr_free(&hostname);
+                    }
+                    else {
+                        self->endpoint = strdup(zsock_endpoint(self->inbox));
+                    }
+
+                    //  Set broadcast/listen beacon
+                    beacon_t beacon;
+                    beacon.protocol[0] = 'Z';
+                    beacon.protocol[1] = 'R';
+                    beacon.protocol[2] = 'E';
+                    beacon.version = BEACON_VERSION;
+                    beacon.port = htons(self->port);
+                    zuuid_export(self->uuid, beacon.uuid);
+                    zsock_send(self->beacon, "sbi", "PUBLISH",
+                        (byte *)&beacon, sizeof(beacon_t), self->interval);
+                    zsock_send(self->beacon, "sb", "SUBSCRIBE", (byte *) "ZRE", 3);
+                    zpoller_add(self->poller, self->beacon);
+
+                    //  Start polling on inbox
+                    zpoller_add(self->poller, self->inbox);
+                }
+            }
+            zstr_free(&hostname);
+        }
+
         int timeout = (int) (reap_at - zclock_mono ());
         if (timeout > REAP_INTERVAL)
             timeout = REAP_INTERVAL;
