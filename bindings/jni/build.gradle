@@ -8,7 +8,7 @@
 plugins {
     id 'java'
     id 'maven-publish'
-    id "com.jfrog.bintray" version "1.6"
+    id "com.jfrog.bintray" version "1.7.2"
 }
 
 group = "org.zeromq"
@@ -101,6 +101,7 @@ bintray {
     key = System.getenv('BINTRAY_KEY')
     publications = ['mavenJava']
     publish = true
+    override = true
     pkg {
         repo = "maven"
         name = "zyre-jni"

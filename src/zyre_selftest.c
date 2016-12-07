@@ -31,10 +31,6 @@ static test_item_t
 all_tests [] = {
     { "zyre", zyre_test },
     { "zyre_event", zyre_event_test },
-    { "zre_msg", zre_msg_test },
-    { "zyre_peer", zyre_peer_test },
-    { "zyre_group", zyre_group_test },
-    { "zyre_node", zyre_node_test },
     {0, 0}          //  Sentinel
 };
 

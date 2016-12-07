@@ -36,22 +36,22 @@
 
 //  *** Draft method, defined for internal use only ***
 //  Self test of this class.
-ZYRE_EXPORT void
+ZYRE_PRIVATE void
     zre_msg_test (bool verbose);
 
 //  *** Draft method, defined for internal use only ***
 //  Self test of this class.
-ZYRE_EXPORT void
+ZYRE_PRIVATE void
     zyre_peer_test (bool verbose);
 
 //  *** Draft method, defined for internal use only ***
 //  Self test of this class.
-ZYRE_EXPORT void
+ZYRE_PRIVATE void
     zyre_group_test (bool verbose);
 
 //  *** Draft method, defined for internal use only ***
 //  Self test of this class.
-ZYRE_EXPORT void
+ZYRE_PRIVATE void
     zyre_node_test (bool verbose);
 
 #endif // ZYRE_BUILD_DRAFT_API

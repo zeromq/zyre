@@ -150,7 +150,7 @@ PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
         fi
 
 
-        AC_CHECK_LIB([czmq], [zctx_test],
+        AC_CHECK_LIB([czmq], [zhashx_test],
             [
                 CFLAGS="${czmq_synthetic_cflags} ${CFLAGS}"
                 LDFLAGS="${czmq_synthetic_libs} ${LDFLAGS}"
@@ -238,6 +238,8 @@ case "${host_os}" in
     *solaris*)
         # Define on Solaris to enable all library features
         CPPFLAGS="-D_PTHREADS $CPPFLAGS"
+        # Allow definitions of common OS-provided functions that are not in old standards
+        CPPFLAGS="-D__EXTENSIONS__ $CPPFLAGS"
         AC_DEFINE(ZYRE_HAVE_SOLARIS, 1, [Have Solaris OS])
         CFLAGS="${CFLAGS} -lsocket -lssp"
         ;;

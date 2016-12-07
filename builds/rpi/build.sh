@@ -76,10 +76,10 @@ CONFIG_OPTS+=("RANLIB=${RANLIB}")
 
 if [ ! $INCREMENTAL ]; then
     # Clone and build dependencies
-    if [ ! -e libzmq ]; then
-        git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
+    if [ ! -e libzmq.git ]; then
+        git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq.git
     fi
-    pushd libzmq
+    pushd libzmq.git
     (
         if [ $UPDATE ]; then
             git pull --rebase
@@ -97,10 +97,10 @@ if [ ! $INCREMENTAL ]; then
     ) || exit 1
     popd
 
-    if [ ! -e czmq ]; then
-        git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
+    if [ ! -e czmq.git ]; then
+        git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq.git
     fi
-    pushd czmq
+    pushd czmq.git
     (
         if [ $UPDATE ]; then
             git pull --rebase
