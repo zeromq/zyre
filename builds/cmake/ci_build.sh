@@ -21,8 +21,8 @@ CMAKE_OPTS+=("-DCMAKE_LIBRARY_PATH:PATH=${BUILD_PREFIX}/lib")
 CMAKE_OPTS+=("-DCMAKE_INCLUDE_PATH:PATH=${BUILD_PREFIX}/include")
 
 # Clone and build dependencies
-git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
-cd libzmq
+git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq.git
+cd libzmq.git
 git --no-pager log --oneline -n1
 if [ -e autogen.sh ]; then
     ./autogen.sh 2> /dev/null
@@ -34,8 +34,8 @@ fi
 make -j4
 make install
 cd ..
-git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
-cd czmq
+git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq.git
+cd czmq.git
 git --no-pager log --oneline -n1
 if [ -e autogen.sh ]; then
     ./autogen.sh 2> /dev/null

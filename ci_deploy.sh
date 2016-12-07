@@ -22,7 +22,8 @@ if [ "$BUILD_TYPE" == "default" ]; then
     cd -
 elif [ "$BUILD_TYPE" == "bindings" ] && [ "$BINDING" == "jni" ]; then
     ( cd bindings/jni && TERM=dumb PKG_CONFIG_PATH=/tmp/lib/pkgconfig ./gradlew clean bintrayUpload )
-    export ZYRE_DEPLOYMENT=bindings/jni/android/zyre-android.jar
+    cp bindings/jni/android/zyre-android.jar zyre-android-1.3.0.jar
+    export ZYRE_DEPLOYMENT=zyre-android-1.3.0.jar
 else
     export ZYRE_DEPLOYMENT=""
 fi

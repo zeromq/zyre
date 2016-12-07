@@ -49,8 +49,14 @@
 #   else
 #       define ZYRE_EXPORT __declspec(dllimport)
 #   endif
+#   define ZYRE_PRIVATE
 #else
 #   define ZYRE_EXPORT
+#   if (defined __GNUC__ && __GNUC__ >= 4) || defined __INTEL_COMPILER
+#       define ZYRE_PRIVATE __attribute__ ((visibility ("hidden")))
+#   else
+#       define ZYRE_PRIVATE
+#   endif
 #endif
 
 //  Opaque class structures to allow forward references

@@ -296,10 +296,6 @@ endif()
 set(TEST_CLASSES
     zyre
     zyre_event
-    zre_msg
-    zyre_peer
-    zyre_group
-    zyre_node
 )
 
 foreach(TEST_CLASS ${TEST_CLASSES})

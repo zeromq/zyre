@@ -42,6 +42,7 @@ zpinger.txt:
 	./mkman zpinger $@
 clean:
 	rm -f *.1 *.3 *.7
+doc:
 	./mkman zyre
 	./mkman zyre_event
 	./mkman zpinger zpinger
