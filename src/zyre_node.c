@@ -930,9 +930,11 @@ zyre_node_actor (zsock_t *pipe, void *args)
 
             // Is UDP broadcast interface available?
             if (!streq(hostname, "")) {
-                if (zsys_ipv6())
-                    self->port = zsock_bind(self->inbox, "tcp://%s%%%s:*", zsys_ipv6_address(), zsys_interface());
-                else
+                const char *iface = zsys_interface ();
+                if (zsys_ipv6() && iface && !streq (iface, "") && !streq (iface, "*") && !streq (zsys_ipv6_address (), "")) {
+                    self->port = zsock_bind(self->inbox, "tcp://%s%%%s:*", zsys_ipv6_address (),
+                        iface);
+                } else
                     self->port = zsock_bind(self->inbox, "tcp://%s:*", hostname);
 
                 if (self->port > 0) {
