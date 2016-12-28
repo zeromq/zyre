@@ -39,7 +39,7 @@ IF EXIST "..\..\..\libzmq" (
 ) ELSE (
     ECHO Building without libzmq
     ECHO zyre cannot build without libzmq
-    ECHO Please clone https://github.com/zeromq/libzmq, and then configure ^& build
+    ECHO Please clone https://github.com/zeromq/libzmq.git, and then configure ^& build
     ECHO TODO: resolve this problem automatically.
     GOTO error
 )
@@ -49,7 +49,7 @@ IF EXIST "..\..\..\czmq" (
 ) ELSE (
     ECHO Building without czmq
     ECHO zyre cannot build without czmq
-    ECHO Please clone https://github.com/zeromq/czmq, and then configure ^& build
+    ECHO Please clone https://github.com/zeromq/czmq.git, and then configure ^& build
     ECHO TODO: resolve this problem automatically.
     GOTO error
 )

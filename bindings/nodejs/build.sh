@@ -40,8 +40,8 @@ cd ../../..
 
 #   Check dependent projects
 if [ ! -d libzmq ]; then
-    echo "I:    cloning https://github.com/zeromq/libzmq into `pwd`/libzmq..."
-    git clone $QUIET https://github.com/zeromq/libzmq
+    echo "I:    cloning https://github.com/zeromq/libzmq.git into `pwd`/libzmq..."
+    git clone $QUIET https://github.com/zeromq/libzmq.git
 fi
 if [ ! -f libzmq/builds/gyp/project.gyp ]; then
     echo "E:    `pwd`/libzmq out of date (builds/gyp/project.gyp missing)"
@@ -50,8 +50,8 @@ fi
 
 #   Check dependent projects
 if [ ! -d czmq ]; then
-    echo "I:    cloning https://github.com/zeromq/czmq into `pwd`/czmq..."
-    git clone $QUIET https://github.com/zeromq/czmq
+    echo "I:    cloning https://github.com/zeromq/czmq.git into `pwd`/czmq..."
+    git clone $QUIET https://github.com/zeromq/czmq.git
 fi
 if [ ! -f czmq/builds/gyp/project.gyp ]; then
     echo "E:    `pwd`/czmq out of date (builds/gyp/project.gyp missing)"

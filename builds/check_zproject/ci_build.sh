@@ -2,20 +2,26 @@
 set -ex
 
 cd $REPO_DIR/..
-git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq.git
-git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq.git
+git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git libzmq
+git clone --quiet --depth 1 https://github.com/zeromq/czmq.git czmq
 cd -
 
-cd $REPO_DIR/..
-git clone --quiet --depth 1 https://github.com/zeromq/zproject zproject.git
-cd zproject.git
-export PATH=$PATH:`pwd`
+if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list zproject >/dev/null 2>&1) || \
+       (command -v brew >/dev/null 2>&1 && brew ls --versions zproject >/dev/null 2>&1)); then
+    cd $REPO_DIR/..
+    git clone --quiet --depth 1 https://github.com/zeromq/zproject zproject
+    cd zproject
+    export PATH=$PATH:`pwd`
+fi
 
-cd $REPO_DIR/..
-git clone https://github.com/imatix/gsl.git gsl.git
-cd gsl.git/src
-make
-export PATH=$PATH:`pwd`
+if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list generator-scripting-language >/dev/null 2>&1) || \
+       (command -v brew >/dev/null 2>&1 && brew ls --versions gsl >/dev/null 2>&1)); then
+    cd $REPO_DIR/..
+    git clone https://github.com/imatix/gsl.git gsl
+    cd gsl/src
+    make
+    export PATH=$PATH:`pwd`
+fi
 
 # As we will overwrite this script file make sure bash loads the
 # next lines into memory before executing
@@ -36,4 +42,5 @@ export PATH=$PATH:`pwd`
         echo "zproject generated new files!"
         exit 1
     fi
+    exit 0
 }
