@@ -28,7 +28,7 @@ IF EXIST "..\..\..\..\libzmq\builds/msvc/vs2015\libzmq.import.props" (
     IF errorlevel 1 GOTO error
 ) ELSE (
     ECHO Did not find libzmq, aborting.
-    ECHO Please clone from https://github.com/zeromq/libzmq, and then build.
+    ECHO Please clone from https://github.com/zeromq/libzmq.git, and then build.
     GOTO error
 )
 IF EXIST "..\..\..\..\czmq\builds/msvc/vs2015\czmq.import.props" (
@@ -36,7 +36,7 @@ IF EXIST "..\..\..\..\czmq\builds/msvc/vs2015\czmq.import.props" (
     IF errorlevel 1 GOTO error
 ) ELSE (
     ECHO Did not find czmq, aborting.
-    ECHO Please clone from https://github.com/zeromq/czmq, and then build.
+    ECHO Please clone from https://github.com/zeromq/czmq.git, and then build.
     GOTO error
 )
 

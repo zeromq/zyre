@@ -22,7 +22,7 @@ CONFIG_OPTS+=("--quiet")
 pushd ../../..
 
 # Clone and build dependencies
-git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
+git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git libzmq
 cd libzmq
 git --no-pager log --oneline -n1
 if [ -e autogen.sh ]; then
@@ -31,12 +31,20 @@ fi
 if [ -e buildconf ]; then
     ./buildconf 2> /dev/null
 fi
+if [ ! -e autogen.sh ] && [ ! -e buildconf ] && [ ! -e ./configure ] && [ -s ./configure.ac ]; then
+    libtoolize --copy --force && \
+    aclocal -I . && \
+    autoheader && \
+    automake --add-missing --copy && \
+    autoconf || \
+    autoreconf -fiv
+fi
 ./configure "${CONFIG_OPTS[@]}"
 make -j4
 make install
 cd ..
 
-git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
+git clone --quiet --depth 1 https://github.com/zeromq/czmq.git czmq
 cd czmq
 git --no-pager log --oneline -n1
 if [ -e autogen.sh ]; then
@@ -44,6 +52,14 @@ if [ -e autogen.sh ]; then
 fi
 if [ -e buildconf ]; then
     ./buildconf 2> /dev/null
+fi
+if [ ! -e autogen.sh ] && [ ! -e buildconf ] && [ ! -e ./configure ] && [ -s ./configure.ac ]; then
+    libtoolize --copy --force && \
+    aclocal -I . && \
+    autoheader && \
+    automake --add-missing --copy && \
+    autoconf || \
+    autoreconf -fiv
 fi
 ./configure "${CONFIG_OPTS[@]}"
 make -j4

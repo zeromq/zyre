@@ -76,10 +76,10 @@ CONFIG_OPTS+=("RANLIB=${RANLIB}")
 
 if [ ! $INCREMENTAL ]; then
     # Clone and build dependencies
-    if [ ! -e libzmq.git ]; then
-        git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq.git
+    if [ ! -e libzmq ]; then
+        git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git libzmq
     fi
-    pushd libzmq.git
+    pushd libzmq
     (
         if [ $UPDATE ]; then
             git pull --rebase
@@ -90,6 +90,14 @@ if [ ! $INCREMENTAL ]; then
         fi
         if [ -e buildconf ]; then
             ./buildconf 2> /dev/null
+        fi
+        if [ ! -e autogen.sh ] && [ ! -e buildconf ] && [ ! -e ./configure ] && [ -s ./configure.ac ]; then
+            libtoolize --copy --force && \
+            aclocal -I . && \
+            autoheader && \
+            automake --add-missing --copy && \
+            autoconf || \
+            autoreconf -fiv
         fi
         ./configure "${CONFIG_OPTS[@]}"
         make -j4
@@ -97,10 +105,10 @@ if [ ! $INCREMENTAL ]; then
     ) || exit 1
     popd
 
-    if [ ! -e czmq.git ]; then
-        git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq.git
+    if [ ! -e czmq ]; then
+        git clone --quiet --depth 1 https://github.com/zeromq/czmq.git czmq
     fi
-    pushd czmq.git
+    pushd czmq
     (
         if [ $UPDATE ]; then
             git pull --rebase
@@ -111,6 +119,14 @@ if [ ! $INCREMENTAL ]; then
         fi
         if [ -e buildconf ]; then
             ./buildconf 2> /dev/null
+        fi
+        if [ ! -e autogen.sh ] && [ ! -e buildconf ] && [ ! -e ./configure ] && [ -s ./configure.ac ]; then
+            libtoolize --copy --force && \
+            aclocal -I . && \
+            autoheader && \
+            automake --add-missing --copy && \
+            autoconf || \
+            autoreconf -fiv
         fi
         ./configure "${CONFIG_OPTS[@]}"
         make -j4

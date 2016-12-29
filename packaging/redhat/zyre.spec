@@ -48,11 +48,10 @@ zyre an open-source framework for proximity-based p2p apps.
 
 %package -n libzyre1
 Group:          System/Libraries
-Summary:        an open-source framework for proximity-based p2p apps
+Summary:        an open-source framework for proximity-based p2p apps shared library
 
 %description -n libzyre1
-zyre an open-source framework for proximity-based p2p apps.
-This package contains shared library.
+This package contains shared library for zyre: an open-source framework for proximity-based p2p apps
 
 %post -n libzyre1 -p /sbin/ldconfig
 %postun -n libzyre1 -p /sbin/ldconfig
@@ -69,8 +68,8 @@ Requires:       zeromq-devel
 Requires:       czmq-devel
 
 %description devel
-zyre an open-source framework for proximity-based p2p apps.
-This package contains development files.
+an open-source framework for proximity-based p2p apps development tools
+This package contains development files for zyre: an open-source framework for proximity-based p2p apps
 
 %files devel
 %defattr(-,root,root)

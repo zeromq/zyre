@@ -1,4 +1,5 @@
 usr/include/*
 usr/lib/*/libzyre.so
 usr/lib/*/pkgconfig/libzyre.pc
+usr/share/zproject
 usr/share/man/man3/*

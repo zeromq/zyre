@@ -26,7 +26,7 @@ Build-Depends-Indep: asciidoc,
 Package: libzyre1
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: zyre
+Description: an open-source framework for proximity-based p2p apps shared library
  This package contains shared library for zyre: an open-source framework for proximity-based p2p apps
 
 Package: libzyre-dev
@@ -36,12 +36,12 @@ Depends:
     libzmq3-dev,
     libczmq-dev,
     libzyre1 (= ${binary:Version})
-Description: development files for zyre
+Description: an open-source framework for proximity-based p2p apps development tools
  This package contains development files for zyre: an open-source framework for proximity-based p2p apps
 
 Package: zyre
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends},
 Description: an open-source framework for proximity-based p2p apps
  Main package for zyre: an open-source framework for proximity-based p2p apps
 
@@ -52,6 +52,6 @@ Priority: extra
 Depends:
     zyre (= ${binary:Version}),
     ${misc:Depends}
-Description: debugging symbols for zyre
+Description: an open-source framework for proximity-based p2p apps debugging symbols
  This package contains the debugging symbols for zyre : an open-source framework for proximity-based p2p apps.
 
