@@ -30,6 +30,7 @@ int main (int argc, char *argv [])
 {
     bool verbose = false;
     char *iface = NULL;
+    int ipv6 = 0;
     int argn;
     for (argn = 1; argn < argc; argn++) {
         if (streq (argv [argn], "--help")
@@ -38,6 +39,7 @@ int main (int argc, char *argv [])
             puts ("  --help / -h            this help");
             puts ("  --verbose / -v         verbose test output");
             puts ("  --interface / -i       use this interface");
+            puts ("  --ipv6 / -6            use IPv6");
             return 0;
         }
         if (streq (argv [argn], "--verbose")
@@ -47,11 +49,16 @@ int main (int argc, char *argv [])
         if (streq (argv [argn], "--interface")
         ||  streq (argv [argn], "-i"))
             iface = argv [++argn];
+        else
+        if (streq (argv [argn], "--ipv6")
+        ||  streq (argv [argn], "-6"))
+            ipv6 = 1;
         else {
             printf ("Unknown option: %s\n", argv [argn]);
             return 1;
         }
     }
+    zsys_set_ipv6(ipv6);
     zyre_t *zyre = zyre_new (NULL);
     zsys_info ("Create Zyre node, uuid=%s, name=%s", zyre_uuid (zyre), zyre_name (zyre));
     if (verbose)
