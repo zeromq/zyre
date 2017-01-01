@@ -153,6 +153,9 @@ set_target_properties(zyre
 set_target_properties(zyre
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
 )
+set_target_properties (zyre
+    PROPERTIES SOVERSION "1.0.3"
+)
 target_link_libraries(zyre
     ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
 )
