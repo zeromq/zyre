@@ -8,6 +8,7 @@
     >
     <include filename = "license.xml" />
     <version major = "1" minor = "3" patch = "0" />
+    <abi current = "1" revision = "3" age = "0" />
     <use project = "czmq" />
 
     <class name = "zyre" />
