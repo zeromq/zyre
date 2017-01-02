@@ -1,9 +1,17 @@
 .set GIT=https://github.com/zeromq/zyre
 .sub 0MQ=ØMQ
 
+[![GitHub release](https://img.shields.io/github/release/zeromq/zyre.svg)](https://github.com/zeromq/zyre/releases)
+[![OBS draft](https://img.shields.io/badge/OBS%20master-draft-yellow.svg)](http://software.opensuse.org/download.html?project=home%3Azeromq%3Agit-draft&package=zyre)
+[![OBS stable](https://img.shields.io/badge/OBS%20master-stable-yellow.svg)](http://software.opensuse.org/download.html?project=home%3Azeromq%3Agit-stable&package=zyre)
+<a target="_blank" href="http://webchat.freenode.net?channels=%23zeromq&uio=d4"><img src="https://cloud.githubusercontent.com/assets/493242/14886493/5c660ea2-0d51-11e6-8249-502e6c71e9f2.png" height = "20" /></a>
+[![license](https://img.shields.io/github/license/zeromq/zyre.svg)](https://github.com/zeromq/zyre/blob/master/LICENSE)
+
 # Zyre - Local Area Clustering for Peer-to-Peer Applications
 
-[![Build Status](https://travis-ci.org/zeromq/zyre.svg?branch=master)](https://travis-ci.org/zeromq/zyre)
+| Linux & MacOSX |
+|:--------------:|
+|[![Build Status](https://travis-ci.org/zeromq/zyre.png?branch=master)](https://travis-ci.org/zeromq/zyre)|
 
 ## Contents
 
