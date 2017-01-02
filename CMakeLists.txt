@@ -239,6 +239,9 @@ set_target_properties(
     zpinger
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
 )
+install(TARGETS zpinger
+    RUNTIME DESTINATION bin
+)
 add_executable(
     ztester_beacon
     "${SOURCE_DIR}/src/ztester_beacon.c"
