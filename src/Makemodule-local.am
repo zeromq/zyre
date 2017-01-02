@@ -1,0 +1,10 @@
+# Project-local changes to auto-generated content
+
+if ENABLE_EXAMPLES_CHAT
+EXTRA_DIST += examples/LICENSE
+
+noinst_PROGRAMS += examples/chat/chat
+examples_chat_chat_SOURCES = examples/chat/chat.c
+examples_chat_chat_CPPFLAGS = ${AM_CPPFLAGS}
+examples_chat_chat_LDADD = ${program_libs}
+endif #ENABLE_EXAMPLES_CHAT
