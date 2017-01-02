@@ -1,0 +1,15 @@
+add_executable(
+    chat
+    "${SOURCE_DIR}/examples/chat/chat.c"
+)
+target_link_libraries(
+    chat
+    zyre
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+set_target_properties(
+    chat
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/examples/chat"
+)

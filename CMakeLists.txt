@@ -166,6 +166,8 @@ install(TARGETS zyre
     RUNTIME DESTINATION bin              # .dll file
 )
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/CMakeLists-local.txt) # Optional project-local hook
+
 ########################################################################
 # pkgconfig
 ########################################################################
@@ -236,6 +238,9 @@ target_link_libraries(
 set_target_properties(
     zpinger
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
+)
+install(TARGETS zpinger
+    RUNTIME DESTINATION bin
 )
 add_executable(
     ztester_beacon
