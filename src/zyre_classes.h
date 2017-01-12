@@ -54,6 +54,10 @@ ZYRE_PRIVATE void
 ZYRE_PRIVATE void
     zyre_node_test (bool verbose);
 
+//  Self test for private classes
+ZYRE_PRIVATE void
+    zyre_private_selftest (bool verbose);
+
 #endif // ZYRE_BUILD_DRAFT_API
 
 //  Private constants

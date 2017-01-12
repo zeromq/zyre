@@ -112,7 +112,9 @@ if [ "$BUILD_TYPE" == "default" ] || [ "$BUILD_TYPE" == "default-Werror" ] || [ 
     CONFIG_OPTS+=("PKG_CONFIG_PATH=${BUILD_PREFIX}/lib/pkgconfig")
     CONFIG_OPTS+=("--prefix=${BUILD_PREFIX}")
     CONFIG_OPTS+=("--with-docs=no")
-    CONFIG_OPTS+=("--quiet")
+    if [ -z "${CI_CONFIG_QUIET-}" ] || [ "${CI_CONFIG_QUIET-}" = yes ] || [ "${CI_CONFIG_QUIET-}" = true ]; then
+        CONFIG_OPTS+=("--quiet")
+    fi
 
     if [ "$HAVE_CCACHE" = yes ] && [ "${COMPILER_FAMILY}" = GCC ]; then
         PATH="/usr/lib/ccache:$PATH"
@@ -165,12 +167,18 @@ if [ "$BUILD_TYPE" == "default" ] || [ "$BUILD_TYPE" == "default-Werror" ] || [ 
         CONFIG_OPTS+=("CPP=${CPP}")
     fi
 
-    # Clone and build dependencies
+    # Clone and build dependencies, if not yet installed to Travis env as DEBs
+    # or MacOS packages; other OSes are not currently supported by Travis cloud
     [ -z "$CI_TIME" ] || echo "`date`: Starting build of dependencies (if any)..."
-    if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libzmq3-dev >/dev/null 2>&1) || \
-           (command -v brew >/dev/null 2>&1 && brew ls --versions libzmq >/dev/null 2>&1)); then
-        $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git libzmq
+
+    # Start of recipe for dependency: libzmq
+    if ! (command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libzmq3-dev >/dev/null 2>&1) || \
+           (command -v brew >/dev/null 2>&1 && brew ls --versions libzmq >/dev/null 2>&1) \
+    ; then
+        echo ""
         BASE_PWD=${PWD}
+        echo "`date`: INFO: Building prerequisite 'libzmq' from Git repository..." >&2
+        $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git libzmq
         cd libzmq
         CCACHE_BASEDIR=${PWD}
         export CCACHE_BASEDIR
@@ -194,10 +202,15 @@ if [ "$BUILD_TYPE" == "default" ] || [ "$BUILD_TYPE" == "default-Werror" ] || [ 
         $CI_TIME make install
         cd "${BASE_PWD}"
     fi
-    if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libczmq-dev >/dev/null 2>&1) || \
-           (command -v brew >/dev/null 2>&1 && brew ls --versions czmq >/dev/null 2>&1)); then
-        $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/czmq.git czmq
+
+    # Start of recipe for dependency: czmq
+    if ! (command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libczmq-dev >/dev/null 2>&1) || \
+           (command -v brew >/dev/null 2>&1 && brew ls --versions czmq >/dev/null 2>&1) \
+    ; then
+        echo ""
         BASE_PWD=${PWD}
+        echo "`date`: INFO: Building prerequisite 'czmq' from Git repository..." >&2
+        $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/czmq.git czmq
         cd czmq
         CCACHE_BASEDIR=${PWD}
         export CCACHE_BASEDIR
@@ -223,7 +236,8 @@ if [ "$BUILD_TYPE" == "default" ] || [ "$BUILD_TYPE" == "default-Werror" ] || [ 
     fi
 
     # Build and check this project; note that zprojects always have an autogen.sh
-    [ -z "$CI_TIME" ] || echo "`date`: Starting build of currently tested project with DRAFT APIs..."
+    echo ""
+    echo "`date`: INFO: Starting build of currently tested project with DRAFT APIs..."
     CCACHE_BASEDIR=${PWD}
     export CCACHE_BASEDIR
     # Only use --enable-Werror on projects that are expected to have it
@@ -252,7 +266,8 @@ if [ "$BUILD_TYPE" == "default" ] || [ "$BUILD_TYPE" == "default-Werror" ] || [ 
     )
 
     # Build and check this project without DRAFT APIs
-    [ -z "$CI_TIME" ] || echo "`date`: Starting build of currently tested project without DRAFT APIs..."
+    echo ""
+    echo "`date`: INFO: Starting build of currently tested project without DRAFT APIs..."
     make distclean
 
     git clean -f

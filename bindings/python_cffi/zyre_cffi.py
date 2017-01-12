@@ -15,9 +15,9 @@ try:
     # load the library.  If we use find_library below, we get the wrong result.
     if os.name == 'posix':
         if sys.platform == 'darwin':
-            libpath = 'libzyre.1.dylib'
+            libpath = 'libzyre.2.dylib'
         else:
-            libpath = 'libzyre.so.1'
+            libpath = 'libzyre.so.2'
     elif os.name == 'nt':
         libpath = 'libzyre.dll'
     lib = ffi.dlopen(libpath)

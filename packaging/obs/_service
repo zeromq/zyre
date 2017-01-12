@@ -52,8 +52,8 @@
   </service>
   <service name="extract_file">
     <param name="archive">*.tar</param>
-    <param name="files">*/packaging/debian/libzyre1.install</param>
-    <param name="outfilename">debian.libzyre1.install</param>
+    <param name="files">*/packaging/debian/libzyre2.install</param>
+    <param name="outfilename">debian.libzyre2.install</param>
   </service>
   <service name="extract_file">
     <param name="archive">*.tar</param>

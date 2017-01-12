@@ -26,6 +26,11 @@ src_libzyre_la_SOURCES = \
     src/zyre_node.c \
     src/platform.h
 
+if ENABLE_DRAFTS
+src_libzyre_la_SOURCES += \
+    src/zyre_private_selftest.c
+endif
+
 src_libzyre_la_CPPFLAGS = ${AM_CPPFLAGS}
 
 src_libzyre_la_LDFLAGS = \

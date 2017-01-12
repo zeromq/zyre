@@ -71,6 +71,7 @@
         '../../src/zyre_peer.h',
         '../../include/zyre_library.h',
         '../../src/zyre_selftest.c',
+        '../../src/zyre_private_selftest.c',
         '../../src/zyre_classes.h'
       ],
       'dependencies': [

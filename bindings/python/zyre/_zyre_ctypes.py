@@ -44,9 +44,9 @@ if not lib:
         # load the library.  If we use find_library below, we get the wrong result.
         if os.name == 'posix':
             if sys.platform == 'darwin':
-                lib = cdll.LoadLibrary('libzyre.1.dylib')
+                lib = cdll.LoadLibrary('libzyre.2.dylib')
             else:
-                lib = cdll.LoadLibrary("libzyre.so.1")
+                lib = cdll.LoadLibrary("libzyre.so.2")
         elif os.name == 'nt':
             lib = cdll.LoadLibrary('libzyre.dll')
     except OSError:

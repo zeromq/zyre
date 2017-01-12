@@ -29,8 +29,12 @@ typedef struct {
 
 static test_item_t
 all_tests [] = {
+// Tests for stable public classes:
     { "zyre", zyre_test },
     { "zyre_event", zyre_event_test },
+#ifdef ZYRE_BUILD_DRAFT_API
+    { "private_classes", zyre_private_selftest },
+#endif // ZYRE_BUILD_DRAFT_API
     {0, 0}          //  Sentinel
 };
 
@@ -95,12 +99,9 @@ main (int argc, char **argv)
         if (streq (argv [argn], "--list")
         ||  streq (argv [argn], "-l")) {
             puts ("Available tests:");
-            puts ("    zyre");
-            puts ("    zyre_event");
-            puts ("    zre_msg");
-            puts ("    zyre_peer");
-            puts ("    zyre_group");
-            puts ("    zyre_node");
+            puts ("    zyre\t\t- stable");
+            puts ("    zyre_event\t\t- stable");
+            puts ("    private_classes\t- draft");
             return 0;
         }
         else
