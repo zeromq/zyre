@@ -26,8 +26,8 @@
 #include <czmq.h>
 
 //  ZYRE version macros for compile-time API detection
-#define ZYRE_VERSION_MAJOR 1
-#define ZYRE_VERSION_MINOR 3
+#define ZYRE_VERSION_MAJOR 2
+#define ZYRE_VERSION_MINOR 0
 #define ZYRE_VERSION_PATCH 0
 
 #define ZYRE_MAKE_VERSION(major, minor, patch) \
@@ -71,6 +71,12 @@ typedef struct _zyre_event_t zyre_event_t;
 
 //  Public classes, each with its own header file
 #include "zyre_event.h"
+
+#ifdef ZYRE_BUILD_DRAFT_API
+//  Self test for private classes
+ZYRE_EXPORT void
+    zyre_private_selftest (bool verbose);
+#endif // ZYRE_BUILD_DRAFT_API
 
 #endif
 /*

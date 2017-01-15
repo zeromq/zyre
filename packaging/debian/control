@@ -17,13 +17,12 @@ Maintainer:     zyre Developers <zeromq-dev@lists.zeromq.org>
 Standards-Version: 3.9.7
 Build-Depends: debhelper (>= 9),
     pkg-config,
-    dh-autoreconf,
     libzmq3-dev,
     libczmq-dev,
-Build-Depends-Indep: asciidoc,
-                     xmlto
+    asciidoc-base | asciidoc, xmlto,
+    dh-autoreconf
 
-Package: libzyre1
+Package: libzyre2
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: an open-source framework for proximity-based p2p apps shared library
@@ -35,7 +34,7 @@ Section: libdevel
 Depends:
     libzmq3-dev,
     libczmq-dev,
-    libzyre1 (= ${binary:Version})
+    libzyre2 (= ${binary:Version})
 Description: an open-source framework for proximity-based p2p apps development tools
  This package contains development files for zyre: an open-source framework for proximity-based p2p apps
 

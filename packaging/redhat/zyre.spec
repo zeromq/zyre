@@ -22,7 +22,7 @@
 %define DRAFTS no
 %endif
 Name:           zyre
-Version:        1.3.0
+Version:        2.0.0
 Release:        1
 Summary:        an open-source framework for proximity-based p2p apps
 License:        MIT
@@ -46,24 +46,24 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 %description
 zyre an open-source framework for proximity-based p2p apps.
 
-%package -n libzyre1
+%package -n libzyre2
 Group:          System/Libraries
 Summary:        an open-source framework for proximity-based p2p apps shared library
 
-%description -n libzyre1
+%description -n libzyre2
 This package contains shared library for zyre: an open-source framework for proximity-based p2p apps
 
-%post -n libzyre1 -p /sbin/ldconfig
-%postun -n libzyre1 -p /sbin/ldconfig
+%post -n libzyre2 -p /sbin/ldconfig
+%postun -n libzyre2 -p /sbin/ldconfig
 
-%files -n libzyre1
+%files -n libzyre2
 %defattr(-,root,root)
 %{_libdir}/libzyre.so.*
 
 %package devel
 Summary:        an open-source framework for proximity-based p2p apps
 Group:          System/Libraries
-Requires:       libzyre1 = %{version}
+Requires:       libzyre2 = %{version}
 Requires:       zeromq-devel
 Requires:       czmq-devel
 
@@ -77,6 +77,7 @@ This package contains development files for zyre: an open-source framework for p
 %{_libdir}/libzyre.so
 %{_libdir}/pkgconfig/libzyre.pc
 %{_mandir}/man3/*
+%{_mandir}/man7/*
 %{_datadir}/zproject/
 %{_datadir}/zproject/zyre/
 

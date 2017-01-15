@@ -1,0 +1,51 @@
+Name(7)
+=======
+
+
+NAME
+----
+zyre - Overview of an open-source framework for proximity-based P2P apps
+
+
+SYNOPSIS
+--------
+
+Project zyre aims to ... (short marketing pitch)
+
+It delivers several programs with their respective man pages:
+ zpinger.1
+and public classes in a shared library:
+ zyre.3 zyre_event.3
+
+Generally you can compile and link against it like this:
+----
+#include <zyre.h>
+
+cc ['flags'] 'files' -lzyre ['libraries']
+----
+
+
+DESCRIPTION
+-----------
+
+This is a skeleton document created by zproject, which will not be
+regenerated automatically (by Makefiles nor project.xml re-parsing).
+You should add hand-written text here to detail whatever applies to
+Linux standard manpage Section 7 (note that other OSes may follow
+a different standard with similar concepts, and extend the recipes
+to package this document into a different section number):
+
+----
+7 Overview, conventions, and miscellaneous :
+    Overviews or descriptions of various topics, conventions
+    and protocols, character set standards, the standard
+    filesystem layout, and miscellaneous other things.
+----
+
+Classes
+~~~~~~~
+
+Something for developers to consider. Note there are separate man
+pages generated for public classes during build with contents taken
+from source code comments.
+
