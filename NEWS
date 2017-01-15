@@ -1,3 +1,53 @@
+Zyre version 2.0.0 stable, released on 20xx/xx/xx
+=================================================
+
+* v2.0.0 breaks API and ABI compatibility with the previous version.
+  The ABI SONAME version has been bumped to 2.
+
+* The current zyre and zyre_event APIs have been declared STABLE, and will
+  no longer change in an backward-incompatible way until they are DEPRECATED
+  and then RETIRED.
+
+* The following backward-incompatbile changes have been made to the previously
+  DRAFT APIs:
+
+  - old: void zyre_version (int* major, int* minor, int* patch)
+    new: uint64_t zyre_version (void)
+  - old: zyre_event_type_t zyre_event_type (zyre_event_t *self)
+    new: const char *zyre_event_type (zyre_event_t *self)
+
+  The following symbols have been removed:
+
+  - zyre_set_endpoint ( zyre_t* self, char const* format, ... )
+  - zyre_shouts ( zyre_t* self, char const* group, char const* format, ... )
+  - zyre_whispers ( zyre_t* self, char const* peer, char const* format, ... )
+  - enum zyre_event_type_t
+
+* The ZRE MSG class is now private and its symbols are no longer exported.
+
+* The following new APIs have been added to the Zyre class:
+
+  - zyre_set_evasive_timeout
+  - zyre_set_expired_timeout
+  - zyre_peers_by_group
+
+  See doc/zyre.txt for more information.
+
+* The following new APIs have been added to the Zyre Event class:
+
+  - zyre_event_get_msg
+
+  See doc/zyre_event.txt for more information.
+
+* The zpinger program has a new option: -6/--ipv6, runs over IPv6.
+  NOTE: needs support from CZMQ, will work only if Zbeacon supports IPv6.
+
+* The examples/chat program is now building again.
+
+* Many bug fixes. See git log on https://github.com/zeromq/zyre/commits/master
+  for more information.
+
+
 Zyre version 1.0.0 stable, released on 2014/05/03
 =================================================
 
