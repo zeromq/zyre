@@ -7,8 +7,8 @@
     repository = "http://github.com/zeromq/zyre"
     >
     <include filename = "license.xml" />
-    <version major = "2" minor = "0" patch = "0" />
-    <abi current = "2" revision = "0" age = "0" />
+    <version major = "2" minor = "0" patch = "1" />
+    <abi current = "2" revision = "1" age = "0" />
     <use project = "czmq" />
 
     <class name = "zyre" />

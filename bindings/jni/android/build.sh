@@ -53,7 +53,7 @@ make $MAKE_OPTIONS
 
 echo "********  Building zyre.jar for Android"
 #   Copy class files into org/zeromq/etc.
-unzip -q ../../build/libs/zyre-jni-2.0.0.jar
+unzip -q ../../build/libs/zyre-jni-2.0.1.jar
 unzip -q -o ../../../../../czmq/bindings/jni/android/czmq-android.jar
 
 #   Copy native libraries into lib/armeabi
