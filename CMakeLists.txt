@@ -171,7 +171,7 @@ set_target_properties(zyre
     PROPERTIES DEFINE_SYMBOL "ZYRE_EXPORTS"
 )
 set_target_properties (zyre
-    PROPERTIES SOVERSION "2.0.0"
+    PROPERTIES SOVERSION "2.0.1"
 )
 target_link_libraries(zyre
     ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
@@ -188,7 +188,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/src/CMakeLists-local.txt) # Optional project
 ########################################################################
 # pkgconfig
 ########################################################################
-set (VERSION "2.0.0")
+set (VERSION "2.0.1")
 set (prefix "${CMAKE_INSTALL_PREFIX}")
 set (exec_prefix "\${prefix}")
 set (libdir "\${prefix}/lib${LIB_SUFFIX}")

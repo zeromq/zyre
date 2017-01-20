@@ -7,7 +7,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.61)
 #
-AC_INIT([zyre],[2.0.0],[zeromq-dev@lists.zeromq.org])
+AC_INIT([zyre],[2.0.1],[zeromq-dev@lists.zeromq.org])
 
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(config)
@@ -31,12 +31,12 @@ AC_SUBST(PACKAGE_VERSION)
 #
 # Libtool -version-info (ABI version)
 #
-# Currently 2:0:0 ("stable"). Don't change this unless you
+# Currently 2:1:0 ("stable"). Don't change this unless you
 # know exactly what you're doing and have read and understand
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 #
 # libzyre -version-info
-LTVER="2:0:0"
+LTVER="2:1:0"
 AC_SUBST(LTVER)
 
 # Capture c flags

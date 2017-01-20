@@ -28,7 +28,7 @@
 //  ZYRE version macros for compile-time API detection
 #define ZYRE_VERSION_MAJOR 2
 #define ZYRE_VERSION_MINOR 0
-#define ZYRE_VERSION_PATCH 0
+#define ZYRE_VERSION_PATCH 1
 
 #define ZYRE_MAKE_VERSION(major, minor, patch) \
     ((major) * 10000 + (minor) * 100 + (patch))
