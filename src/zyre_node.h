@@ -20,8 +20,6 @@
 extern "C" {
 #endif
 
-typedef struct _zyre_node_t zyre_node_t;
-
 //  This is the actor that runs a single node; it uses one thread, creates
 //  a zyre_node object at start and destroys that when finishing.
 void

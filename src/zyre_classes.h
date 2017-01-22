@@ -25,6 +25,26 @@
 //  External API
 #include "../include/zyre.h"
 
+//  Extra headers
+
+//  Opaque class structures to allow forward references
+#ifndef ZRE_MSG_T_DEFINED
+typedef struct _zre_msg_t zre_msg_t;
+#define ZRE_MSG_T_DEFINED
+#endif
+#ifndef ZYRE_PEER_T_DEFINED
+typedef struct _zyre_peer_t zyre_peer_t;
+#define ZYRE_PEER_T_DEFINED
+#endif
+#ifndef ZYRE_GROUP_T_DEFINED
+typedef struct _zyre_group_t zyre_group_t;
+#define ZYRE_GROUP_T_DEFINED
+#endif
+#ifndef ZYRE_NODE_T_DEFINED
+typedef struct _zyre_node_t zyre_node_t;
+#define ZYRE_NODE_T_DEFINED
+#endif
+
 //  Internal API
 #include "zre_msg.h"
 #include "zyre_peer.h"
