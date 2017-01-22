@@ -222,10 +222,6 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
-set_target_properties(
-    perf_local
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
-)
 add_executable(
     perf_remote
     "${SOURCE_DIR}/src/perf_remote.c"
@@ -237,10 +233,6 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
-set_target_properties(
-    perf_remote
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
-)
 add_executable(
     zpinger
     "${SOURCE_DIR}/src/zpinger.c"
@@ -251,10 +243,6 @@ target_link_libraries(
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
-)
-set_target_properties(
-    zpinger
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
 )
 install(TARGETS zpinger
     RUNTIME DESTINATION bin
@@ -270,10 +258,6 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
-set_target_properties(
-    ztester_beacon
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
-)
 add_executable(
     ztester_gossip
     "${SOURCE_DIR}/src/ztester_gossip.c"
@@ -285,10 +269,6 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
-set_target_properties(
-    ztester_gossip
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
-)
 add_executable(
     zyre_selftest
     "${SOURCE_DIR}/src/zyre_selftest.c"
@@ -299,10 +279,6 @@ target_link_libraries(
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
-)
-set_target_properties(
-    zyre_selftest
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/src"
 )
 
 ########################################################################

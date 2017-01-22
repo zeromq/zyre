@@ -131,6 +131,12 @@ main (int argc, char **argv)
             return 1;
         }
     }
+
+    #ifdef NDEBUG
+        printf(" !!! 'assert' macro is disabled, remove NDEBUG from your compilation definitions.\n");
+        printf(" tests will be meaningless.\n");
+    #endif //
+
     if (test) {
         printf ("Running zyre test '%s'...\n", test->testname);
         test->test (verbose);
