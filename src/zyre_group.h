@@ -20,8 +20,6 @@
 extern "C" {
 #endif
 
-typedef struct _zyre_group_t zyre_group_t;
-
 //  Constructor
 zyre_group_t *
     zyre_group_new (const char *name, zhash_t *container);
