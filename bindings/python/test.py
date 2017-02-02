@@ -15,12 +15,12 @@ class TestZyre(unittest.TestCase):
         e = ZyreEvent(z1)
         self.assertEquals(e.peer_name(), z2.name())
         self.assertEquals(e.peer_uuid(), z2.uuid())
-        self.assertEquals(e.type(), b'ENTER')
+        self.assertEquals(e.type(), 'ENTER')
 
         e = ZyreEvent(z2)
         self.assertEquals(e.peer_name(), z1.name())
         self.assertEquals(e.peer_uuid(), z1.uuid())
-        self.assertEquals(e.type(), b'ENTER')
+        self.assertEquals(e.type(), 'ENTER')
 
         z1.join('test group')
         z2.join('test group')
@@ -28,23 +28,23 @@ class TestZyre(unittest.TestCase):
         e = ZyreEvent(z1)
         self.assertEquals(e.peer_name(), z2.name())
         self.assertEquals(e.peer_uuid(), z2.uuid())
-        self.assertEquals(e.type(), b'JOIN')
-        self.assertEquals(e.group(), b'test group')
+        self.assertEquals(e.type(), 'JOIN')
+        self.assertEquals(e.group(), 'test group')
 
         e = ZyreEvent(z2)
         self.assertEquals(e.peer_name(), z1.name())
         self.assertEquals(e.peer_uuid(), z1.uuid())
-        self.assertEquals(e.type(), b'JOIN')
-        self.assertEquals(e.group(), b'test group')
+        self.assertEquals(e.type(), 'JOIN')
+        self.assertEquals(e.group(), 'test group')
 
         z1.shouts('test group', "Hello World")
 
         e = ZyreEvent(z2)
         self.assertEquals(e.peer_name(), z1.name())
         self.assertEquals(e.peer_uuid(), z1.uuid())
-        self.assertEquals(e.type(), b'SHOUT')
-        self.assertEquals(e.group(), b'test group')
-        self.assertEquals(e.msg().popstr(), b"Hello World")
+        self.assertEquals(e.type(), 'SHOUT')
+        self.assertEquals(e.group(), 'test group')
+        self.assertEquals(e.msg().popstr(), "Hello World")
 
 if __name__ == '__main__':
     unittest.main()
