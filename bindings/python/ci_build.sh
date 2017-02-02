@@ -57,3 +57,4 @@ cp -r czmq/bindings/python/czmq bindings/python/
 
 # Setup environment & run tests
 LD_LIBRARY_PATH=$PWD/tmp/lib python bindings/python/test.py
+LD_LIBRARY_PATH=$PWD/tmp/lib python3 bindings/python/test.py
