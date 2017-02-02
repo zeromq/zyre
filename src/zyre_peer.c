@@ -93,7 +93,7 @@ zyre_peer_destroy (zyre_peer_t **self_p)
 //  Connect peer mailbox
 //  Configures mailbox and connects to peer's router endpoint
 
-void
+int
 zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint64_t expired_timeout)
 {
     assert (self);
@@ -102,7 +102,7 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint6
     //  Create new outgoing socket (drop any messages in transit)
     self->mailbox = zsock_new (ZMQ_DEALER);
     if (!self->mailbox)
-        return;             //  Null when we're shutting down
+        return -1;             //  Null when we're shutting down
 
     //  Set our own identity on the socket so that receiving node
     //  knows who each message came from. Note that we cannot use
@@ -125,13 +125,11 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint6
     //  Connect through to peer node
     rc = zsock_connect (self->mailbox, "%s", endpoint);
     if (rc != 0) {
-        zsys_error ("(%s) cannot connect to endpoint=%s",
+        zsys_debug ("(%s) cannot connect to endpoint=%s",
                     self->origin, endpoint);
-        //  Don't really have any error handling yet; if connect
-        //  fails, there's something wrong with connect endpoint?
-        assert (false);
+        zsock_destroy (&self->mailbox);
+        return -1;
     }
-    assert (rc == 0);
     if (self->verbose)
         zsys_info ("(%s) connect to peer: endpoint=%s",
                    self->origin, endpoint);
@@ -139,6 +137,8 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint6
     self->endpoint = strdup (endpoint);
     self->connected = true;
     self->ready = false;
+
+    return 0;
 }
 
 
@@ -444,7 +444,7 @@ zyre_peer_set_verbose (zyre_peer_t *self, bool verbose)
 void
 zyre_peer_test (bool verbose)
 {
-    printf (" * zyre_peer: ");
+    printf (" * zyre_peer:");
 
     zsock_t *mailbox = zsock_new_dealer ("@tcp://127.0.0.1:5551");
     zhash_t *peers = zhash_new ();
@@ -452,7 +452,10 @@ zyre_peer_test (bool verbose)
     zuuid_t *me = zuuid_new ();
     zyre_peer_t *peer = zyre_peer_new (peers, you);
     assert (!zyre_peer_connected (peer));
-    zyre_peer_connect (peer, me, "tcp://127.0.0.1:5551", 30000);
+    printf ("\nThe following error connecting to ::ffff:127.0.0.1:5550 is "
+            "expected:\n");
+    assert (zyre_peer_connect (peer, me, "tcp://::ffff:127.0.0.1:5550", 30000));
+    assert (!zyre_peer_connect (peer, me, "tcp://127.0.0.1:5551", 30000));
     assert (zyre_peer_connected (peer));
     zyre_peer_set_name (peer, "peer");
     assert (streq (zyre_peer_name (peer), "peer"));
