@@ -153,7 +153,8 @@ specify NULL, Zyre generates a randomized node name from the UUID.
             self.allow_destruct = args[1] # This is a 'fresh' value, owned by us
         else:
             assert(len(args) == 1)
-            self._as_parameter_ = lib.zyre_new(args[0]) # Creation of new raw type
+            # import ipdb; ipdb.set_trace()
+            self._as_parameter_ = lib.zyre_new(args[0].encode()) # Creation of new raw type
             self.allow_destruct = True
 
     def __del__(self):
@@ -201,7 +202,7 @@ messages it is sending or receiving will be discarded.
         Set node header; these are provided to other nodes during discovery
 and come in each ENTER message.
         """
-        return lib.zyre_set_header(self._as_parameter_, name, format, *args)
+        return lib.zyre_set_header(self._as_parameter_, name.encode(), format.encode(), *args)
 
     def set_verbose(self):
         """
@@ -302,7 +303,7 @@ stopping it.
         Join a named group; after joining a group you can send messages to
 the group and all Zyre nodes in that group will receive them.
         """
-        return lib.zyre_join(self._as_parameter_, group)
+        return lib.zyre_join(self._as_parameter_, group.encode())
 
     def leave(self, group):
         """
@@ -342,7 +343,7 @@ Destroys message after sending
         """
         Send formatted string to a named group
         """
-        return lib.zyre_shouts(self._as_parameter_, group, format, *args)
+        return lib.zyre_shouts(self._as_parameter_, group.encode(), format.encode(), *args)
 
     def peers(self):
         """
