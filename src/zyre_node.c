@@ -568,7 +568,14 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         assert (peer);
         zyre_peer_set_origin (peer, self->name);
         zyre_peer_set_verbose (peer, self->verbose);
-        zyre_peer_connect (peer, self->uuid, endpoint, self->expired_timeout);
+        int rc = zyre_peer_connect (peer, self->uuid, endpoint,
+                self->expired_timeout);
+        if (rc != 0) {
+            // TBD: removing the peer means it will keep retrying. Should
+            // it be kept in the hash table instead perhaps?
+            zhash_delete (self->peers, zyre_peer_identity (peer));
+            return NULL;
+        }
 
         //  Handshake discovery by sending HELLO as first message
         zlist_t *groups = zlist_dup (self->own_groups);
@@ -710,8 +717,8 @@ zyre_node_recv_peer (zyre_node_t *self)
             }
         }
         peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg));
-        assert (peer);
-        zyre_peer_set_ready (peer, true);
+        if (peer)
+            zyre_peer_set_ready (peer, true);
     }
     //  Ignore command if peer isn't ready
     if (peer == NULL || !zyre_peer_ready (peer)) {
@@ -825,7 +832,9 @@ zyre_node_recv_beacon (zyre_node_t *self)
         else
             sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
         zyre_peer_t *peer = zyre_node_require_peer (self, uuid, endpoint);
-        zyre_peer_refresh (peer, self->evasive_timeout, self->expired_timeout);
+        if (peer)
+            zyre_peer_refresh (peer, self->evasive_timeout,
+                    self->expired_timeout);
     }
     else {
         //  Zero port means peer is going away; remove it if
@@ -877,6 +886,8 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
 {
     zyre_peer_t *peer = (zyre_peer_t *) item;
     zyre_node_t *self = (zyre_node_t *) argument;
+    if (!peer)
+        return 0;
     if (zclock_mono () >= zyre_peer_expired_at (peer)) {
         if (self->verbose)
             zsys_info ("(%s) peer expired name=%s endpoint=%s",

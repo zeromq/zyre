@@ -29,7 +29,7 @@ void
     zyre_peer_destroy (zyre_peer_t **self_p);
 
 //  Connect peer mailbox
-void
+int
     zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint64_t expired_timeout);
 
 //  Connect peer mailbox
