@@ -738,12 +738,4 @@ zyre_test (bool verbose)
     zyre_destroy (&node2);
     //  @end
     printf ("OK\n");
-
-    // zre_msg, zyre_group, zyre_node and zyre_peer are private classes and
-    // symbols are not exported so the tests can't be run from zyre_selftest,
-    // so run them from here
-    zre_msg_test (verbose);
-    zyre_group_test (verbose);
-    zyre_node_test (verbose);
-    zyre_peer_test (verbose);
 }
