@@ -3,7 +3,7 @@ zyre(3)
 
 NAME
 ----
-zyre - API wrapping one Zyre node
+zyre - Class for API wrapping one Zyre node
 
 SYNOPSIS
 --------
@@ -189,6 +189,7 @@ ZYRE_EXPORT uint64_t
 ZYRE_EXPORT void
     zyre_test (bool verbose);
 
+Please add '@interface' section in './../src/zyre.c'.
 ----
 
 DESCRIPTION

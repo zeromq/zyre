@@ -4,7 +4,7 @@ This class provides a higher-level API to the zyre_recv call, by doing
 work that you will want to do in many cases, such as unpacking the peer
 headers for each ENTER event received.
 
-Please add @discuss section in ../src/zyre_event.c.
+Please add '@discuss' section in './../src/zyre_event.c'.
 
 This is the class interface:
 
@@ -73,6 +73,7 @@ This is the class interface:
         zyre_event_test (bool verbose);
     
 ```
+Please add '@interface' section in './../src/zyre_event.c'.
 
 This is the class self test code:
 

@@ -3,12 +3,13 @@ zpinger(1)
 
 NAME
 ----
-zpinger - ping other peers in a ZRE network
+zpinger - Program for ping other peers in a ZRE network
 
 SYNOPSIS
 --------
 ----
-Please add @interface section in ../src/zpinger.c.
+Please add '@interface' section in './../src/zpinger.c'.
+Please add '@interface' section in './../src/zpinger.c'.
 ----
 
 DESCRIPTION
@@ -25,5 +26,5 @@ EXAMPLE
 -------
 .From zpinger_test method
 ----
-Please add @selftest section in ../src/zpinger.c.
+Please add '@selftest' section in './../src/zpinger.c'.
 ----

@@ -181,7 +181,7 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
                 self->name? self->name: "-",
                 zre_msg_sequence (msg));
 
-        if (zre_msg_send (msg_p, self->mailbox)) {
+        if (zre_msg_send (msg, self->mailbox)) {
             if (errno == EAGAIN) {
                 if (self->verbose)
                     zsys_info ("(%s) disconnect from peer (EAGAIN): name=%s",
@@ -193,8 +193,8 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
             assert (false);
         }
     }
-    else
-        zre_msg_destroy (msg_p);
+
+    zre_msg_destroy (msg_p);
 
     return 0;
 }
@@ -460,13 +460,15 @@ zyre_peer_test (bool verbose)
     zyre_peer_set_name (peer, "peer");
     assert (streq (zyre_peer_name (peer), "peer"));
 
-    zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
+    zre_msg_t *msg = zre_msg_new ();
+    zre_msg_set_id (msg, ZRE_MSG_HELLO);
     zre_msg_set_endpoint (msg, "tcp://127.0.0.1:5552");
     int rc = zyre_peer_send (peer, &msg);
     assert (rc == 0);
 
-    msg = zre_msg_recv (mailbox);
-    assert (msg);
+    msg = zre_msg_new ();
+    rc = zre_msg_recv (msg, mailbox);
+    assert (rc == 0);
     if (verbose)
         zre_msg_print (msg);
     zre_msg_destroy (&msg);

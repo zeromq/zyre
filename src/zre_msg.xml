@@ -2,8 +2,7 @@
     name = "zre_msg"
     signature = "1"
     title = "work with ZRE messages"
-    script = "zproto_codec_c_v1"
-    package_dir = "."
+    script = "zproto_codec_c"
     project_header = "../include/zyre.h"
     export_macro = "ZYRE_EXPORT"
     >

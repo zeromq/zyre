@@ -155,12 +155,14 @@ zyre_group_test (bool verbose)
 
     zyre_group_join (group, peer);
 
-    zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
+    zre_msg_t *msg = zre_msg_new ();
+    zre_msg_set_id (msg, ZRE_MSG_HELLO);
     zre_msg_set_endpoint (msg, "tcp://127.0.0.1:5552");
     zyre_group_send (group, &msg);
 
-    msg = zre_msg_recv (mailbox);
-    assert (msg);
+    msg = zre_msg_new ();
+    int rc = zre_msg_recv (msg, mailbox);
+    assert (rc == 0);
     if (verbose)
         zre_msg_print (msg);
     zre_msg_destroy (&msg);
