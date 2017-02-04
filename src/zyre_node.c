@@ -415,7 +415,8 @@ zyre_node_recv_api (zyre_node_t *self)
         //  Send frame on out to peer's mailbox, drop message
         //  if peer doesn't exist (may have been destroyed)
         if (peer) {
-            zre_msg_t *msg = zre_msg_new (ZRE_MSG_WHISPER);
+            zre_msg_t *msg = zre_msg_new ();
+            zre_msg_set_id (msg, ZRE_MSG_WHISPER);
             zre_msg_set_content (msg, &request);
             zyre_peer_send (peer, &msg);
         }
@@ -427,7 +428,8 @@ zyre_node_recv_api (zyre_node_t *self)
         char *name = zmsg_popstr (request);
         zyre_group_t *group = (zyre_group_t *) zhash_lookup (self->peer_groups, name);
         if (group) {
-            zre_msg_t *msg = zre_msg_new (ZRE_MSG_SHOUT);
+            zre_msg_t *msg = zre_msg_new ();
+            zre_msg_set_id (msg, ZRE_MSG_SHOUT);
             zre_msg_set_group (msg, name);
             zre_msg_set_content (msg, &request);
             zyre_group_send (group, &msg);
@@ -441,13 +443,15 @@ zyre_node_recv_api (zyre_node_t *self)
             void *item;
             //  Only send if we're not already in group
             zlist_append (self->own_groups, name);
-            zre_msg_t *msg = zre_msg_new (ZRE_MSG_JOIN);
+            zre_msg_t *msg = zre_msg_new ();
+            zre_msg_set_id (msg, ZRE_MSG_JOIN);
             zre_msg_set_group (msg, name);
             //  Update status before sending command
             zre_msg_set_status (msg, ++(self->status));
             for (item = zhash_first (self->peers); item != NULL;
                     item = zhash_next (self->peers))
                 zyre_node_send_peer (zhash_cursor (self->peers), item, msg);
+
             zre_msg_destroy (&msg);
             if (self->verbose)
                 zsys_info ("(%s) JOIN group=%s", self->name, name);
@@ -460,13 +464,15 @@ zyre_node_recv_api (zyre_node_t *self)
         if (zlist_exists (self->own_groups, name)) {
             void *item;
             //  Only send if we are actually in group
-            zre_msg_t *msg = zre_msg_new (ZRE_MSG_LEAVE);
+            zre_msg_t *msg = zre_msg_new ();
+            zre_msg_set_id (msg, ZRE_MSG_LEAVE);
             zre_msg_set_group (msg, name);
             //  Update status before sending command
             zre_msg_set_status (msg, ++(self->status));
             for (item = zhash_first (self->peers); item != NULL;
                     item = zhash_next (self->peers))
                 zyre_node_send_peer (zhash_cursor (self->peers), item, msg);
+
             zre_msg_destroy (&msg);
             zlist_remove (self->own_groups, name);
             if (self->verbose)
@@ -580,13 +586,15 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         //  Handshake discovery by sending HELLO as first message
         zlist_t *groups = zlist_dup (self->own_groups);
         zhash_t *headers = zhash_dup (self->headers);
-        zre_msg_t *msg = zre_msg_new (ZRE_MSG_HELLO);
+        zre_msg_t *msg = zre_msg_new ();
+        zre_msg_set_id (msg, ZRE_MSG_HELLO);
         zre_msg_set_endpoint (msg, self->endpoint);
         zre_msg_set_groups (msg, &groups);
         zre_msg_set_status (msg, self->status);
         zre_msg_set_name (msg, self->name);
         zre_msg_set_headers (msg, &headers);
         zyre_peer_send (peer, &msg);
+        zre_msg_destroy (&msg);
     }
     return peer;
 }
@@ -682,8 +690,9 @@ static void
 zyre_node_recv_peer (zyre_node_t *self)
 {
     //  Router socket tells us the identity of this peer
-    zre_msg_t *msg = zre_msg_recv (self->inbox);
-    if (!msg)
+    zre_msg_t *msg = zre_msg_new ();
+    int rc = zre_msg_recv (msg, self->inbox);
+    if (!rc == 0)
         return;                 //  Interrupted
 
     //  First frame is sender identity
@@ -752,10 +761,11 @@ zyre_node_recv_peer (zyre_node_t *self)
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
 
         //  Join peer to listed groups
-        const char *name = zre_msg_groups_first (msg);
+        zlist_t *groups = zre_msg_groups (msg);
+        const char *name = (const char *) zlist_first (groups);
         while (name) {
             zyre_node_join_peer_group (self, peer, name);
-            name = zre_msg_groups_next (msg);
+            name = (const char *) zlist_next (groups);
         }
         //  Now take peer's status from HELLO, after joining groups
         zyre_peer_set_status (peer, zre_msg_status (msg));
@@ -781,7 +791,8 @@ zyre_node_recv_peer (zyre_node_t *self)
     }
     else
     if (zre_msg_id (msg) == ZRE_MSG_PING) {
-        zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING_OK);
+        zre_msg_t *msg = zre_msg_new ();
+        zre_msg_set_id (msg, ZRE_MSG_PING_OK);
         zyre_peer_send (peer, &msg);
     }
     else
@@ -903,11 +914,13 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
         if (self->verbose)
             zsys_info ("(%s) peer seems dead/slow name=%s endpoint=%s",
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
-        zre_msg_t *msg = zre_msg_new (ZRE_MSG_PING);
+        zre_msg_t *msg = zre_msg_new ();
+        zre_msg_set_id (msg, ZRE_MSG_PING);
         zyre_peer_send (peer, &msg);
+        zre_msg_destroy (&msg);
         // Inform the calling application this peer is being evasive
     	zstr_sendm (self->outbox, "EVASIVE");
-	zstr_sendm (self->outbox, zyre_peer_identity (peer));
+        zstr_sendm (self->outbox, zyre_peer_identity (peer));
     	zstr_send (self->outbox, zyre_peer_name (peer));
     }
     return 0;

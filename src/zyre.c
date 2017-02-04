@@ -204,8 +204,8 @@ zyre_set_port (zyre_t *self, int port_nbr)
 //  --------------------------------------------------------------------------
 //  Set the node evasiveness timeout, in milliseconds. Default is 5000.
 //  This can be tuned in order to deal with expected network conditions
-//  and the response time expected by the application. This is tied to 
-//  the beacon interval and rate of messages received.                 
+//  and the response time expected by the application. This is tied to
+//  the beacon interval and rate of messages received.
 void
 zyre_set_evasive_timeout (zyre_t *self, int interval)
 {
@@ -217,8 +217,8 @@ zyre_set_evasive_timeout (zyre_t *self, int interval)
 //  --------------------------------------------------------------------------
 //  Set the node expiration timeout, in milliseconds. Default is 30000.
 //  This can be tuned in order to deal with expected network conditions
-//  and the response time expected by the application. This is tied to 
-//  the beacon interval and rate of messages received.                 
+//  and the response time expected by the application. This is tied to
+//  the beacon interval and rate of messages received.
 void
 zyre_set_expired_timeout (zyre_t *self, int interval)
 {

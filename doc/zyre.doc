@@ -219,6 +219,7 @@ This is the class interface:
         zyre_test (bool verbose);
     
 ```
+Please add '@interface' section in './../src/zyre.c'.
 
 This is the class self test code:
 

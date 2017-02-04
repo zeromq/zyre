@@ -112,7 +112,7 @@ src:
 
 # Produce generated code from models in the src directory
 code:
-	cd $(srcdir)/src; gsl -topdir:.. -zproject:1 -q zre_msg.xml
+	cd $(srcdir)/src; gsl -topdir:.. -zproject:1 -private:1 -q zre_msg.xml
 	cd $(srcdir); gsl -target:- project.xml
 
 check-local: src/zyre_selftest
