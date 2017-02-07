@@ -24,7 +24,6 @@ env:
   - BUILD_TYPE=cmake
   - BUILD_TYPE=check_zproject
   - BUILD_TYPE=bindings BINDING=jni
-  - BUILD_TYPE=bindings BINDING=python
 
 # osx environment does not have docker
 matrix:
@@ -53,6 +52,14 @@ matrix:
     services: docker
     addons:
       apt:
+  - env: BUILD_TYPE=bindings BINDING=python
+    os: osx
+  - env: BUILD_TYPE=bindings BINDING=python
+    os: linux
+    addons:
+      apt:
+        packages:
+        - python3
 
 addons:
   apt:
