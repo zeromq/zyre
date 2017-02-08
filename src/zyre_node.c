@@ -692,7 +692,7 @@ zyre_node_recv_peer (zyre_node_t *self)
     //  Router socket tells us the identity of this peer
     zre_msg_t *msg = zre_msg_new ();
     int rc = zre_msg_recv (msg, self->inbox);
-    if (!rc == 0)
+    if (rc == -1)
         return;                 //  Interrupted
 
     //  First frame is sender identity
