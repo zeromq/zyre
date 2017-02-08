@@ -452,9 +452,6 @@ zyre_peer_test (bool verbose)
     zuuid_t *me = zuuid_new ();
     zyre_peer_t *peer = zyre_peer_new (peers, you);
     assert (!zyre_peer_connected (peer));
-    printf ("\nThe following error connecting to ::ffff:127.0.0.1:5550 is "
-            "expected:\n");
-    assert (zyre_peer_connect (peer, me, "tcp://::ffff:127.0.0.1:5550", 30000));
     assert (!zyre_peer_connect (peer, me, "tcp://127.0.0.1:5551", 30000));
     assert (zyre_peer_connected (peer));
     zyre_peer_set_name (peer, "peer");
