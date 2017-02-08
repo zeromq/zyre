@@ -73,6 +73,7 @@ addons:
 
 before_install:
 - if [ $TRAVIS_OS_NAME == "osx" ] ; then brew update; brew install binutils ; fi
+- if [ $TRAVIS_OS_NAME == "osx" -a $BUILD_TYPE == "bindings" -a $BINDING == "python" ] ; then brew install python3 ; fi
 
 # Build and check this project according to the BUILD_TYPE
 script: "./ci_build.sh"
