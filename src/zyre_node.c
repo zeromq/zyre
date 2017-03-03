@@ -756,8 +756,10 @@ zyre_node_recv_peer (zyre_node_t *self)
         zstr_sendm (self->outbox, "ENTER");
         zstr_sendm (self->outbox, zyre_peer_identity (peer));
         zstr_sendm (self->outbox, zyre_peer_name (peer));
-        zframe_t *headers = zhash_pack (zyre_peer_headers (peer));
-        zframe_send (&headers, self->outbox, ZFRAME_MORE);
+        if (zyre_peer_headers (peer)) {
+            zframe_t *headers = zhash_pack (zyre_peer_headers (peer));
+            zframe_send (&headers, self->outbox, ZFRAME_MORE);
+        }
         zstr_send (self->outbox, zre_msg_endpoint (msg));
 
         if (self->verbose)
