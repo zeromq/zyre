@@ -35,6 +35,7 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "defined", defined);
     Nan::SetPrototypeMethod (tpl, "uuid", _uuid);
     Nan::SetPrototypeMethod (tpl, "name", _name);
+    Nan::SetPrototypeMethod (tpl, "setName", _set_name);
     Nan::SetPrototypeMethod (tpl, "setHeader", _set_header);
     Nan::SetPrototypeMethod (tpl, "setVerbose", _set_verbose);
     Nan::SetPrototypeMethod (tpl, "setPort", _set_port);
@@ -121,6 +122,21 @@ NAN_METHOD (Zyre::_name) {
     Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
     char *result = (char *) zyre_name (zyre->self);
     info.GetReturnValue ().Set (Nan::New (result).ToLocalChecked ());
+}
+
+NAN_METHOD (Zyre::_set_name) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *name;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `name`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`name` must be a string");
+    else {
+        Nan::Utf8String name_utf8 (info [0].As<String>());
+        name = *name_utf8;
+    }
+    zyre_set_name (zyre->self, (const char *)name);
 }
 
 NAN_METHOD (Zyre::_set_header) {

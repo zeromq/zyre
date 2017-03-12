@@ -37,9 +37,17 @@ class Zyre(object):
 
     def name(self):
         """
-        Return our node name, after successful initialization
+        Return our node name, after successful initialization. First 6
+        characters of UUID by default.                                
         """
         return lib.zyre_name(self._p)
+
+    def set_name(self, name):
+        """
+        Set the public name of this node overriding the default. The name is
+        provide during discovery and come in each ENTER message.            
+        """
+        return lib.zyre_set_name(self._p, to_bytes(name))
 
     def set_header(self, name, ):
         """

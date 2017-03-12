@@ -54,9 +54,15 @@ void
 const char *
     zyre_uuid (zyre_t *self);
 
-// Return our node name, after successful initialization
+// Return our node name, after successful initialization. First 6
+// characters of UUID by default.                                
 const char *
     zyre_name (zyre_t *self);
+
+// Set the public name of this node overriding the default. The name is
+// provide during discovery and come in each ENTER message.            
+void
+    zyre_set_name (zyre_t *self, const char *name);
 
 // Set node header; these are provided to other nodes during discovery
 // and come in each ENTER message.                                    

@@ -31,8 +31,13 @@ public slots:
     //  Return our node UUID string, after successful initialization
     const QString uuid ();
 
-    //  Return our node name, after successful initialization
+    //  Return our node name, after successful initialization. First 6
+    //  characters of UUID by default.                                
     const QString name ();
+
+    //  Set the public name of this node overriding the default. The name is
+    //  provide during discovery and come in each ENTER message.            
+    void setName (const QString &name);
 
     //  Set node header; these are provided to other nodes during discovery
     //  and come in each ENTER message.                                    
