@@ -49,11 +49,20 @@ public class Zyre implements AutoCloseable{
         return __uuid (self);
     }
     /*
-    Return our node name, after successful initialization
+    Return our node name, after successful initialization. First 6
+    characters of UUID by default.                                
     */
     native static String __name (long self);
     public String name () {
         return __name (self);
+    }
+    /*
+    Set the public name of this node overriding the default. The name is
+    provide during discovery and come in each ENTER message.            
+    */
+    native static void __setName (long self, String name);
+    public void setName (String name) {
+        __setName (self, name);
     }
     /*
     Set node header; these are provided to other nodes during discovery

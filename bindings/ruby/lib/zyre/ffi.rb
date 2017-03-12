@@ -44,6 +44,7 @@ module Zyre
       attach_function :zyre_destroy, [:pointer], :void, **opts
       attach_function :zyre_uuid, [:pointer], :string, **opts
       attach_function :zyre_name, [:pointer], :string, **opts
+      attach_function :zyre_set_name, [:pointer, :string], :void, **opts
       attach_function :zyre_set_header, [:pointer, :string, :string, :varargs], :void, **opts
       attach_function :zyre_set_verbose, [:pointer], :void, **opts
       attach_function :zyre_set_port, [:pointer, :int], :void, **opts

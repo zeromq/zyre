@@ -44,6 +44,14 @@ Java_org_zeromq_zyre_Zyre__1_1name (JNIEnv *env, jclass c, jlong self)
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1setName (JNIEnv *env, jclass c, jlong self, jstring name)
+{
+    char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);
+    zyre_set_name ((zyre_t *) (intptr_t) self, name_);
+    (*env)->ReleaseStringUTFChars (env, name, name_);
+}
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setHeader (JNIEnv *env, jclass c, jlong self, jstring name, jstring format)
 {
     char *name_ = (char *) (*env)->GetStringUTFChars (env, name, NULL);

@@ -44,6 +44,7 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (defined);
     static NAN_METHOD (_uuid);
     static NAN_METHOD (_name);
+    static NAN_METHOD (_set_name);
     static NAN_METHOD (_set_header);
     static NAN_METHOD (_set_verbose);
     static NAN_METHOD (_set_port);

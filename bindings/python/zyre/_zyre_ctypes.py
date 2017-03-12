@@ -73,6 +73,8 @@ lib.zyre_uuid.restype = c_char_p
 lib.zyre_uuid.argtypes = [zyre_p]
 lib.zyre_name.restype = c_char_p
 lib.zyre_name.argtypes = [zyre_p]
+lib.zyre_set_name.restype = None
+lib.zyre_set_name.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_header.restype = None
 lib.zyre_set_header.argtypes = [zyre_p, c_char_p, c_char_p]
 lib.zyre_set_verbose.restype = None
@@ -192,9 +194,17 @@ messages it is sending or receiving will be discarded.
 
     def name(self):
         """
-        Return our node name, after successful initialization
+        Return our node name, after successful initialization. First 6
+characters of UUID by default.
         """
         return lib.zyre_name(self._as_parameter_)
+
+    def set_name(self, name):
+        """
+        Set the public name of this node overriding the default. The name is
+provide during discovery and come in each ENTER message.
+        """
+        return lib.zyre_set_name(self._as_parameter_, name)
 
     def set_header(self, name, format, *args):
         """

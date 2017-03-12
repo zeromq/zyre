@@ -78,8 +78,10 @@ This package contains development files for zyre: an open-source framework for p
 %{_libdir}/pkgconfig/libzyre.pc
 %{_mandir}/man3/*
 %{_mandir}/man7/*
-%{_datadir}/zproject/
-%{_datadir}/zproject/zyre/
+# Install api files into /usr/local/share/zproject
+%dir %{_datadir}/zproject/
+%dir %{_datadir}/zproject/zyre
+%{_datadir}/zproject/zyre/*.api
 
 %prep
 %setup -q

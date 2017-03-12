@@ -15,9 +15,17 @@ const QString QmlZyre::uuid () {
 };
 
 ///
-//  Return our node name, after successful initialization
+//  Return our node name, after successful initialization. First 6
+//  characters of UUID by default.                                
 const QString QmlZyre::name () {
     return QString (zyre_name (self));
+};
+
+///
+//  Set the public name of this node overriding the default. The name is
+//  provide during discovery and come in each ENTER message.            
+void QmlZyre::setName (const QString &name) {
+    zyre_set_name (self, name.toUtf8().data());
 };
 
 ///

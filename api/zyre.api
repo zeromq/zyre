@@ -30,8 +30,15 @@
     </method>
 
     <method name = "name">
-        Return our node name, after successful initialization
+        Return our node name, after successful initialization. First 6
+        characters of UUID by default.
         <return type = "string" />
+    </method>
+
+    <method name = "set name">
+        Set the public name of this node overriding the default. The name is
+        provide during discovery and come in each ENTER message.
+        <argument name = "name" type = "string" />
     </method>
 
     <method name = "set header">

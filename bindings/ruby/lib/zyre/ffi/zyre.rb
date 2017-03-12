@@ -105,13 +105,26 @@ module Zyre
         result
       end
 
-      # Return our node name, after successful initialization
+      # Return our node name, after successful initialization. First 6
+      # characters of UUID by default.                                
       #
       # @return [String]
       def name()
         raise DestroyedError unless @ptr
         self_p = @ptr
         result = ::Zyre::FFI.zyre_name(self_p)
+        result
+      end
+
+      # Set the public name of this node overriding the default. The name is
+      # provide during discovery and come in each ENTER message.            
+      #
+      # @param name [String, #to_s, nil]
+      # @return [void]
+      def set_name(name)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_set_name(self_p, name)
         result
       end
 

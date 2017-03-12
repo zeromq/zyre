@@ -70,7 +70,15 @@ Return our node UUID string, after successful initialization
 string my_zyre.name ()
 ```
 
-Return our node name, after successful initialization
+Return our node name, after successful initialization. First 6
+characters of UUID by default.
+
+```
+nothing my_zyre.setName (String)
+```
+
+Set the public name of this node overriding the default. The name is
+provide during discovery and come in each ENTER message.
 
 ```
 nothing my_zyre.setHeader (String, String)
