@@ -18,8 +18,6 @@
 
 // to test performances, run perf_remote [node_count] first then perf_local
 
-#define MAX_GROUP 10
-
 static void
 node_actor (zsock_t *pipe, void *args)
 {
@@ -36,7 +34,7 @@ node_actor (zsock_t *pipe, void *args)
     zyre_join (node, "GLOBAL");
 
     while (!zsys_interrupted) {
-        void *which = zpoller_wait (poller, randof (1000));
+        void *which = zpoller_wait (poller, -1);
         if (which == pipe || which == NULL)
             break;              //  Any command from parent means exit
 
@@ -56,6 +54,7 @@ node_actor (zsock_t *pipe, void *args)
         else
         if (streq (event, "WHISPER")) {
             to_peer = zmsg_popstr (incoming);
+            free (zmsg_popstr (incoming)); // peer name
             cookie = zmsg_popstr (incoming);
 
             //  If a message comes from perf_local,
@@ -72,6 +71,7 @@ node_actor (zsock_t *pipe, void *args)
         else
         if (streq (event, "SHOUT")) {
             to_peer = zmsg_popstr (incoming);
+            free (zmsg_popstr (incoming)); // peer name
             to_group = zmsg_popstr (incoming);
             cookie = zmsg_popstr (incoming);
 
@@ -115,10 +115,13 @@ node_actor (zsock_t *pipe, void *args)
 
 int main (int argc, char *argv [])
 {
-    //  Get number of nodes to simulate, default 100
-    int max_node = 100;
+    //  Get number of nodes to simulate, default 25
+    int max_node = 25;
     if (argc > 1)
         max_node = atoi (argv [1]);
+
+    //  Set max sockets to system maximum
+    zsys_set_max_sockets(0);
 
     //  We address nodes as an array of pipes
     zactor_t **nodes = (zactor_t **) zmalloc (sizeof (zactor_t *) * max_node);
@@ -128,7 +131,7 @@ int main (int argc, char *argv [])
         nodes [node_nbr] = zactor_new (node_actor, NULL);
         zclock_log ("I: Started node %d", node_nbr + 1);
     }
-    //  We will randomly start and stop node threads
+
     while (!zsys_interrupted)
         zclock_sleep (1000);
 
@@ -136,7 +139,7 @@ int main (int argc, char *argv [])
         zclock_log ("I: Stopped node %d", node_nbr + 1);
         zactor_destroy (&nodes [node_nbr]);
     }
-    zclock_log ("I: Stopped perl_remote");
+    zclock_log ("I: Stopped perf_remote");
     free (nodes);
     return 0;
 }
