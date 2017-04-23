@@ -853,13 +853,9 @@ zyre_node_recv_beacon (zyre_node_t *self)
     zuuid_t *uuid = zuuid_new ();
     zuuid_set (uuid, beacon.uuid);
     if (beacon.port) {
-        char endpoint [100];
-        const char *iface = zsys_interface ();
+        char endpoint [NI_MAXHOST];
+        sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
 
-        if (zsys_ipv6 () && iface && !streq (iface, "") && !streq (iface, "*"))
-            sprintf (endpoint, "tcp://%s%%%s:%d", ipaddress, iface, ntohs (beacon.port));
-        else
-            sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
         zyre_peer_t *peer = zyre_node_require_peer (self, uuid, endpoint);
         if (peer)
             zyre_peer_refresh (peer, self->evasive_timeout,

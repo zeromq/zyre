@@ -122,19 +122,37 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint6
     //  Send messages immediately or return EAGAIN
     zsock_set_sndtimeo (self->mailbox, 0);
 
+    //  If the peer is a link-local IPv6 address but the interface is not set,
+    //  use ZSYS_INTERFACE_ADDRESS if provided
+    zrex_t *rex = zrex_new (NULL);
+    char endpoint_iface [NI_MAXHOST] = {0};
+    if (zsys_ipv6 () && zsys_interface () && strlen(zsys_interface ()) &&
+            !streq (zsys_interface (), "*") &&
+            zrex_eq (rex, endpoint, "^tcp://(fe80[^%]+)(:\\d+)$")) {
+        const char *hostname, *port;
+        zrex_fetch (rex, &hostname, &port, NULL);
+        strcat (endpoint_iface, "tcp://");
+        strcat (endpoint_iface, hostname);
+        strcat (endpoint_iface, "%");
+        strcat (endpoint_iface, zsys_interface ());
+        strcat (endpoint_iface, port);
+    } else
+        strcat (endpoint_iface, endpoint);
+    zrex_destroy (&rex);
+
     //  Connect through to peer node
-    rc = zsock_connect (self->mailbox, "%s", endpoint);
+    rc = zsock_connect (self->mailbox, "%s", endpoint_iface);
     if (rc != 0) {
         zsys_debug ("(%s) cannot connect to endpoint=%s",
-                    self->origin, endpoint);
+                    self->origin, endpoint_iface);
         zsock_destroy (&self->mailbox);
         return -1;
     }
     if (self->verbose)
         zsys_info ("(%s) connect to peer: endpoint=%s",
-                   self->origin, endpoint);
+                   self->origin, endpoint_iface);
 
-    self->endpoint = strdup (endpoint);
+    self->endpoint = strdup (endpoint_iface);
     self->connected = true;
     self->ready = false;
 
