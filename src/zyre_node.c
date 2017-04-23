@@ -588,7 +588,19 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         zhash_t *headers = zhash_dup (self->headers);
         zre_msg_t *msg = zre_msg_new ();
         zre_msg_set_id (msg, ZRE_MSG_HELLO);
-        zre_msg_set_endpoint (msg, self->endpoint);
+
+        //  If the endpoint is a link-local IPv6 address we must not send the
+        //  interface name to the peer, as it is relevant only on the local node
+        char endpoint_iface [NI_MAXHOST] = {0};
+        if (zsys_ipv6 () && strchr (self->endpoint, '%')) {
+            strcat (endpoint_iface, self->endpoint);
+            memmove (strchr (endpoint_iface, '%'),
+                    strrchr (endpoint_iface, ':'),
+                    strlen (strrchr (endpoint_iface, ':')) + 1);
+            zre_msg_set_endpoint (msg, endpoint_iface);
+        } else
+            zre_msg_set_endpoint (msg, self->endpoint);
+
         zre_msg_set_groups (msg, &groups);
         zre_msg_set_status (msg, self->status);
         zre_msg_set_name (msg, self->name);
