@@ -1,10 +1,14 @@
 <services>
   <service name="tar_scm">
-    <param name="url">http://github.com/zeromq/zyre</param>
+    <param name="url">https://github.com/zeromq/zyre</param>
     <param name="scm">git</param>
     <param name="versionformat">@PARENT_TAG@+git%cd</param>
+    <param name="versionrewrite-pattern">v(.*)</param>
+    <param name="versionrewrite-replacement">1</param>
     <!-- extract redhat packaging -->
+    <param name="exclude">.git</param>
     <param name="changesgenerate">enable</param>
+    <param name="filename">zyre</param>
   </service>
 
   <!-- extract redhat packaging -->

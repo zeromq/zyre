@@ -81,16 +81,16 @@ publishing {
                 asNode().appendNode('packaging', 'jar')
                 asNode().appendNode('name', 'zyre-jni')
                 asNode().appendNode('description', 'an open-source framework for proximity-based P2P apps')
-                asNode().appendNode('url', 'http://github.com/zeromq/zyre')
+                asNode().appendNode('url', 'https://github.com/zeromq/zyre')
 
                 def license = asNode().appendNode('licenses').appendNode('license')
                 license.appendNode('name', 'Mozilla Public License Version 2.0')
                 license.appendNode('url', 'https://www.mozilla.org/en-US/MPL/2.0/')
 
                 def scm = asNode().appendNode('scm')
-                scm.appendNode('connection', 'http://github.com/zeromq/zyre.git')
-                scm.appendNode('developerConnection', 'http://github.com/zeromq/zyre.git')
-                scm.appendNode('url', 'http://github.com/zeromq/zyre')
+                scm.appendNode('connection', 'https://github.com/zeromq/zyre.git')
+                scm.appendNode('developerConnection', 'https://github.com/zeromq/zyre.git')
+                scm.appendNode('url', 'https://github.com/zeromq/zyre')
             }
         }
     }
@@ -108,9 +108,9 @@ bintray {
         desc = "an open-source framework for proximity-based P2P apps"
         userOrg = System.getenv('BINTRAY_USER_ORG')
         licenses = ["MPL-2.0"]
-        websiteUrl = 'http://github.com/zeromq/zyre'
-        issueTrackerUrl = 'http://github.com/zeromq/zyre/issues'
-        vcsUrl = 'http://github.com/zeromq/zyre.git'
+        websiteUrl = 'https://github.com/zeromq/zyre'
+        issueTrackerUrl = 'https://github.com/zeromq/zyre/issues'
+        vcsUrl = 'https://github.com/zeromq/zyre.git'
         githubRepo = System.getenv('BINTRAY_USER_ORG') + '/zyre'
         version {
             name = '2.0.1'
