@@ -39,6 +39,7 @@ EXTRA_DIST += \
 endif
 
 EXTRA_DIST += \
+    bindings \
     src/zre_msg.h \
     src/zyre_peer.h \
     src/zyre_group.h \

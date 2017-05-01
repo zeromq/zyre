@@ -3,8 +3,8 @@
     description = "an open-source framework for proximity-based P2P apps"
     script = "zproject.gsl"
     email = "zeromq-dev@lists.zeromq.org"
-    url = "http://github.com/zeromq/zyre"
-    repository = "http://github.com/zeromq/zyre"
+    url = "https://github.com/zeromq/zyre"
+    repository = "https://github.com/zeromq/zyre"
     >
     <include filename = "license.xml" />
     <version major = "2" minor = "0" patch = "1" />
