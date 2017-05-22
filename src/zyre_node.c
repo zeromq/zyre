@@ -607,6 +607,8 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         zre_msg_set_headers (msg, &headers);
         zyre_peer_send (peer, &msg);
         zre_msg_destroy (&msg);
+        
+        zyre_peer_refresh (peer, self->evasive_timeout, self->expired_timeout);
     }
     return peer;
 }
