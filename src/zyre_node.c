@@ -856,10 +856,7 @@ zyre_node_recv_beacon (zyre_node_t *self)
         char endpoint [NI_MAXHOST];
         sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
 
-        zyre_peer_t *peer = zyre_node_require_peer (self, uuid, endpoint);
-        if (peer)
-            zyre_peer_refresh (peer, self->evasive_timeout,
-                    self->expired_timeout);
+        zyre_node_require_peer (self, uuid, endpoint);
     }
     else {
         //  Zero port means peer is going away; remove it if
