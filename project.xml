@@ -2,6 +2,7 @@
     name = "zyre"
     description = "an open-source framework for proximity-based P2P apps"
     script = "zproject.gsl"
+    license = "MPLv2"
     email = "zeromq-dev@lists.zeromq.org"
     url = "https://github.com/zeromq/zyre"
     repository = "https://github.com/zeromq/zyre"
