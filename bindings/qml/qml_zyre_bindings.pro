@@ -27,7 +27,7 @@ android {
   !system(bash $$ZYRE_ROOT/builds/android/build.sh) {
     error(Failed to build the zyre library with $$ZYRE_ROOT/builds/android/build.sh)
   }
-  
+
   VENDOR_PREFIX = $$ZYRE_ROOT/builds/android/prefix/$(TOOLCHAIN_NAME)
   BUILDDIR  = $$PWD/build/$(TOOLCHAIN_NAME)
   QMAKE_LIBDIR += $$VENDOR_PREFIX/lib
@@ -39,11 +39,11 @@ LIBS += -lzyre
 HEADERS += \
   $$SRCDIR/qml_zyre_plugin.h \
   $$SRCDIR/QmlZyre.h \
-  $$SRCDIR/QmlZyreEvent.h 
+  $$SRCDIR/QmlZyreEvent.h
 
 SOURCES += \
   $$SRCDIR/QmlZyre.cpp \
-  $$SRCDIR/QmlZyreEvent.cpp 
+  $$SRCDIR/QmlZyreEvent.cpp
 
 OBJECTS_DIR = $$BUILDDIR/.obj
 MOC_DIR     = $$BUILDDIR/.moc

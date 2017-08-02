@@ -18,19 +18,19 @@ class QmlZyreEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool isNULL READ isNULL)
-    
+
 public:
     zyre_event_t *self;
-    
+
     QmlZyreEvent() { self = NULL; }
     bool isNULL() { return self == NULL; }
-    
+
     static QObject* qmlAttachedProperties(QObject* object); // defined in QmlZyreEvent.cpp
-    
+
 public slots:
-    //  Returns event type, as printable uppercase string. Choices are:   
+    //  Returns event type, as printable uppercase string. Choices are:
     //  "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
-    //  and for the local node: "STOP"                                    
+    //  and for the local node: "STOP"
     const QString type ();
 
     //  Return the sending peer's uuid as a string
@@ -45,7 +45,7 @@ public slots:
     //  Returns the event headers, or NULL if there are none
     zhash_t *headers ();
 
-    //  Returns value of a header from the message headers   
+    //  Returns value of a header from the message headers
     //  obtained by ENTER. Return NULL if no value was found.
     const QString header (const QString &name);
 
@@ -53,12 +53,12 @@ public slots:
     const QString group ();
 
     //  Returns the incoming message payload; the caller can modify the
-    //  message but does not own it and should not destroy it.         
+    //  message but does not own it and should not destroy it.
     zmsg_t *msg ();
 
-    //  Returns the incoming message payload, and pass ownership to the   
+    //  Returns the incoming message payload, and pass ownership to the
     //  caller. The caller must destroy the message when finished with it.
-    //  After called on the given event, further calls will return NULL.  
+    //  After called on the given event, further calls will return NULL.
     zmsg_t *getMsg ();
 
     //  Print event to zsys log
@@ -69,19 +69,19 @@ class QmlZyreEventAttached : public QObject
 {
     Q_OBJECT
     QObject* m_attached;
-    
+
 public:
     QmlZyreEventAttached (QObject* attached) {
         Q_UNUSED (attached);
     };
-    
+
 public slots:
     //  Self test of this class.
     void test (bool verbose);
 
     //  Constructor: receive an event from the zyre node, wraps zyre_recv.
-    //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
-    //  data (WHISPER, SHOUT).                                            
+    //  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+    //  data (WHISPER, SHOUT).
     QmlZyreEvent *construct (QmlZyre *node);
 
     //  Destructor; destroys an event instance

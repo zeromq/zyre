@@ -17,8 +17,8 @@ QZyreEvent::QZyreEvent (zyre_event_t *self, QObject *qObjParent) : QObject (qObj
 
 ///
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.
-//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
-//  data (WHISPER, SHOUT).                                            
+//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+//  data (WHISPER, SHOUT).
 QZyreEvent::QZyreEvent (QZyre *node, QObject *qObjParent) : QObject (qObjParent)
 {
     this->self = zyre_event_new (node->self);
@@ -32,9 +32,9 @@ QZyreEvent::~QZyreEvent ()
 }
 
 ///
-//  Returns event type, as printable uppercase string. Choices are:   
+//  Returns event type, as printable uppercase string. Choices are:
 //  "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
-//  and for the local node: "STOP"                                    
+//  and for the local node: "STOP"
 const QString QZyreEvent::type ()
 {
     const QString rv = QString (zyre_event_type (self));
@@ -74,7 +74,7 @@ QZhash * QZyreEvent::headers ()
 }
 
 ///
-//  Returns value of a header from the message headers   
+//  Returns value of a header from the message headers
 //  obtained by ENTER. Return NULL if no value was found.
 const QString QZyreEvent::header (const QString &name)
 {
@@ -92,7 +92,7 @@ const QString QZyreEvent::group ()
 
 ///
 //  Returns the incoming message payload; the caller can modify the
-//  message but does not own it and should not destroy it.         
+//  message but does not own it and should not destroy it.
 QZmsg * QZyreEvent::msg ()
 {
     QZmsg *rv = new QZmsg (zyre_event_msg (self));
@@ -100,9 +100,9 @@ QZmsg * QZyreEvent::msg ()
 }
 
 ///
-//  Returns the incoming message payload, and pass ownership to the   
+//  Returns the incoming message payload, and pass ownership to the
 //  caller. The caller must destroy the message when finished with it.
-//  After called on the given event, further calls will return NULL.  
+//  After called on the given event, further calls will return NULL.
 QZmsg * QZyreEvent::getMsg ()
 {
     QZmsg *rv = new QZmsg (zyre_event_get_msg (self));
@@ -114,7 +114,7 @@ QZmsg * QZyreEvent::getMsg ()
 void QZyreEvent::print ()
 {
     zyre_event_print (self);
-    
+
 }
 
 ///
@@ -122,7 +122,7 @@ void QZyreEvent::print ()
 void QZyreEvent::test (bool verbose)
 {
     zyre_event_test (verbose);
-    
+
 }
 /*
 ################################################################################

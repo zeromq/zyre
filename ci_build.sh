@@ -167,10 +167,6 @@ default|default-Werror|default-with-docs|valgrind)
         CONFIG_OPTS+=("CPP=${CPP}")
     fi
 
-    if [ -n "$ADDRESS_SANITIZER" ] && [ "$ADDRESS_SANITIZER" == "enabled" ]; then
-        CONFIG_OPTS+=("--enable-address-sanitizer=yes")
-    fi
-
     CONFIG_OPTS_COMMON=$CONFIG_OPTS
     CONFIG_OPTS+=("--with-docs=no")
 
@@ -251,6 +247,9 @@ default|default-Werror|default-with-docs|valgrind)
         CONFIG_OPTS=$CONFIG_OPTS_COMMON
         CONFIG_OPTS+=("--with-docs=yes")
     fi
+    if [ -n "$ADDRESS_SANITIZER" ] && [ "$ADDRESS_SANITIZER" == "enabled" ]; then
+        CONFIG_OPTS+=("--enable-address-sanitizer=yes")
+    fi
     # Only use --enable-Werror on projects that are expected to have it
     # (and it is not our duty to check prerequisite projects anyway)
     CONFIG_OPTS+=("${CONFIG_OPT_WERROR}")
@@ -258,7 +257,9 @@ default|default-Werror|default-with-docs|valgrind)
     $CI_TIME ./configure --enable-drafts=yes "${CONFIG_OPTS[@]}"
     if [ "$BUILD_TYPE" == "valgrind" ] ; then
         # Build and check this project
-        $CI_TIME make VERBOSE=1 memcheck
+        $CI_TIME make VERBOSE=1 memcheck && exit
+        echo "Re-running failed ($?) memcheck with greater verbosity" >&2
+        $CI_TIME make VERBOSE=1 memcheck-verbose
         exit $?
     fi
     $CI_TIME make VERBOSE=1 all

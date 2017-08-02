@@ -1,14 +1,14 @@
 /*  =========================================================================
     zyre_event - Parsing Zyre messages
 
-    Copyright (c) the Contributors as noted in the AUTHORS file.           
-                                                                           
+    Copyright (c) the Contributors as noted in the AUTHORS file.
+
     This file is part of Zyre, an open-source framework for proximity-based
-    peer-to-peer applications -- See http://zyre.org.                      
-                                                                           
-    This Source Code Form is subject to the terms of the Mozilla Public    
-    License, v. 2.0. If a copy of the MPL was not distributed with this    
-    file, You can obtain one at http://mozilla.org/MPL/2.0/.               
+    peer-to-peer applications -- See http://zyre.org.
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
     =========================================================================
 */
 
@@ -26,8 +26,8 @@ extern "C" {
 //  This is a stable class, and may not change except for emergencies. It
 //  is provided in stable builds.
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.
-//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
-//  data (WHISPER, SHOUT).                                            
+//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+//  data (WHISPER, SHOUT).
 ZYRE_EXPORT zyre_event_t *
     zyre_event_new (zyre_t *node);
 
@@ -35,9 +35,9 @@ ZYRE_EXPORT zyre_event_t *
 ZYRE_EXPORT void
     zyre_event_destroy (zyre_event_t **self_p);
 
-//  Returns event type, as printable uppercase string. Choices are:   
+//  Returns event type, as printable uppercase string. Choices are:
 //  "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
-//  and for the local node: "STOP"                                    
+//  and for the local node: "STOP"
 ZYRE_EXPORT const char *
     zyre_event_type (zyre_event_t *self);
 
@@ -57,7 +57,7 @@ ZYRE_EXPORT const char *
 ZYRE_EXPORT zhash_t *
     zyre_event_headers (zyre_event_t *self);
 
-//  Returns value of a header from the message headers   
+//  Returns value of a header from the message headers
 //  obtained by ENTER. Return NULL if no value was found.
 ZYRE_EXPORT const char *
     zyre_event_header (zyre_event_t *self, const char *name);
@@ -67,13 +67,13 @@ ZYRE_EXPORT const char *
     zyre_event_group (zyre_event_t *self);
 
 //  Returns the incoming message payload; the caller can modify the
-//  message but does not own it and should not destroy it.         
+//  message but does not own it and should not destroy it.
 ZYRE_EXPORT zmsg_t *
     zyre_event_msg (zyre_event_t *self);
 
-//  Returns the incoming message payload, and pass ownership to the   
+//  Returns the incoming message payload, and pass ownership to the
 //  caller. The caller must destroy the message when finished with it.
-//  After called on the given event, further calls will return NULL.  
+//  After called on the given event, further calls will return NULL.
 //  Caller owns return value and must destroy it when done.
 ZYRE_EXPORT zmsg_t *
     zyre_event_get_msg (zyre_event_t *self);
