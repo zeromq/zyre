@@ -5,6 +5,7 @@
     license = "MPLv2"
     email = "zeromq-dev@lists.zeromq.org"
     url = "https://github.com/zeromq/zyre"
+    license = "MPLv2"
     repository = "https://github.com/zeromq/zyre"
     >
     <include filename = "license.xml" />

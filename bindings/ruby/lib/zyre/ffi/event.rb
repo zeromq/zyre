@@ -74,8 +74,8 @@ module Zyre
       end
 
       # Constructor: receive an event from the zyre node, wraps zyre_recv.
-      # The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
-      # data (WHISPER, SHOUT).                                            
+      # The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+      # data (WHISPER, SHOUT).
       # @param node [Zyre, #__ptr]
       # @return [Zyre::Event]
       def self.new(node)
@@ -94,9 +94,9 @@ module Zyre
         result
       end
 
-      # Returns event type, as printable uppercase string. Choices are:   
+      # Returns event type, as printable uppercase string. Choices are:
       # "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
-      # and for the local node: "STOP"                                    
+      # and for the local node: "STOP"
       #
       # @return [String]
       def type()
@@ -146,7 +146,7 @@ module Zyre
         result
       end
 
-      # Returns value of a header from the message headers   
+      # Returns value of a header from the message headers
       # obtained by ENTER. Return NULL if no value was found.
       #
       # @param name [String, #to_s, nil]
@@ -169,7 +169,7 @@ module Zyre
       end
 
       # Returns the incoming message payload; the caller can modify the
-      # message but does not own it and should not destroy it.         
+      # message but does not own it and should not destroy it.
       #
       # @return [::FFI::Pointer]
       def msg()
@@ -179,9 +179,9 @@ module Zyre
         result
       end
 
-      # Returns the incoming message payload, and pass ownership to the   
+      # Returns the incoming message payload, and pass ownership to the
       # caller. The caller must destroy the message when finished with it.
-      # After called on the given event, further calls will return NULL.  
+      # After called on the given event, further calls will return NULL.
       #
       # @return [::FFI::Pointer]
       def get_msg()

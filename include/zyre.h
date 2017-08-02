@@ -28,14 +28,14 @@ extern "C" {
 //  This is a stable class, and may not change except for emergencies. It
 //  is provided in stable builds.
 //  Constructor, creates a new Zyre node. Note that until you start the
-//  node it is silent and invisible to other nodes on the network.     
-//  The node name is provided to other nodes during discovery. If you  
-//  specify NULL, Zyre generates a randomized node name from the UUID. 
+//  node it is silent and invisible to other nodes on the network.
+//  The node name is provided to other nodes during discovery. If you
+//  specify NULL, Zyre generates a randomized node name from the UUID.
 ZYRE_EXPORT zyre_t *
     zyre_new (const char *name);
 
 //  Destructor, destroys a Zyre node. When you destroy a node, any
-//  messages it is sending or receiving will be discarded.        
+//  messages it is sending or receiving will be discarded.
 ZYRE_EXPORT void
     zyre_destroy (zyre_t **self_p);
 
@@ -44,94 +44,94 @@ ZYRE_EXPORT const char *
     zyre_uuid (zyre_t *self);
 
 //  Return our node name, after successful initialization. First 6
-//  characters of UUID by default.                                
+//  characters of UUID by default.
 ZYRE_EXPORT const char *
     zyre_name (zyre_t *self);
 
 //  Set the public name of this node overriding the default. The name is
-//  provide during discovery and come in each ENTER message.            
+//  provide during discovery and come in each ENTER message.
 ZYRE_EXPORT void
     zyre_set_name (zyre_t *self, const char *name);
 
 //  Set node header; these are provided to other nodes during discovery
-//  and come in each ENTER message.                                    
+//  and come in each ENTER message.
 ZYRE_EXPORT void
     zyre_set_header (zyre_t *self, const char *name, const char *format, ...) CHECK_PRINTF (3);
 
 //  Set verbose mode; this tells the node to log all traffic as well as
-//  all major events.                                                  
+//  all major events.
 ZYRE_EXPORT void
     zyre_set_verbose (zyre_t *self);
 
 //  Set UDP beacon discovery port; defaults to 5670, this call overrides
 //  that so you can create independent clusters on the same network, for
-//  e.g. development vs. production. Has no effect after zyre_start().  
+//  e.g. development vs. production. Has no effect after zyre_start().
 ZYRE_EXPORT void
     zyre_set_port (zyre_t *self, int port_nbr);
 
 //  Set the peer evasiveness timeout, in milliseconds. Default is 5000.
 //  This can be tuned in order to deal with expected network conditions
-//  and the response time expected by the application. This is tied to 
-//  the beacon interval and rate of messages received.                 
+//  and the response time expected by the application. This is tied to
+//  the beacon interval and rate of messages received.
 ZYRE_EXPORT void
     zyre_set_evasive_timeout (zyre_t *self, int interval);
 
 //  Set the peer expiration timeout, in milliseconds. Default is 30000.
 //  This can be tuned in order to deal with expected network conditions
-//  and the response time expected by the application. This is tied to 
-//  the beacon interval and rate of messages received.                 
+//  and the response time expected by the application. This is tied to
+//  the beacon interval and rate of messages received.
 ZYRE_EXPORT void
     zyre_set_expired_timeout (zyre_t *self, int interval);
 
 //  Set UDP beacon discovery interval, in milliseconds. Default is instant
-//  beacon exploration followed by pinging every 1,000 msecs.             
+//  beacon exploration followed by pinging every 1,000 msecs.
 ZYRE_EXPORT void
     zyre_set_interval (zyre_t *self, size_t interval);
 
 //  Set network interface for UDP beacons. If you do not set this, CZMQ will
 //  choose an interface for you. On boxes with several interfaces you should
-//  specify which one you want to use, or strange things can happen.        
+//  specify which one you want to use, or strange things can happen.
 ZYRE_EXPORT void
     zyre_set_interface (zyre_t *self, const char *value);
 
-//  By default, Zyre binds to an ephemeral TCP port and broadcasts the local 
-//  host name using UDP beaconing. When you call this method, Zyre will use  
-//  gossip discovery instead of UDP beaconing. You MUST set-up the gossip    
+//  By default, Zyre binds to an ephemeral TCP port and broadcasts the local
+//  host name using UDP beaconing. When you call this method, Zyre will use
+//  gossip discovery instead of UDP beaconing. You MUST set-up the gossip
 //  service separately using zyre_gossip_bind() and _connect(). Note that the
-//  endpoint MUST be valid for both bind and connect operations. You can use 
-//  inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address   
-//  that is meaningful to remote as well as local nodes). Returns 0 if       
-//  the bind was successful, else -1.                                        
+//  endpoint MUST be valid for both bind and connect operations. You can use
+//  inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address
+//  that is meaningful to remote as well as local nodes). Returns 0 if
+//  the bind was successful, else -1.
 ZYRE_EXPORT int
     zyre_set_endpoint (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
-//  it. Note that gossip endpoints are completely distinct from Zyre node   
-//  endpoints, and should not overlap (they can use the same transport).    
+//  it. Note that gossip endpoints are completely distinct from Zyre node
+//  endpoints, and should not overlap (they can use the same transport).
 ZYRE_EXPORT void
     zyre_gossip_bind (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 
 //  Set-up gossip discovery of other nodes. A node may connect to multiple
-//  other nodes, for redundancy paths. For details of the gossip network  
-//  design, see the CZMQ zgossip class.                                   
+//  other nodes, for redundancy paths. For details of the gossip network
+//  design, see the CZMQ zgossip class.
 ZYRE_EXPORT void
     zyre_gossip_connect (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
-//  possible to start the node.                                      
+//  possible to start the node.
 ZYRE_EXPORT int
     zyre_start (zyre_t *self);
 
 //  Stop node; this signals to other peers that this node will go away.
-//  This is polite; however you can also just destroy the node without 
-//  stopping it.                                                       
+//  This is polite; however you can also just destroy the node without
+//  stopping it.
 ZYRE_EXPORT void
     zyre_stop (zyre_t *self);
 
 //  Join a named group; after joining a group you can send messages to
-//  the group and all Zyre nodes in that group will receive them.     
+//  the group and all Zyre nodes in that group will receive them.
 ZYRE_EXPORT int
     zyre_join (zyre_t *self, const char *group);
 
@@ -140,18 +140,18 @@ ZYRE_EXPORT int
     zyre_leave (zyre_t *self, const char *group);
 
 //  Receive next message from network; the message may be a control
-//  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).   
-//  Returns zmsg_t object, or NULL if interrupted                  
+//  message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
+//  Returns zmsg_t object, or NULL if interrupted
 //  Caller owns return value and must destroy it when done.
 ZYRE_EXPORT zmsg_t *
     zyre_recv (zyre_t *self);
 
 //  Send message to single peer, specified as a UUID string
-//  Destroys message after sending                         
+//  Destroys message after sending
 ZYRE_EXPORT int
     zyre_whisper (zyre_t *self, const char *peer, zmsg_t **msg_p);
 
-//  Send message to a named group 
+//  Send message to a named group
 //  Destroys message after sending
 ZYRE_EXPORT int
     zyre_shout (zyre_t *self, const char *group, zmsg_t **msg_p);
@@ -190,7 +190,7 @@ ZYRE_EXPORT char *
     zyre_peer_address (zyre_t *self, const char *peer);
 
 //  Return the value of a header of a conected peer.
-//  Returns null if peer or key doesn't exits.      
+//  Returns null if peer or key doesn't exits.
 //  Caller owns return value and must destroy it when done.
 ZYRE_EXPORT char *
     zyre_peer_header_value (zyre_t *self, const char *peer, const char *name);
@@ -204,7 +204,7 @@ ZYRE_EXPORT void
     zyre_print (zyre_t *self);
 
 //  Return the Zyre version for run-time API detection; returns
-//  major * 10000 + minor * 100 + patch, as a single integer.  
+//  major * 10000 + minor * 100 + patch, as a single integer.
 ZYRE_EXPORT uint64_t
     zyre_version (void);
 

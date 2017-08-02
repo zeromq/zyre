@@ -1,48 +1,55 @@
 #
 #    zyre - an open-source framework for proximity-based P2P apps
 #
-#    Copyright (c) the Contributors as noted in the AUTHORS file.           
-#                                                                           
+#    Copyright (c) the Contributors as noted in the AUTHORS file.
+#
 #    This file is part of Zyre, an open-source framework for proximity-based
-#    peer-to-peer applications -- See http://zyre.org.                      
-#                                                                           
-#    This Source Code Form is subject to the terms of the Mozilla Public    
-#    License, v. 2.0. If a copy of the MPL was not distributed with this    
-#    file, You can obtain one at http://mozilla.org/MPL/2.0/.               
+#    peer-to-peer applications -- See http://zyre.org.
+#
+#    This Source Code Form is subject to the terms of the Mozilla Public
+#    License, v. 2.0. If a copy of the MPL was not distributed with this
+#    file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 Source:         zyre
 Section:        net
 Priority:       optional
 Maintainer:     zyre Developers <zeromq-dev@lists.zeromq.org>
-Standards-Version: 3.9.7
+Standards-Version: 4.0.0
 Build-Depends: debhelper (>= 9),
     pkg-config,
     libzmq3-dev,
     libczmq-dev,
+    dh-python,
+    python-all-dev, python-cffi, python-setuptools,
+    python3-all-dev, python3-cffi, python3-setuptools,
     asciidoc-base | asciidoc, xmlto,
     dh-autoreconf
 
 Package: libzyre2
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: an open-source framework for proximity-based p2p apps shared library
- This package contains shared library for zyre: an open-source framework for proximity-based p2p apps
+Description: zyre shared library
+ This package contains shared library for zyre:
+ an open-source framework for proximity-based p2p apps
 
 Package: libzyre-dev
 Architecture: any
 Section: libdevel
 Depends:
+    ${misc:Depends},
     libzmq3-dev,
     libczmq-dev,
     libzyre2 (= ${binary:Version})
-Description: an open-source framework for proximity-based p2p apps development tools
- This package contains development files for zyre: an open-source framework for proximity-based p2p apps
+Description: zyre development tools
+ This package contains development files for zyre:
+ an open-source framework for proximity-based p2p apps
 
 Package: zyre
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends},
-Description: an open-source framework for proximity-based p2p apps
- Main package for zyre: an open-source framework for proximity-based p2p apps
+Description: runnable binaries from zyre
+ Main package for zyre:
+ an open-source framework for proximity-based p2p apps
 
 Package: zyre-dbg
 Architecture: any
@@ -51,6 +58,26 @@ Priority: extra
 Depends:
     zyre (= ${binary:Version}),
     ${misc:Depends}
-Description: an open-source framework for proximity-based p2p apps debugging symbols
- This package contains the debugging symbols for zyre : an open-source framework for proximity-based p2p apps.
+Description: zyre debugging symbols
+ This package contains the debugging symbols for zyre:
+ an open-source framework for proximity-based p2p apps.
 
+Package: python-zyre-cffi
+Architecture: any
+Section: python
+Depends:
+    libzyre2 (= ${binary:Version}),
+    ${misc:Depends}, ${shlibs:Depends},
+    ${python:Depends}, python-cffi,
+Description: Python CFFI bindings for zyre
+ This package contains Python CFFI bindings for zyre.
+
+Package: python3-zyre-cffi
+Architecture: any
+Section: python
+Depends:
+    libzyre2 (= ${binary:Version}),
+    ${misc:Depends}, ${shlibs:Depends},
+    ${python3:Depends}, python3-cffi,
+Description: Python 3 CFFI bindings for zyre
+ This package contains Python 3 CFFI bindings for zyre.

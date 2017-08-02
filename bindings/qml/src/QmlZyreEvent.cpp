@@ -9,9 +9,9 @@
 
 
 ///
-//  Returns event type, as printable uppercase string. Choices are:   
+//  Returns event type, as printable uppercase string. Choices are:
 //  "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
-//  and for the local node: "STOP"                                    
+//  and for the local node: "STOP"
 const QString QmlZyreEvent::type () {
     return QString (zyre_event_type (self));
 };
@@ -41,7 +41,7 @@ zhash_t *QmlZyreEvent::headers () {
 };
 
 ///
-//  Returns value of a header from the message headers   
+//  Returns value of a header from the message headers
 //  obtained by ENTER. Return NULL if no value was found.
 const QString QmlZyreEvent::header (const QString &name) {
     return QString (zyre_event_header (self, name.toUtf8().data()));
@@ -55,15 +55,15 @@ const QString QmlZyreEvent::group () {
 
 ///
 //  Returns the incoming message payload; the caller can modify the
-//  message but does not own it and should not destroy it.         
+//  message but does not own it and should not destroy it.
 zmsg_t *QmlZyreEvent::msg () {
     return zyre_event_msg (self);
 };
 
 ///
-//  Returns the incoming message payload, and pass ownership to the   
+//  Returns the incoming message payload, and pass ownership to the
 //  caller. The caller must destroy the message when finished with it.
-//  After called on the given event, further calls will return NULL.  
+//  After called on the given event, further calls will return NULL.
 zmsg_t *QmlZyreEvent::getMsg () {
     return zyre_event_get_msg (self);
 };
@@ -88,8 +88,8 @@ void QmlZyreEventAttached::test (bool verbose) {
 
 ///
 //  Constructor: receive an event from the zyre node, wraps zyre_recv.
-//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
-//  data (WHISPER, SHOUT).                                            
+//  The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+//  data (WHISPER, SHOUT).
 QmlZyreEvent *QmlZyreEventAttached::construct (QmlZyre *node) {
     QmlZyreEvent *qmlSelf = new QmlZyreEvent ();
     qmlSelf->self = zyre_event_new (node->self);

@@ -1,14 +1,14 @@
 #
 #    zyre - an open-source framework for proximity-based P2P apps
 #
-#    Copyright (c) the Contributors as noted in the AUTHORS file.           
-#                                                                           
+#    Copyright (c) the Contributors as noted in the AUTHORS file.
+#
 #    This file is part of Zyre, an open-source framework for proximity-based
-#    peer-to-peer applications -- See http://zyre.org.                      
-#                                                                           
-#    This Source Code Form is subject to the terms of the Mozilla Public    
-#    License, v. 2.0. If a copy of the MPL was not distributed with this    
-#    file, You can obtain one at http://mozilla.org/MPL/2.0/.               
+#    peer-to-peer applications -- See http://zyre.org.
+#
+#    This Source Code Form is subject to the terms of the Mozilla Public
+#    License, v. 2.0. If a copy of the MPL was not distributed with this
+#    file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
 # To build with draft APIs, use "--with drafts" in rpmbuild for local builds or add
@@ -21,11 +21,19 @@
 %else
 %define DRAFTS no
 %endif
+
+# build with python_cffi support enabled
+%bcond_with python_cffi
+%if %{with python_cffi}
+%define py2_ver %(python2 -c "import sys; print ('%d.%d' % (sys.version_info.major, sys.version_info.minor))")
+%define py3_ver %(python3 -c "import sys; print ('%d.%d' % (sys.version_info.major, sys.version_info.minor))")
+%endif
+
 Name:           zyre
 Version:        2.0.1
 Release:        1
 Summary:        an open-source framework for proximity-based p2p apps
-License:        MIT
+License:        MPLv2
 URL:            https://github.com/zeromq/zyre
 Source0:        %{name}-%{version}.tar.gz
 Group:          System/Libraries
@@ -41,6 +49,14 @@ BuildRequires:  pkgconfig
 BuildRequires:  xmlto
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel
+%if %{with python_cffi}
+BuildRequires:  python-cffi
+BuildRequires:  python-devel
+BuildRequires:  python-setuptools
+BuildRequires:  python3-devel
+BuildRequires:  python3-cffi
+BuildRequires:  python3-setuptools
+%endif
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %description
@@ -83,7 +99,41 @@ This package contains development files for zyre: an open-source framework for p
 %dir %{_datadir}/zproject/zyre
 %{_datadir}/zproject/zyre/*.api
 
+%if %{with python_cffi}
+%package -n python2-zyre-cffi
+Group:  Python
+Summary:    Python CFFI bindings for zyre
+Requires:  python = %{py2_ver}
+
+%description -n python2-zyre-cffi
+This package contains Python CFFI bindings for zyre
+
+%files -n python2-zyre-cffi
+%{_libdir}/python%{py2_ver}/site-packages/zyre_cffi/
+%{_libdir}/python%{py2_ver}/site-packages/zyre_cffi-*-py%{py2_ver}.egg-info/
+
+%package -n python3-zyre-cffi
+Group:  Python
+Summary:    Python 3 CFFI bindings for zyre
+Requires:  python3 = %{py3_ver}
+
+%description -n python3-zyre-cffi
+This package contains Python 3 CFFI bindings for zyre
+
+%files -n python3-zyre-cffi
+%{_libdir}/python%{py3_ver}/site-packages/zyre_cffi/
+%{_libdir}/python%{py3_ver}/site-packages/zyre_cffi-*-py%{py3_ver}.egg-info/
+%endif
+
 %prep
+#FIXME: %{error:...} did not worked for me
+%if %{with python_cffi}
+%if %{without drafts}
+echo "FATAL: python_cffi not yet supported w/o drafts"
+exit 1
+%endif
+%endif
+
 %setup -q
 
 %build
@@ -91,12 +141,31 @@ sh autogen.sh
 %{configure} --enable-drafts=%{DRAFTS}
 make %{_smp_mflags}
 
+%if %{with python_cffi}
+# Problem: we need pkg-config points to built and not yet installed copy of zyre
+# Solution: chicken-egg problem - let's make "fake" pkg-config file
+sed -e "s@^libdir.*@libdir=`pwd`/src/.libs@" \
+    -e "s@^includedir.*@includedir=`pwd`/include@" \
+    src/libzyre.pc > bindings/python_cffi/libzyre.pc
+cd bindings/python_cffi
+export PKG_CONFIG_PATH=`pwd`
+python2 setup.py build
+python3 setup.py build
+%endif
+
 %install
 make install DESTDIR=%{buildroot} %{?_smp_mflags}
 
 # remove static libraries
 find %{buildroot} -name '*.a' | xargs rm -f
 find %{buildroot} -name '*.la' | xargs rm -f
+
+%if %{with python_cffi}
+cd bindings/python_cffi
+export PKG_CONFIG_PATH=`pwd`
+python2 setup.py install --root=%{buildroot} --skip-build --prefix %{_prefix}
+python3 setup.py install --root=%{buildroot} --skip-build --prefix %{_prefix}
+%endif
 
 %files
 %defattr(-,root,root)

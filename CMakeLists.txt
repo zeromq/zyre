@@ -178,7 +178,10 @@ set_target_properties(zyre
     PROPERTIES DEFINE_SYMBOL "ZYRE_EXPORTS"
 )
 set_target_properties (zyre
-    PROPERTIES SOVERSION "2.0.1"
+    PROPERTIES SOVERSION "2"
+)
+set_target_properties (zyre
+    PROPERTIES VERSION "2.0.1"
 )
 target_link_libraries(zyre
     ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
@@ -312,6 +315,22 @@ IF (ENABLE_DRAFTS)
     )
 ENDIF (ENABLE_DRAFTS)
 
+
+add_custom_target(
+    copy-selftest-ro ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/selftest-ro ${CMAKE_BINARY_DIR}/src/selftest-ro
+)
+
+add_custom_target(
+    make-selftest-rw ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/src/selftest-rw
+)
+
+set_directory_properties(
+    PROPERTIES
+    ADDITIONAL_MAKE_CLEAN_FILES "${CMAKE_BINARY_DIR}/src/selftest-ro;${CMAKE_BINARY_DIR}/src/selftest-rw"
+)
+
 foreach(TEST_CLASS ${TEST_CLASSES})
     add_test(
         NAME ${TEST_CLASS}
@@ -320,6 +339,10 @@ foreach(TEST_CLASS ${TEST_CLASSES})
     set_tests_properties(
         ${TEST_CLASS}
         PROPERTIES TIMEOUT ${CLASSTEST_TIMEOUT}
+    )
+    set_tests_properties(
+        ${TEST_CLASS}
+        PROPERTIES DEPENDS "copy-selftest-ro;make-selftest-rw"
     )
 endforeach(TEST_CLASS)
 

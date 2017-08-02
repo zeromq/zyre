@@ -19,9 +19,9 @@ public class Zyre implements AutoCloseable{
     public long self;
     /*
     Constructor, creates a new Zyre node. Note that until you start the
-    node it is silent and invisible to other nodes on the network.     
-    The node name is provided to other nodes during discovery. If you  
-    specify NULL, Zyre generates a randomized node name from the UUID. 
+    node it is silent and invisible to other nodes on the network.
+    The node name is provided to other nodes during discovery. If you
+    specify NULL, Zyre generates a randomized node name from the UUID.
     */
     native static long __new (String name);
     public Zyre (String name) {
@@ -33,7 +33,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Destructor, destroys a Zyre node. When you destroy a node, any
-    messages it is sending or receiving will be discarded.        
+    messages it is sending or receiving will be discarded.
     */
     native static void __destroy (long self);
     @Override
@@ -50,7 +50,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Return our node name, after successful initialization. First 6
-    characters of UUID by default.                                
+    characters of UUID by default.
     */
     native static String __name (long self);
     public String name () {
@@ -58,7 +58,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Set the public name of this node overriding the default. The name is
-    provide during discovery and come in each ENTER message.            
+    provide during discovery and come in each ENTER message.
     */
     native static void __setName (long self, String name);
     public void setName (String name) {
@@ -66,7 +66,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Set node header; these are provided to other nodes during discovery
-    and come in each ENTER message.                                    
+    and come in each ENTER message.
     */
     native static void __setHeader (long self, String name, String format);
     public void setHeader (String name, String format) {
@@ -74,7 +74,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Set verbose mode; this tells the node to log all traffic as well as
-    all major events.                                                  
+    all major events.
     */
     native static void __setVerbose (long self);
     public void setVerbose () {
@@ -83,7 +83,7 @@ public class Zyre implements AutoCloseable{
     /*
     Set UDP beacon discovery port; defaults to 5670, this call overrides
     that so you can create independent clusters on the same network, for
-    e.g. development vs. production. Has no effect after zyre_start().  
+    e.g. development vs. production. Has no effect after zyre_start().
     */
     native static void __setPort (long self, int portNbr);
     public void setPort (int portNbr) {
@@ -92,8 +92,8 @@ public class Zyre implements AutoCloseable{
     /*
     Set the peer evasiveness timeout, in milliseconds. Default is 5000.
     This can be tuned in order to deal with expected network conditions
-    and the response time expected by the application. This is tied to 
-    the beacon interval and rate of messages received.                 
+    and the response time expected by the application. This is tied to
+    the beacon interval and rate of messages received.
     */
     native static void __setEvasiveTimeout (long self, int interval);
     public void setEvasiveTimeout (int interval) {
@@ -102,8 +102,8 @@ public class Zyre implements AutoCloseable{
     /*
     Set the peer expiration timeout, in milliseconds. Default is 30000.
     This can be tuned in order to deal with expected network conditions
-    and the response time expected by the application. This is tied to 
-    the beacon interval and rate of messages received.                 
+    and the response time expected by the application. This is tied to
+    the beacon interval and rate of messages received.
     */
     native static void __setExpiredTimeout (long self, int interval);
     public void setExpiredTimeout (int interval) {
@@ -111,7 +111,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Set UDP beacon discovery interval, in milliseconds. Default is instant
-    beacon exploration followed by pinging every 1,000 msecs.             
+    beacon exploration followed by pinging every 1,000 msecs.
     */
     native static void __setInterval (long self, long interval);
     public void setInterval (long interval) {
@@ -120,21 +120,21 @@ public class Zyre implements AutoCloseable{
     /*
     Set network interface for UDP beacons. If you do not set this, CZMQ will
     choose an interface for you. On boxes with several interfaces you should
-    specify which one you want to use, or strange things can happen.        
+    specify which one you want to use, or strange things can happen.
     */
     native static void __setInterface (long self, String value);
     public void setInterface (String value) {
         __setInterface (self, value);
     }
     /*
-    By default, Zyre binds to an ephemeral TCP port and broadcasts the local 
-    host name using UDP beaconing. When you call this method, Zyre will use  
-    gossip discovery instead of UDP beaconing. You MUST set-up the gossip    
+    By default, Zyre binds to an ephemeral TCP port and broadcasts the local
+    host name using UDP beaconing. When you call this method, Zyre will use
+    gossip discovery instead of UDP beaconing. You MUST set-up the gossip
     service separately using zyre_gossip_bind() and _connect(). Note that the
-    endpoint MUST be valid for both bind and connect operations. You can use 
-    inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address   
-    that is meaningful to remote as well as local nodes). Returns 0 if       
-    the bind was successful, else -1.                                        
+    endpoint MUST be valid for both bind and connect operations. You can use
+    inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address
+    that is meaningful to remote as well as local nodes). Returns 0 if
+    the bind was successful, else -1.
     */
     native static int __setEndpoint (long self, String format);
     public int setEndpoint (String format) {
@@ -143,8 +143,8 @@ public class Zyre implements AutoCloseable{
     /*
     Set-up gossip discovery of other nodes. At least one node in the cluster
     must bind to a well-known gossip endpoint, so other nodes can connect to
-    it. Note that gossip endpoints are completely distinct from Zyre node   
-    endpoints, and should not overlap (they can use the same transport).    
+    it. Note that gossip endpoints are completely distinct from Zyre node
+    endpoints, and should not overlap (they can use the same transport).
     */
     native static void __gossipBind (long self, String format);
     public void gossipBind (String format) {
@@ -152,8 +152,8 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Set-up gossip discovery of other nodes. A node may connect to multiple
-    other nodes, for redundancy paths. For details of the gossip network  
-    design, see the CZMQ zgossip class.                                   
+    other nodes, for redundancy paths. For details of the gossip network
+    design, see the CZMQ zgossip class.
     */
     native static void __gossipConnect (long self, String format);
     public void gossipConnect (String format) {
@@ -162,7 +162,7 @@ public class Zyre implements AutoCloseable{
     /*
     Start node, after setting header values. When you start a node it
     begins discovery and connection. Returns 0 if OK, -1 if it wasn't
-    possible to start the node.                                      
+    possible to start the node.
     */
     native static int __start (long self);
     public int start () {
@@ -170,8 +170,8 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Stop node; this signals to other peers that this node will go away.
-    This is polite; however you can also just destroy the node without 
-    stopping it.                                                       
+    This is polite; however you can also just destroy the node without
+    stopping it.
     */
     native static void __stop (long self);
     public void stop () {
@@ -179,7 +179,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Join a named group; after joining a group you can send messages to
-    the group and all Zyre nodes in that group will receive them.     
+    the group and all Zyre nodes in that group will receive them.
     */
     native static int __join (long self, String group);
     public int join (String group) {
@@ -194,8 +194,8 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Receive next message from network; the message may be a control
-    message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).   
-    Returns zmsg_t object, or NULL if interrupted                  
+    message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
+    Returns zmsg_t object, or NULL if interrupted
     */
     native static long __recv (long self);
     public Zmsg recv () {
@@ -203,14 +203,14 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Send message to single peer, specified as a UUID string
-    Destroys message after sending                         
+    Destroys message after sending
     */
     native static int __whisper (long self, String peer, long msgP);
     public int whisper (String peer, Zmsg msgP) {
         return __whisper (self, peer, msgP.self);
     }
     /*
-    Send message to a named group 
+    Send message to a named group
     Destroys message after sending
     */
     native static int __shout (long self, String group, long msgP);
@@ -268,7 +268,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Return the value of a header of a conected peer.
-    Returns null if peer or key doesn't exits.      
+    Returns null if peer or key doesn't exits.
     */
     native static String __peerHeaderValue (long self, String peer, String name);
     public String peerHeaderValue (String peer, String name) {
@@ -290,7 +290,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Return the Zyre version for run-time API detection; returns
-    major * 10000 + minor * 100 + patch, as a single integer.  
+    major * 10000 + minor * 100 + patch, as a single integer.
     */
     native static long __version ();
     public long version () {

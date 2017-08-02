@@ -19,8 +19,8 @@ public class ZyreEvent implements AutoCloseable{
     public long self;
     /*
     Constructor: receive an event from the zyre node, wraps zyre_recv.
-    The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or  
-    data (WHISPER, SHOUT).                                            
+    The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
+    data (WHISPER, SHOUT).
     */
     native static long __new (long node);
     public ZyreEvent (Zyre node) {
@@ -40,9 +40,9 @@ public class ZyreEvent implements AutoCloseable{
         self = 0;
     }
     /*
-    Returns event type, as printable uppercase string. Choices are:   
+    Returns event type, as printable uppercase string. Choices are:
     "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
-    and for the local node: "STOP"                                    
+    and for the local node: "STOP"
     */
     native static String __type (long self);
     public String type () {
@@ -77,7 +77,7 @@ public class ZyreEvent implements AutoCloseable{
         return new Zhash (__headers (self));
     }
     /*
-    Returns value of a header from the message headers   
+    Returns value of a header from the message headers
     obtained by ENTER. Return NULL if no value was found.
     */
     native static String __header (long self, String name);
@@ -93,16 +93,16 @@ public class ZyreEvent implements AutoCloseable{
     }
     /*
     Returns the incoming message payload; the caller can modify the
-    message but does not own it and should not destroy it.         
+    message but does not own it and should not destroy it.
     */
     native static long __msg (long self);
     public Zmsg msg () {
         return new Zmsg (__msg (self));
     }
     /*
-    Returns the incoming message payload, and pass ownership to the   
+    Returns the incoming message payload, and pass ownership to the
     caller. The caller must destroy the message when finished with it.
-    After called on the given event, further calls will return NULL.  
+    After called on the given event, further calls will return NULL.
     */
     native static long __getMsg (long self);
     public Zmsg getMsg () {
