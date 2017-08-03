@@ -6,6 +6,8 @@ os:
 - linux
 - osx
 
+dist: trusty
+
 sudo: false
 
 env:
@@ -73,8 +75,8 @@ matrix:
 addons:
   apt:
     sources:
-    - sourceline: 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_12.04/ ./'
-      key_url: 'http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_12.04/Release.key'
+    - sourceline: 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ ./'
+      key_url: 'http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/Release.key'
     packages:
     - uuid-dev
     - zproject
