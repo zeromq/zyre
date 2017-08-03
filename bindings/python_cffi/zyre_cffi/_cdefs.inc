@@ -93,14 +93,6 @@ void
 int
     zyre_set_endpoint (zyre_t *self, const char *format, ...);
 
-//
-void
-    zyre_set_curve_key_public (zyre_t *self, const char *key);
-
-//
-void
-    zyre_set_curve_key_secret (zyre_t *self, const char *key);
-
 // Set-up gossip discovery of other nodes. At least one node in the cluster
 // must bind to a well-known gossip endpoint, so other nodes can connect to
 // it. Note that gossip endpoints are completely distinct from Zyre node

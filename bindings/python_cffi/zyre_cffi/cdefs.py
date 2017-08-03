@@ -3733,6 +3733,20 @@ void
 int
     zsys_max_msgsz (void);
 
+// Configure the threshold value of filesystem object age per st_mtime
+// that should elapse until we consider that object "stable" at the
+// current zclock_time() moment.
+// The default is S_DEFAULT_ZSYS_FILE_STABLE_AGE_MSEC defined in zsys.c
+// which generally depends on host OS, with fallback value of 3000.
+void
+    zsys_set_file_stable_age_msec (int64_t file_stable_age_msec);
+
+// Return current threshold value of file stable age in msec.
+// This can be used in code that chooses to wait for this timeout
+// before testing if a filesystem object is "stable" or not.
+int64_t
+    zsys_file_stable_age_msec (void);
+
 // Configure the default linger timeout in msecs for new zsock instances.
 // You can also set this separately on each zsock_t instance. The default
 // linger time is zero, i.e. any pending messages will be dropped. If the
@@ -4129,14 +4143,6 @@ void
 // the bind was successful, else -1.
 int
     zyre_set_endpoint (zyre_t *self, const char *format, ...);
-
-//
-void
-    zyre_set_curve_key_public (zyre_t *self, const char *key);
-
-//
-void
-    zyre_set_curve_key_secret (zyre_t *self, const char *key);
 
 // Set-up gossip discovery of other nodes. At least one node in the cluster
 // must bind to a well-known gossip endpoint, so other nodes can connect to
