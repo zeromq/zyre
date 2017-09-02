@@ -250,7 +250,7 @@ zre_msg_dup (zre_msg_t *other)
     zre_msg_t *copy = zre_msg_new ();
 
     // Copy the routing and message id
-    zre_msg_set_routing_id (copy, zframe_dup (zre_msg_routing_id (other)));
+    zre_msg_set_routing_id (copy, zre_msg_routing_id (other));
     zre_msg_set_id (copy, zre_msg_id (other));
 
     // Copy the rest of the fields
