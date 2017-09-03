@@ -14,7 +14,7 @@ Source:         zyre
 Section:        net
 Priority:       optional
 Maintainer:     zyre Developers <zeromq-dev@lists.zeromq.org>
-Standards-Version: 4.0.0
+Standards-Version: 4.0.1.0
 Build-Depends: debhelper (>= 9),
     pkg-config,
     libzmq3-dev,
@@ -54,7 +54,7 @@ Description: runnable binaries from zyre
 Package: zyre-dbg
 Architecture: any
 Section: debug
-Priority: extra
+Priority: optional
 Depends:
     zyre (= ${binary:Version}),
     ${misc:Depends}
