@@ -11,5 +11,3 @@ except ImportError:
     lib = dlopen.lib
     ffi = dlopen.ffi
 
-from . import Zyre
-from . import ZyreEvent
