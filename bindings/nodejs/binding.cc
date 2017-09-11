@@ -44,8 +44,11 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "setInterval", _set_interval);
     Nan::SetPrototypeMethod (tpl, "setInterface", _set_interface);
     Nan::SetPrototypeMethod (tpl, "setEndpoint", _set_endpoint);
+    Nan::SetPrototypeMethod (tpl, "setZcert", _set_zcert);
+    Nan::SetPrototypeMethod (tpl, "beaconSetVersion", _beacon_set_version);
     Nan::SetPrototypeMethod (tpl, "gossipBind", _gossip_bind);
     Nan::SetPrototypeMethod (tpl, "gossipConnect", _gossip_connect);
+    Nan::SetPrototypeMethod (tpl, "gossipConnectCurve", _gossip_connect_curve);
     Nan::SetPrototypeMethod (tpl, "start", _start);
     Nan::SetPrototypeMethod (tpl, "stop", _stop);
     Nan::SetPrototypeMethod (tpl, "join", _join);
@@ -250,6 +253,27 @@ NAN_METHOD (Zyre::_set_endpoint) {
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
 
+NAN_METHOD (Zyre::_set_zcert) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    Zcert *zcert = Nan::ObjectWrap::Unwrap<Zcert>(info [0].As<Object>());
+    zyre_set_zcert (zyre->self, zcert->self);
+}
+
+NAN_METHOD (Zyre::_beacon_set_version) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *version;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `version`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`version` must be a string");
+    else {
+        Nan::Utf8String version_utf8 (info [0].As<String>());
+        version = *version_utf8;
+    }
+    zyre_beacon_set_version (zyre->self, (const char *)version);
+}
+
 NAN_METHOD (Zyre::_gossip_bind) {
     Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
     char *format;
@@ -278,6 +302,31 @@ NAN_METHOD (Zyre::_gossip_connect) {
         format = *format_utf8;
     }
     zyre_gossip_connect (zyre->self, "%s", format);
+}
+
+NAN_METHOD (Zyre::_gossip_connect_curve) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *public_key;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `public_key`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`public_key` must be a string");
+    else {
+        Nan::Utf8String public_key_utf8 (info [0].As<String>());
+        public_key = *public_key_utf8;
+    }
+    char *format;
+    if (info [1]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `format`");
+    else
+    if (!info [1]->IsString ())
+        return Nan::ThrowTypeError ("`format` must be a string");
+    else {
+        Nan::Utf8String format_utf8 (info [1].As<String>());
+        format = *format_utf8;
+    }
+    zyre_gossip_connect_curve (zyre->self, (const char *)public_key, "%s", format);
 }
 
 NAN_METHOD (Zyre::_start) {

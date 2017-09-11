@@ -118,6 +118,18 @@ class Zyre(object):
         """
         return libzyre.zyre_set_endpoint(self._p, format, )
 
+    def set_zcert(self, zcert):
+        """
+        Apply a azcert to a Zyre node.
+        """
+        return libzyre.zyre_set_zcert(self._p, zcert._p)
+
+    def beacon_set_version(self, version):
+        """
+        Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+        """
+        return libzyre.zyre_beacon_set_version(self._p, to_bytes(version))
+
     def gossip_bind(self, format, ):
         """
         Set-up gossip discovery of other nodes. At least one node in the cluster
@@ -134,6 +146,12 @@ class Zyre(object):
         design, see the CZMQ zgossip class.
         """
         return libzyre.zyre_gossip_connect(self._p, format, )
+
+    def gossip_connect_curve(self, public_key, format, ):
+        """
+        Set-up gossip discovery with CURVE enabled.
+        """
+        return libzyre.zyre_gossip_connect_curve(self._p, to_bytes(public_key), format, )
 
     def start(self):
         """

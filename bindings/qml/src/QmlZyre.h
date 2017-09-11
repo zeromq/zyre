@@ -83,6 +83,12 @@ public slots:
     //  the bind was successful, else -1.
     int setEndpoint (const QString &format);
 
+    //  Apply a azcert to a Zyre node.
+    void setZcert (zcert_t *zcert);
+
+    //  Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+    void beaconSetVersion (const QString &version);
+
     //  Set-up gossip discovery of other nodes. At least one node in the cluster
     //  must bind to a well-known gossip endpoint, so other nodes can connect to
     //  it. Note that gossip endpoints are completely distinct from Zyre node
@@ -93,6 +99,9 @@ public slots:
     //  other nodes, for redundancy paths. For details of the gossip network
     //  design, see the CZMQ zgossip class.
     void gossipConnect (const QString &format);
+
+    //  Set-up gossip discovery with CURVE enabled.
+    void gossipConnectCurve (const QString &publicKey, const QString &format);
 
     //  Start node, after setting header values. When you start a node it
     //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't

@@ -4081,6 +4081,7 @@ zyre_cdefs.extend (czmq_cdefs)
 
 zyre_cdefs.append ('''
 typedef struct _zyre_t zyre_t;
+typedef struct _zcert_t zcert_t;
 typedef struct _zmsg_t zmsg_t;
 typedef struct _zlist_t zlist_t;
 typedef struct _zsock_t zsock_t;
@@ -4165,6 +4166,14 @@ void
 int
     zyre_set_endpoint (zyre_t *self, const char *format, ...);
 
+// Apply a azcert to a Zyre node.
+void
+    zyre_set_zcert (zyre_t *self, zcert_t *zcert);
+
+// Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+void
+    zyre_beacon_set_version (zyre_t *self, const char *version);
+
 // Set-up gossip discovery of other nodes. At least one node in the cluster
 // must bind to a well-known gossip endpoint, so other nodes can connect to
 // it. Note that gossip endpoints are completely distinct from Zyre node
@@ -4177,6 +4186,10 @@ void
 // design, see the CZMQ zgossip class.
 void
     zyre_gossip_connect (zyre_t *self, const char *format, ...);
+
+// Set-up gossip discovery with CURVE enabled.
+void
+    zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...);
 
 // Start node, after setting header values. When you start a node it
 // begins discovery and connection. Returns 0 if OK, -1 if it wasn't

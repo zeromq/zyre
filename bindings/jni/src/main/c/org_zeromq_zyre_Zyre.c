@@ -109,6 +109,20 @@ Java_org_zeromq_zyre_Zyre__1_1setEndpoint (JNIEnv *env, jclass c, jlong self, js
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1setZcert (JNIEnv *env, jclass c, jlong self, jlong zcert)
+{
+    zyre_set_zcert ((zyre_t *) (intptr_t) self, (zcert_t *) (intptr_t) zcert);
+}
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1beaconSetVersion (JNIEnv *env, jclass c, jlong self, jstring version)
+{
+    char *version_ = (char *) (*env)->GetStringUTFChars (env, version, NULL);
+    zyre_beacon_set_version ((zyre_t *) (intptr_t) self, version_);
+    (*env)->ReleaseStringUTFChars (env, version, version_);
+}
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1gossipBind (JNIEnv *env, jclass c, jlong self, jstring format)
 {
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
@@ -121,6 +135,16 @@ Java_org_zeromq_zyre_Zyre__1_1gossipConnect (JNIEnv *env, jclass c, jlong self, 
 {
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
     zyre_gossip_connect ((zyre_t *) (intptr_t) self, "%s", format_);
+    (*env)->ReleaseStringUTFChars (env, format, format_);
+}
+
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1gossipConnectCurve (JNIEnv *env, jclass c, jlong self, jstring public_key, jstring format)
+{
+    char *public_key_ = (char *) (*env)->GetStringUTFChars (env, public_key, NULL);
+    char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);
+    zyre_gossip_connect_curve ((zyre_t *) (intptr_t) self, public_key_, "%s", format_);
+    (*env)->ReleaseStringUTFChars (env, public_key, public_key_);
     (*env)->ReleaseStringUTFChars (env, format, format_);
 }
 

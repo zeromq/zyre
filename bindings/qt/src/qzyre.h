@@ -30,6 +30,7 @@
 //  Opaque class structures to allow forward references
 class QZyre;
 class QZyreEvent;
+class QZcert;
 class QZmsg;
 class QZlist;
 class QZsock;
@@ -39,6 +40,7 @@ class QZframe;
 //  Public API classes
 #include "qzyre.h"
 #include "qzyreevent.h"
+#include "qzcert.h"
 #include "qzmsg.h"
 #include "qzlist.h"
 #include "qzsock.h"

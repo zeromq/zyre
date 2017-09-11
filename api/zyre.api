@@ -102,6 +102,16 @@
         <return type = "integer" />
     </method>
 
+    <method name = "set zcert" state = "draft">
+        Apply a azcert to a Zyre node.
+        <argument name = "zcert" type = "zcert"></argument>
+    </method>
+
+    <method name = "beacon set version" state = "draft">
+        Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+        <argument name = "version" type = "string"></argument>
+    </method>
+
     <method name = "gossip bind">
         Set-up gossip discovery of other nodes. At least one node in the cluster
         must bind to a well-known gossip endpoint, so other nodes can connect to
@@ -114,6 +124,12 @@
         Set-up gossip discovery of other nodes. A node may connect to multiple
         other nodes, for redundancy paths. For details of the gossip network
         design, see the CZMQ zgossip class.
+        <argument name = "format" type = "format" />
+    </method>
+
+    <method name = "gossip connect curve" state = "draft">
+        Set-up gossip discovery with CURVE enabled.
+        <argument name = "public_key" type = "string" />
         <argument name = "format" type = "format" />
     </method>
 

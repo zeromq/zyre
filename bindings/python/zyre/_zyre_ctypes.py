@@ -92,10 +92,16 @@ lib.zyre_set_interface.restype = None
 lib.zyre_set_interface.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_endpoint.restype = c_int
 lib.zyre_set_endpoint.argtypes = [zyre_p, c_char_p]
+lib.zyre_set_zcert.restype = None
+lib.zyre_set_zcert.argtypes = [zyre_p, czmq.zcert_p]
+lib.zyre_beacon_set_version.restype = None
+lib.zyre_beacon_set_version.argtypes = [zyre_p, c_char_p]
 lib.zyre_gossip_bind.restype = None
 lib.zyre_gossip_bind.argtypes = [zyre_p, c_char_p]
 lib.zyre_gossip_connect.restype = None
 lib.zyre_gossip_connect.argtypes = [zyre_p, c_char_p]
+lib.zyre_gossip_connect_curve.restype = None
+lib.zyre_gossip_connect_curve.argtypes = [zyre_p, c_char_p, c_char_p]
 lib.zyre_start.restype = c_int
 lib.zyre_start.argtypes = [zyre_p]
 lib.zyre_stop.restype = None
@@ -275,6 +281,18 @@ the bind was successful, else -1.
         """
         return lib.zyre_set_endpoint(self._as_parameter_, format, *args)
 
+    def set_zcert(self, zcert):
+        """
+        Apply a azcert to a Zyre node.
+        """
+        return lib.zyre_set_zcert(self._as_parameter_, zcert)
+
+    def beacon_set_version(self, version):
+        """
+        Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+        """
+        return lib.zyre_beacon_set_version(self._as_parameter_, version)
+
     def gossip_bind(self, format, *args):
         """
         Set-up gossip discovery of other nodes. At least one node in the cluster
@@ -291,6 +309,12 @@ other nodes, for redundancy paths. For details of the gossip network
 design, see the CZMQ zgossip class.
         """
         return lib.zyre_gossip_connect(self._as_parameter_, format, *args)
+
+    def gossip_connect_curve(self, public_key, format, *args):
+        """
+        Set-up gossip discovery with CURVE enabled.
+        """
+        return lib.zyre_gossip_connect_curve(self._as_parameter_, public_key, format, *args)
 
     def start(self):
         """

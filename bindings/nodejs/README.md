@@ -149,6 +149,18 @@ that is meaningful to remote as well as local nodes). Returns 0 if
 the bind was successful, else -1.
 
 ```
+nothing my_zyre.setZcert (Zcert)
+```
+
+Apply a azcert to a Zyre node.
+
+```
+nothing my_zyre.beaconSetVersion (String)
+```
+
+Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+
+```
 nothing my_zyre.gossipBind (String)
 ```
 
@@ -164,6 +176,12 @@ nothing my_zyre.gossipConnect (String)
 Set-up gossip discovery of other nodes. A node may connect to multiple
 other nodes, for redundancy paths. For details of the gossip network
 design, see the CZMQ zgossip class.
+
+```
+nothing my_zyre.gossipConnectCurve (String, String)
+```
+
+Set-up gossip discovery with CURVE enabled.
 
 ```
 integer my_zyre.start ()

@@ -27,6 +27,8 @@ extern "C" {
 //  @interface
 //  This is a stable class, and may not change except for emergencies. It
 //  is provided in stable builds.
+//  This class has draft methods, which may change over time. They are not
+//  in stable releases, by default. Use --enable-drafts to enable.
 //  Constructor, creates a new Zyre node. Note that until you start the
 //  node it is silent and invisible to other nodes on the network.
 //  The node name is provided to other nodes during discovery. If you
@@ -212,6 +214,23 @@ ZYRE_EXPORT uint64_t
 ZYRE_EXPORT void
     zyre_test (bool verbose);
 
+#ifdef ZYRE_BUILD_DRAFT_API
+//  *** Draft method, for development use, may change without warning ***
+//  Apply a azcert to a Zyre node.
+ZYRE_EXPORT void
+    zyre_set_zcert (zyre_t *self, zcert_t *zcert);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+ZYRE_EXPORT void
+    zyre_beacon_set_version (zyre_t *self, const char *version);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Set-up gossip discovery with CURVE enabled.
+ZYRE_EXPORT void
+    zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);
+
+#endif // ZYRE_BUILD_DRAFT_API
 //  @end
 
 #define zyre_dump(z) zyre_print((z))
