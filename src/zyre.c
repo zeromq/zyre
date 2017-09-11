@@ -613,7 +613,7 @@ zyre_test (bool verbose)
     if (verbose)
         printf ("\n");
 
-    //  @selftestzsys_info ("Using key %s for %s", server_key, endpoint);
+    //  @selftest
     //  We'll use inproc gossip discovery so that this works without networking
 
     uint64_t version = zyre_version ();
