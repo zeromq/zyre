@@ -56,6 +56,21 @@ typedef struct _zyre_node_t zyre_node_t;
 #ifndef ZYRE_BUILD_DRAFT_API
 
 //  *** Draft method, defined for internal use only ***
+//  Apply a azcert to a Zyre node.
+ZYRE_PRIVATE void
+    zyre_set_zcert (zyre_t *self, zcert_t *zcert);
+
+//  *** Draft method, defined for internal use only ***
+//  Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+ZYRE_PRIVATE void
+    zyre_beacon_set_version (zyre_t *self, const char *version);
+
+//  *** Draft method, defined for internal use only ***
+//  Set-up gossip discovery with CURVE enabled.
+ZYRE_PRIVATE void
+    zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);
+
+//  *** Draft method, defined for internal use only ***
 //  Self test of this class.
 ZYRE_PRIVATE void
     zre_msg_test (bool verbose);

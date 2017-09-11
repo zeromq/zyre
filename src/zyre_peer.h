@@ -112,6 +112,20 @@ bool
 void
     zyre_peer_set_verbose (zyre_peer_t *self, bool verbose);
 
+
+// private
+#ifdef ZYRE_BUILD_DRAFT_API
+// curve support
+void
+    zyre_peer_set_server_key (zyre_peer_t *self, const char *key);
+
+void
+    zyre_peer_set_public_key (zyre_peer_t *self, const char *key);
+
+void
+    zyre_peer_set_secret_key (zyre_peer_t *self, const char *key);
+#endif
+
 //  Self test of this class
 ZYRE_EXPORT void
     zyre_peer_test (bool verbose);

@@ -141,6 +141,20 @@ public class Zyre implements AutoCloseable{
         return __setEndpoint (self, format);
     }
     /*
+    Apply a azcert to a Zyre node.
+    */
+    native static void __setZcert (long self, long zcert);
+    public void setZcert (Zcert zcert) {
+        __setZcert (self, zcert.self);
+    }
+    /*
+    Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+    */
+    native static void __beaconSetVersion (long self, String version);
+    public void beaconSetVersion (String version) {
+        __beaconSetVersion (self, version);
+    }
+    /*
     Set-up gossip discovery of other nodes. At least one node in the cluster
     must bind to a well-known gossip endpoint, so other nodes can connect to
     it. Note that gossip endpoints are completely distinct from Zyre node
@@ -158,6 +172,13 @@ public class Zyre implements AutoCloseable{
     native static void __gossipConnect (long self, String format);
     public void gossipConnect (String format) {
         __gossipConnect (self, format);
+    }
+    /*
+    Set-up gossip discovery with CURVE enabled.
+    */
+    native static void __gossipConnectCurve (long self, String publicKey, String format);
+    public void gossipConnectCurve (String publicKey, String format) {
+        __gossipConnectCurve (self, publicKey, format);
     }
     /*
     Start node, after setting header values. When you start a node it

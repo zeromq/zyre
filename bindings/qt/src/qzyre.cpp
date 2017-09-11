@@ -144,6 +144,22 @@ int QZyre::setEndpoint (const QString &param)
 }
 
 ///
+//  Apply a azcert to a Zyre node.
+void QZyre::setZcert (QZcert *zcert)
+{
+    zyre_set_zcert (self, zcert->self);
+
+}
+
+///
+//  Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+void QZyre::beaconSetVersion (const QString &version)
+{
+    zyre_beacon_set_version (self, version.toUtf8().data());
+
+}
+
+///
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
 //  it. Note that gossip endpoints are completely distinct from Zyre node
@@ -161,6 +177,14 @@ void QZyre::gossipBind (const QString &param)
 void QZyre::gossipConnect (const QString &param)
 {
     zyre_gossip_connect (self, "%s", param.toUtf8().data());
+
+}
+
+///
+//  Set-up gossip discovery with CURVE enabled.
+void QZyre::gossipConnectCurve (const QString &publicKey, const QString &param)
+{
+    zyre_gossip_connect_curve (self, publicKey.toUtf8().data(), "%s", param.toUtf8().data());
 
 }
 

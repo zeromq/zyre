@@ -242,6 +242,28 @@ module Zyre
         result
       end
 
+      # Apply a azcert to a Zyre node.
+      #
+      # @param zcert [::FFI::Pointer, #to_ptr]
+      # @return [void]
+      def set_zcert(zcert)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_set_zcert(self_p, zcert)
+        result
+      end
+
+      # Set the beacon version. Useful when working with ZYREv3 with secure beacons.
+      #
+      # @param version [String, #to_s, nil]
+      # @return [void]
+      def beacon_set_version(version)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_beacon_set_version(self_p, version)
+        result
+      end
+
       # Set-up gossip discovery of other nodes. At least one node in the cluster
       # must bind to a well-known gossip endpoint, so other nodes can connect to
       # it. Note that gossip endpoints are completely distinct from Zyre node
@@ -268,6 +290,19 @@ module Zyre
         raise DestroyedError unless @ptr
         self_p = @ptr
         result = ::Zyre::FFI.zyre_gossip_connect(self_p, format, *args)
+        result
+      end
+
+      # Set-up gossip discovery with CURVE enabled.
+      #
+      # @param public_key [String, #to_s, nil]
+      # @param format [String, #to_s, nil]
+      # @param args [Array<Object>] see https://github.com/ffi/ffi/wiki/examples#using-varargs
+      # @return [void]
+      def gossip_connect_curve(public_key, format, *args)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_gossip_connect_curve(self_p, public_key, format, *args)
         result
       end
 

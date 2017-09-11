@@ -53,8 +53,41 @@ module Zyre
       attach_function :zyre_set_interval, [:pointer, :size_t], :void, **opts
       attach_function :zyre_set_interface, [:pointer, :string], :void, **opts
       attach_function :zyre_set_endpoint, [:pointer, :string, :varargs], :int, **opts
+      begin # DRAFT method
+        attach_function :zyre_set_zcert, [:pointer, :pointer], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The DRAFT function zyre_set_zcert()" +
+            " is not provided by the installed zyre library."
+        end
+        def self.zyre_set_zcert(*)
+          raise NotImplementedError, "compile zyre with --enable-drafts"
+        end
+      end
+      begin # DRAFT method
+        attach_function :zyre_beacon_set_version, [:pointer, :string], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The DRAFT function zyre_beacon_set_version()" +
+            " is not provided by the installed zyre library."
+        end
+        def self.zyre_beacon_set_version(*)
+          raise NotImplementedError, "compile zyre with --enable-drafts"
+        end
+      end
       attach_function :zyre_gossip_bind, [:pointer, :string, :varargs], :void, **opts
       attach_function :zyre_gossip_connect, [:pointer, :string, :varargs], :void, **opts
+      begin # DRAFT method
+        attach_function :zyre_gossip_connect_curve, [:pointer, :string, :string, :varargs], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The DRAFT function zyre_gossip_connect_curve()" +
+            " is not provided by the installed zyre library."
+        end
+        def self.zyre_gossip_connect_curve(*)
+          raise NotImplementedError, "compile zyre with --enable-drafts"
+        end
+      end
       attach_function :zyre_start, [:pointer], :int, **opts
       attach_function :zyre_stop, [:pointer], :void, **opts
       attach_function :zyre_join, [:pointer, :string], :int, **opts

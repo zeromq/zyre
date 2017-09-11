@@ -26,6 +26,9 @@ struct _zyre_node_t {
     bool terminated;            //  API shut us down
     bool verbose;               //  Log all traffic
     int beacon_port;            //  Beacon port number
+#ifdef ZYRE_BUILD_DRAFT_API
+    byte beacon_version;        //  Beacon version
+#endif
     uint64_t evasive_timeout;   //  Time since a message is received before a peer is considered evasive
     uint64_t expired_timeout;   //  Time since a message is received before a peer is considered gone
     size_t interval;            //  Beacon interval
@@ -44,22 +47,40 @@ struct _zyre_node_t {
     zactor_t *gossip;           //  Gossip discovery service, if any
     char *gossip_bind;          //  Gossip bind endpoint, if any
     char *gossip_connect;       //  Gossip connect endpoint, if any
+    char *log_prefix;           //  Default log prefix
+
+#ifdef ZYRE_BUILD_DRAFT_API
+    char *public_key;           // Our curve public key
+    char *secret_key;           // Our curve private key
+#endif
 };
 
 //  Beacon frame has this format:
 //
 //  Z R E       3 bytes
-//  version     1 byte, %x01
+//  version     1 byte 0x01 | 0x03
 //  UUID        16 bytes
 //  port        2 bytes in network order
+//  curve key   32 bytes
 
+#ifdef ZYRE_BUILD_DRAFT_API
+#define BEACON_VERSION_V2 0x01
+#define BEACON_VERSION_V3 0x03
+#define BEACON_VERSION BEACON_VERSION_V2
+#else
 #define BEACON_VERSION 0x01
+#endif
+
 
 typedef struct {
     byte protocol [3];
     byte version;
     byte uuid [ZUUID_LEN];
     uint16_t port;
+
+#ifdef ZYRE_BUILD_DRAFT_API
+    uint8_t public_key [32];
+#endif
 } beacon_t;
 
 //  --------------------------------------------------------------------------
@@ -106,6 +127,9 @@ zyre_node_new (zsock_t *pipe, void *args)
     self->headers = zhash_new ();
     zhash_autofree (self->headers);
 
+#ifdef ZYRE_BUILD_DRAFT_API
+    self->beacon_version = BEACON_VERSION_V2;
+#endif
     //  Default name for node is first 6 characters of UUID:
     //  the shorter string is more readable in logs
     self->name = (char *) zmalloc (7);
@@ -136,6 +160,10 @@ zyre_node_destroy (zyre_node_t **self_p)
         zstr_free (&self->endpoint);
         zstr_free (&self->gossip_bind);
         zstr_free (&self->gossip_connect);
+#ifdef ZYRE_BUILD_DRAFT_API
+        zstr_free (&self->secret_key);
+        zstr_free (&self->public_key);
+#endif
         free (self->name);
         free (self);
         *self_p = NULL;
@@ -156,16 +184,35 @@ zyre_node_gossip_start (zyre_node_t *self)
     }
 }
 
-
 //  Start node, return 0 if OK, 1 if not possible
 
 static int
 zyre_node_start (zyre_node_t *self)
 {
+#ifdef ZYRE_BUILD_DRAFT_API
+    if (self->secret_key) {
+        // apply the cert to the socket
+        zsys_debug ("applying zcert to ->inbox");
+        zcert_t *cert = zcert_new_from_txt(self->public_key, self->secret_key);
+        zcert_apply(cert, self->inbox);
+        zsock_set_curve_server (self->inbox, 1);
+        zcert_destroy(&cert);
+    }
+#endif
+
     if (self->beacon_port) {
         //  Start beacon discovery
         //  ------------------------------------------------------------------
         assert (!self->beacon);
+
+#ifdef ZYRE_BUILD_DRAFT_API
+        if (self->secret_key) {
+            // upgrade the beacon version
+            zsys_debug ("switching to beacon v3");
+            self->beacon_version = BEACON_VERSION_V3;
+        }
+#endif
+
         self->beacon = zactor_new (zbeacon, NULL);
         if (!self->beacon)
             return 1;               //  Not possible to start beacon
@@ -190,12 +237,28 @@ zyre_node_start (zyre_node_t *self)
             zstr_free (&hostname);
         }
         assert (self->gossip);
+
+#ifdef ZYRE_BUILD_DRAFT_API
+        if (self->public_key) {
+            const char *published_endpoint = zsys_sprintf("%s|%s", self->endpoint, self->public_key);
+            zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), published_endpoint, NULL);
+        } else
+            zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->endpoint, NULL);
+#else
         zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->endpoint, NULL);
+#endif
         //  Start polling on zgossip
         zpoller_add (self->poller, self->gossip);
         //  Start polling on inbox
         zpoller_add(self->poller, self->inbox);
     }
+
+#ifdef ZYRE_BUILD_DRAFT_API
+    // this needs to be tested after bind
+    if (self->secret_key)
+        assert (zsock_mechanism (self->inbox) == ZMQ_CURVE);
+#endif
+
     return 0;
 }
 
@@ -212,7 +275,11 @@ zyre_node_stop (zyre_node_t *self)
         beacon.protocol [0] = 'Z';
         beacon.protocol [1] = 'R';
         beacon.protocol [2] = 'E';
+#ifdef ZYRE_BUILD_DRAFT_API
+        beacon.version = self->beacon_version;
+#else
         beacon.version = BEACON_VERSION;
+#endif
         beacon.port = 0;            //  Zero means we're stopping
         zuuid_export (self->uuid, beacon.uuid);
         zsock_send (self->beacon, "sbi", "PUBLISH",
@@ -326,6 +393,10 @@ zyre_node_recv_api (zyre_node_t *self)
         return;                 //  Interrupted
 
     char *command = zmsg_popstr (request);
+
+    if (self->verbose)
+        zsys_debug ("%s:     API command=%s", self->log_prefix, command);
+
     if (streq (command, "UUID"))
         zstr_send (self->pipe, zuuid_str (self->uuid));
     else
@@ -387,10 +458,28 @@ zyre_node_recv_api (zyre_node_t *self)
         }
     }
     else
+#ifdef ZYRE_BUILD_DRAFT_API
+    if (streq (command, "SET PUBLICKEY")) {
+        self->public_key = zmsg_popstr (request);
+        assert (self->public_key);
+    }
+    else
+    if (streq (command, "SET SECRETKEY")) {
+        self->secret_key = zmsg_popstr (request);
+        assert (self->secret_key);
+    }
+    else
+#endif
     if (streq (command, "GOSSIP BIND")) {
         zyre_node_gossip_start (self);
         zstr_free (&self->gossip_bind);
         self->gossip_bind = zmsg_popstr (request);
+#ifdef ZYRE_BUILD_DRAFT_API
+        if (self->secret_key) {
+            zstr_sendx(self->gossip, "SET SECRETKEY", self->secret_key, NULL);
+            zstr_sendx(self->gossip, "SET PUBLICKEY", self->public_key, NULL);
+        }
+#endif
         zstr_sendx (self->gossip, "BIND", self->gossip_bind, NULL);
     }
     else
@@ -398,7 +487,20 @@ zyre_node_recv_api (zyre_node_t *self)
         zyre_node_gossip_start (self);
         zstr_free (&self->gossip_connect);
         self->gossip_connect = zmsg_popstr (request);
+#ifdef ZYRE_BUILD_DRAFT_API
+        if (self->secret_key) {
+            zstr_sendx(self->gossip, "SET SECRETKEY", self->secret_key, NULL);
+            zstr_sendx(self->gossip, "SET PUBLICKEY", self->public_key, NULL);
+        }
+        const char *server_public_key = zmsg_popstr (request);
+        if (server_public_key)
+            zstr_sendx (self->gossip, "CONNECT", self->gossip_connect, server_public_key, NULL);
+        else
+            zstr_sendx (self->gossip, "CONNECT", self->gossip_connect, NULL);
+
+#else
         zstr_sendx (self->gossip, "CONNECT", self->gossip_connect, NULL);
+#endif
     }
     else
     if (streq (command, "START"))
@@ -557,7 +659,11 @@ zyre_node_purge_peer (const char *key, void *item, void *argument)
 //  Find or create peer via its UUID
 
 static zyre_peer_t *
+#ifdef ZYRE_BUILD_DRAFT_API
+zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint, const char *public_key)
+#else
 zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
+#endif
 {
     assert (self);
     assert (endpoint);
@@ -572,6 +678,17 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
 
         peer = zyre_peer_new (self->peers, uuid);
         assert (peer);
+
+#ifdef ZYRE_BUILD_DRAFT_API
+        if (public_key && self->public_key && self->secret_key) {
+            // set my local keys
+            zyre_peer_set_public_key(peer, self->public_key);
+            zyre_peer_set_secret_key(peer, self->secret_key);
+            // set the public key of the peer we're connecting to
+            // peer is acting as the 'server' curve role
+            zyre_peer_set_server_key(peer, public_key);
+        }
+#endif
         zyre_peer_set_origin (peer, self->name);
         zyre_peer_set_verbose (peer, self->verbose);
         int rc = zyre_peer_connect (peer, self->uuid, endpoint,
@@ -607,7 +724,7 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         zre_msg_set_headers (msg, &headers);
         zyre_peer_send (peer, &msg);
         zre_msg_destroy (&msg);
-        
+
         zyre_peer_refresh (peer, self->evasive_timeout, self->expired_timeout);
     }
     return peer;
@@ -743,7 +860,12 @@ zyre_node_recv_peer (zyre_node_t *self)
                 return;
             }
         }
+#ifdef ZYRE_BUILD_DRAFT_API
+        // TODO- CURVE- how does this trigger???
+        peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg), NULL);
+#else
         peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg));
+#endif
         if (peer)
             zyre_peer_set_ready (peer, true);
     }
@@ -849,8 +971,18 @@ zyre_node_recv_beacon (zyre_node_t *self)
     if (zframe_size (frame) == sizeof (beacon_t))
         memcpy (&beacon, zframe_data (frame), zframe_size (frame));
     zframe_destroy (&frame);
+#ifdef ZYRE_BUILD_DRAFT_API
+    if (beacon.version != self->beacon_version)
+        return;
+
+    // beacon missing public key when we're in secure mode
+    if (self->secret_key && !beacon.public_key)
+        // toss it to avoid down-grade attacks
+        return;
+#else
     if (beacon.version != BEACON_VERSION)
         return;                 //  Garbage beacon, ignore it
+#endif
 
     zuuid_t *uuid = zuuid_new ();
     zuuid_set (uuid, beacon.uuid);
@@ -858,7 +990,17 @@ zyre_node_recv_beacon (zyre_node_t *self)
         char endpoint [NI_MAXHOST];
         sprintf (endpoint, "tcp://%s:%d", ipaddress, ntohs (beacon.port));
 
+#ifdef ZYRE_BUILD_DRAFT_API
+        if (beacon.version == BEACON_VERSION_V3) {
+            char public_key [41];
+            zmq_z85_encode(public_key, beacon.public_key, 32);
+            zyre_node_require_peer(self, uuid, endpoint, public_key);
+        }
+        else
+            zyre_node_require_peer(self, uuid, endpoint, NULL);
+#else
         zyre_node_require_peer (self, uuid, endpoint);
+#endif
     }
     else {
         //  Zero port means peer is going away; remove it if
@@ -892,7 +1034,20 @@ zyre_node_recv_gossip (zyre_node_t *self)
     if (strneq (endpoint, self->endpoint)) {
         zuuid_t *uuid = zuuid_new ();
         zuuid_set_str (uuid, uuidstr);
+#ifdef ZYRE_BUILD_DRAFT_API
+        // extract public key from published service
+        // tcp://endpoint:NNNN|asdfasdfasdfasdfasdf
+        char *pipe = strchr(endpoint, '|');
+        const char *public_key = NULL;
+        if(pipe != NULL) {
+            *pipe = '\0';
+            public_key = pipe+1;
+        }
+        zyre_node_require_peer (self, uuid, endpoint, public_key);
+
+#else
         zyre_node_require_peer (self, uuid, endpoint);
+#endif
         zuuid_destroy (&uuid);
     }
     zstr_free (&command);
@@ -952,6 +1107,9 @@ zyre_node_actor (zsock_t *pipe, void *args)
     if (!self)                  //  Interrupted
         return;
 
+    //  Actor argument may be a string used for logging
+    self->log_prefix = args? (char *) args: "";
+
     //  Signal actor successfully initialized
     zsock_signal (self->pipe, 0);
 
@@ -990,9 +1148,19 @@ zyre_node_actor (zsock_t *pipe, void *args)
                     beacon.protocol[0] = 'Z';
                     beacon.protocol[1] = 'R';
                     beacon.protocol[2] = 'E';
+#ifdef ZYRE_BUILD_DRAFT_API
+                    beacon.version = self->beacon_version;
+#else
                     beacon.version = BEACON_VERSION;
+#endif
                     beacon.port = htons(self->port);
                     zuuid_export(self->uuid, beacon.uuid);
+#ifdef ZYRE_BUILD_DRAFT_API
+                    // SEND
+                    if (self->public_key) {
+                        zmq_z85_decode(beacon.public_key, self->public_key);
+                    }
+#endif
                     zsock_send(self->beacon, "sbi", "PUBLISH",
                         (byte *)&beacon, sizeof(beacon_t), self->interval);
                     zsock_send(self->beacon, "sb", "SUBSCRIBE", (byte *) "ZRE", 3);

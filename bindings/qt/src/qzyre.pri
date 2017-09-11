@@ -13,6 +13,7 @@ qzyre-uselib:!qzyre-buildlib {
                      $$PWD/qzyre.h \
                      $$PWD/qzyre.h \
                      $$PWD/qzyreevent.h \
+                     $$PWD/qzcert.h \
                      $$PWD/qzmsg.h \
                      $$PWD/qzlist.h \
                      $$PWD/qzsock.h \
@@ -22,6 +23,7 @@ qzyre-uselib:!qzyre-buildlib {
     SOURCES       += \
                      $$PWD/qzyre.cpp \
                      $$PWD/qzyreevent.cpp \
+                     $$PWD/qzcert.cpp \
                      $$PWD/qzmsg.cpp \
                      $$PWD/qzlist.cpp \
                      $$PWD/qzsock.cpp \

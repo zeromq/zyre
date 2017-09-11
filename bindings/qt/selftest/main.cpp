@@ -19,6 +19,7 @@ int main(int argc, char **argv)
 
     QZyre::test (verbose);
     QZyreEvent::test (verbose);
+    QZcert::test (verbose);
     QZmsg::test (verbose);
     QZlist::test (verbose);
     QZsock::test (verbose);
