@@ -105,5 +105,32 @@ ffibuilder.set_source ("zyre_cffi.native", "#include <zyre.h>", **kwargs)
 for item in zyre_cdefs:
     ffibuilder.cdef(item)
 
+ffidestructorbuilder = cffi.FFI ()
+ffidestructorbuilder.cdef('''
+void
+   zyre_destroy_py (void *self);
+
+void
+   zyre_event_destroy_py (void *self);
+
+''')
+
+ffidestructorbuilder.set_source ("zyre_cffi.destructors", '''
+#include <zyre.h>
+void
+zyre_destroy_py (void *self)
+{
+   zyre_destroy ((zyre_t **) &self);
+}
+
+void
+zyre_event_destroy_py (void *self)
+{
+   zyre_event_destroy ((zyre_event_t **) &self);
+}
+
+''', **kwargs)
+
 if __name__ == "__main__":
     ffibuilder.compile (verbose=True)
+    ffidestructorbuilder.compile (verbose=True)
