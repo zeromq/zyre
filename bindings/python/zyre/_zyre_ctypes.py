@@ -94,8 +94,6 @@ lib.zyre_set_endpoint.restype = c_int
 lib.zyre_set_endpoint.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_zcert.restype = None
 lib.zyre_set_zcert.argtypes = [zyre_p, czmq.zcert_p]
-lib.zyre_beacon_set_version.restype = None
-lib.zyre_beacon_set_version.argtypes = [zyre_p, c_char_p]
 lib.zyre_gossip_bind.restype = None
 lib.zyre_gossip_bind.argtypes = [zyre_p, c_char_p]
 lib.zyre_gossip_connect.restype = None
@@ -286,12 +284,6 @@ the bind was successful, else -1.
         Apply a azcert to a Zyre node.
         """
         return lib.zyre_set_zcert(self._as_parameter_, zcert)
-
-    def beacon_set_version(self, version):
-        """
-        Set the beacon version. Useful when working with ZYREv3 with secure beacons.
-        """
-        return lib.zyre_beacon_set_version(self._as_parameter_, version)
 
     def gossip_bind(self, format, *args):
         """

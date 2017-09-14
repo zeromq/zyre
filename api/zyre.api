@@ -107,11 +107,6 @@
         <argument name = "zcert" type = "zcert"></argument>
     </method>
 
-    <method name = "beacon set version" state = "draft">
-        Set the beacon version. Useful when working with ZYREv3 with secure beacons.
-        <argument name = "version" type = "string"></argument>
-    </method>
-
     <method name = "gossip bind">
         Set-up gossip discovery of other nodes. At least one node in the cluster
         must bind to a well-known gossip endpoint, so other nodes can connect to

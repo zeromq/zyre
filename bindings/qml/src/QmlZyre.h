@@ -86,9 +86,6 @@ public slots:
     //  Apply a azcert to a Zyre node.
     void setZcert (zcert_t *zcert);
 
-    //  Set the beacon version. Useful when working with ZYREv3 with secure beacons.
-    void beaconSetVersion (const QString &version);
-
     //  Set-up gossip discovery of other nodes. At least one node in the cluster
     //  must bind to a well-known gossip endpoint, so other nodes can connect to
     //  it. Note that gossip endpoints are completely distinct from Zyre node

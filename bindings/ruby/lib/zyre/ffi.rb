@@ -64,17 +64,6 @@ module Zyre
           raise NotImplementedError, "compile zyre with --enable-drafts"
         end
       end
-      begin # DRAFT method
-        attach_function :zyre_beacon_set_version, [:pointer, :string], :void, **opts
-      rescue ::FFI::NotFoundError
-        if $VERBOSE || $DEBUG
-          warn "The DRAFT function zyre_beacon_set_version()" +
-            " is not provided by the installed zyre library."
-        end
-        def self.zyre_beacon_set_version(*)
-          raise NotImplementedError, "compile zyre with --enable-drafts"
-        end
-      end
       attach_function :zyre_gossip_bind, [:pointer, :string, :varargs], :void, **opts
       attach_function :zyre_gossip_connect, [:pointer, :string, :varargs], :void, **opts
       begin # DRAFT method
