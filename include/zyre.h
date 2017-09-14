@@ -221,11 +221,6 @@ ZYRE_EXPORT void
     zyre_set_zcert (zyre_t *self, zcert_t *zcert);
 
 //  *** Draft method, for development use, may change without warning ***
-//  Set the beacon version. Useful when working with ZYREv3 with secure beacons.
-ZYRE_EXPORT void
-    zyre_beacon_set_version (zyre_t *self, const char *version);
-
-//  *** Draft method, for development use, may change without warning ***
 //  Set-up gossip discovery with CURVE enabled.
 ZYRE_EXPORT void
     zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);

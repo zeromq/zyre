@@ -155,12 +155,6 @@ nothing my_zyre.setZcert (Zcert)
 Apply a azcert to a Zyre node.
 
 ```
-nothing my_zyre.beaconSetVersion (String)
-```
-
-Set the beacon version. Useful when working with ZYREv3 with secure beacons.
-
-```
 nothing my_zyre.gossipBind (String)
 ```
 

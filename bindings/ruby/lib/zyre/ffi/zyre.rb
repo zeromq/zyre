@@ -253,17 +253,6 @@ module Zyre
         result
       end
 
-      # Set the beacon version. Useful when working with ZYREv3 with secure beacons.
-      #
-      # @param version [String, #to_s, nil]
-      # @return [void]
-      def beacon_set_version(version)
-        raise DestroyedError unless @ptr
-        self_p = @ptr
-        result = ::Zyre::FFI.zyre_beacon_set_version(self_p, version)
-        result
-      end
-
       # Set-up gossip discovery of other nodes. At least one node in the cluster
       # must bind to a well-known gossip endpoint, so other nodes can connect to
       # it. Note that gossip endpoints are completely distinct from Zyre node

@@ -124,12 +124,6 @@ class Zyre(object):
         """
         return libzyre.zyre_set_zcert(self._p, zcert._p)
 
-    def beacon_set_version(self, version):
-        """
-        Set the beacon version. Useful when working with ZYREv3 with secure beacons.
-        """
-        return libzyre.zyre_beacon_set_version(self._p, to_bytes(version))
-
     def gossip_bind(self, format, ):
         """
         Set-up gossip discovery of other nodes. At least one node in the cluster

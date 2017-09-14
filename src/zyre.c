@@ -758,15 +758,45 @@ zyre_test (bool verbose)
     zyre_destroy (&node1);
     zyre_destroy (&node2);
 
+    printf ("OK\n");
+
 #ifdef ZYRE_BUILD_DRAFT_API
     if (zsys_has_curve()){
 
-        zsys_debug("----------------TESTING CURVE --------------");
+        printf (" * zyre-curve: ");
+        if (verbose)
+            printf ("\n");
+
+        if (verbose)
+            zsys_debug("----------------TESTING CURVE --------------");
+
+        zactor_t *speaker = zactor_new (zbeacon, NULL);
+        assert (speaker);
+        if (verbose)
+            zstr_sendx (speaker, "VERBOSE", NULL);
+
+        // ensuring we have a broadcast address
+        zsock_send (speaker, "si", "CONFIGURE", 9999);
+        char *hostname = zstr_recv (speaker);
+        if (!*hostname) {
+            printf ("OK (skipping test, no UDP broadcasting)\n");
+            zactor_destroy (&speaker);
+            freen (hostname);
+            return;
+        }
+        freen (hostname);
+        zactor_destroy (&speaker);
+
+
         // zap setup
         zactor_t *auth = zactor_new(zauth, NULL);
         assert (auth);
-        zstr_sendx (auth, "VERBOSE", NULL);
-        zsock_wait (auth);
+
+        if (verbose) {
+            zstr_sendx(auth, "VERBOSE", NULL);
+            zsock_wait(auth);
+        }
+
         zstr_sendx (auth, "CURVE", CURVE_ALLOW_ANY, NULL);
         zsock_wait (auth);
 
@@ -776,14 +806,11 @@ zyre_test (bool verbose)
         assert (node3);
         assert (node4);
 
-        assert (streq (zyre_name (node3), "node3"));
-        zyre_set_header (node3, "X-HELLO", "World");
-
         zyre_set_verbose (node3);
         zyre_set_verbose (node4);
 
-        zsock_set_rcvtimeo(node3->inbox, 1500);
-        zsock_set_rcvtimeo(node4->inbox, 1500);
+        zsock_set_rcvtimeo(node3->inbox, 10000);
+        zsock_set_rcvtimeo(node4->inbox, 10000);
 
         zcert_t *node3_cert = zcert_new ();
         zcert_t *node4_cert = zcert_new ();
@@ -794,19 +821,28 @@ zyre_test (bool verbose)
         zyre_set_zcert(node3, node3_cert);
         zyre_set_zcert(node4, node4_cert);
 
+        zyre_set_header(node3, "X-PUBLICKEY", "%s", zcert_public_txt(node3_cert));
+        zyre_set_header(node4, "X-PUBLICKEY", "%s", zcert_public_txt(node4_cert));
+
         // test beacon
+        if (verbose)
+            zsys_debug ("----------------TESTING BEACON----------------");
 
-        zsys_debug ("----------------TESTING BEACON----------------");
+        rc = zyre_start(node3);
+        assert (rc == 0);
 
-        zyre_start(node3);
-        zsock_wait(node3);
-        zyre_start(node4);
-        zsock_wait(node4);
+        rc = zyre_start(node4);
+        assert (rc == 0);
 
         zyre_join (node3, "GLOBAL");
         zyre_join (node4, "GLOBAL");
 
-        zclock_sleep (2500);
+        zclock_sleep (1500);
+
+        if (verbose) {
+            zyre_dump (node3);
+            zyre_dump (node4);
+        }
 
         zyre_shouts (node3, "GLOBAL", "Hello, World");
 
@@ -814,19 +850,32 @@ zyre_test (bool verbose)
         msg = zyre_recv (node4);
         assert (msg);
         command = zmsg_popstr (msg);
-        zsys_info(command);
         assert (streq (command, "ENTER"));
         zstr_free (&command);
-        assert (zmsg_size (msg) == 4);
+
         char *peerid = zmsg_popstr (msg);
         assert (peerid);
         name = zmsg_popstr (msg);
-        zsys_info(name);
+        assert (streq (name, "node3"));
+        zmsg_destroy (&msg);
+
+        msg = zyre_recv (node4);
+        assert (msg);
+        command = zmsg_popstr (msg);
+        assert (streq (command, "JOIN"));
+        zstr_free (&command);
+        zmsg_destroy(&msg);
+
+        msg = zyre_recv (node4);
+        assert (msg);
+        command = zmsg_popstr (msg);
+        assert (streq (command, "SHOUT"));
+        zstr_free (&command);
+        zmsg_destroy(&msg);
 
         zyre_leave(node3, "GLOBAL");
         zyre_leave(node4, "GLOBAL");
 
-        assert (streq (name, "node3"));
         zstr_free (&name);
         zstr_free (&peerid);
         zstr_free (&command);
@@ -835,62 +884,105 @@ zyre_test (bool verbose)
         zyre_stop (node4);
 
         // give things a chance to settle...
-        zclock_sleep (500);
-
-        // test gossip
-
-        zsys_debug ("----------------TESTING GOSSIP----------------");
-
-        const char *gossip_cert = zcert_public_txt (node3_cert);
-
-        zyre_gossip_bind(node3, "tcp://*:9001");
-        zyre_gossip_connect_curve(node4, gossip_cert, "tcp://127.0.0.1:9001");
-
-        zyre_start(node3);
-        zsock_wait(node3);
-        zyre_start(node4);
-        zsock_wait(node4);
-
-        zyre_join (node3, "GLOBAL");
-        zyre_join (node4, "GLOBAL");
-
-        zclock_sleep (500);
-
-        zyre_shouts (node3, "GLOBAL", "Hello, World");
-
-        //  Second node should receive ENTER, JOIN, and SHOUT
-        msg = zyre_recv (node4);
-        assert (msg);
-        command = zmsg_popstr (msg);
-        zsys_info(command);
-        assert (streq (command, "JOIN"));
-        zstr_free (&command);
-        assert (zmsg_size (msg) == 3);
-        peerid = zmsg_popstr (msg);
-        assert (peerid);
-        name = zmsg_popstr (msg);
-        zsys_info(name);
-
-        assert (streq (name, "node3"));
-        zstr_free (&name);
-
-        zyre_leave(node3, "GLOBAL");
-        zyre_leave(node4, "GLOBAL");
-
-        zyre_stop (node3);
-        zyre_stop (node4);
-
-        // give things a chance to settle...
-        zclock_sleep (500);
+        zclock_sleep (250);
 
         zyre_destroy(&node3);
         zyre_destroy(&node4);
+
+        zcert_destroy(&node3_cert);
+        zcert_destroy(&node4_cert);
+
+        // test gossip
+        if (verbose)
+            zsys_debug ("----------------TESTING GOSSIP----------------");
+
+        zyre_t *node5 = zyre_new ("node5");
+        zyre_t *node6 = zyre_new ("node6");
+
+        assert (node5);
+        assert (node6);
+
+        if (verbose) {
+            zyre_set_verbose (node5);
+            zyre_set_verbose (node6);
+        }
+
+        // if it takes more than 10s, something probably went terribly wrong
+        zsock_set_rcvtimeo(node5->inbox, 10000);
+        zsock_set_rcvtimeo(node6->inbox, 10000);
+
+        zcert_t *node5_cert = zcert_new ();
+        zcert_t *node6_cert = zcert_new ();
+
+        assert (node5_cert);
+        assert (node6_cert);
+
+        zyre_set_zcert(node5, node5_cert);
+        zyre_set_zcert(node6, node6_cert);
+
+        zyre_set_header(node5, "X-PUBLICKEY", "%s", zcert_public_txt(node5_cert));
+        zyre_set_header(node6, "X-PUBLICKEY", "%s", zcert_public_txt(node6_cert));
+
+        const char *gossip_cert = zcert_public_txt (node5_cert);
+
+        // TODO- need to add zyre_gossip_port functions to get port from gossip bind(?)
+        zyre_gossip_bind(node5, "tcp://127.0.0.1:9001");
+        zyre_gossip_connect_curve(node6, gossip_cert, "tcp://127.0.0.1:9001");
+
+        zyre_start(node5);
+        zsock_wait(node5);
+        zyre_start(node6);
+        zsock_wait(node6);
+
+        zyre_join (node5, "GLOBAL");
+        zyre_join (node6, "GLOBAL");
+
+        // give things a chance to settle...
+        zclock_sleep (1500);
+
+        if (verbose) {
+            zyre_dump (node5);
+            zyre_dump (node6);
+        }
+
+        zyre_shouts (node5, "GLOBAL", "Hello, World");
+
+        //  Second node should receive ENTER, JOIN, and SHOUT
+        msg = zyre_recv (node6);
+        assert (msg);
+        command = zmsg_popstr (msg);
+        zsys_info(command);
+        assert (streq (command, "ENTER"));
+        zstr_free (&command);
+
+        peerid = zmsg_popstr (msg);
+        assert (peerid);
+        name = zmsg_popstr (msg);
+        zmsg_destroy (&msg);
+
+        assert (streq (name, "node5"));
+        zstr_free (&name);
+
+        zyre_leave(node5, "GLOBAL");
+        zyre_leave(node6, "GLOBAL");
+
+        zyre_stop (node5);
+        zyre_stop (node6);
+
+        // give things a chance to settle...
+        zclock_sleep (250);
+
+        zstr_free (&peerid);
+
+        zcert_destroy (&node5_cert);
+        zcert_destroy (&node6_cert);
+
+        zyre_destroy(&node5);
+        zyre_destroy(&node6);
         zactor_destroy(&auth);
+
+        printf ("OK\n");
 
     }
 #endif
-
-
-    //  @end
-    printf ("OK\n");
 }

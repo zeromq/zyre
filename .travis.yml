@@ -47,7 +47,6 @@ matrix:
   - env: BUILD_TYPE=valgrind
     os: linux
     dist: trusty
-    sudo: required
     addons:
       apt:
         sources:

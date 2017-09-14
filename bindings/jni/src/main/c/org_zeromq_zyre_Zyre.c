@@ -115,14 +115,6 @@ Java_org_zeromq_zyre_Zyre__1_1setZcert (JNIEnv *env, jclass c, jlong self, jlong
 }
 
 JNIEXPORT void JNICALL
-Java_org_zeromq_zyre_Zyre__1_1beaconSetVersion (JNIEnv *env, jclass c, jlong self, jstring version)
-{
-    char *version_ = (char *) (*env)->GetStringUTFChars (env, version, NULL);
-    zyre_beacon_set_version ((zyre_t *) (intptr_t) self, version_);
-    (*env)->ReleaseStringUTFChars (env, version, version_);
-}
-
-JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1gossipBind (JNIEnv *env, jclass c, jlong self, jstring format)
 {
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);

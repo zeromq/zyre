@@ -192,7 +192,9 @@ zyre_node_start (zyre_node_t *self)
 #ifdef ZYRE_BUILD_DRAFT_API
     if (self->secret_key) {
         // apply the cert to the socket
-        zsys_debug ("applying zcert to ->inbox");
+        if (self->verbose)
+            zsys_debug ("applying zcert to ->inbox");
+
         zcert_t *cert = zcert_new_from_txt(self->public_key, self->secret_key);
         zcert_apply(cert, self->inbox);
         zsock_set_curve_server (self->inbox, 1);
@@ -208,7 +210,8 @@ zyre_node_start (zyre_node_t *self)
 #ifdef ZYRE_BUILD_DRAFT_API
         if (self->secret_key) {
             // upgrade the beacon version
-            zsys_debug ("switching to beacon v3");
+            if (self->verbose)
+                zsys_debug ("switching to beacon v3");
             self->beacon_version = BEACON_VERSION_V3;
         }
 #endif
@@ -240,8 +243,9 @@ zyre_node_start (zyre_node_t *self)
 
 #ifdef ZYRE_BUILD_DRAFT_API
         if (self->public_key) {
-            const char *published_endpoint = zsys_sprintf("%s|%s", self->endpoint, self->public_key);
+            char *published_endpoint = zsys_sprintf("%s|%s", self->endpoint, self->public_key);
             zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), published_endpoint, NULL);
+            zstr_free (&published_endpoint);
         } else
             zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->endpoint, NULL);
 #else
@@ -255,6 +259,11 @@ zyre_node_start (zyre_node_t *self)
 
 #ifdef ZYRE_BUILD_DRAFT_API
     // this needs to be tested after bind
+#ifndef ZMQ_CURVE
+        // legacy ZMQ support
+        // inline incase the underlying assert is removed
+        bool ZMQ_CURVE = false;
+#endif
     if (self->secret_key)
         assert (zsock_mechanism (self->inbox) == ZMQ_CURVE);
 #endif
@@ -277,6 +286,7 @@ zyre_node_stop (zyre_node_t *self)
         beacon.protocol [2] = 'E';
 #ifdef ZYRE_BUILD_DRAFT_API
         beacon.version = self->beacon_version;
+        zmq_z85_decode(beacon.public_key, self->public_key);
 #else
         beacon.version = BEACON_VERSION;
 #endif
@@ -335,6 +345,10 @@ zyre_node_dump (zyre_node_t *self)
     zsys_info (" - name=%s uuid=%s", self->name, zuuid_str (self->uuid));
 
     zsys_info (" - endpoint=%s", self->endpoint);
+#ifdef ZYRE_BUILD_DRAFT_API
+    if (self->public_key)
+        zsys_info (" - public-key: %s", self->public_key);
+#endif
     if (self->beacon_port)
         zsys_info (" - discovery=beacon port=%d interval=%zu",
                    self->beacon_port, self->interval);
@@ -492,11 +506,13 @@ zyre_node_recv_api (zyre_node_t *self)
             zstr_sendx(self->gossip, "SET SECRETKEY", self->secret_key, NULL);
             zstr_sendx(self->gossip, "SET PUBLICKEY", self->public_key, NULL);
         }
-        const char *server_public_key = zmsg_popstr (request);
+        char *server_public_key = zmsg_popstr (request);
         if (server_public_key)
             zstr_sendx (self->gossip, "CONNECT", self->gossip_connect, server_public_key, NULL);
         else
             zstr_sendx (self->gossip, "CONNECT", self->gossip_connect, NULL);
+
+        zstr_free (&server_public_key);
 
 #else
         zstr_sendx (self->gossip, "CONNECT", self->gossip_connect, NULL);
@@ -680,7 +696,8 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
         assert (peer);
 
 #ifdef ZYRE_BUILD_DRAFT_API
-        if (public_key && self->public_key && self->secret_key) {
+        if (self->public_key && self->secret_key) {
+            assert (public_key != NULL);
             // set my local keys
             zyre_peer_set_public_key(peer, self->public_key);
             zyre_peer_set_secret_key(peer, self->secret_key);
@@ -862,7 +879,20 @@ zyre_node_recv_peer (zyre_node_t *self)
         }
 #ifdef ZYRE_BUILD_DRAFT_API
         // TODO- CURVE- how does this trigger???
-        peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg), NULL);
+        char public_key[41];
+        if (self->secret_key) {
+            if (self->secret_key) {
+                char *value; // i think zhash_destroy will free this one(?)
+                zhash_t *headers = zhash_dup (zre_msg_headers(msg));
+                value = (char *) zhash_lookup (headers, "X-PUBLICKEY");
+                assert (value);
+                strcpy(public_key, value);
+                assert (public_key[0] != 0);
+                zhash_destroy (&headers);
+            }
+        }
+
+        peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg), public_key);
 #else
         peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg));
 #endif
@@ -972,16 +1002,29 @@ zyre_node_recv_beacon (zyre_node_t *self)
         memcpy (&beacon, zframe_data (frame), zframe_size (frame));
     zframe_destroy (&frame);
 #ifdef ZYRE_BUILD_DRAFT_API
-    if (beacon.version != self->beacon_version)
+    if (beacon.version != self->beacon_version) {
+        if (self->verbose)
+            zsys_debug ("tossing beacon, version mis-match");
         return;
+    }
 
-    // beacon missing public key when we're in secure mode
-    if (self->secret_key && !beacon.public_key)
-        // toss it to avoid down-grade attacks
+//     beacon missing public key when we're in secure mode
+    if (self->secret_key && (beacon.public_key[0] == 0)) {
+        //         toss it to avoid down-grade attacks
+        if (self->verbose)
+            zsys_debug ("tossing beacon to avoid security downgrade, does not contain public key...");
+
         return;
+    }
+
 #else
-    if (beacon.version != BEACON_VERSION)
+    if (beacon.version != BEACON_VERSION) {
+        if (self->verbose)
+            zsys_debug ("tossing beacon");
+
         return;                 //  Garbage beacon, ignore it
+    }
+
 #endif
 
     zuuid_t *uuid = zuuid_new ();
@@ -998,6 +1041,7 @@ zyre_node_recv_beacon (zyre_node_t *self)
         }
         else
             zyre_node_require_peer(self, uuid, endpoint, NULL);
+
 #else
         zyre_node_require_peer (self, uuid, endpoint);
 #endif

@@ -148,13 +148,6 @@ public class Zyre implements AutoCloseable{
         __setZcert (self, zcert.self);
     }
     /*
-    Set the beacon version. Useful when working with ZYREv3 with secure beacons.
-    */
-    native static void __beaconSetVersion (long self, String version);
-    public void beaconSetVersion (String version) {
-        __beaconSetVersion (self, version);
-    }
-    /*
     Set-up gossip discovery of other nodes. At least one node in the cluster
     must bind to a well-known gossip endpoint, so other nodes can connect to
     it. Note that gossip endpoints are completely distinct from Zyre node
