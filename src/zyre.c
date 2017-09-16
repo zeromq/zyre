@@ -286,6 +286,15 @@ void zyre_set_zcert(zyre_t *self, zcert_t *zcert)
     zstr_sendx (self->actor, "SET SECRETKEY", zcert_secret_txt(zcert), NULL);
 }
 
+//  Explicitly connect to a peer
+
+int
+zyre_require_peer (zyre_t *self, const char *uuid, const char *endpoint, const char *public_key)
+{
+    assert (self);
+    return zstr_sendx (self->actor, "REQUIRE PEER", uuid, endpoint, public_key, NULL);
+}
+
 //  --------------------------------------------------------------------------
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to

@@ -397,6 +397,12 @@ zyre_node_dump (zyre_node_t *self)
 
 //  Here we handle the different control messages from the front-end
 
+#ifdef ZYRE_BUILD_DRAFT_API
+// Forward declaration so that REQUIRE PEER works
+static zyre_peer_t *
+zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint, const char *public_key);
+#endif
+
 static void
 zyre_node_recv_api (zyre_node_t *self)
 {
@@ -601,6 +607,23 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "PEERS"))
         zsock_send (self->pipe, "p", zhash_keys (self->peers));
+    #ifdef ZYRE_BUILD_DRAFT_API
+    else
+    if (streq (command, "REQUIRE PEER")) {
+        char *uuidstr = zmsg_popstr (request);
+        char *endpoint = zmsg_popstr (request);
+        char *public_key = zmsg_popstr (request);
+        if (strneq (endpoint, self->endpoint)) {
+            zuuid_t *uuid = zuuid_new ();
+            zuuid_set_str (uuid, uuidstr);
+            zyre_node_require_peer (self, uuid, endpoint, public_key);
+            zuuid_destroy (&uuid);
+        }
+        zstr_free (&uuidstr);
+        zstr_free (&endpoint);
+        zstr_free (&public_key);
+    }
+    #endif
     else
     if (streq (command, "GROUP PEERS")) {
         char *name = zmsg_popstr (request);
