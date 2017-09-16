@@ -475,6 +475,7 @@ zyre_node_recv_api (zyre_node_t *self)
 #ifdef ZYRE_BUILD_DRAFT_API
     if (streq (command, "SET PUBLICKEY")) {
         self->public_key = zmsg_popstr (request);
+        zhash_update (self->headers, "X-PUBLICKEY", self->public_key);
         assert (self->public_key);
     }
     else
@@ -881,15 +882,13 @@ zyre_node_recv_peer (zyre_node_t *self)
         // TODO- CURVE- how does this trigger???
         char public_key[41];
         if (self->secret_key) {
-            if (self->secret_key) {
-                char *value; // i think zhash_destroy will free this one(?)
-                zhash_t *headers = zhash_dup (zre_msg_headers(msg));
-                value = (char *) zhash_lookup (headers, "X-PUBLICKEY");
-                assert (value);
-                strcpy(public_key, value);
-                assert (public_key[0] != 0);
-                zhash_destroy (&headers);
-            }
+            char *value; // i think zhash_destroy will free this one(?)
+            zhash_t *headers = zhash_dup (zre_msg_headers(msg));
+            value = (char *) zhash_lookup (headers, "X-PUBLICKEY");
+            assert (value);
+            strcpy(public_key, value);
+            assert (public_key[0] != 0);
+            zhash_destroy (&headers);
         }
 
         peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg), public_key);
@@ -1150,9 +1149,6 @@ zyre_node_actor (zsock_t *pipe, void *args)
     zyre_node_t *self = zyre_node_new (pipe, args);
     if (!self)                  //  Interrupted
         return;
-
-    //  Actor argument may be a string used for logging
-    self->log_prefix = args? (char *) args: "";
 
     //  Signal actor successfully initialized
     zsock_signal (self->pipe, 0);
