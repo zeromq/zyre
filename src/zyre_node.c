@@ -47,7 +47,6 @@ struct _zyre_node_t {
     zactor_t *gossip;           //  Gossip discovery service, if any
     char *gossip_bind;          //  Gossip bind endpoint, if any
     char *gossip_connect;       //  Gossip connect endpoint, if any
-    char *log_prefix;           //  Default log prefix
 
 #ifdef ZYRE_BUILD_DRAFT_API
     char *public_key;           // Our curve public key
@@ -409,7 +408,7 @@ zyre_node_recv_api (zyre_node_t *self)
     char *command = zmsg_popstr (request);
 
     if (self->verbose)
-        zsys_debug ("%s:     API command=%s", self->log_prefix, command);
+        zsys_debug ("%s:     API command=%s", self->name, command);
 
     if (streq (command, "UUID"))
         zstr_send (self->pipe, zuuid_str (self->uuid));
