@@ -879,19 +879,19 @@ zyre_node_recv_peer (zyre_node_t *self)
             }
         }
 #ifdef ZYRE_BUILD_DRAFT_API
-        // TODO- CURVE- how does this trigger???
-        char public_key[41];
-        if (self->secret_key) {
-            char *value; // i think zhash_destroy will free this one(?)
-            zhash_t *headers = zhash_dup (zre_msg_headers(msg));
-            value = (char *) zhash_lookup (headers, "X-PUBLICKEY");
-            assert (value);
-            strcpy(public_key, value);
-            assert (public_key[0] != 0);
-            zhash_destroy (&headers);
+        if (!self->secret_key) {
+            peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg), NULL);
+        } else {
+            zhash_t *headers = zre_msg_headers(msg);
+            char *public_key = (char *) zhash_lookup (headers, "X-PUBLICKEY");
+            if(public_key) {
+                assert (public_key[0] != 0);
+                peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg), public_key);
+            } else {
+                zsys_debug ("ignoring HELLO to avoid security downgrade, does not contain public key");
+                peer = NULL;
+            }
         }
-
-        peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg), public_key);
 #else
         peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg));
 #endif
