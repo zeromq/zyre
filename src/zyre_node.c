@@ -285,7 +285,8 @@ zyre_node_stop (zyre_node_t *self)
         beacon.protocol [2] = 'E';
 #ifdef ZYRE_BUILD_DRAFT_API
         beacon.version = self->beacon_version;
-        zmq_z85_decode(beacon.public_key, self->public_key);
+        if (self->public_key)
+            zmq_z85_decode(beacon.public_key, self->public_key);
 #else
         beacon.version = BEACON_VERSION;
 #endif
