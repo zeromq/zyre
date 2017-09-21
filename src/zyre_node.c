@@ -492,7 +492,7 @@ zyre_node_recv_api (zyre_node_t *self)
 #ifdef ZYRE_BUILD_DRAFT_API
             // if we set a secret key- make sure the bind ZMQ_CURVE'd properly
             if (self->secret_key)
-                assert (zsock_mechanism (self->mailbox) == ZMQ_CURVE);
+                assert (zsock_mechanism (self->inbox) == ZMQ_CURVE);
 #endif
 
         self->endpoint = endpoint;
