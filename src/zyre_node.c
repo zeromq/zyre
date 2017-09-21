@@ -483,19 +483,19 @@ zyre_node_recv_api (zyre_node_t *self)
         }
 #endif
         if (zsock_bind (self->inbox, "%s", endpoint) != -1) {
-            zstr_free (&self->endpoint);
+            zstr_free(&self->endpoint);
 #ifndef ZMQ_CURVE
             // legacy ZMQ support
             // inline incase the underlying assert is removed
             bool ZMQ_CURVE = false;
 #endif
-#ifndef ZYRE_BUILD_DRAFT_API
+#ifdef ZYRE_BUILD_DRAFT_API
             // if we set a secret key- make sure the bind ZMQ_CURVE'd properly
             if (self->secret_key)
                 assert (zsock_mechanism (self->mailbox) == ZMQ_CURVE);
-        }
 #endif
-            self->endpoint = endpoint;
+
+        self->endpoint = endpoint;
             zsock_signal (self->pipe, 0);
         }
         else {
