@@ -467,9 +467,35 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "SET ENDPOINT")) {
         zyre_node_gossip_start (self);
         char *endpoint = zmsg_popstr (request);
+#ifdef ZYRE_BUILD_DRAFT_API
+        // when SET ENDPOINT is called, it calls zsock_bind
+        // CURVE needs to be set before that happens
+        // this happens when connecting nodes define the endpoint
+        if (self->secret_key) {
+            // apply the cert to the socket
+            if (self->verbose)
+                zsys_debug ("applying zcert to ->inbox");
+
+            zcert_t *cert = zcert_new_from_txt(self->public_key, self->secret_key);
+            zcert_apply(cert, self->inbox);
+            zsock_set_curve_server (self->inbox, 1);
+            zcert_destroy(&cert);
+        }
+#endif
         if (zsock_bind (self->inbox, "%s", endpoint) != -1) {
-            zstr_free (&self->endpoint);
-            self->endpoint = endpoint;
+            zstr_free(&self->endpoint);
+#ifndef ZMQ_CURVE
+            // legacy ZMQ support
+            // inline incase the underlying assert is removed
+            bool ZMQ_CURVE = false;
+#endif
+#ifdef ZYRE_BUILD_DRAFT_API
+            // if we set a secret key- make sure the bind ZMQ_CURVE'd properly
+            if (self->secret_key)
+                assert (zsock_mechanism (self->inbox) == ZMQ_CURVE);
+#endif
+
+        self->endpoint = endpoint;
             zsock_signal (self->pipe, 0);
         }
         else {
@@ -911,7 +937,8 @@ zyre_node_recv_peer (zyre_node_t *self)
                 assert (public_key[0] != 0);
                 peer = zyre_node_require_peer (self, uuid, zre_msg_endpoint (msg), public_key);
             } else {
-                zsys_debug ("ignoring HELLO to avoid security downgrade, does not contain public key");
+                if (self->verbose)
+                    zsys_debug ("ignoring HELLO to avoid security downgrade, does not contain public key");
                 peer = NULL;
             }
         }
@@ -1096,21 +1123,24 @@ zyre_node_recv_gossip (zyre_node_t *self)
     //  messages come from zgossip, not an external source
     assert (streq (command, "DELIVER"));
 
+#ifdef ZYRE_BUILD_DRAFT_API
+    // extract public key from published service
+    // tcp://endpoint:NNNN|asdfasdfasdfasdfasdf
+    // do this before we check the endpoint o/w it will not match..
+    char *pipe = strchr(endpoint, '|');
+    const char *public_key = NULL;
+    if(pipe != NULL) {
+        *pipe = '\0';
+        public_key = pipe+1;
+    }
+#endif
+
     //  Require peer, if it's not us
     if (strneq (endpoint, self->endpoint)) {
         zuuid_t *uuid = zuuid_new ();
         zuuid_set_str (uuid, uuidstr);
 #ifdef ZYRE_BUILD_DRAFT_API
-        // extract public key from published service
-        // tcp://endpoint:NNNN|asdfasdfasdfasdfasdf
-        char *pipe = strchr(endpoint, '|');
-        const char *public_key = NULL;
-        if(pipe != NULL) {
-            *pipe = '\0';
-            public_key = pipe+1;
-        }
         zyre_node_require_peer (self, uuid, endpoint, public_key);
-
 #else
         zyre_node_require_peer (self, uuid, endpoint);
 #endif
