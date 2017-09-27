@@ -507,6 +507,25 @@ zyre_peer_set_verbose (zyre_peer_t *self, bool verbose)
     self->verbose = verbose;
 }
 
+//  --------------------------------------------------------------------------
+//  Return want_sequence
+
+uint16_t
+zyre_peer_want_sequence (zyre_peer_t *self)
+{
+    assert (self);
+    return self->want_sequence;
+}
+//
+//  --------------------------------------------------------------------------
+//  Return sent_sequence
+
+uint16_t
+zyre_peer_sent_sequence (zyre_peer_t *self)
+{
+    assert (self);
+    return self->sent_sequence;
+}
 
 //  --------------------------------------------------------------------------
 //  Self test of this class
