@@ -112,6 +112,13 @@ bool
 void
     zyre_peer_set_verbose (zyre_peer_t *self, bool verbose);
 
+//  Return want_sequence
+uint16_t
+    zyre_peer_want_sequence (zyre_peer_t *self);
+
+//  Return sent_sequence
+uint16_t
+    zyre_peer_sent_sequence (zyre_peer_t *self);
 
 // private
 #ifdef ZYRE_BUILD_DRAFT_API

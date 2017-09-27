@@ -321,9 +321,16 @@ zyre_node_send_peer (const char *key, void *item, void *argument)
 //  Print hash key to log
 
 static int
-zyre_node_log_item (const char *key, void *item, void *argument)
+zyre_node_log_peer (zyre_peer_t *peer)
 {
-    zsys_info ("   - %s", key);
+    zsys_info ("   - uuid=%s name=%s endpoint=%s connected=%s ready=%s sent_seq=%" PRIu16 " want_seq=%"PRIu16,
+        zyre_peer_identity(peer),
+        zyre_peer_name(peer),
+        zyre_peer_endpoint(peer),
+        zyre_peer_connected(peer) ? "yes" : "no",
+        zyre_peer_ready(peer) ? "yes" : "no",
+        zyre_peer_sent_sequence(peer),
+        zyre_peer_want_sequence(peer));
     return 0;
 }
 
@@ -367,7 +374,7 @@ zyre_node_dump (zyre_node_t *self)
     zsys_info (" - peers=%zu:", zhash_size (self->peers));
     for (item = zhash_first (self->peers); item != NULL;
             item = zhash_next (self->peers))
-        zyre_node_log_item (zhash_cursor (self->peers), item, self);
+        zyre_node_log_peer((zyre_peer_t *)item);
 
     zsys_info (" - own groups=%zu:", zlist_size (self->own_groups));
     const char *group = (const char *) zlist_first (self->own_groups);
