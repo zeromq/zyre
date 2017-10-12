@@ -63,6 +63,7 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "peerGroups", _peer_groups);
     Nan::SetPrototypeMethod (tpl, "peerAddress", _peer_address);
     Nan::SetPrototypeMethod (tpl, "peerHeaderValue", _peer_header_value);
+    Nan::SetPrototypeMethod (tpl, "requirePeer", _require_peer);
     Nan::SetPrototypeMethod (tpl, "socket", _socket);
     Nan::SetPrototypeMethod (tpl, "print", _print);
     Nan::SetPrototypeMethod (tpl, "version", _version);
@@ -552,6 +553,42 @@ NAN_METHOD (Zyre::_peer_header_value) {
     }
     char *result = (char *) zyre_peer_header_value (zyre->self, (const char *)peer, (const char *)name);
     info.GetReturnValue ().Set (Nan::New (result).ToLocalChecked ());
+}
+
+NAN_METHOD (Zyre::_require_peer) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *uuid;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `uuid`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`uuid` must be a string");
+    else {
+        Nan::Utf8String uuid_utf8 (info [0].As<String>());
+        uuid = *uuid_utf8;
+    }
+    char *endpoint;
+    if (info [1]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `endpoint`");
+    else
+    if (!info [1]->IsString ())
+        return Nan::ThrowTypeError ("`endpoint` must be a string");
+    else {
+        Nan::Utf8String endpoint_utf8 (info [1].As<String>());
+        endpoint = *endpoint_utf8;
+    }
+    char *public_key;
+    if (info [2]->IsUndefined ())
+        public_key = NULL;
+    else
+    if (!info [2]->IsString ())
+        return Nan::ThrowTypeError ("`public_key` must be a string");
+    else {
+        Nan::Utf8String public_key_utf8 (info [2].As<String>());
+        public_key = *public_key_utf8;
+    }
+    int result = zyre_require_peer (zyre->self, (const char *)uuid, (const char *)endpoint, (const char *)public_key);
+    info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
 
 NAN_METHOD (Zyre::_socket) {

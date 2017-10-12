@@ -72,6 +72,7 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (_peer_groups);
     static NAN_METHOD (_peer_address);
     static NAN_METHOD (_peer_header_value);
+    static NAN_METHOD (_require_peer);
     static NAN_METHOD (_socket);
     static NAN_METHOD (_print);
     static NAN_METHOD (_version);

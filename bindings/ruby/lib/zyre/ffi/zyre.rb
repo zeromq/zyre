@@ -473,6 +473,19 @@ module Zyre
         result
       end
 
+      # Explicitly connect to a peer
+      #
+      # @param uuid [String, #to_s, nil]
+      # @param endpoint [String, #to_s, nil]
+      # @param public_key [String, #to_s, nil]
+      # @return [Integer]
+      def require_peer(uuid, endpoint, public_key)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_require_peer(self_p, uuid, endpoint, public_key)
+        result
+      end
+
       # Return socket for talking to the Zyre node, for polling
       #
       # @return [::FFI::Pointer]

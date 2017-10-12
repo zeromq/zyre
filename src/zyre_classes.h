@@ -66,6 +66,11 @@ ZYRE_PRIVATE void
     zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);
 
 //  *** Draft method, defined for internal use only ***
+//  Explicitly connect to a peer
+ZYRE_PRIVATE int
+    zyre_require_peer (zyre_t *self, const char *uuid, const char *endpoint, const char *public_key);
+
+//  *** Draft method, defined for internal use only ***
 //  Self test of this class.
 ZYRE_PRIVATE void
     zre_msg_test (bool verbose);

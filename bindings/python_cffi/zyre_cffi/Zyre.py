@@ -247,6 +247,12 @@ class Zyre(object):
         """
         return libzyre.zyre_peer_header_value(self._p, to_bytes(peer), to_bytes(name))
 
+    def require_peer(self, uuid, endpoint, public_key):
+        """
+        Explicitly connect to a peer
+        """
+        return libzyre.zyre_require_peer(self._p, to_bytes(uuid), to_bytes(endpoint), to_bytes(public_key))
+
     def socket(self):
         """
         Return socket for talking to the Zyre node, for polling

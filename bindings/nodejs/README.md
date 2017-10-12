@@ -278,6 +278,12 @@ Return the value of a header of a conected peer.
 Returns null if peer or key doesn't exits.
 
 ```
+integer my_zyre.requirePeer (String, String, String)
+```
+
+Explicitly connect to a peer
+
+```
 zsock my_zyre.socket ()
 ```
 

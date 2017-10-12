@@ -232,6 +232,12 @@ QString QmlZyre::peerHeaderValue (const QString &peer, const QString &name) {
 };
 
 ///
+//  Explicitly connect to a peer
+int QmlZyre::requirePeer (const QString &uuid, const QString &endpoint, const QString &publicKey) {
+    return zyre_require_peer (self, uuid.toUtf8().data(), endpoint.toUtf8().data(), publicKey.toUtf8().data());
+};
+
+///
 //  Return socket for talking to the Zyre node, for polling
 zsock_t *QmlZyre::socket () {
     return zyre_socket (self);
