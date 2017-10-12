@@ -94,6 +94,8 @@ lib.zyre_set_endpoint.restype = c_int
 lib.zyre_set_endpoint.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_zcert.restype = None
 lib.zyre_set_zcert.argtypes = [zyre_p, czmq.zcert_p]
+lib.zyre_set_zap_domain.restype = None
+lib.zyre_set_zap_domain.argtypes = [zyre_p, c_char_p]
 lib.zyre_gossip_bind.restype = None
 lib.zyre_gossip_bind.argtypes = [zyre_p, c_char_p]
 lib.zyre_gossip_connect.restype = None
@@ -286,6 +288,12 @@ the bind was successful, else -1.
         Apply a azcert to a Zyre node.
         """
         return lib.zyre_set_zcert(self._as_parameter_, zcert)
+
+    def set_zap_domain(self, domain):
+        """
+        Specify the ZAP domain (for use with CURVE).
+        """
+        return lib.zyre_set_zap_domain(self._as_parameter_, domain)
 
     def gossip_bind(self, format, *args):
         """

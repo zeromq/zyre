@@ -64,6 +64,17 @@ module Zyre
           raise NotImplementedError, "compile zyre with --enable-drafts"
         end
       end
+      begin # DRAFT method
+        attach_function :zyre_set_zap_domain, [:pointer, :string], :void, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The DRAFT function zyre_set_zap_domain()" +
+            " is not provided by the installed zyre library."
+        end
+        def self.zyre_set_zap_domain(*)
+          raise NotImplementedError, "compile zyre with --enable-drafts"
+        end
+      end
       attach_function :zyre_gossip_bind, [:pointer, :string, :varargs], :void, **opts
       attach_function :zyre_gossip_connect, [:pointer, :string, :varargs], :void, **opts
       begin # DRAFT method
