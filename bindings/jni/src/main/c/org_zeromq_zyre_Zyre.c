@@ -115,6 +115,14 @@ Java_org_zeromq_zyre_Zyre__1_1setZcert (JNIEnv *env, jclass c, jlong self, jlong
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1setZapDomain (JNIEnv *env, jclass c, jlong self, jstring domain)
+{
+    char *domain_ = (char *) (*env)->GetStringUTFChars (env, domain, NULL);
+    zyre_set_zap_domain ((zyre_t *) (intptr_t) self, domain_);
+    (*env)->ReleaseStringUTFChars (env, domain, domain_);
+}
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1gossipBind (JNIEnv *env, jclass c, jlong self, jstring format)
 {
     char *format_ = (char *) (*env)->GetStringUTFChars (env, format, NULL);

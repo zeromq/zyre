@@ -51,6 +51,7 @@ struct _zyre_node_t {
 #ifdef ZYRE_BUILD_DRAFT_API
     char *public_key;           // Our curve public key
     char *secret_key;           // Our curve private key
+    char *zap_domain;           // ZAP domain if any
 #endif
 };
 
@@ -128,6 +129,7 @@ zyre_node_new (zsock_t *pipe, void *args)
 
 #ifdef ZYRE_BUILD_DRAFT_API
     self->beacon_version = BEACON_VERSION_V2;
+    self->zap_domain = strdup(ZAP_DOMAIN_DEFAULT);
 #endif
     //  Default name for node is first 6 characters of UUID:
     //  the shorter string is more readable in logs
@@ -162,6 +164,7 @@ zyre_node_destroy (zyre_node_t **self_p)
 #ifdef ZYRE_BUILD_DRAFT_API
         zstr_free (&self->secret_key);
         zstr_free (&self->public_key);
+        zstr_free (&self->zap_domain);
 #endif
         free (self->name);
         free (self);
@@ -197,6 +200,7 @@ zyre_node_start (zyre_node_t *self)
         zcert_t *cert = zcert_new_from_txt(self->public_key, self->secret_key);
         zcert_apply(cert, self->inbox);
         zsock_set_curve_server (self->inbox, 1);
+        zsock_set_zap_domain (self->inbox, self->zap_domain);
         zcert_destroy(&cert);
     }
 #endif
@@ -486,6 +490,7 @@ zyre_node_recv_api (zyre_node_t *self)
             zcert_t *cert = zcert_new_from_txt(self->public_key, self->secret_key);
             zcert_apply(cert, self->inbox);
             zsock_set_curve_server (self->inbox, 1);
+            zsock_set_zap_domain (self->inbox, self->zap_domain);
             zcert_destroy(&cert);
         }
 #endif
@@ -521,6 +526,12 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "SET SECRETKEY")) {
         self->secret_key = zmsg_popstr (request);
         assert (self->secret_key);
+    }
+    else
+    if (streq (command, "ZAP DOMAIN")) {
+        free (self->zap_domain);
+        self->zap_domain = zmsg_popstr (request);
+        assert (self->zap_domain);
     }
     else
 #endif

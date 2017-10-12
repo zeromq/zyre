@@ -35,5 +35,6 @@
 
     <constant name = "ZRE_DISCOVERY_PORT" value = "5670" state = "stable">IANA-assigned UDP port for ZRE</constant>
     <constant name = "REAP_INTERVAL" value = "1000" private = "1" >Once per second</constant>
+    <constant name = "ZAP_DOMAIN_DEFAULT" value = "global" state = "draft" type = "string">Default ZAP domain (auth)</constant>
 </project>
 

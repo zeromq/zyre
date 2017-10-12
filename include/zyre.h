@@ -221,6 +221,11 @@ ZYRE_EXPORT void
     zyre_set_zcert (zyre_t *self, zcert_t *zcert);
 
 //  *** Draft method, for development use, may change without warning ***
+//  Specify the ZAP domain (for use with CURVE).
+ZYRE_EXPORT void
+    zyre_set_zap_domain (zyre_t *self, const char *domain);
+
+//  *** Draft method, for development use, may change without warning ***
 //  Set-up gossip discovery with CURVE enabled.
 ZYRE_EXPORT void
     zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);
