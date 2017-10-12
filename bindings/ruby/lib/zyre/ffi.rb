@@ -92,6 +92,17 @@ module Zyre
       attach_function :zyre_peer_groups, [:pointer], :pointer, **opts
       attach_function :zyre_peer_address, [:pointer, :string], :pointer, **opts
       attach_function :zyre_peer_header_value, [:pointer, :string, :string], :pointer, **opts
+      begin # DRAFT method
+        attach_function :zyre_require_peer, [:pointer, :string, :string, :string], :int, **opts
+      rescue ::FFI::NotFoundError
+        if $VERBOSE || $DEBUG
+          warn "The DRAFT function zyre_require_peer()" +
+            " is not provided by the installed zyre library."
+        end
+        def self.zyre_require_peer(*)
+          raise NotImplementedError, "compile zyre with --enable-drafts"
+        end
+      end
       attach_function :zyre_socket, [:pointer], :pointer, **opts
       attach_function :zyre_print, [:pointer], :void, **opts
       attach_function :zyre_version, [], :uint64, **opts

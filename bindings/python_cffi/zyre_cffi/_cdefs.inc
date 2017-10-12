@@ -185,6 +185,10 @@ char *
 char *
     zyre_peer_header_value (zyre_t *self, const char *peer, const char *name);
 
+// Explicitly connect to a peer
+int
+    zyre_require_peer (zyre_t *self, const char *uuid, const char *endpoint, const char *public_key);
+
 // Return socket for talking to the Zyre node, for polling
 zsock_t *
     zyre_socket (zyre_t *self);

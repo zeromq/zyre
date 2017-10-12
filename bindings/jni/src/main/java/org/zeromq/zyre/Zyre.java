@@ -289,6 +289,13 @@ public class Zyre implements AutoCloseable{
         return __peerHeaderValue (self, peer, name);
     }
     /*
+    Explicitly connect to a peer
+    */
+    native static int __requirePeer (long self, String uuid, String endpoint, String publicKey);
+    public int requirePeer (String uuid, String endpoint, String publicKey) {
+        return __requirePeer (self, uuid, endpoint, publicKey);
+    }
+    /*
     Return socket for talking to the Zyre node, for polling
     */
     native static long __socket (long self);

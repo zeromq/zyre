@@ -272,6 +272,19 @@ Java_org_zeromq_zyre_Zyre__1_1peerHeaderValue (JNIEnv *env, jclass c, jlong self
     return return_string_;
 }
 
+JNIEXPORT jint JNICALL
+Java_org_zeromq_zyre_Zyre__1_1requirePeer (JNIEnv *env, jclass c, jlong self, jstring uuid, jstring endpoint, jstring public_key)
+{
+    char *uuid_ = (char *) (*env)->GetStringUTFChars (env, uuid, NULL);
+    char *endpoint_ = (char *) (*env)->GetStringUTFChars (env, endpoint, NULL);
+    char *public_key_ = (char *) (*env)->GetStringUTFChars (env, public_key, NULL);
+    jint require_peer_ = (jint) zyre_require_peer ((zyre_t *) (intptr_t) self, uuid_, endpoint_, public_key_);
+    (*env)->ReleaseStringUTFChars (env, uuid, uuid_);
+    (*env)->ReleaseStringUTFChars (env, endpoint, endpoint_);
+    (*env)->ReleaseStringUTFChars (env, public_key, public_key_);
+    return require_peer_;
+}
+
 JNIEXPORT jlong JNICALL
 Java_org_zeromq_zyre_Zyre__1_1socket (JNIEnv *env, jclass c, jlong self)
 {

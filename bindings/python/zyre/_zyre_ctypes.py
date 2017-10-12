@@ -130,6 +130,8 @@ lib.zyre_peer_address.restype = POINTER(c_char)
 lib.zyre_peer_address.argtypes = [zyre_p, c_char_p]
 lib.zyre_peer_header_value.restype = POINTER(c_char)
 lib.zyre_peer_header_value.argtypes = [zyre_p, c_char_p, c_char_p]
+lib.zyre_require_peer.restype = c_int
+lib.zyre_require_peer.argtypes = [zyre_p, c_char_p, c_char_p, c_char_p]
 lib.zyre_socket.restype = czmq.zsock_p
 lib.zyre_socket.argtypes = [zyre_p]
 lib.zyre_print.restype = None
@@ -407,6 +409,12 @@ Destroys message after sending
 Returns null if peer or key doesn't exits.
         """
         return return_fresh_string(lib.zyre_peer_header_value(self._as_parameter_, peer, name))
+
+    def require_peer(self, uuid, endpoint, public_key):
+        """
+        Explicitly connect to a peer
+        """
+        return lib.zyre_require_peer(self._as_parameter_, uuid, endpoint, public_key)
 
     def socket(self):
         """

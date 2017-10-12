@@ -155,6 +155,9 @@ public slots:
     //  Returns null if peer or key doesn't exits.
     QString peerHeaderValue (const QString &peer, const QString &name);
 
+    //  Explicitly connect to a peer
+    int requirePeer (const QString &uuid, const QString &endpoint, const QString &publicKey);
+
     //  Return socket for talking to the Zyre node, for polling
     zsock_t *socket ();
 
