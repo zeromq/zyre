@@ -155,12 +155,6 @@ nothing my_zyre.setZcert (Zcert)
 Apply a azcert to a Zyre node.
 
 ```
-nothing my_zyre.setZapDomain (String)
-```
-
-Specify the ZAP domain (for use with CURVE).
-
-```
 nothing my_zyre.gossipBind (String)
 ```
 

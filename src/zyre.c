@@ -286,12 +286,6 @@ void zyre_set_zcert(zyre_t *self, zcert_t *zcert)
     zstr_sendx (self->actor, "SET SECRETKEY", zcert_secret_txt(zcert), NULL);
 }
 
-void zyre_set_zap_domain(zyre_t *self, const char *domain)
-{
-    assert (domain);
-    zstr_sendx (self->actor, "ZAP DOMAIN", domain, NULL);
-}
-
 //  Explicitly connect to a peer
 
 int
@@ -823,9 +817,6 @@ zyre_test (bool verbose)
 
         zyre_set_verbose (node3);
         zyre_set_verbose (node4);
-
-        zyre_set_zap_domain(node3, "TEST");
-        zyre_set_zap_domain(node4, "TEST");
 
         zsock_set_rcvtimeo(node3->inbox, 10000);
         zsock_set_rcvtimeo(node4->inbox, 10000);

@@ -68,9 +68,6 @@ typedef struct _zyre_event_t zyre_event_t;
 
 //  Public constants
 #define ZRE_DISCOVERY_PORT  5670               //  IANA-assigned UDP port for ZRE
-#ifdef ZYRE_BUILD_DRAFT_API
-#define ZAP_DOMAIN_DEFAULT  "global"           //  Default ZAP domain (auth)
-#endif // ZYRE_BUILD_DRAFT_API
 
 //  Public classes, each with its own header file
 #include "zyre_event.h"

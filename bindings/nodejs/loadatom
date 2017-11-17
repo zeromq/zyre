@@ -54,7 +54,6 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (_set_interface);
     static NAN_METHOD (_set_endpoint);
     static NAN_METHOD (_set_zcert);
-    static NAN_METHOD (_set_zap_domain);
     static NAN_METHOD (_gossip_bind);
     static NAN_METHOD (_gossip_connect);
     static NAN_METHOD (_gossip_connect_curve);

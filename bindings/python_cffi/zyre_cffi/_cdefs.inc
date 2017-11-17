@@ -98,10 +98,6 @@ int
 void
     zyre_set_zcert (zyre_t *self, zcert_t *zcert);
 
-// Specify the ZAP domain (for use with CURVE).
-void
-    zyre_set_zap_domain (zyre_t *self, const char *domain);
-
 // Set-up gossip discovery of other nodes. At least one node in the cluster
 // must bind to a well-known gossip endpoint, so other nodes can connect to
 // it. Note that gossip endpoints are completely distinct from Zyre node

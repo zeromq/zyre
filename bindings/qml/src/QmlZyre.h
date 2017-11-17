@@ -86,9 +86,6 @@ public slots:
     //  Apply a azcert to a Zyre node.
     void setZcert (zcert_t *zcert);
 
-    //  Specify the ZAP domain (for use with CURVE).
-    void setZapDomain (const QString &domain);
-
     //  Set-up gossip discovery of other nodes. At least one node in the cluster
     //  must bind to a well-known gossip endpoint, so other nodes can connect to
     //  it. Note that gossip endpoints are completely distinct from Zyre node
