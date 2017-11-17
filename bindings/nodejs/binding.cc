@@ -45,7 +45,6 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "setInterface", _set_interface);
     Nan::SetPrototypeMethod (tpl, "setEndpoint", _set_endpoint);
     Nan::SetPrototypeMethod (tpl, "setZcert", _set_zcert);
-    Nan::SetPrototypeMethod (tpl, "setZapDomain", _set_zap_domain);
     Nan::SetPrototypeMethod (tpl, "gossipBind", _gossip_bind);
     Nan::SetPrototypeMethod (tpl, "gossipConnect", _gossip_connect);
     Nan::SetPrototypeMethod (tpl, "gossipConnectCurve", _gossip_connect_curve);
@@ -258,21 +257,6 @@ NAN_METHOD (Zyre::_set_zcert) {
     Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
     Zcert *zcert = Nan::ObjectWrap::Unwrap<Zcert>(info [0].As<Object>());
     zyre_set_zcert (zyre->self, zcert->self);
-}
-
-NAN_METHOD (Zyre::_set_zap_domain) {
-    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-    char *domain;
-    if (info [0]->IsUndefined ())
-        return Nan::ThrowTypeError ("method requires a `domain`");
-    else
-    if (!info [0]->IsString ())
-        return Nan::ThrowTypeError ("`domain` must be a string");
-    else {
-        Nan::Utf8String domain_utf8 (info [0].As<String>());
-        domain = *domain_utf8;
-    }
-    zyre_set_zap_domain (zyre->self, (const char *)domain);
 }
 
 NAN_METHOD (Zyre::_gossip_bind) {

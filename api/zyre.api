@@ -107,11 +107,6 @@
         <argument name = "zcert" type = "zcert"></argument>
     </method>
 
-    <method name = "set zap domain" state = "draft">
-        Specify the ZAP domain (for use with CURVE).
-        <argument name = "domain" type = "string"/>
-    </method>
-
     <method name = "gossip bind">
         Set-up gossip discovery of other nodes. At least one node in the cluster
         must bind to a well-known gossip endpoint, so other nodes can connect to

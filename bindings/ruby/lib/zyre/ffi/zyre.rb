@@ -253,17 +253,6 @@ module Zyre
         result
       end
 
-      # Specify the ZAP domain (for use with CURVE).
-      #
-      # @param domain [String, #to_s, nil]
-      # @return [void]
-      def set_zap_domain(domain)
-        raise DestroyedError unless @ptr
-        self_p = @ptr
-        result = ::Zyre::FFI.zyre_set_zap_domain(self_p, domain)
-        result
-      end
-
       # Set-up gossip discovery of other nodes. At least one node in the cluster
       # must bind to a well-known gossip endpoint, so other nodes can connect to
       # it. Note that gossip endpoints are completely distinct from Zyre node

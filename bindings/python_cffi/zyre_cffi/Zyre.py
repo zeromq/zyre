@@ -124,12 +124,6 @@ class Zyre(object):
         """
         return libzyre.zyre_set_zcert(self._p, zcert._p)
 
-    def set_zap_domain(self, domain):
-        """
-        Specify the ZAP domain (for use with CURVE).
-        """
-        return libzyre.zyre_set_zap_domain(self._p, to_bytes(domain))
-
     def gossip_bind(self, format, ):
         """
         Set-up gossip discovery of other nodes. At least one node in the cluster

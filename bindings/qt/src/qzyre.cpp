@@ -152,14 +152,6 @@ void QZyre::setZcert (QZcert *zcert)
 }
 
 ///
-//  Specify the ZAP domain (for use with CURVE).
-void QZyre::setZapDomain (const QString &domain)
-{
-    zyre_set_zap_domain (self, domain.toUtf8().data());
-
-}
-
-///
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
 //  it. Note that gossip endpoints are completely distinct from Zyre node

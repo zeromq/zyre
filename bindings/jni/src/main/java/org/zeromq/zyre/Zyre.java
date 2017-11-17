@@ -148,13 +148,6 @@ public class Zyre implements AutoCloseable{
         __setZcert (self, zcert.self);
     }
     /*
-    Specify the ZAP domain (for use with CURVE).
-    */
-    native static void __setZapDomain (long self, String domain);
-    public void setZapDomain (String domain) {
-        __setZapDomain (self, domain);
-    }
-    /*
     Set-up gossip discovery of other nodes. At least one node in the cluster
     must bind to a well-known gossip endpoint, so other nodes can connect to
     it. Note that gossip endpoints are completely distinct from Zyre node
