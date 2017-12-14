@@ -89,4 +89,5 @@ override_dh_auto_configure:
 %:
 	dh $@ \
 		$(WITH_PYTHON) \
+		--parallel \
 		--with autoreconf

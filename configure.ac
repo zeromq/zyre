@@ -39,6 +39,9 @@ AC_SUBST(PACKAGE_VERSION)
 LTVER="2:1:0"
 AC_SUBST(LTVER)
 
+# building in a subdirectory?
+AM_CONDITIONAL([USING_VPATH], [test "x${srcdir}" != "x."])
+
 # Capture c flags
 ZYRE_ORIG_CFLAGS="${CFLAGS:-none}"
 
@@ -325,6 +328,9 @@ else
     AC_CHECK_PROG(zyre_have_asciidoc, asciidoc, yes, no)
     AC_CHECK_PROG(zyre_have_xmlto, xmlto, yes, no)
     if test "x$zyre_have_asciidoc" = "xno" -o "x$zyre_have_xmlto" = "xno"; then
+        if test "x$with_docs" = "xyes" ; then
+            AC_MSG_ERROR([Build with docs was explicitly requested, but tools are not available])
+        fi
         zyre_build_doc="no"
         # Tarballs built with 'make dist' ship with prebuilt documentation.
         if ! test -f doc/zyre.7; then
