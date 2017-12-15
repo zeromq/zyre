@@ -50,6 +50,9 @@
 #       define ZYRE_EXPORT __declspec(dllimport)
 #   endif
 #   define ZYRE_PRIVATE
+#elif defined (__CYGWIN__)
+#   define ZYRE_EXPORT
+#   define ZYRE_PRIVATE
 #else
 #   define ZYRE_EXPORT
 #   if (defined __GNUC__ && __GNUC__ >= 4) || defined __INTEL_COMPILER

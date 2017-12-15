@@ -35,6 +35,19 @@ module Zyre
       @available = false
     end
 
+
+    def self.attach_function(name, *rest)
+      super
+    rescue ::FFI::NotFoundError
+      define_singleton_method name do |*|
+        raise NotImplementedError, "The function #{name}() is not provided by the zyre library installed. Upgrade the library or compile it with --enable-drafts."
+      end
+
+      return unless $VERBOSE || $DEBUG
+
+      warn "The function #{name}() is not provided by the installed zyre library."
+    end
+
     if available?
       opts = {
         blocking: true  # only necessary on MRI to deal with the GIL.
@@ -53,41 +66,11 @@ module Zyre
       attach_function :zyre_set_interval, [:pointer, :size_t], :void, **opts
       attach_function :zyre_set_interface, [:pointer, :string], :void, **opts
       attach_function :zyre_set_endpoint, [:pointer, :string, :varargs], :int, **opts
-      begin # DRAFT method
-        attach_function :zyre_set_zcert, [:pointer, :pointer], :void, **opts
-      rescue ::FFI::NotFoundError
-        if $VERBOSE || $DEBUG
-          warn "The DRAFT function zyre_set_zcert()" +
-            " is not provided by the installed zyre library."
-        end
-        def self.zyre_set_zcert(*)
-          raise NotImplementedError, "compile zyre with --enable-drafts"
-        end
-      end
-      begin # DRAFT method
-        attach_function :zyre_set_zap_domain, [:pointer, :string], :void, **opts
-      rescue ::FFI::NotFoundError
-        if $VERBOSE || $DEBUG
-          warn "The DRAFT function zyre_set_zap_domain()" +
-            " is not provided by the installed zyre library."
-        end
-        def self.zyre_set_zap_domain(*)
-          raise NotImplementedError, "compile zyre with --enable-drafts"
-        end
-      end
+      attach_function :zyre_set_zcert, [:pointer, :pointer], :void, **opts
+      attach_function :zyre_set_zap_domain, [:pointer, :string], :void, **opts
       attach_function :zyre_gossip_bind, [:pointer, :string, :varargs], :void, **opts
       attach_function :zyre_gossip_connect, [:pointer, :string, :varargs], :void, **opts
-      begin # DRAFT method
-        attach_function :zyre_gossip_connect_curve, [:pointer, :string, :string, :varargs], :void, **opts
-      rescue ::FFI::NotFoundError
-        if $VERBOSE || $DEBUG
-          warn "The DRAFT function zyre_gossip_connect_curve()" +
-            " is not provided by the installed zyre library."
-        end
-        def self.zyre_gossip_connect_curve(*)
-          raise NotImplementedError, "compile zyre with --enable-drafts"
-        end
-      end
+      attach_function :zyre_gossip_connect_curve, [:pointer, :string, :string, :varargs], :void, **opts
       attach_function :zyre_start, [:pointer], :int, **opts
       attach_function :zyre_stop, [:pointer], :void, **opts
       attach_function :zyre_join, [:pointer, :string], :int, **opts
@@ -103,17 +86,7 @@ module Zyre
       attach_function :zyre_peer_groups, [:pointer], :pointer, **opts
       attach_function :zyre_peer_address, [:pointer, :string], :pointer, **opts
       attach_function :zyre_peer_header_value, [:pointer, :string, :string], :pointer, **opts
-      begin # DRAFT method
-        attach_function :zyre_require_peer, [:pointer, :string, :string, :string], :int, **opts
-      rescue ::FFI::NotFoundError
-        if $VERBOSE || $DEBUG
-          warn "The DRAFT function zyre_require_peer()" +
-            " is not provided by the installed zyre library."
-        end
-        def self.zyre_require_peer(*)
-          raise NotImplementedError, "compile zyre with --enable-drafts"
-        end
-      end
+      attach_function :zyre_require_peer, [:pointer, :string, :string, :string], :int, **opts
       attach_function :zyre_socket, [:pointer], :pointer, **opts
       attach_function :zyre_print, [:pointer], :void, **opts
       attach_function :zyre_version, [], :uint64, **opts

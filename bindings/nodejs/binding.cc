@@ -94,10 +94,10 @@ NAN_METHOD (Zyre::New) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`name` must be a string");
-    else {
-        Nan::Utf8String name_utf8 (info [0].As<String>());
-        name = *name_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String name_utf8 (info [0].As<String>());
+    name = *name_utf8;
+         //} //bjornw end
     Zyre *zyre = new Zyre ((const char *)name);
     if (zyre) {
         zyre->Wrap (info.This ());
@@ -136,10 +136,10 @@ NAN_METHOD (Zyre::_set_name) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`name` must be a string");
-    else {
-        Nan::Utf8String name_utf8 (info [0].As<String>());
-        name = *name_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String name_utf8 (info [0].As<String>());
+    name = *name_utf8;
+         //} //bjornw end
     zyre_set_name (zyre->self, (const char *)name);
 }
 
@@ -151,20 +151,20 @@ NAN_METHOD (Zyre::_set_header) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`name` must be a string");
-    else {
-        Nan::Utf8String name_utf8 (info [0].As<String>());
-        name = *name_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String name_utf8 (info [0].As<String>());
+    name = *name_utf8;
+         //} //bjornw end
     char *format;
     if (info [1]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `format`");
     else
     if (!info [1]->IsString ())
         return Nan::ThrowTypeError ("`format` must be a string");
-    else {
-        Nan::Utf8String format_utf8 (info [1].As<String>());
-        format = *format_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String format_utf8 (info [1].As<String>());
+    format = *format_utf8;
+         //} //bjornw end
     zyre_set_header (zyre->self, (const char *)name, "%s", format);
 }
 
@@ -178,9 +178,14 @@ NAN_METHOD (Zyre::_set_port) {
     if (info [0]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `port nbr`");
 
+    //int port_nbr; // bjornw typedef - if using c_type, then you get 'int * major' but it needs to be 'int major'. later using the FromJust() returns an int
     int port_nbr;
+
+
     if (info [0]->IsNumber ())
-        port_nbr = Nan::To<int>(info [0]).FromJust ();
+    {
+          port_nbr = Nan::To<int>(info [0]).FromJust ();
+    }
     else
         return Nan::ThrowTypeError ("`port nbr` must be a number");
     zyre_set_port (zyre->self, (int) port_nbr);
@@ -191,9 +196,14 @@ NAN_METHOD (Zyre::_set_evasive_timeout) {
     if (info [0]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `interval`");
 
+    //int interval; // bjornw typedef - if using c_type, then you get 'int * major' but it needs to be 'int major'. later using the FromJust() returns an int
     int interval;
+
+
     if (info [0]->IsNumber ())
-        interval = Nan::To<int>(info [0]).FromJust ();
+    {
+          interval = Nan::To<int>(info [0]).FromJust ();
+    }
     else
         return Nan::ThrowTypeError ("`interval` must be a number");
     zyre_set_evasive_timeout (zyre->self, (int) interval);
@@ -204,9 +214,14 @@ NAN_METHOD (Zyre::_set_expired_timeout) {
     if (info [0]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `interval`");
 
+    //int interval; // bjornw typedef - if using c_type, then you get 'int * major' but it needs to be 'int major'. later using the FromJust() returns an int
     int interval;
+
+
     if (info [0]->IsNumber ())
-        interval = Nan::To<int>(info [0]).FromJust ();
+    {
+          interval = Nan::To<int>(info [0]).FromJust ();
+    }
     else
         return Nan::ThrowTypeError ("`interval` must be a number");
     zyre_set_expired_timeout (zyre->self, (int) interval);
@@ -231,10 +246,10 @@ NAN_METHOD (Zyre::_set_interface) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`value` must be a string");
-    else {
-        Nan::Utf8String value_utf8 (info [0].As<String>());
-        value = *value_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String value_utf8 (info [0].As<String>());
+    value = *value_utf8;
+         //} //bjornw end
     zyre_set_interface (zyre->self, (const char *)value);
 }
 
@@ -246,10 +261,10 @@ NAN_METHOD (Zyre::_set_endpoint) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`format` must be a string");
-    else {
-        Nan::Utf8String format_utf8 (info [0].As<String>());
-        format = *format_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String format_utf8 (info [0].As<String>());
+    format = *format_utf8;
+         //} //bjornw end
     int result = zyre_set_endpoint (zyre->self, "%s", format);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
@@ -268,10 +283,10 @@ NAN_METHOD (Zyre::_set_zap_domain) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`domain` must be a string");
-    else {
-        Nan::Utf8String domain_utf8 (info [0].As<String>());
-        domain = *domain_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String domain_utf8 (info [0].As<String>());
+    domain = *domain_utf8;
+         //} //bjornw end
     zyre_set_zap_domain (zyre->self, (const char *)domain);
 }
 
@@ -283,10 +298,10 @@ NAN_METHOD (Zyre::_gossip_bind) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`format` must be a string");
-    else {
-        Nan::Utf8String format_utf8 (info [0].As<String>());
-        format = *format_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String format_utf8 (info [0].As<String>());
+    format = *format_utf8;
+         //} //bjornw end
     zyre_gossip_bind (zyre->self, "%s", format);
 }
 
@@ -298,10 +313,10 @@ NAN_METHOD (Zyre::_gossip_connect) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`format` must be a string");
-    else {
-        Nan::Utf8String format_utf8 (info [0].As<String>());
-        format = *format_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String format_utf8 (info [0].As<String>());
+    format = *format_utf8;
+         //} //bjornw end
     zyre_gossip_connect (zyre->self, "%s", format);
 }
 
@@ -313,20 +328,20 @@ NAN_METHOD (Zyre::_gossip_connect_curve) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`public_key` must be a string");
-    else {
-        Nan::Utf8String public_key_utf8 (info [0].As<String>());
-        public_key = *public_key_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String public_key_utf8 (info [0].As<String>());
+    public_key = *public_key_utf8;
+         //} //bjornw end
     char *format;
     if (info [1]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `format`");
     else
     if (!info [1]->IsString ())
         return Nan::ThrowTypeError ("`format` must be a string");
-    else {
-        Nan::Utf8String format_utf8 (info [1].As<String>());
-        format = *format_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String format_utf8 (info [1].As<String>());
+    format = *format_utf8;
+         //} //bjornw end
     zyre_gossip_connect_curve (zyre->self, (const char *)public_key, "%s", format);
 }
 
@@ -349,10 +364,10 @@ NAN_METHOD (Zyre::_join) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`group` must be a string");
-    else {
-        Nan::Utf8String group_utf8 (info [0].As<String>());
-        group = *group_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String group_utf8 (info [0].As<String>());
+    group = *group_utf8;
+         //} //bjornw end
     int result = zyre_join (zyre->self, (const char *)group);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
@@ -365,10 +380,10 @@ NAN_METHOD (Zyre::_leave) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`group` must be a string");
-    else {
-        Nan::Utf8String group_utf8 (info [0].As<String>());
-        group = *group_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String group_utf8 (info [0].As<String>());
+    group = *group_utf8;
+         //} //bjornw end
     int result = zyre_leave (zyre->self, (const char *)group);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
@@ -393,10 +408,10 @@ NAN_METHOD (Zyre::_whisper) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`peer` must be a string");
-    else {
-        Nan::Utf8String peer_utf8 (info [0].As<String>());
-        peer = *peer_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String peer_utf8 (info [0].As<String>());
+    peer = *peer_utf8;
+         //} //bjornw end
     Zmsg *msg_p = Nan::ObjectWrap::Unwrap<Zmsg>(info [1].As<Object>());
     int result = zyre_whisper (zyre->self, (const char *)peer, &msg_p->self);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
@@ -410,10 +425,10 @@ NAN_METHOD (Zyre::_shout) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`group` must be a string");
-    else {
-        Nan::Utf8String group_utf8 (info [0].As<String>());
-        group = *group_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String group_utf8 (info [0].As<String>());
+    group = *group_utf8;
+         //} //bjornw end
     Zmsg *msg_p = Nan::ObjectWrap::Unwrap<Zmsg>(info [1].As<Object>());
     int result = zyre_shout (zyre->self, (const char *)group, &msg_p->self);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
@@ -427,20 +442,20 @@ NAN_METHOD (Zyre::_whispers) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`peer` must be a string");
-    else {
-        Nan::Utf8String peer_utf8 (info [0].As<String>());
-        peer = *peer_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String peer_utf8 (info [0].As<String>());
+    peer = *peer_utf8;
+         //} //bjornw end
     char *format;
     if (info [1]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `format`");
     else
     if (!info [1]->IsString ())
         return Nan::ThrowTypeError ("`format` must be a string");
-    else {
-        Nan::Utf8String format_utf8 (info [1].As<String>());
-        format = *format_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String format_utf8 (info [1].As<String>());
+    format = *format_utf8;
+         //} //bjornw end
     int result = zyre_whispers (zyre->self, (const char *)peer, "%s", format);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
@@ -453,20 +468,20 @@ NAN_METHOD (Zyre::_shouts) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`group` must be a string");
-    else {
-        Nan::Utf8String group_utf8 (info [0].As<String>());
-        group = *group_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String group_utf8 (info [0].As<String>());
+    group = *group_utf8;
+         //} //bjornw end
     char *format;
     if (info [1]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `format`");
     else
     if (!info [1]->IsString ())
         return Nan::ThrowTypeError ("`format` must be a string");
-    else {
-        Nan::Utf8String format_utf8 (info [1].As<String>());
-        format = *format_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String format_utf8 (info [1].As<String>());
+    format = *format_utf8;
+         //} //bjornw end
     int result = zyre_shouts (zyre->self, (const char *)group, "%s", format);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
@@ -491,10 +506,10 @@ NAN_METHOD (Zyre::_peers_by_group) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`name` must be a string");
-    else {
-        Nan::Utf8String name_utf8 (info [0].As<String>());
-        name = *name_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String name_utf8 (info [0].As<String>());
+    name = *name_utf8;
+         //} //bjornw end
     zlist_t *result = zyre_peers_by_group (zyre->self, (const char *)name);
     Zlist *zlist_result = new Zlist (result);
     if (zlist_result) {
@@ -537,10 +552,10 @@ NAN_METHOD (Zyre::_peer_address) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`peer` must be a string");
-    else {
-        Nan::Utf8String peer_utf8 (info [0].As<String>());
-        peer = *peer_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String peer_utf8 (info [0].As<String>());
+    peer = *peer_utf8;
+         //} //bjornw end
     char *result = (char *) zyre_peer_address (zyre->self, (const char *)peer);
     info.GetReturnValue ().Set (Nan::New (result).ToLocalChecked ());
 }
@@ -553,20 +568,20 @@ NAN_METHOD (Zyre::_peer_header_value) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`peer` must be a string");
-    else {
-        Nan::Utf8String peer_utf8 (info [0].As<String>());
-        peer = *peer_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String peer_utf8 (info [0].As<String>());
+    peer = *peer_utf8;
+         //} //bjornw end
     char *name;
     if (info [1]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `name`");
     else
     if (!info [1]->IsString ())
         return Nan::ThrowTypeError ("`name` must be a string");
-    else {
-        Nan::Utf8String name_utf8 (info [1].As<String>());
-        name = *name_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String name_utf8 (info [1].As<String>());
+    name = *name_utf8;
+         //} //bjornw end
     char *result = (char *) zyre_peer_header_value (zyre->self, (const char *)peer, (const char *)name);
     info.GetReturnValue ().Set (Nan::New (result).ToLocalChecked ());
 }
@@ -579,30 +594,30 @@ NAN_METHOD (Zyre::_require_peer) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`uuid` must be a string");
-    else {
-        Nan::Utf8String uuid_utf8 (info [0].As<String>());
-        uuid = *uuid_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String uuid_utf8 (info [0].As<String>());
+    uuid = *uuid_utf8;
+         //} //bjornw end
     char *endpoint;
     if (info [1]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `endpoint`");
     else
     if (!info [1]->IsString ())
         return Nan::ThrowTypeError ("`endpoint` must be a string");
-    else {
-        Nan::Utf8String endpoint_utf8 (info [1].As<String>());
-        endpoint = *endpoint_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String endpoint_utf8 (info [1].As<String>());
+    endpoint = *endpoint_utf8;
+         //} //bjornw end
     char *public_key;
     if (info [2]->IsUndefined ())
         public_key = NULL;
     else
     if (!info [2]->IsString ())
         return Nan::ThrowTypeError ("`public_key` must be a string");
-    else {
-        Nan::Utf8String public_key_utf8 (info [2].As<String>());
-        public_key = *public_key_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String public_key_utf8 (info [2].As<String>());
+    public_key = *public_key_utf8;
+         //} //bjornw end
     int result = zyre_require_peer (zyre->self, (const char *)uuid, (const char *)endpoint, (const char *)public_key);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
@@ -633,9 +648,14 @@ NAN_METHOD (Zyre::_test) {
     if (info [0]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `verbose`");
 
+    //bool verbose; // bjornw typedef - if using c_type, then you get 'int * major' but it needs to be 'int major'. later using the FromJust() returns an int
     bool verbose;
+
+
     if (info [0]->IsBoolean ())
-        verbose = Nan::To<bool>(info [0]).FromJust ();
+    {
+          verbose = Nan::To<bool>(info [0]).FromJust ();
+    }
     else
         return Nan::ThrowTypeError ("`verbose` must be a Boolean");
     zyre_test ((bool) verbose);
@@ -751,10 +771,10 @@ NAN_METHOD (ZyreEvent::_header) {
     else
     if (!info [0]->IsString ())
         return Nan::ThrowTypeError ("`name` must be a string");
-    else {
-        Nan::Utf8String name_utf8 (info [0].As<String>());
-        name = *name_utf8;
-    }
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String name_utf8 (info [0].As<String>());
+    name = *name_utf8;
+         //} //bjornw end
     char *result = (char *) zyre_event_header (zyre_event->self, (const char *)name);
     info.GetReturnValue ().Set (Nan::New (result).ToLocalChecked ());
 }
@@ -798,9 +818,14 @@ NAN_METHOD (ZyreEvent::_test) {
     if (info [0]->IsUndefined ())
         return Nan::ThrowTypeError ("method requires a `verbose`");
 
+    //bool verbose; // bjornw typedef - if using c_type, then you get 'int * major' but it needs to be 'int major'. later using the FromJust() returns an int
     bool verbose;
+
+
     if (info [0]->IsBoolean ())
-        verbose = Nan::To<bool>(info [0]).FromJust ();
+    {
+          verbose = Nan::To<bool>(info [0]).FromJust ();
+    }
     else
         return Nan::ThrowTypeError ("`verbose` must be a Boolean");
     zyre_event_test ((bool) verbose);

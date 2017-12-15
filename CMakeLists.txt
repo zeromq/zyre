@@ -92,7 +92,7 @@ if (MSVC)
 endif()
 
 # specific case of windows UWP
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "WindowsStore" AND ${CMAKE_SYSTEM_VERSION} STREQUAL "10.0")
+if( "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore" AND "${CMAKE_SYSTEM_VERSION}" STREQUAL "10.0")
   ADD_DEFINITIONS(-DZMQ_HAVE_WINDOWS_UWP)
   ADD_DEFINITIONS(-D_WIN32_WINNT=_WIN32_WINNT_WIN10)
 endif()
@@ -136,6 +136,16 @@ ELSE (CZMQ_FOUND)
 ENDIF (CZMQ_FOUND)
 
 ########################################################################
+# version
+########################################################################
+set(ZYRE_VERSION_MAJOR 2)
+set(ZYRE_VERSION_MINOR 0)
+set(ZYRE_VERSION_PATCH 1)
+set(ZYRE_VERSION "${ZYRE_VERSION_MAJOR}.${ZYRE_VERSION_MINOR}.${ZYRE_VERSION_PATCH}")
+message(STATUS "Detected ZYRE Version - ${ZYRE_VERSION}")
+
+
+########################################################################
 # includes
 ########################################################################
 set (zyre_headers
@@ -170,28 +180,70 @@ IF (ENABLE_DRAFTS)
 ENDIF (ENABLE_DRAFTS)
 
 source_group("Source Files" FILES ${zyre_sources})
-if (NOT DEFINED BUILD_SHARED_LIBS)
-    SET(BUILD_SHARED_LIBS ON)
-endif()
-add_library(zyre ${zyre_sources})
-set_target_properties(zyre
-    PROPERTIES DEFINE_SYMBOL "ZYRE_EXPORTS"
-)
-set_target_properties (zyre
-    PROPERTIES SOVERSION "2"
-)
-set_target_properties (zyre
-    PROPERTIES VERSION "2.0.1"
-)
-target_link_libraries(zyre
-    ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
-)
 
-install(TARGETS zyre
+
+option(ZYRE_BUILD_SHARED "Whether or not to build the shared object" ON)
+option(ZYRE_BUILD_STATIC "Whether or not to build the static archive" ON)
+
+if (NOT ZYRE_BUILD_SHARED AND NOT ZYRE_BUILD_STATIC)
+  message(FATAL_ERROR "Neither static nor shared library build enabled")
+endif()
+
+# shared
+if (ZYRE_BUILD_SHARED)
+  add_library(zyre SHARED ${zyre_sources})
+
+  set_target_properties (zyre PROPERTIES
+    PUBLIC_HEADER "${public_headers}"
+    DEFINE_SYMBOL "ZYRE_EXPORTS"
+    SOVERSION "2"
+    VERSION "${ZYRE_VERSION}"
+    COMPILE_DEFINITIONS "DLL_EXPORT"
+  )
+
+  target_link_libraries(zyre
+    ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
+  )
+
+  install(TARGETS zyre
     LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
     ARCHIVE DESTINATION "lib${LIB_SUFFIX}" # .lib file
-    RUNTIME DESTINATION bin              # .dll file
-)
+    RUNTIME DESTINATION bin                # .dll file
+  )
+
+  target_include_directories(zyre
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+  )
+endif()
+
+# static
+if (ZYRE_BUILD_STATIC)
+  add_library(zyre-static STATIC ${zyre_sources})
+
+  set_target_properties(zyre-static PROPERTIES
+    PUBLIC_HEADER "${public_headers}"
+    COMPILE_DEFINITIONS "ZYRE_STATIC"
+  )
+
+  target_link_libraries(zyre-static
+    ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
+  )
+
+  install(TARGETS zyre-static
+    LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
+    ARCHIVE DESTINATION "lib${LIB_SUFFIX}" # .lib file
+    RUNTIME DESTINATION bin                # .dll file
+  )
+
+  target_include_directories(zyre-static
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+  )
+  target_compile_definitions(zyre-static
+    PUBLIC ZYRE_STATIC
+  )
+
+endif()
+
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/src/CMakeLists-local.txt) # Optional project-local hook
 
@@ -225,6 +277,7 @@ add_executable(
     perf_local
     "${SOURCE_DIR}/src/perf_local.c"
 )
+if (TARGET zyre)
 target_link_libraries(
     perf_local
     zyre
@@ -232,10 +285,21 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
+endif()
+if (NOT TARGET zyre AND TARGET zyre-static)
+target_link_libraries(
+    perf_local
+    zyre-static
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+endif()
 add_executable(
     perf_remote
     "${SOURCE_DIR}/src/perf_remote.c"
 )
+if (TARGET zyre)
 target_link_libraries(
     perf_remote
     zyre
@@ -243,10 +307,21 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
+endif()
+if (NOT TARGET zyre AND TARGET zyre-static)
+target_link_libraries(
+    perf_remote
+    zyre-static
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+endif()
 add_executable(
     zpinger
     "${SOURCE_DIR}/src/zpinger.c"
 )
+if (TARGET zyre)
 target_link_libraries(
     zpinger
     zyre
@@ -254,6 +329,16 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
+endif()
+if (NOT TARGET zyre AND TARGET zyre-static)
+target_link_libraries(
+    zpinger
+    zyre-static
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+endif()
 install(TARGETS zpinger
     RUNTIME DESTINATION bin
 )
@@ -261,6 +346,7 @@ add_executable(
     ztester_beacon
     "${SOURCE_DIR}/src/ztester_beacon.c"
 )
+if (TARGET zyre)
 target_link_libraries(
     ztester_beacon
     zyre
@@ -268,10 +354,21 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
+endif()
+if (NOT TARGET zyre AND TARGET zyre-static)
+target_link_libraries(
+    ztester_beacon
+    zyre-static
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+endif()
 add_executable(
     ztester_gossip
     "${SOURCE_DIR}/src/ztester_gossip.c"
 )
+if (TARGET zyre)
 target_link_libraries(
     ztester_gossip
     zyre
@@ -279,10 +376,21 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
+endif()
+if (NOT TARGET zyre AND TARGET zyre-static)
+target_link_libraries(
+    ztester_gossip
+    zyre-static
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+endif()
 add_executable(
     zyre_selftest
     "${SOURCE_DIR}/src/zyre_selftest.c"
 )
+if (TARGET zyre)
 target_link_libraries(
     zyre_selftest
     zyre
@@ -290,6 +398,16 @@ target_link_libraries(
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
 )
+endif()
+if (NOT TARGET zyre AND TARGET zyre-static)
+target_link_libraries(
+    zyre_selftest
+    zyre-static
+    ${LIBZMQ_LIBRARIES}
+    ${CZMQ_LIBRARIES}
+    ${OPTIONAL_LIBRARIES}
+)
+endif()
 
 ########################################################################
 # tests
@@ -393,6 +511,8 @@ message (STATUS "  C compiler        :   ${CMAKE_C_COMPILER}")
 message (STATUS "  Debug C flags     :   ${CMAKE_C_FLAGS_DEBUG} ${CMAKE_C_FLAGS}")
 message (STATUS "  Release C flags   :   ${CMAKE_C_FLAGS_RELEASE} ${CMAKE_C_FLAGS}")
 message (STATUS "  Build type        :   ${CMAKE_BUILD_TYPE}")
+message (STATUS "  Static build      :   ${ZYRE_BUILD_STATIC}")
+message (STATUS "  Shared build      :   ${ZYRE_BUILD_SHARED}")
 IF (ENABLE_DRAFTS)
 message (STATUS "  Draft API         :   Yes")
 ELSE (ENABLE_DRAFTS)
