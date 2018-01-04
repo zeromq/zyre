@@ -219,6 +219,7 @@
 
     <method name = "peer address">
         Return the endpoint of a connected peer.
+        Returns empty string if peer does not exist.
         <argument name = "peer" type = "string" />
         <return type = "string" fresh = "1" />
     </method>

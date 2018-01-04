@@ -220,6 +220,7 @@ zlist_t *QmlZyre::peerGroups () {
 
 ///
 //  Return the endpoint of a connected peer.
+//  Returns empty string if peer does not exist.
 QString QmlZyre::peerAddress (const QString &peer) {
     char *retStr_ = zyre_peer_address (self, peer.toUtf8().data());
     QString retQStr_ = QString (retStr_);

@@ -303,6 +303,7 @@ QZlist * QZyre::peerGroups ()
 
 ///
 //  Return the endpoint of a connected peer.
+//  Returns empty string if peer does not exist.
 QString QZyre::peerAddress (const QString &peer)
 {
     char *retStr_ = zyre_peer_address (self, peer.toUtf8().data());

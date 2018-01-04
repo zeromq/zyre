@@ -240,6 +240,7 @@ class Zyre(object):
     def peer_address(self, peer):
         """
         Return the endpoint of a connected peer.
+        Returns empty string if peer does not exist.
         """
         return utils.lib.zyre_peer_address(self._p, utils.to_bytes(peer))
 
