@@ -459,6 +459,7 @@ module Zyre
       end
 
       # Return the endpoint of a connected peer.
+      # Returns empty string if peer does not exist.
       #
       # @param peer [String, #to_s, nil]
       # @return [::FFI::AutoPointer]

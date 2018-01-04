@@ -152,6 +152,7 @@ public slots:
     zlist_t *peerGroups ();
 
     //  Return the endpoint of a connected peer.
+    //  Returns empty string if peer does not exist.
     QString peerAddress (const QString &peer);
 
     //  Return the value of a header of a conected peer.

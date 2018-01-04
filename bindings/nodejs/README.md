@@ -275,6 +275,7 @@ string my_zyre.peerAddress (String)
 ```
 
 Return the endpoint of a connected peer.
+Returns empty string if peer does not exist.
 
 ```
 string my_zyre.peerHeaderValue (String, String)

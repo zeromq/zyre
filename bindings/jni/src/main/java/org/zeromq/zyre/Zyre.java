@@ -282,6 +282,7 @@ public class Zyre implements AutoCloseable{
     }
     /*
     Return the endpoint of a connected peer.
+    Returns empty string if peer does not exist.
     */
     native static String __peerAddress (long self, String peer);
     public String peerAddress (String peer) {

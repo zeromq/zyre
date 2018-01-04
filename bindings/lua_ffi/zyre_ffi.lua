@@ -193,6 +193,7 @@ zlist_t *
     zyre_peer_groups (zyre_t *self);
 
 // Return the endpoint of a connected peer.
+// Returns empty string if peer does not exist.
 char *
     zyre_peer_address (zyre_t *self, const char *peer);
 

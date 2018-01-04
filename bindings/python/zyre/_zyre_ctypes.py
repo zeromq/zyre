@@ -408,6 +408,7 @@ Destroys message after sending
     def peer_address(self, peer):
         """
         Return the endpoint of a connected peer.
+Returns empty string if peer does not exist.
         """
         return return_fresh_string(lib.zyre_peer_address(self._as_parameter_, peer))
 

@@ -529,7 +529,8 @@ zyre_peers_by_group (zyre_t *self, const char *group)
 
 
 //  --------------------------------------------------------------------------
-//  Return the endpoint of a connected peer. Caller owns the string.
+//  Return the endpoint of a connected peer. Returns empty string if
+//  the peer does not exist. Caller owns the string.
 
 char *
 zyre_peer_address (zyre_t *self, const char *peer)
