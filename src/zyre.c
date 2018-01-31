@@ -950,10 +950,11 @@ zyre_test (bool verbose)
         zyre_gossip_bind(node5, "tcp://127.0.0.1:9001");
         zyre_gossip_connect_curve(node6, gossip_cert, "tcp://127.0.0.1:9001");
 
-        zyre_start(node5);
-        zsock_wait(node5);
-        zyre_start(node6);
-        zsock_wait(node6);
+        rc = zyre_start (node5);
+        assert (rc == 0);
+
+        rc = zyre_start (node6);
+        assert (rc == 0);
 
         zyre_join (node5, "GLOBAL");
         zyre_join (node6, "GLOBAL");
