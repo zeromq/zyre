@@ -973,7 +973,6 @@ zyre_test (bool verbose)
         msg = zyre_recv (node6);
         assert (msg);
         command = zmsg_popstr (msg);
-        zsys_info(command);
         assert (streq (command, "ENTER"));
         zstr_free (&command);
 
