@@ -822,8 +822,10 @@ zyre_test (bool verbose)
         assert (node3);
         assert (node4);
 
-        zyre_set_verbose (node3);
-        zyre_set_verbose (node4);
+        if (verbose) {
+            zyre_set_verbose (node3);
+            zyre_set_verbose (node4);
+        }
 
         zyre_set_zap_domain(node3, "TEST");
         zyre_set_zap_domain(node4, "TEST");
