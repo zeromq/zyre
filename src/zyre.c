@@ -839,20 +839,20 @@ zyre_test (bool verbose)
         assert (node3_cert);
         assert (node4_cert);
 
-        zyre_set_zcert(node3, node3_cert);
-        zyre_set_zcert(node4, node4_cert);
+        zyre_set_zcert (node3, node3_cert);
+        zyre_set_zcert (node4, node4_cert);
 
-        zyre_set_header(node3, "X-PUBLICKEY", "%s", zcert_public_txt(node3_cert));
-        zyre_set_header(node4, "X-PUBLICKEY", "%s", zcert_public_txt(node4_cert));
+        zyre_set_header (node3, "X-PUBLICKEY", "%s", zcert_public_txt (node3_cert));
+        zyre_set_header (node4, "X-PUBLICKEY", "%s", zcert_public_txt (node4_cert));
 
         // test beacon
         if (verbose)
             zsys_debug ("----------------TESTING BEACON----------------");
 
-        rc = zyre_start(node3);
+        rc = zyre_start (node3);
         assert (rc == 0);
 
-        rc = zyre_start(node4);
+        rc = zyre_start (node4);
         assert (rc == 0);
 
         zyre_join (node3, "GLOBAL");
@@ -885,17 +885,17 @@ zyre_test (bool verbose)
         command = zmsg_popstr (msg);
         assert (streq (command, "JOIN"));
         zstr_free (&command);
-        zmsg_destroy(&msg);
+        zmsg_destroy (&msg);
 
         msg = zyre_recv (node4);
         assert (msg);
         command = zmsg_popstr (msg);
         assert (streq (command, "SHOUT"));
         zstr_free (&command);
-        zmsg_destroy(&msg);
+        zmsg_destroy (&msg);
 
-        zyre_leave(node3, "GLOBAL");
-        zyre_leave(node4, "GLOBAL");
+        zyre_leave (node3, "GLOBAL");
+        zyre_leave (node4, "GLOBAL");
 
         zstr_free (&name);
         zstr_free (&peerid);
@@ -984,8 +984,8 @@ zyre_test (bool verbose)
         assert (streq (name, "node5"));
         zstr_free (&name);
 
-        zyre_leave(node5, "GLOBAL");
-        zyre_leave(node6, "GLOBAL");
+        zyre_leave (node5, "GLOBAL");
+        zyre_leave (node6, "GLOBAL");
 
         zyre_stop (node5);
         zyre_stop (node6);
@@ -998,9 +998,9 @@ zyre_test (bool verbose)
         zcert_destroy (&node5_cert);
         zcert_destroy (&node6_cert);
 
-        zyre_destroy(&node5);
-        zyre_destroy(&node6);
-        zactor_destroy(&auth);
+        zyre_destroy (&node5);
+        zyre_destroy (&node6);
+        zactor_destroy (&auth);
 
         printf ("OK\n");
 
