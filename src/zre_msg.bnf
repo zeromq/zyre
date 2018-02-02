@@ -2,7 +2,7 @@ The following ABNF grammar defines the work with ZRE messages:
 
     zre             = greeting *traffic
     greeting        = hello
-    traffic         = whisper / shout / join / leave / ping / ping-ok
+    traffic         = elect / leader / whisper / shout / join / leave / ping / ping-ok
 
     ;  Greet a peer so it can connect back to us
 
@@ -58,6 +58,20 @@ The following ABNF grammar defines the work with ZRE messages:
     PING-OK         = signature %d7 version sequence
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
+
+    ;  No description
+
+    ELECT           = signature %d8 version sequence challenger_id
+    version         = number-1              ; Version number (2)
+    sequence        = number-2              ; Cyclic sequence number
+    challenger_id   = string                ; ID of the challenger
+
+    ;  No description
+
+    LEADER          = signature %d9 version sequence leader_id
+    version         = number-1              ; Version number (2)
+    sequence        = number-2              ; Cyclic sequence number
+    leader_id       = string                ; ID of the elected leader
 
     ; A list of string values
     strings         = strings-count *strings-value

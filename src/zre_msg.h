@@ -67,6 +67,16 @@
     PING_OK - Reply to a peer's ping
         version             number 1    Version number (2)
         sequence            number 2    Cyclic sequence number
+
+    ELECT - This is the ZRE protocol, version 2 draft, as defined by rfc.zeromq.org/spec:36/ZRE.
+        version             number 1    Version number (2)
+        sequence            number 2    Cyclic sequence number
+        challenger_id       string      ID of the challenger
+
+    LEADER - This is the ZRE protocol, version 2 draft, as defined by rfc.zeromq.org/spec:36/ZRE.
+        version             number 1    Version number (2)
+        sequence            number 2    Cyclic sequence number
+        leader_id           string      ID of the elected leader
 */
 
 
@@ -77,6 +87,8 @@
 #define ZRE_MSG_LEAVE                       5
 #define ZRE_MSG_PING                        6
 #define ZRE_MSG_PING_OK                     7
+#define ZRE_MSG_ELECT                       8
+#define ZRE_MSG_LEADER                      9
 
 #include <czmq.h>
 
@@ -199,6 +211,18 @@ ZYRE_PRIVATE const char *
     zre_msg_group (zre_msg_t *self);
 ZYRE_PRIVATE void
     zre_msg_set_group (zre_msg_t *self, const char *value);
+
+//  Get/set the challenger_id field
+ZYRE_EXPORT const char *
+    zre_msg_challenger_id (zre_msg_t *self);
+ZYRE_EXPORT void
+    zre_msg_set_challenger_id (zre_msg_t *self, const char *value);
+
+//  Get/set the leader_id field
+ZYRE_EXPORT const char *
+    zre_msg_leader_id (zre_msg_t *self);
+ZYRE_EXPORT void
+    zre_msg_set_leader_id (zre_msg_t *self, const char *value);
 
 //  Self test of this class
 ZYRE_PRIVATE void
