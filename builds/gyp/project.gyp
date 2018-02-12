@@ -75,7 +75,6 @@
         '../../src/zyre_classes.h'
       ],
       'dependencies': [
-        '../../../libzmq/builds/gyp/project.gyp:libzmq',
         '../../../czmq/builds/gyp/project.gyp:libczmq',
       ],
       'copies': [
