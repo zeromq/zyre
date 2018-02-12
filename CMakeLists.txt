@@ -6,7 +6,7 @@
 ########################################################################
 # Project setup
 ########################################################################
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.8)
 project(zyre)
 enable_language(C)
 enable_testing()
@@ -15,6 +15,8 @@ set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 # Select flags
 SET(CMAKE_C_FLAGS_RELEASE "-O3")
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/builds/cmake/Modules)
 
 # Will be used to add flags to pkg-config useful when apps want to statically link
 set(pkg_config_libs_private "")
@@ -164,6 +166,8 @@ install(FILES ${zyre_headers} DESTINATION include)
 ########################################################################
 # library
 ########################################################################
+
+
 include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include")
 set (zyre_sources
     src/zyre.c
@@ -189,9 +193,20 @@ if (NOT ZYRE_BUILD_SHARED AND NOT ZYRE_BUILD_STATIC)
   message(FATAL_ERROR "Neither static nor shared library build enabled")
 endif()
 
+IF (NOT MSVC)
+  # avoid building everything twice for shared + static
+  # only on *nix, as Windows needs different preprocessor defines in static builds
+  add_library (zyre_objects OBJECT ${zyre_sources})
+  set_property(TARGET zyre_objects PROPERTY POSITION_INDEPENDENT_CODE ON)
+ENDIF (NOT MSVC)
+
 # shared
 if (ZYRE_BUILD_SHARED)
-  add_library(zyre SHARED ${zyre_sources})
+  IF (MSVC)
+    add_library(zyre SHARED ${zyre_sources})
+  ELSE (MSVC)
+    add_library(zyre SHARED $<TARGET_OBJECTS:zyre_objects>)
+  ENDIF (MSVC)
 
   set_target_properties (zyre PROPERTIES
     PUBLIC_HEADER "${public_headers}"
@@ -199,6 +214,8 @@ if (ZYRE_BUILD_SHARED)
     SOVERSION "2"
     VERSION "${ZYRE_VERSION}"
     COMPILE_DEFINITIONS "DLL_EXPORT"
+    OUTPUT_NAME "zyre"
+    PREFIX "lib"
   )
 
   target_link_libraries(zyre
@@ -218,11 +235,17 @@ endif()
 
 # static
 if (ZYRE_BUILD_STATIC)
-  add_library(zyre-static STATIC ${zyre_sources})
+  IF (MSVC)
+    add_library(zyre-static STATIC ${zyre_sources})
+  ELSE (MSVC)
+    add_library(zyre-static STATIC $<TARGET_OBJECTS:zyre_objects>)
+  ENDIF (MSVC)
 
   set_target_properties(zyre-static PROPERTIES
     PUBLIC_HEADER "${public_headers}"
     COMPILE_DEFINITIONS "ZYRE_STATIC"
+    OUTPUT_NAME "zyre"
+    PREFIX "lib"
   )
 
   target_link_libraries(zyre-static
@@ -498,6 +521,8 @@ add_custom_command(
     ARGS    -rf CMakeTmp ${cmake_generated}
     TARGET  distclean
 )
+
+include(ClangFormat)
 
 ########################################################################
 # summary

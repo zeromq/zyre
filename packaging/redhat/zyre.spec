@@ -104,7 +104,7 @@ This package contains development files for zyre: an open-source framework for p
 # Install api files into /usr/local/share/zproject
 %dir %{_datadir}/zproject/
 %dir %{_datadir}/zproject/zyre
-%{_datadir}/zproject/zyre/*.api
+%{_datadir}/zproject/zyre/*
 
 %if %{with python_cffi}
 %package -n python2-zyre-cffi
@@ -152,10 +152,13 @@ make %{_smp_mflags}
 %if %{with python_cffi}
 # Problem: we need pkg-config points to built and not yet installed copy of zyre
 # Solution: chicken-egg problem - let's make "fake" pkg-config file
-sed -e "s@^libdir.*@libdir=`pwd`/src/.libs@" \
-    -e "s@^includedir.*@includedir=`pwd`/include@" \
+sed -e "s@^libdir.*@libdir=.libs/@" \
+    -e "s@^includedir.*@includedir=include/@" \
     src/libzyre.pc > bindings/python_cffi/libzyre.pc
 cd bindings/python_cffi
+# This avoids problem with "weird" character quoting between shell and python3
+ln -sfr ../../include/ .
+ln -sfr ../../src/.libs/ .
 export PKG_CONFIG_PATH=`pwd`
 python2 setup.py build
 %endif
@@ -163,10 +166,13 @@ python2 setup.py build
 %if %{with python3_cffi}
 # Problem: we need pkg-config points to built and not yet installed copy of zyre
 # Solution: chicken-egg problem - let's make "fake" pkg-config file
-sed -e "s@^libdir.*@libdir=`pwd`/src/.libs@" \
-    -e "s@^includedir.*@includedir=`pwd`/include@" \
+sed -e "s@^libdir.*@libdir=.libs/@" \
+    -e "s@^includedir.*@includedir=include/@" \
     src/libzyre.pc > bindings/python_cffi/libzyre.pc
 cd bindings/python_cffi
+# This avoids problem with "weird" character quoting between shell and python3
+ln -sfr ../../include/ .
+ln -sfr ../../src/.libs/ .
 export PKG_CONFIG_PATH=`pwd`
 python3 setup.py build
 %endif
