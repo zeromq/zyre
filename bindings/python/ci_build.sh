@@ -55,6 +55,10 @@ make VERBOSE=1 install
 # Copy dependency python bindings
 cp -r czmq/bindings/python/czmq bindings/python/
 
+# LD_LIBRARY_PATH/DYLD_LIBRARY_PATH do not work anymore on OSX, change directory instead
+BASE_PWD=${PWD}
+cd ${BUILD_PREFIX}/lib
+
 # Setup environment & run tests
-LD_LIBRARY_PATH=$PWD/tmp/lib python bindings/python/test.py
-LD_LIBRARY_PATH=$PWD/tmp/lib python3 bindings/python/test.py
+LD_LIBRARY_PATH=$BUILD_PREFIX/lib python ${BASE_PWD}/bindings/python/test.py
+LD_LIBRARY_PATH=$BUILD_PREFIX/lib python3 ${BASE_PWD}/bindings/python/test.py
