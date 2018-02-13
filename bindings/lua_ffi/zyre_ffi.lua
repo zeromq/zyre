@@ -106,6 +106,11 @@ void
 int
     zyre_set_endpoint (zyre_t *self, const char *format, ...);
 
+// Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+// if you're advertising an endpoint behind a NAT.
+void
+    zyre_set_advertised_endpoint (zyre_t *self, const char *value);
+
 // Apply a azcert to a Zyre node.
 void
     zyre_set_zcert (zyre_t *self, zcert_t *zcert);

@@ -83,6 +83,10 @@ public slots:
     //  the bind was successful, else -1.
     int setEndpoint (const QString &format);
 
+    //  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+    //  if you're advertising an endpoint behind a NAT.
+    void setAdvertisedEndpoint (const QString &value);
+
     //  Apply a azcert to a Zyre node.
     void setZcert (zcert_t *zcert);
 

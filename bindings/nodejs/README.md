@@ -149,6 +149,13 @@ that is meaningful to remote as well as local nodes). Returns 0 if
 the bind was successful, else -1.
 
 ```
+nothing my_zyre.setAdvertisedEndpoint (String)
+```
+
+Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+if you're advertising an endpoint behind a NAT.
+
+```
 nothing my_zyre.setZcert (Zcert)
 ```
 

@@ -56,6 +56,12 @@ typedef struct _zyre_node_t zyre_node_t;
 #ifndef ZYRE_BUILD_DRAFT_API
 
 //  *** Draft method, defined for internal use only ***
+//  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+//  if you're advertising an endpoint behind a NAT.
+ZYRE_PRIVATE void
+    zyre_set_advertised_endpoint (zyre_t *self, const char *value);
+
+//  *** Draft method, defined for internal use only ***
 //  Apply a azcert to a Zyre node.
 ZYRE_PRIVATE void
     zyre_set_zcert (zyre_t *self, zcert_t *zcert);

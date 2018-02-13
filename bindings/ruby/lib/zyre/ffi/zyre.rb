@@ -242,6 +242,18 @@ module Zyre
         result
       end
 
+      # Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+      # if you're advertising an endpoint behind a NAT.
+      #
+      # @param value [String, #to_s, nil]
+      # @return [void]
+      def set_advertised_endpoint(value)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_set_advertised_endpoint(self_p, value)
+        result
+      end
+
       # Apply a azcert to a Zyre node.
       #
       # @param zcert [::FFI::Pointer, #to_ptr]

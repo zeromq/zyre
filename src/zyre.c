@@ -277,6 +277,16 @@ zyre_set_endpoint (zyre_t *self, const char *format, ...)
     return zsock_wait (self->actor) == 0? 0: -1;
 }
 
+#ifdef ZYRE_BUILD_DRAFT_API
+void
+zyre_set_advertised_endpoint (zyre_t *self, const char *endpoint)
+{
+    assert (self);
+    assert (endpoint);
+    zstr_sendx (self->actor, "SET ADVERTISED ENDPOINT", endpoint, NULL);
+}
+#endif
+
 void zyre_set_zcert(zyre_t *self, zcert_t *zcert)
 {
     assert (zcert);
@@ -943,6 +953,10 @@ zyre_test (bool verbose)
 
         zyre_set_header(node5, "X-PUBLICKEY", "%s", zcert_public_txt(node5_cert));
         zyre_set_header(node6, "X-PUBLICKEY", "%s", zcert_public_txt(node6_cert));
+
+        // TODO- set_advertised_endpoint tests
+//        zyre_set_endpoint(node5, "tcp://127.0.0.1:9001");
+//        zyre_set_advertised_endpoint(node5, "tcp://localhost:9001");
 
         const char *gossip_cert = zcert_public_txt (node5_cert);
 

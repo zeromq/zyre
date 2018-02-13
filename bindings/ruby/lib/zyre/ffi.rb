@@ -66,6 +66,7 @@ module Zyre
       attach_function :zyre_set_interval, [:pointer, :size_t], :void, **opts
       attach_function :zyre_set_interface, [:pointer, :string], :void, **opts
       attach_function :zyre_set_endpoint, [:pointer, :string, :varargs], :int, **opts
+      attach_function :zyre_set_advertised_endpoint, [:pointer, :string], :void, **opts
       attach_function :zyre_set_zcert, [:pointer, :pointer], :void, **opts
       attach_function :zyre_set_zap_domain, [:pointer, :string], :void, **opts
       attach_function :zyre_gossip_bind, [:pointer, :string, :varargs], :void, **opts

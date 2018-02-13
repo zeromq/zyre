@@ -2345,12 +2345,6 @@ void
 void
     zproc_set_verbose (zproc_t *self, bool verbose);
 
-// Returns true if the process received a SIGINT or SIGTERM signal.
-// It is good practice to use this method to exit any infinite loop
-// processing messages.
-bool
-    zproc_interrupted (void);
-
 // Self test of this class.
 void
     zproc_test (bool verbose);
@@ -3507,6 +3501,18 @@ void
 void
     zsys_catch_interrupts (void);
 
+// Check if default interrupt handler of Ctrl-C or SIGTERM was called.
+// Does not work if ZSYS_SIGHANDLER is false and code does not call
+// set interrupted on signal.
+bool
+    zsys_is_interrupted (void);
+
+// Set interrupted flag. This is done by default signal handler, however
+// this can be handy for language bindings or cases without default
+// signal handler.
+void
+    zsys_set_interrupted (void);
+
 // Return 1 if file exists, else zero
 bool
     zsys_file_exists (const char *filename);
@@ -4082,6 +4088,11 @@ void
 // the bind was successful, else -1.
 int
     zyre_set_endpoint (zyre_t *self, const char *format, ...);
+
+// Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+// if you're advertising an endpoint behind a NAT.
+void
+    zyre_set_advertised_endpoint (zyre_t *self, const char *value);
 
 // Apply a azcert to a Zyre node.
 void

@@ -109,6 +109,14 @@ Java_org_zeromq_zyre_Zyre__1_1setEndpoint (JNIEnv *env, jclass c, jlong self, js
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1setAdvertisedEndpoint (JNIEnv *env, jclass c, jlong self, jstring value)
+{
+    char *value_ = (char *) (*env)->GetStringUTFChars (env, value, NULL);
+    zyre_set_advertised_endpoint ((zyre_t *) (intptr_t) self, value_);
+    (*env)->ReleaseStringUTFChars (env, value, value_);
+}
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setZcert (JNIEnv *env, jclass c, jlong self, jlong zcert)
 {
     zyre_set_zcert ((zyre_t *) (intptr_t) self, (zcert_t *) (intptr_t) zcert);
