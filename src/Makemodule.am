@@ -12,11 +12,6 @@ endif
 lib_LTLIBRARIES += src/libzyre.la
 pkgconfig_DATA = src/libzyre.pc
 
-include_HEADERS = \
-    include/zyre.h \
-    include/zyre_event.h \
-    include/zyre_library.h
-
 src_libzyre_la_SOURCES = \
     src/zyre.c \
     src/zyre_event.c \
