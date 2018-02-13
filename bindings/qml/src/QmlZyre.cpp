@@ -97,6 +97,13 @@ int QmlZyre::setEndpoint (const QString &format) {
 };
 
 ///
+//  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+//  if you're advertising an endpoint behind a NAT.
+void QmlZyre::setAdvertisedEndpoint (const QString &value) {
+    zyre_set_advertised_endpoint (self, value.toUtf8().data());
+};
+
+///
 //  Apply a azcert to a Zyre node.
 void QmlZyre::setZcert (zcert_t *zcert) {
     zyre_set_zcert (self, zcert);

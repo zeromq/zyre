@@ -141,6 +141,14 @@ public class Zyre implements AutoCloseable{
         return __setEndpoint (self, format);
     }
     /*
+    Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+    if you're advertising an endpoint behind a NAT.
+    */
+    native static void __setAdvertisedEndpoint (long self, String value);
+    public void setAdvertisedEndpoint (String value) {
+        __setAdvertisedEndpoint (self, value);
+    }
+    /*
     Apply a azcert to a Zyre node.
     */
     native static void __setZcert (long self, long zcert);

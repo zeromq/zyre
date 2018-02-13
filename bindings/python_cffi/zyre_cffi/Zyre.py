@@ -115,6 +115,13 @@ class Zyre(object):
         """
         return utils.lib.zyre_set_endpoint(self._p, format, )
 
+    def set_advertised_endpoint(self, value):
+        """
+        Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+        if you're advertising an endpoint behind a NAT.
+        """
+        utils.lib.zyre_set_advertised_endpoint(self._p, utils.to_bytes(value))
+
     def set_zcert(self, zcert):
         """
         Apply a azcert to a Zyre node.

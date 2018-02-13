@@ -217,6 +217,12 @@ ZYRE_EXPORT void
 
 #ifdef ZYRE_BUILD_DRAFT_API
 //  *** Draft method, for development use, may change without warning ***
+//  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+//  if you're advertising an endpoint behind a NAT.
+ZYRE_EXPORT void
+    zyre_set_advertised_endpoint (zyre_t *self, const char *value);
+
+//  *** Draft method, for development use, may change without warning ***
 //  Apply a azcert to a Zyre node.
 ZYRE_EXPORT void
     zyre_set_zcert (zyre_t *self, zcert_t *zcert);

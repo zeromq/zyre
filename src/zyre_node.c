@@ -38,6 +38,9 @@ struct _zyre_node_t {
     zsock_t *inbox;             //  Our inbox socket (ROUTER)
     char *name;                 //  Our public name
     char *endpoint;             //  Our public endpoint
+#ifdef ZYRE_BUILD_DRAFT_API
+    char *advertised_endpoint;  //  Our advertised public endpoint - NAT workaround?
+#endif
     int port;                   //  Our inbox port, if any
     byte status;                //  Our own change counter
     zhash_t *peers;             //  Hash of known peers, fast lookup
@@ -165,6 +168,7 @@ zyre_node_destroy (zyre_node_t **self_p)
         zstr_free (&self->secret_key);
         zstr_free (&self->public_key);
         zstr_free (&self->zap_domain);
+        zstr_free (&self->advertised_endpoint);
 #endif
         free (self->name);
         free (self);
@@ -245,15 +249,30 @@ zyre_node_start (zyre_node_t *self)
         assert (self->gossip);
 
 #ifdef ZYRE_BUILD_DRAFT_API
-        if (self->public_key) {
-            char *published_endpoint = zsys_sprintf("%s|%s", self->endpoint, self->public_key);
-            zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), published_endpoint, NULL);
+        char *published_endpoint = strdup(self->endpoint);
+
+        // if the advertised endpoint is set and different than our bound endpoint
+        if (self->advertised_endpoint) {
             zstr_free (&published_endpoint);
-        } else
-            zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->endpoint, NULL);
+            published_endpoint = zsys_sprintf("%s", self->advertised_endpoint);
+        }
+
+        // further arrange if we have a public key associated
+        if (self->public_key) {
+            // there has got to be a better way to do this. valgrind gets cranky
+            char *t1 = strdup(published_endpoint);
+            zstr_free (&published_endpoint);
+            published_endpoint = zsys_sprintf("%s|%s", t1, self->public_key);
+            zstr_free (&t1);
+        }
+
+        zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), published_endpoint, NULL);
+        zstr_free (&published_endpoint);
+
 #else
         zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), self->endpoint, NULL);
 #endif
+
         //  Start polling on zgossip
         zpoller_add (self->poller, self->gossip);
         //  Start polling on inbox
@@ -475,6 +494,12 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&value);
     }
     else
+#ifdef ZYRE_BUILD_DRAFT_API
+    if (streq (command, "SET ADVERTISED ENDPOINT")) {
+        self->advertised_endpoint = zmsg_popstr (request);
+    }
+    else
+#endif
     if (streq (command, "SET ENDPOINT")) {
         zyre_node_gossip_start (self);
         char *endpoint = zmsg_popstr (request);
@@ -802,8 +827,16 @@ zyre_node_require_peer (zyre_node_t *self, zuuid_t *uuid, const char *endpoint)
                     strrchr (endpoint_iface, ':'),
                     strlen (strrchr (endpoint_iface, ':')) + 1);
             zre_msg_set_endpoint (msg, endpoint_iface);
-        } else
+        }
+        else
+#ifdef ZYRE_BUILD_DRAFT_API
+        if (self->advertised_endpoint)
+            zre_msg_set_endpoint (msg, self->advertised_endpoint);
+        else
             zre_msg_set_endpoint (msg, self->endpoint);
+#else
+        zre_msg_set_endpoint (msg, self->endpoint);
+#endif
 
         zre_msg_set_groups (msg, &groups);
         zre_msg_set_status (msg, self->status);
@@ -1156,7 +1189,13 @@ zyre_node_recv_gossip (zyre_node_t *self)
 #endif
 
     //  Require peer, if it's not us
+#ifdef ZYRE_BUILD_DRAFT_API
+    // check to see if the endpoint and advertised endpoint are the same (NAT checking)
+    if ((strneq (endpoint, self->endpoint))
+        && (!self->advertised_endpoint || (strneq (endpoint, self->advertised_endpoint)))) {
+#else
     if (strneq (endpoint, self->endpoint)) {
+#endif
         zuuid_t *uuid = zuuid_new ();
         zuuid_set_str (uuid, uuidstr);
 #ifdef ZYRE_BUILD_DRAFT_API

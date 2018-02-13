@@ -92,6 +92,8 @@ lib.zyre_set_interface.restype = None
 lib.zyre_set_interface.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_endpoint.restype = c_int
 lib.zyre_set_endpoint.argtypes = [zyre_p, c_char_p]
+lib.zyre_set_advertised_endpoint.restype = None
+lib.zyre_set_advertised_endpoint.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_zcert.restype = None
 lib.zyre_set_zcert.argtypes = [zyre_p, czmq.zcert_p]
 lib.zyre_set_zap_domain.restype = None
@@ -282,6 +284,13 @@ that is meaningful to remote as well as local nodes). Returns 0 if
 the bind was successful, else -1.
         """
         return lib.zyre_set_endpoint(self._as_parameter_, format, *args)
+
+    def set_advertised_endpoint(self, value):
+        """
+        Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+if you're advertising an endpoint behind a NAT.
+        """
+        return lib.zyre_set_advertised_endpoint(self._as_parameter_, value)
 
     def set_zcert(self, zcert):
         """
