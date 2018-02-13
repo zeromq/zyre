@@ -17,7 +17,10 @@ AM_CPPFLAGS = \
 project_libs = ${libzmq_LIBS} ${czmq_LIBS}
 
 SUBDIRS = doc
+SUBDIRS += include
 DIST_SUBDIRS = doc
+DIST_SUBDIRS += include
+
 lib_LTLIBRARIES =
 bin_PROGRAMS =
 noinst_PROGRAMS =

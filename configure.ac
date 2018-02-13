@@ -643,6 +643,7 @@ AS_IF([test "x$enable_Werror" = "xyes" || test "x$enable_Werror" = "xauto"],
 # Specify output files
 AC_CONFIG_FILES([Makefile
                  doc/Makefile
+                 include/Makefile
                  src/libzyre.pc
                  ])
 
