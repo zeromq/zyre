@@ -21,6 +21,11 @@
 struct _zyre_group_t {
     char *name;                 //  Group name
     zhash_t *peers;             //  Peers in group
+#ifdef ZYRE_BUILD_DRAFT_API
+//  DRAFT-API: Election
+    zyre_peer_t *leader;        //  Peer that has been elected as leader for this group
+    zyre_election_t *election;  //  Election handler, is NULL if there's no active election
+#endif
 };
 
 
@@ -63,6 +68,10 @@ zyre_group_destroy (zyre_group_t **self_p)
     if (*self_p) {
         zyre_group_t *self = *self_p;
         zhash_destroy (&self->peers);
+#ifdef ZYRE_BUILD_DRAFT_API
+//  DRAFT-API: Election
+        zyre_election_destroy (&self->election);
+#endif
         free (self->name);
         free (self);
         *self_p = NULL;
@@ -130,6 +139,64 @@ zyre_group_peers (zyre_group_t *self)
 {
     return zhash_keys (self->peers);
 }
+
+
+#ifdef ZYRE_BUILD_DRAFT_API
+//  DRAFT-API: Election
+
+//  --------------------------------------------------------------------------
+//  Find or create an election for a group
+
+zyre_election_t *
+zyre_group_require_election (zyre_group_t *self)
+{
+    assert (self);
+    if (!self->election)
+        self->election = zyre_election_new ();
+
+    return self->election;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Return the election handler for this group.
+
+zyre_election_t *
+zyre_group_election (zyre_group_t *self) {
+    assert (self);
+    return self->election;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Sets the election handler for this group.
+
+void
+zyre_group_set_election (zyre_group_t *self, zyre_election_t *election) {
+    assert (self);
+    self->election = election;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Return the peer that has been elected leader of this group.
+
+zyre_peer_t *
+zyre_group_leader (zyre_group_t *self) {
+    assert (self);
+    return self->leader;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Sets the peer that has been elected leader of this group.
+
+void
+zyre_group_set_leader (zyre_group_t *self, zyre_peer_t *leader) {
+    assert (self);
+    self->leader = leader;
+}
+#endif
 
 
 //  --------------------------------------------------------------------------

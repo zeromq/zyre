@@ -18,6 +18,7 @@ src_libzyre_la_SOURCES = \
     src/zre_msg.c \
     src/zyre_peer.c \
     src/zyre_group.c \
+    src/zyre_election.c \
     src/zyre_node.c \
     src/platform.h
 

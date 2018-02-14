@@ -61,16 +61,18 @@ The following ABNF grammar defines the work with ZRE messages:
 
     ;  No description
 
-    ELECT           = signature %d8 version sequence challenger_id
+    ELECT           = signature %d8 version sequence group challenger_id
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
+    group           = string                ; Name of group
     challenger_id   = string                ; ID of the challenger
 
     ;  No description
 
-    LEADER          = signature %d9 version sequence leader_id
+    LEADER          = signature %d9 version sequence group leader_id
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
+    group           = string                ; Name of group
     leader_id       = string                ; ID of the elected leader
 
     ; A list of string values

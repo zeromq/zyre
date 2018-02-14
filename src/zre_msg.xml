@@ -64,10 +64,12 @@
     </message>
 
     <message name = "ELECT" id = "8">
+        <field name = "group" type = "string">Name of group</field>
         <field name = "challenger id" type = "string">ID of the challenger</field>
     </message>
 
     <message name = "LEADER" id = "9">
+        <field name = "group" type = "string">Name of group</field>
         <field name = "leader id" type = "string">ID of the elected leader</field>
     </message>
 </class>

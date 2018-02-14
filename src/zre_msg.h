@@ -71,11 +71,13 @@
     ELECT - This is the ZRE protocol, version 2 draft, as defined by rfc.zeromq.org/spec:36/ZRE.
         version             number 1    Version number (2)
         sequence            number 2    Cyclic sequence number
+        group               string      Name of group
         challenger_id       string      ID of the challenger
 
     LEADER - This is the ZRE protocol, version 2 draft, as defined by rfc.zeromq.org/spec:36/ZRE.
         version             number 1    Version number (2)
         sequence            number 2    Cyclic sequence number
+        group               string      Name of group
         leader_id           string      ID of the elected leader
 */
 
