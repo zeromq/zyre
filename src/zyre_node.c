@@ -1094,8 +1094,11 @@ zyre_node_recv_beacon (zyre_node_t *self)
     //  Get IP address and beacon of peer
     char *ipaddress = zstr_recv (self->beacon);
     zframe_t *frame = zframe_recv (self->beacon);
-    if (ipaddress == NULL)
+    if (ipaddress == NULL) {
+        if(frame != NULL)
+            zframe_destroy (&frame);
         return;                 //  Interrupted
+    }
 
     //  Ignore anything that isn't a valid beacon
     beacon_t beacon;
@@ -1105,6 +1108,7 @@ zyre_node_recv_beacon (zyre_node_t *self)
     zframe_destroy (&frame);
 #ifdef ZYRE_BUILD_DRAFT_API
     if (beacon.version != self->beacon_version) {
+        zstr_free (&ipaddress);
         if (self->verbose)
             zsys_debug ("tossing beacon, version mis-match");
         return;
@@ -1112,6 +1116,7 @@ zyre_node_recv_beacon (zyre_node_t *self)
 
 //     beacon missing public key when we're in secure mode
     if (self->secret_key && (beacon.public_key[0] == 0)) {
+        zstr_free (&ipaddress);
         //         toss it to avoid down-grade attacks
         if (self->verbose)
             zsys_debug ("tossing beacon to avoid security downgrade, does not contain public key...");
@@ -1121,6 +1126,7 @@ zyre_node_recv_beacon (zyre_node_t *self)
 
 #else
     if (beacon.version != BEACON_VERSION) {
+        zstr_free (&ipaddress);
         if (self->verbose)
             zsys_debug ("tossing beacon");
 
