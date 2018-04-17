@@ -103,7 +103,7 @@ ZYRE_PRIVATE void
 
 //  Self test for private classes
 ZYRE_PRIVATE void
-    zyre_private_selftest (bool verbose);
+    zyre_private_selftest (bool verbose, const char *subtest);
 
 #endif // ZYRE_BUILD_DRAFT_API
 

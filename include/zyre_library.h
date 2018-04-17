@@ -79,9 +79,18 @@ typedef struct _zyre_event_t zyre_event_t;
 #include "zyre_event.h"
 
 #ifdef ZYRE_BUILD_DRAFT_API
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //  Self test for private classes
 ZYRE_EXPORT void
-    zyre_private_selftest (bool verbose);
+    zyre_private_selftest (bool verbose, const char *subtest);
+
+#ifdef __cplusplus
+}
+#endif
 #endif // ZYRE_BUILD_DRAFT_API
 
 #endif
