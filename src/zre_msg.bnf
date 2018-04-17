@@ -4,7 +4,7 @@ The following ABNF grammar defines the work with ZRE messages:
     greeting        = hello
     traffic         = whisper / shout / join / leave / ping / ping-ok
 
-    ;  Greet a peer so it can connect back to us                             
+    ;  Greet a peer so it can connect back to us
 
     HELLO           = signature %d1 version sequence endpoint groups status name headers
     signature       = %xAA %xA1             ; two octets
@@ -16,14 +16,14 @@ The following ABNF grammar defines the work with ZRE messages:
     name            = string                ; Sender public name
     headers         = hash                  ; Sender header properties
 
-    ;  Send a multi-part message to a peer                                   
+    ;  Send a multi-part message to a peer
 
     WHISPER         = signature %d2 version sequence content
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
     content         = msg                   ; Wrapped message content
 
-    ;  Send a multi-part message to a group                                  
+    ;  Send a multi-part message to a group
 
     SHOUT           = signature %d3 version sequence group content
     version         = number-1              ; Version number (2)
@@ -31,7 +31,7 @@ The following ABNF grammar defines the work with ZRE messages:
     group           = string                ; Group to send to
     content         = msg                   ; Wrapped message content
 
-    ;  Join a group                                                          
+    ;  Join a group
 
     JOIN            = signature %d4 version sequence group status
     version         = number-1              ; Version number (2)
@@ -39,7 +39,7 @@ The following ABNF grammar defines the work with ZRE messages:
     group           = string                ; Name of group
     status          = number-1              ; Sender groups status value
 
-    ;  Leave a group                                                         
+    ;  Leave a group
 
     LEAVE           = signature %d5 version sequence group status
     version         = number-1              ; Version number (2)
@@ -47,13 +47,13 @@ The following ABNF grammar defines the work with ZRE messages:
     group           = string                ; Name of group
     status          = number-1              ; Sender groups status value
 
-    ;  Ping a peer that has gone silent                                      
+    ;  Ping a peer that has gone silent
 
     PING            = signature %d6 version sequence
     version         = number-1              ; Version number (2)
     sequence        = number-2              ; Cyclic sequence number
 
-    ;  Reply to a peer's ping                                                
+    ;  Reply to a peer's ping
 
     PING-OK         = signature %d7 version sequence
     version         = number-1              ; Version number (2)

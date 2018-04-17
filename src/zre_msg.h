@@ -12,14 +12,14 @@
      * The XML model used for this code generation: zre_msg.xml, or
      * The code generation script that built this file: zproto_codec_c
     ************************************************************************
-    Copyright (c) the Contributors as noted in the AUTHORS file.           
-                                                                           
+    Copyright (c) the Contributors as noted in the AUTHORS file.
+
     This file is part of Zyre, an open-source framework for proximity-based
-    peer-to-peer applications -- See http://zyre.org.                      
-                                                                           
-    This Source Code Form is subject to the terms of the Mozilla Public    
-    License, v. 2.0. If a copy of the MPL was not distributed with this    
-    file, You can obtain one at http://mozilla.org/MPL/2.0/.               
+    peer-to-peer applications -- See http://zyre.org.
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
     =========================================================================
 */
 
@@ -95,6 +95,10 @@ typedef struct _zre_msg_t zre_msg_t;
 ZYRE_EXPORT zre_msg_t *
     zre_msg_new (void);
 
+//  Create a new zre_msg from zpl/zconfig_t *
+ZYRE_EXPORT zre_msg_t *
+    zre_msg_new_zpl (zconfig_t *config);
+
 //  Destroy a zre_msg instance
 ZYRE_EXPORT void
     zre_msg_destroy (zre_msg_t **self_p);
@@ -117,6 +121,10 @@ ZYRE_EXPORT int
 //  Print contents of message to stdout
 ZYRE_EXPORT void
     zre_msg_print (zre_msg_t *self);
+
+//  Export class as zconfig_t*. Caller is responsibe for destroying the instance
+ZYRE_EXPORT zconfig_t *
+    zre_msg_zpl (zre_msg_t *self, zconfig_t* parent);
 
 //  Get/set the message routing id
 ZYRE_EXPORT zframe_t *

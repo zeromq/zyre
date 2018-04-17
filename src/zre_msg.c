@@ -12,14 +12,14 @@
      * The XML model used for this code generation: zre_msg.xml, or
      * The code generation script that built this file: zproto_codec_c
     ************************************************************************
-    Copyright (c) the Contributors as noted in the AUTHORS file.           
-                                                                           
+    Copyright (c) the Contributors as noted in the AUTHORS file.
+
     This file is part of Zyre, an open-source framework for proximity-based
-    peer-to-peer applications -- See http://zyre.org.                      
-                                                                           
-    This Source Code Form is subject to the terms of the Mozilla Public    
-    License, v. 2.0. If a copy of the MPL was not distributed with this    
-    file, You can obtain one at http://mozilla.org/MPL/2.0/.               
+    peer-to-peer applications -- See http://zyre.org.
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
     =========================================================================
 */
 
@@ -204,6 +204,49 @@ struct _zre_msg_t {
     self->needle += string_size; \
 }
 
+//  --------------------------------------------------------------------------
+//  bytes cstring conversion macros
+
+// create new array of unsigned char from properly encoded string
+// len of resulting array is strlen (str) / 2
+// caller is responsibe for freeing up the memory
+#define BYTES_FROM_STR(dst, _str) { \
+    char *str = (char*) (_str); \
+    if (!str || (strlen (str) % 2) != 0) \
+        return NULL; \
+\
+    size_t strlen_2 = strlen (str) / 2; \
+    byte *mem = (byte*) zmalloc (strlen_2); \
+    size_t i; \
+\
+    for (i = 0; i != strlen_2; i++) \
+    { \
+        char buff[3] = {0x0, 0x0, 0x0}; \
+        strncpy (buff, str, 2); \
+        unsigned int uint; \
+        sscanf (buff, "%x", &uint); \
+        assert (uint <= 0xff); \
+        mem [i] = (byte) (0xff & uint); \
+        str += 2; \
+    } \
+    dst = mem; \
+}
+
+// convert len bytes to hex string
+// caller is responsibe for freeing up the memory
+#define STR_FROM_BYTES(dst, _mem, _len) { \
+    byte *mem = (byte*) (_mem); \
+    size_t len = (size_t) (_len); \
+    char* ret = (char*) zmalloc (2*len + 1); \
+    char* aux = ret; \
+    size_t i; \
+    for (i = 0; i != len; i++) \
+    { \
+        sprintf (aux, "%02x", mem [i]); \
+        aux+=2; \
+    } \
+    dst = ret; \
+}
 
 //  --------------------------------------------------------------------------
 //  Create a new zre_msg
@@ -212,6 +255,409 @@ zre_msg_t *
 zre_msg_new (void)
 {
     zre_msg_t *self = (zre_msg_t *) zmalloc (sizeof (zre_msg_t));
+    return self;
+}
+
+//  --------------------------------------------------------------------------
+//  Create a new zre_msg from zpl/zconfig_t *
+
+zre_msg_t *
+    zre_msg_new_zpl (zconfig_t *config)
+{
+    assert (config);
+    zre_msg_t *self = NULL;
+    char *message = zconfig_get (config, "message", NULL);
+    if (!message) {
+        zsys_error ("Can't find 'message' section");
+        return NULL;
+    }
+
+    if (streq ("ZRE_MSG_HELLO", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_HELLO);
+    }
+    else
+    if (streq ("ZRE_MSG_WHISPER", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_WHISPER);
+    }
+    else
+    if (streq ("ZRE_MSG_SHOUT", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_SHOUT);
+    }
+    else
+    if (streq ("ZRE_MSG_JOIN", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_JOIN);
+    }
+    else
+    if (streq ("ZRE_MSG_LEAVE", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_LEAVE);
+    }
+    else
+    if (streq ("ZRE_MSG_PING", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_PING);
+    }
+    else
+    if (streq ("ZRE_MSG_PING_OK", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_PING_OK);
+    }
+    else
+       {
+        zsys_error ("message=%s is not known", message);
+        return NULL;
+       }
+
+    char *s = zconfig_get (config, "routing_id", NULL);
+    if (s) {
+        byte *bvalue;
+        BYTES_FROM_STR (bvalue, s);
+        if (!bvalue) {
+            zre_msg_destroy (&self);
+            return NULL;
+        }
+        zframe_t *frame = zframe_new (bvalue, strlen (s) / 2);
+        free (bvalue);
+        self->routing_id = frame;
+    }
+
+    zconfig_t *content = NULL;
+    switch (self->id) {
+        case ZRE_MSG_HELLO:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            {
+            char *s = zconfig_get (content, "endpoint", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->endpoint, s, 256);
+            }
+            {
+            zconfig_t *zstrings = zconfig_locate (content, "groups");
+            if (zstrings) {
+                zlist_t *strings = zlist_new ();
+                zlist_autofree (strings);
+                zconfig_t *child;
+                for (child = zconfig_child (zstrings);
+                                child != NULL;
+                                child = zconfig_next (child))
+                {
+                    zlist_append (strings, zconfig_value (child));
+                }
+                self->groups = strings;
+            }
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "status", NULL);
+            if (!s) {
+                zsys_error ("content/status not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/status: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->status = uvalue;
+            }
+            {
+            char *s = zconfig_get (content, "name", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->name, s, 256);
+            }
+            {
+            zconfig_t *zhash = zconfig_locate (content, "headers");
+            if (zhash) {
+                zhash_t *hash = zhash_new ();
+                zhash_autofree (hash);
+                zconfig_t *child;
+                for (child = zconfig_child (zhash);
+                                child != NULL;
+                                child = zconfig_next (child))
+                {
+                    zhash_update (hash, zconfig_name (child), zconfig_value (child));
+                }
+                self->headers = hash;
+            }
+            }
+            break;
+        case ZRE_MSG_WHISPER:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            {
+            char *s = zconfig_get (content, "content", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            byte *bvalue;
+            BYTES_FROM_STR (bvalue, s);
+            if (!bvalue) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+#if CZMQ_VERSION_MAJOR == 4
+            zframe_t *frame = zframe_new (bvalue, strlen (s) / 2);
+            zmsg_t *msg = zmsg_decode (frame);
+            zframe_destroy (&frame);
+#else
+            zmsg_t *msg = zmsg_decode (bvalue, strlen (s) / 2);
+#endif
+            free (bvalue);
+            self->content = msg;
+            }
+            break;
+        case ZRE_MSG_SHOUT:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            {
+            char *s = zconfig_get (content, "group", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->group, s, 256);
+            }
+            {
+            char *s = zconfig_get (content, "content", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            byte *bvalue;
+            BYTES_FROM_STR (bvalue, s);
+            if (!bvalue) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+#if CZMQ_VERSION_MAJOR == 4
+            zframe_t *frame = zframe_new (bvalue, strlen (s) / 2);
+            zmsg_t *msg = zmsg_decode (frame);
+            zframe_destroy (&frame);
+#else
+            zmsg_t *msg = zmsg_decode (bvalue, strlen (s) / 2);
+#endif
+            free (bvalue);
+            self->content = msg;
+            }
+            break;
+        case ZRE_MSG_JOIN:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            {
+            char *s = zconfig_get (content, "group", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->group, s, 256);
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "status", NULL);
+            if (!s) {
+                zsys_error ("content/status not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/status: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->status = uvalue;
+            }
+            break;
+        case ZRE_MSG_LEAVE:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            {
+            char *s = zconfig_get (content, "group", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->group, s, 256);
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "status", NULL);
+            if (!s) {
+                zsys_error ("content/status not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/status: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->status = uvalue;
+            }
+            break;
+        case ZRE_MSG_PING:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            break;
+        case ZRE_MSG_PING_OK:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            break;
+    }
     return self;
 }
 
@@ -262,10 +708,14 @@ zre_msg_dup (zre_msg_t *other)
     }
     zre_msg_set_status (copy, zre_msg_status (other));
     zre_msg_set_name (copy, zre_msg_name (other));
-    zhash_t *dup_hash = zhash_dup (zre_msg_headers (other));
-    zre_msg_set_headers (copy, &dup_hash);
-    zmsg_t *dup_msg = zmsg_dup (zre_msg_content (other));
-    zre_msg_set_content (copy, &dup_msg);
+    {
+        zhash_t *dup_hash = zhash_dup (zre_msg_headers (other));
+        zre_msg_set_headers (copy, &dup_hash);
+    }
+    {
+        zmsg_t *dup_msg = zmsg_dup (zre_msg_content (other));
+        zre_msg_set_content (copy, &dup_msg);
+    }
     zre_msg_set_group (copy, zre_msg_group (other));
 
     return copy;
@@ -728,6 +1178,194 @@ zre_msg_print (zre_msg_t *self)
     }
 }
 
+//  --------------------------------------------------------------------------
+//  Export class as zconfig_t*. Caller is responsibe for destroying the instance
+
+zconfig_t *
+zre_msg_zpl (zre_msg_t *self, zconfig_t *parent)
+{
+    assert (self);
+
+    zconfig_t *root = zconfig_new ("zre_msg", parent);
+
+    switch (self->id) {
+        case ZRE_MSG_HELLO:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_HELLO");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            zconfig_putf (config, "endpoint", "%s", self->endpoint);
+            if (self->groups) {
+                zconfig_t *strings = zconfig_new ("groups", config);
+                size_t i = 0;
+                char *groups = (char *) zlist_first (self->groups);
+                while (groups) {
+                    char *key = zsys_sprintf ("%zu", i);
+                    zconfig_putf (strings, key, "%s", groups);
+                    zstr_free (&key);
+                    i++;
+                    groups = (char *) zlist_next (self->groups);
+                }
+            }
+            zconfig_putf (config, "status", "%ld", (long) self->status);
+            zconfig_putf (config, "name", "%s", self->name);
+            if (self->headers) {
+                zconfig_t *hash = zconfig_new ("headers", config);
+                char *item = (char *) zhash_first (self->headers);
+                while (item) {
+                    zconfig_putf (hash, zhash_cursor (self->headers), "%s", item);
+                    item = (char *) zhash_next (self->headers);
+                }
+            }
+            break;
+            }
+        case ZRE_MSG_WHISPER:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_WHISPER");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            {
+            char *hex = NULL;
+#if CZMQ_VERSION_MAJOR == 4
+            zframe_t *frame = zmsg_encode (self->content);
+            STR_FROM_BYTES (hex, zframe_data (frame), zframe_size (frame));
+            zconfig_putf (config, "content", "%s", hex);
+            zstr_free (&hex);
+            zframe_destroy (&frame);
+#else
+            byte *buffer;
+            size_t size = zmsg_encode (self->content, &buffer);
+            STR_FROM_BYTES (hex, buffer, size);
+            zconfig_putf (config, "content", "%s", hex);
+            zstr_free (&hex);
+            free (buffer); buffer= NULL;
+#endif
+            }
+            break;
+            }
+        case ZRE_MSG_SHOUT:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_SHOUT");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            zconfig_putf (config, "group", "%s", self->group);
+            {
+            char *hex = NULL;
+#if CZMQ_VERSION_MAJOR == 4
+            zframe_t *frame = zmsg_encode (self->content);
+            STR_FROM_BYTES (hex, zframe_data (frame), zframe_size (frame));
+            zconfig_putf (config, "content", "%s", hex);
+            zstr_free (&hex);
+            zframe_destroy (&frame);
+#else
+            byte *buffer;
+            size_t size = zmsg_encode (self->content, &buffer);
+            STR_FROM_BYTES (hex, buffer, size);
+            zconfig_putf (config, "content", "%s", hex);
+            zstr_free (&hex);
+            free (buffer); buffer= NULL;
+#endif
+            }
+            break;
+            }
+        case ZRE_MSG_JOIN:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_JOIN");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            zconfig_putf (config, "group", "%s", self->group);
+            zconfig_putf (config, "status", "%ld", (long) self->status);
+            break;
+            }
+        case ZRE_MSG_LEAVE:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_LEAVE");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            zconfig_putf (config, "group", "%s", self->group);
+            zconfig_putf (config, "status", "%ld", (long) self->status);
+            break;
+            }
+        case ZRE_MSG_PING:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_PING");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            break;
+            }
+        case ZRE_MSG_PING_OK:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_PING_OK");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            break;
+            }
+    }
+    return root;
+}
 
 //  --------------------------------------------------------------------------
 //  Get/set the message routing_id
@@ -1014,6 +1652,7 @@ zre_msg_test (bool verbose)
 
     //  @selftest
     //  Simple create/destroy test
+    zconfig_t *config;
     zre_msg_t *self = zre_msg_new ();
     assert (self);
     zre_msg_destroy (&self);
@@ -1046,13 +1685,25 @@ zre_msg_test (bool verbose)
     zhash_t *hello_headers = zhash_new ();
     zhash_insert (hello_headers, "Name", "Brutus");
     zre_msg_set_headers (self, &hello_headers);
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
     //  Send twice
     zre_msg_send (self, output);
     zre_msg_send (self, output);
 
-    for (instance = 0; instance < 2; instance++) {
-        zre_msg_recv (self, input);
-        assert (zre_msg_routing_id (self));
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
         assert (zre_msg_sequence (self) == 123);
         assert (streq (zre_msg_endpoint (self), "Life is short but Now lasts for ever"));
         zlist_t *groups = zre_msg_get_groups (self);
@@ -1065,12 +1716,17 @@ zre_msg_test (bool verbose)
         assert (zre_msg_status (self) == 123);
         assert (streq (zre_msg_name (self), "Life is short but Now lasts for ever"));
         zhash_t *headers = zre_msg_get_headers (self);
+        // Order of values is not guaranted
         assert (zhash_size (headers) == 1);
         assert (streq ((char *) zhash_first (headers), "Brutus"));
         assert (streq ((char *) zhash_cursor (headers), "Name"));
         zhash_destroy (&headers);
-        if (instance == 1)
+        if (instance == 2)
             zhash_destroy (&hello_headers);
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
     }
     zre_msg_set_id (self, ZRE_MSG_WHISPER);
 
@@ -1078,20 +1734,36 @@ zre_msg_test (bool verbose)
     zmsg_t *whisper_content = zmsg_new ();
     zre_msg_set_content (self, &whisper_content);
     zmsg_addstr (zre_msg_content (self), "Captcha Diem");
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
     //  Send twice
     zre_msg_send (self, output);
     zre_msg_send (self, output);
 
-    for (instance = 0; instance < 2; instance++) {
-        zre_msg_recv (self, input);
-        assert (zre_msg_routing_id (self));
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
         assert (zre_msg_sequence (self) == 123);
         assert (zmsg_size (zre_msg_content (self)) == 1);
         char *content = zmsg_popstr (zre_msg_content (self));
         assert (streq (content, "Captcha Diem"));
         zstr_free (&content);
-        if (instance == 1)
+        if (instance == 2)
             zmsg_destroy (&whisper_content);
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
     }
     zre_msg_set_id (self, ZRE_MSG_SHOUT);
 
@@ -1100,82 +1772,165 @@ zre_msg_test (bool verbose)
     zmsg_t *shout_content = zmsg_new ();
     zre_msg_set_content (self, &shout_content);
     zmsg_addstr (zre_msg_content (self), "Captcha Diem");
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
     //  Send twice
     zre_msg_send (self, output);
     zre_msg_send (self, output);
 
-    for (instance = 0; instance < 2; instance++) {
-        zre_msg_recv (self, input);
-        assert (zre_msg_routing_id (self));
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
         assert (zre_msg_sequence (self) == 123);
         assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
         assert (zmsg_size (zre_msg_content (self)) == 1);
         char *content = zmsg_popstr (zre_msg_content (self));
         assert (streq (content, "Captcha Diem"));
         zstr_free (&content);
-        if (instance == 1)
+        if (instance == 2)
             zmsg_destroy (&shout_content);
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
     }
     zre_msg_set_id (self, ZRE_MSG_JOIN);
 
     zre_msg_set_sequence (self, 123);
     zre_msg_set_group (self, "Life is short but Now lasts for ever");
     zre_msg_set_status (self, 123);
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
     //  Send twice
     zre_msg_send (self, output);
     zre_msg_send (self, output);
 
-    for (instance = 0; instance < 2; instance++) {
-        zre_msg_recv (self, input);
-        assert (zre_msg_routing_id (self));
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
         assert (zre_msg_sequence (self) == 123);
         assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
         assert (zre_msg_status (self) == 123);
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
     }
     zre_msg_set_id (self, ZRE_MSG_LEAVE);
 
     zre_msg_set_sequence (self, 123);
     zre_msg_set_group (self, "Life is short but Now lasts for ever");
     zre_msg_set_status (self, 123);
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
     //  Send twice
     zre_msg_send (self, output);
     zre_msg_send (self, output);
 
-    for (instance = 0; instance < 2; instance++) {
-        zre_msg_recv (self, input);
-        assert (zre_msg_routing_id (self));
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
         assert (zre_msg_sequence (self) == 123);
         assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
         assert (zre_msg_status (self) == 123);
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
     }
     zre_msg_set_id (self, ZRE_MSG_PING);
 
     zre_msg_set_sequence (self, 123);
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
     //  Send twice
     zre_msg_send (self, output);
     zre_msg_send (self, output);
 
-    for (instance = 0; instance < 2; instance++) {
-        zre_msg_recv (self, input);
-        assert (zre_msg_routing_id (self));
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
         assert (zre_msg_sequence (self) == 123);
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
     }
     zre_msg_set_id (self, ZRE_MSG_PING_OK);
 
     zre_msg_set_sequence (self, 123);
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
     //  Send twice
     zre_msg_send (self, output);
     zre_msg_send (self, output);
 
-    for (instance = 0; instance < 2; instance++) {
-        zre_msg_recv (self, input);
-        assert (zre_msg_routing_id (self));
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
         assert (zre_msg_sequence (self) == 123);
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
     }
 
     zre_msg_destroy (&self);
     zsock_destroy (&input);
     zsock_destroy (&output);
+#if defined (__WINDOWS__)
+    zsys_shutdown();
+#endif
     //  @end
 
     printf ("OK\n");
