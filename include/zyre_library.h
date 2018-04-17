@@ -54,11 +54,12 @@
 #   define ZYRE_EXPORT
 #   define ZYRE_PRIVATE
 #else
-#   define ZYRE_EXPORT
 #   if (defined __GNUC__ && __GNUC__ >= 4) || defined __INTEL_COMPILER
 #       define ZYRE_PRIVATE __attribute__ ((visibility ("hidden")))
+#       define ZYRE_EXPORT __attribute__ ((visibility ("default")))
 #   else
 #       define ZYRE_PRIVATE
+#       define ZYRE_EXPORT
 #   endif
 #endif
 
