@@ -21,32 +21,32 @@ extern "C" {
 #endif
 
 //  Constructor
-zyre_group_t *
+ZYRE_PRIVATE zyre_group_t *
     zyre_group_new (const char *name, zhash_t *container);
 
 //  Destructor
-void
+ZYRE_PRIVATE void
     zyre_group_destroy (zyre_group_t **self_p);
 
 //  Add peer to group
-void
+ZYRE_PRIVATE void
     zyre_group_join (zyre_group_t *self, zyre_peer_t *peer);
 
 //  Remove peer from group
-void
+ZYRE_PRIVATE void
     zyre_group_leave (zyre_group_t *self, zyre_peer_t *peer);
 
 //  Send message to all peers in group
-void
+ZYRE_PRIVATE void
     zyre_group_send (zyre_group_t *self, zre_msg_t **msg_p);
 
 //  Return zlist of peer ids currently in this group
 //  Caller owns return value and must destroy it when done.
-zlist_t *
+ZYRE_PRIVATE zlist_t *
    zyre_group_peers (zyre_group_t *self);
 
 //  Self test of this class
-ZYRE_EXPORT void
+ZYRE_PRIVATE void
     zyre_group_test (bool verbose);
 
 #ifdef __cplusplus

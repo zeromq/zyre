@@ -22,11 +22,11 @@ extern "C" {
 
 //  This is the actor that runs a single node; it uses one thread, creates
 //  a zyre_node object at start and destroys that when finishing.
-void
+ZYRE_PRIVATE void
     zyre_node_actor (zsock_t *pipe, void *args);
 
 //  Self test of this class
-ZYRE_EXPORT void
+ZYRE_PRIVATE void
     zyre_node_test (bool verbose);
 
 #ifdef __cplusplus
