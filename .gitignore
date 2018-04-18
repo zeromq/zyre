@@ -1,87 +1,133 @@
-INSTALL
+# This is a skeleton created by zproject.
+# You can add hand-written code here.
+save.xml
+# Object files
+*.o
+*.so
+*.ko
+*.pyc
+
+# Libraries
+*.lib
+*.a
+*.la
+*.pc
+*.dll.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so.*
+*.dylib
+*.lo
+
+# Executables
+src/zyre_selftest
+src/perf_local
+src/perf_remote
+src/zpinger
+src/ztester_beacon
+src/ztester_gossip
+src/zyre_selftest
+*.exe
+*.out
+*.app
+core
+
+ # Distcheck workspace and archives
+zyre-*/
+zyre-*.tar.gz
+zyre-*.zip
+
+# Man pages
+doc/*.1
+doc/*.3
+doc/*.7
+
+# autoconf files
+.deps
+.libs
+*.log
+*.trs
 Makefile
 Makefile.in
+!builds/openwrt/Makefile
 aclocal.m4
 autom4te.cache/
 config.log
 config.status
 config/
 configure
-examples/chat
-examples/chat/.deps
+configure.lineno
 libtool
-src/.deps/
-src/libfmq.pc
 src/platform.h
 src/platform.h.in
 src/platform.h.in~
 src/stamp-h1
-tools/.deps/
-doc/*.1
-doc/*.3
-.libs/
-.dirstamp
-*.o
-*.lo
-*.la
-*.lst
-*.so
-*.swp
-core
-.cache
-testit
-*.pc
-src/zpinger
-src/ztester
-src/ztester_beacon
-src/ztester_gossip
-src/perf_local
-src/perf_remote
-doit
-src/zyre_selftest
 src/test-suite.log
-src/zyre_selftest.log
-src/zyre_selftest.trs
+src/.dirstamp
 
+# CMake cache
 CMakeCache.txt
 CMakeFiles/
-Testing/
 CTestTestfile.cmake
 cmake_install.cmake
+compile_commands.json
+DartConfiguration.tcl
 install_manifest.txt
-src/libzyre.so
-include/platform.h
-src/platform.h.in
-*.log
+Testing/
 
-# config files for qtcreator
-zyre.config
-zyre.creator
-zyre.files
-zyre.includes
+# Repositories downloaded by CI integration scripts
+libzmq/
+czmq/
 
-# Windows build intermediate files
-*.suo
-*.sdf
-*.user
-*.opensdf
-bin/
-obj/
-builds/msvc/**/*Debug
-builds/msvc/**/*Release
+# Travis build area
+tmp/
 
-# eclipse setting
-.cproject
-.project
+# Valgrind files
+callgrind*
+vgcore*
 
-# android build results
-builds/android/prefix/
-
-# Python bindings
-*.pyc
-
-# vagrant
+# Vagrant files
 .vagrant
 
-# CLion
+# CLion / PyCharm
 .idea
+
+# GYP files
+project.Makefile
+*.target.mk
+out/
+
+# Android build results
+builds/android/prefix
+
+# Android - generated directories
+src/app/bin/
+src/app/gen/
+src/app/obj/
+src/app/local.properties
+
+# Android -dependencies
+src/app/jni/output
+
+# Python build directory
+build/
+
+# MSVC build directories
+obj/
+bin/
+*.tlog
+
+# Qt
+*pro.user
+moc_*
+build-*
+bindings/qt/selftest/selftest
+
+# Temporary files
+*.swp
+*.bak
+.test*
+
+# editor backups
+*~

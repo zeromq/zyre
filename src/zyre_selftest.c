@@ -22,20 +22,32 @@
 
 #include "zyre_classes.h"
 
+#include <stdio.h>
+#include <string.h>
+
 typedef struct {
-    const char *testname;
-    void (*test) (bool);
+    const char *testname;           // test name, can be called from command line this way
+    void (*test) (bool);            // function to run the test (or NULL for private tests)
+    bool stable;                    // true if class is declared as stable
+    bool pub;                       // true if class is declared as public
+    const char *subtest;            // name of private subtest to run
 } test_item_t;
 
 static test_item_t
 all_tests [] = {
 // Tests for stable public classes:
-    { "zyre", zyre_test },
-    { "zyre_event", zyre_event_test },
+    { "zyre", zyre_test, true, true, NULL },
+    { "zyre_event", zyre_event_test, true, true, NULL },
 #ifdef ZYRE_BUILD_DRAFT_API
-    { "private_classes", zyre_private_selftest },
+// Tests for stable/draft private classes:
+// Now built only with --enable-drafts, so even stable builds are hidden behind the flag
+    { "zre_msg", NULL, true, false, "zre_msg_test" },
+    { "zyre_peer", NULL, true, false, "zyre_peer_test" },
+    { "zyre_group", NULL, true, false, "zyre_group_test" },
+    { "zyre_node", NULL, true, false, "zyre_node_test" },
+    { "private_classes", NULL, false, false, "$ALL" }, // compat option for older projects
 #endif // ZYRE_BUILD_DRAFT_API
-    {0, 0}          //  Sentinel
+    {NULL, NULL, 0, 0, NULL}          //  Sentinel
 };
 
 //  -------------------------------------------------------------------------
@@ -47,8 +59,8 @@ test_item_t *
 test_available (const char *testname)
 {
     test_item_t *item;
-    for (item = all_tests; item->test; item++) {
-        if (streq (testname, item->testname))
+    for (item = all_tests; item->testname; item++) {
+        if (strcmp (testname, item->testname) == 0)
             return item;
     }
     return NULL;
@@ -63,10 +75,43 @@ test_runall (bool verbose)
 {
     test_item_t *item;
     printf ("Running zyre selftests...\n");
-    for (item = all_tests; item->test; item++)
-        item->test (verbose);
+    for (item = all_tests; item->testname; item++) {
+        if (strcmp (item->testname, "private_classes") == 0)
+            continue;
+        if (!item->subtest)
+            item->test (verbose);
+#ifdef ZYRE_BUILD_DRAFT_API // selftest is still in draft
+        else
+            zyre_private_selftest (verbose, item->subtest);
+#endif // ZYRE_BUILD_DRAFT_API
+    }
 
     printf ("Tests passed OK\n");
+}
+
+static void
+test_list (void)
+{
+    test_item_t *item;
+    puts ("Available tests:");
+    for (item = all_tests; item->testname; item++)
+        printf ("    %-40s - %s	%s\n",
+            item->testname,
+            item->stable ? "stable" : "draft",
+            item->pub ? "public" : "private"
+        );
+}
+
+static void
+test_number (void)
+{
+    int n = 0;
+    test_item_t *item;
+    for (item = all_tests; item->testname; item++) {
+        if (strcmp (item->testname, "private_classes") == 0)
+            n++;
+    }
+    printf ("%d\n", n);
 }
 
 int
@@ -76,8 +121,8 @@ main (int argc, char **argv)
     test_item_t *test = 0;
     int argn;
     for (argn = 1; argn < argc; argn++) {
-        if (streq (argv [argn], "--help")
-        ||  streq (argv [argn], "-h")) {
+        if (strcmp (argv [argn], "--help") == 0
+        ||  strcmp (argv [argn], "-h") == 0) {
             puts ("zyre_selftest.c [options] ...");
             puts ("  --verbose / -v         verbose test output");
             puts ("  --number / -n          report number of tests");
@@ -86,27 +131,24 @@ main (int argc, char **argv)
             puts ("  --continue / -c        continue on exception (on Windows)");
             return 0;
         }
-        if (streq (argv [argn], "--verbose")
-        ||  streq (argv [argn], "-v"))
+        if (strcmp (argv [argn], "--verbose") == 0
+        ||  strcmp (argv [argn], "-v") == 0)
             verbose = true;
         else
-        if (streq (argv [argn], "--number")
-        ||  streq (argv [argn], "-n")) {
-            puts ("6");
+        if (strcmp (argv [argn], "--number") == 0
+        ||  strcmp (argv [argn], "-n") == 0) {
+            test_number ();
             return 0;
         }
         else
-        if (streq (argv [argn], "--list")
-        ||  streq (argv [argn], "-l")) {
-            puts ("Available tests:");
-            puts ("    zyre\t\t- stable");
-            puts ("    zyre_event\t\t- stable");
-            puts ("    private_classes\t- draft");
+        if (strcmp (argv [argn], "--list") == 0
+        ||  strcmp (argv [argn], "-l") == 0) {
+            test_list ();
             return 0;
         }
         else
-        if (streq (argv [argn], "--test")
-        ||  streq (argv [argn], "-t")) {
+        if (strcmp (argv [argn], "--test") == 0
+        ||  strcmp (argv [argn], "-t") == 0) {
             argn++;
             if (argn >= argc) {
                 fprintf (stderr, "--test needs an argument\n");
@@ -119,8 +161,8 @@ main (int argc, char **argv)
             }
         }
         else
-        if (streq (argv [argn], "--continue")
-        ||  streq (argv [argn], "-c")) {
+        if (strcmp (argv [argn], "--continue") == 0
+        ||  strcmp (argv [argn], "-c") == 0) {
 #ifdef _MSC_VER
             //  When receiving an abort signal, only print to stderr (no dialog)
             _set_abort_behavior (0, _WRITE_ABORT_MSG);
@@ -139,7 +181,12 @@ main (int argc, char **argv)
 
     if (test) {
         printf ("Running zyre test '%s'...\n", test->testname);
-        test->test (verbose);
+        if (!test->subtest)
+            test->test (verbose);
+#ifdef ZYRE_BUILD_DRAFT_API // selftest is still in draft
+        else
+            zyre_private_selftest (verbose, test->subtest);
+#endif // ZYRE_BUILD_DRAFT_API
     }
     else
         test_runall (verbose);

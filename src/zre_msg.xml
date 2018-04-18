@@ -4,7 +4,7 @@
     title = "work with ZRE messages"
     script = "zproto_codec_c"
     project_header = "../include/zyre.h"
-    export_macro = "ZYRE_EXPORT"
+    export_macro = "ZYRE_PRIVATE"
     >
     This is the ZRE protocol, version 2 draft, as defined by rfc.zeromq.org/spec:36/ZRE.
 

@@ -28,13 +28,17 @@
 //
 
 void
-zyre_private_selftest (bool verbose)
+zyre_private_selftest (bool verbose, const char *subtest)
 {
 // Tests for stable private classes:
-    zre_msg_test (verbose);
-    zyre_peer_test (verbose);
-    zyre_group_test (verbose);
-    zyre_node_test (verbose);
+    if (streq (subtest, "$ALL") || streq (subtest, "zre_msg_test"))
+        zre_msg_test (verbose);
+    if (streq (subtest, "$ALL") || streq (subtest, "zyre_peer_test"))
+        zyre_peer_test (verbose);
+    if (streq (subtest, "$ALL") || streq (subtest, "zyre_group_test"))
+        zyre_group_test (verbose);
+    if (streq (subtest, "$ALL") || streq (subtest, "zyre_node_test"))
+        zyre_node_test (verbose);
 }
 /*
 ################################################################################

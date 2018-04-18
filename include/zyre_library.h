@@ -54,11 +54,12 @@
 #   define ZYRE_EXPORT
 #   define ZYRE_PRIVATE
 #else
-#   define ZYRE_EXPORT
 #   if (defined __GNUC__ && __GNUC__ >= 4) || defined __INTEL_COMPILER
 #       define ZYRE_PRIVATE __attribute__ ((visibility ("hidden")))
+#       define ZYRE_EXPORT __attribute__ ((visibility ("default")))
 #   else
 #       define ZYRE_PRIVATE
+#       define ZYRE_EXPORT
 #   endif
 #endif
 
@@ -79,9 +80,18 @@ typedef struct _zyre_event_t zyre_event_t;
 #include "zyre_event.h"
 
 #ifdef ZYRE_BUILD_DRAFT_API
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //  Self test for private classes
 ZYRE_EXPORT void
-    zyre_private_selftest (bool verbose);
+    zyre_private_selftest (bool verbose, const char *subtest);
+
+#ifdef __cplusplus
+}
+#endif
 #endif // ZYRE_BUILD_DRAFT_API
 
 #endif
