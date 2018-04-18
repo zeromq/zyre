@@ -183,7 +183,7 @@ Test by running `zpinger` from two or more PCs:
 
 Include `zyre.h` in your application and link with libzyre. Here is a typical gcc link command:
 
-    gcc -lzyre -lczmq -lzmq myapp.c -o myapp
+    gcc myapp.c -lzyre -lczmq -lzmq -o myapp
 
 ### API Summary
 
