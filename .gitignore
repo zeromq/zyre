@@ -21,6 +21,7 @@ save.xml
 *.lo
 
 # Executables
+examples/chat/chat
 src/zyre_selftest
 src/perf_local
 src/perf_remote
@@ -117,6 +118,11 @@ build/
 obj/
 bin/
 *.tlog
+
+# Java binding
+bindings/jni/.classpath
+bindings/jni/.project
+bindings/jni/.settings/
 
 # Qt
 *pro.user
