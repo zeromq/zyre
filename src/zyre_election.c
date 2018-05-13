@@ -318,13 +318,73 @@ zyre_election_test (bool verbose)
     zclock_sleep (500);
 
     //  Join topology
-    zyre_join (node1, "GLOBAL");
-    zyre_join (node2, "GLOBAL");
+    zyre_join (node1, "GROUP_1");
+    zyre_set_contest_in_group (node1, "GROUP_1");
+    zyre_join (node2, "GROUP_1");
+    zyre_set_contest_in_group (node2, "GROUP_1");
 
-    zyre_join (node1, "GLOBAL1");
-    zyre_join (node2, "GLOBAL1");
+    zyre_join (node1, "GROUP_2");
+    zyre_join (node2, "GROUP_2");
+    zyre_set_contest_in_group (node2, "GROUP_2");
 
+    zyre_join (node1, "GROUP_3");
+    zyre_join (node2, "GROUP_3");
+
+    //  Give peers time to perform elections
     zclock_sleep (1500);
+
+    //  Check election results
+    int num_of_global_leaders = 0;
+    int num_of_global1_leaders = 0;
+    int num_of_leader_messages = 0;
+
+    zyre_event_t *event;
+    do {
+        //  Recv from node1
+        event = zyre_event_new (node1);
+        if (streq (zyre_event_type (event), "LEADER")) {
+            if (streq (zyre_event_group (event), "GROUP_1")) {
+                num_of_leader_messages++;
+                if (streq (zyre_uuid (node1), zyre_event_peer_uuid (event)))
+                    num_of_global_leaders++;
+            }
+            else
+            if (streq (zyre_event_group (event), "GROUP_2")) {
+                num_of_leader_messages++;
+                if (streq (zyre_uuid (node1), zyre_event_peer_uuid (event)))
+                    num_of_global1_leaders++;
+            }
+            else
+            if (streq (zyre_event_group (event), "GROUP_3"))
+                assert (false);
+        }
+        zyre_event_destroy (&event);
+
+        //  Recv from node2
+        event = zyre_event_new (node2);
+        if (streq (zyre_event_type (event), "LEADER")) {
+            if (streq (zyre_event_group (event), "GROUP_1")) {
+                num_of_leader_messages++;
+                if (streq (zyre_uuid (node2), zyre_event_peer_uuid (event)))
+                    num_of_global_leaders++;
+            }
+            else
+            if (streq (zyre_event_group (event), "GROUP_2")) {
+                num_of_leader_messages++;
+                if (streq (zyre_uuid (node2), zyre_event_peer_uuid (event)))
+                    num_of_global1_leaders++;
+            }
+            else
+            if (streq (zyre_event_group (event), "GROUP_3"))
+                assert (false);
+        }
+        zyre_event_destroy (&event);
+    } while (num_of_leader_messages < 4);
+
+    assert (num_of_global_leaders == 1);
+    assert (num_of_global1_leaders == 1);
+
+    //  @TODO: Test leaving leader
 
     zyre_stop (node1);
     zyre_stop (node2);

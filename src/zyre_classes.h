@@ -61,6 +61,15 @@ typedef struct _zyre_node_t zyre_node_t;
 #ifndef ZYRE_BUILD_DRAFT_API
 
 //  *** Draft method, defined for internal use only ***
+//  This options enables a peer to actively contest for leadership in the
+//  given group. If this option is not set the peer will still participate in
+//  elections but never gets elected. This ensures that a consent for a leader
+//  is reached within a group even though not every peer is contesting for
+//  leadership.
+ZYRE_PRIVATE void
+    zyre_set_contest_in_group (zyre_t *self, const char *group);
+
+//  *** Draft method, defined for internal use only ***
 //  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
 //  if you're advertising an endpoint behind a NAT.
 ZYRE_PRIVATE void

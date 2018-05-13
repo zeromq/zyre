@@ -23,6 +23,7 @@ struct _zyre_group_t {
     zhash_t *peers;             //  Peers in group
 #ifdef ZYRE_BUILD_DRAFT_API
 //  DRAFT-API: Election
+    bool contest;               //  Wheather the peer actively contest for leadership of this group
     zyre_peer_t *leader;        //  Peer that has been elected as leader for this group
     zyre_election_t *election;  //  Election handler, is NULL if there's no active election
 #endif
@@ -48,6 +49,10 @@ zyre_group_new (const char *name, zhash_t *container)
     zyre_group_t *self = (zyre_group_t *) zmalloc (sizeof (zyre_group_t));
     self->name = strdup (name);
     self->peers = zhash_new ();
+#ifdef ZYRE_BUILD_DRAFT_API
+//  DRAFT-API: Election
+    self->contest = false;
+#endif
 
     //  Insert into container if requested
     if (container) {
@@ -157,6 +162,24 @@ zyre_group_require_election (zyre_group_t *self)
     return self->election;
 }
 
+//  --------------------------------------------------------------------------
+//  Enables peer to actively contest for leadership in this group.
+
+void
+zyre_group_set_contest (zyre_group_t *self) {
+    assert (self);
+    self->contest = true;
+}
+
+//  --------------------------------------------------------------------------
+//  Returns true if this peer actively contests for leadership, otherwise
+//  false.
+
+bool
+zyre_group_contest (zyre_group_t *self) {
+    assert (self);
+    return self->contest;
+}
 
 //  --------------------------------------------------------------------------
 //  Return the election handler for this group.
@@ -232,6 +255,7 @@ zyre_group_test (bool verbose)
     assert (rc == 0);
     if (verbose)
         zre_msg_print (msg);
+
     zre_msg_destroy (&msg);
 
     zuuid_destroy (&me);
