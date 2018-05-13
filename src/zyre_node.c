@@ -935,6 +935,24 @@ zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *na
     return group;
 }
 
+static void
+zyre_node_leader_peer_group (zyre_node_t *self, const char *identity,
+                             const char *name, const char *group)
+{
+    //  Now tell the caller about the elected leader peer
+    zstr_sendm (self->outbox, "LEADER");
+    zstr_sendm (self->outbox, identity);
+    zstr_sendm (self->outbox, name);
+    zstr_send (self->outbox, group);
+
+    if (self->verbose)
+        zsys_info ("(%s) LEADER name=%s group=%s identity=%s",
+                   self->name,
+                   name,
+                   group,
+                   identity);
+}
+
 //  Here we handle messages coming from other peers
 
 static void
@@ -1215,16 +1233,31 @@ zyre_node_recv_peer (zyre_node_t *self)
 
         // Check if election is finished
         if (zyre_election_lrec_complete (election, group)) {
-            zyre_peer_t *leader_peer = (zyre_peer_t *) zhash_lookup (self->peers, zyre_election_leader (election));
-            zyre_group_set_leader (group, leader_peer);
+            if (streq (zyre_election_leader (election), zuuid_str (self->uuid))) {
+                //  This node is leader
+                zyre_node_leader_peer_group (self,
+                                             zuuid_str (self->uuid),
+                                             self->name,
+                                             zre_msg_group (msg));
+            }
+            else {
+                //  Peer is leader
+                zyre_peer_t *leader_peer = (zyre_peer_t *) zhash_lookup (self->peers, zyre_election_leader (election));
+                zyre_group_set_leader (group, leader_peer);
+                assert (leader_peer);
+                zyre_node_leader_peer_group (self,
+                                             zyre_peer_identity (leader_peer),
+                                             zyre_peer_name (leader_peer),
+                                             zre_msg_group (msg));
+            }
 
             if (self->verbose)
                 zsys_info ("(%s) [%s] Election finished %s, %s!\n",
                            self->name, zre_msg_group (msg), zuuid_str (self->uuid),
                            streq (zyre_election_leader (election), zuuid_str (self->uuid))? "LEADER": "FOLLOWER");
 
-            zyre_group_set_election (group, NULL);
             zyre_election_destroy (&election);
+            zyre_group_set_election (group, NULL);
         }
     }
 #endif
