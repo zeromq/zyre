@@ -37,6 +37,8 @@ zyre_private_selftest (bool verbose, const char *subtest)
         zyre_peer_test (verbose);
     if (streq (subtest, "$ALL") || streq (subtest, "zyre_group_test"))
         zyre_group_test (verbose);
+    if (streq (subtest, "$ALL") || streq (subtest, "zyre_election_test"))
+        zyre_election_test (verbose);
     if (streq (subtest, "$ALL") || streq (subtest, "zyre_node_test"))
         zyre_node_test (verbose);
 }
