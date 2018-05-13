@@ -82,6 +82,10 @@ zyre_event_new (zyre_t *node)
         self->msg = msg;
         msg = NULL;
     }
+    else
+    if (streq (self->type, "LEADER")) {
+        self->group = zmsg_popstr (msg);
+    }
     zmsg_destroy (&msg);
     return self;
 }
@@ -138,11 +142,11 @@ zyre_event_print (zyre_event_t *self)
     }
     else
     if (streq (self->type, "JOIN")) {
-        zsys_info (" - group=%s", zyre_event_group(self));
+        zsys_info (" - group=%s", zyre_event_group (self));
     }
     else
     if (streq (self->type, "LEAVE")) {
-        zsys_info (" - group=%s", zyre_event_group(self));
+        zsys_info (" - group=%s", zyre_event_group (self));
     }
     else
     if (streq (self->type, "SHOUT")) {
@@ -153,6 +157,10 @@ zyre_event_print (zyre_event_t *self)
     if (streq (self->type, "WHISPER")) {
         zsys_info (" - message:");
         zmsg_print (self->msg);
+    }
+    else
+    if (streq (self->type, "LEADER")) {
+        zsys_info (" - group=%s", zyre_event_group (self));
     }
 }
 
