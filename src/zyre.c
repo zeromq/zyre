@@ -74,6 +74,8 @@ struct _zyre_t {
 zyre_t *
 zyre_new (const char *name)
 {
+    assert(name);
+
     zyre_t *self = (zyre_t *) zmalloc (sizeof (zyre_t));
     assert (self);
 
@@ -153,6 +155,7 @@ void
 zyre_set_name (zyre_t *self, const char *name)
 {
     assert (self);
+    assert (name);
     zstr_sendx (self->actor, "SET NAME", name, NULL);
 }
 
@@ -165,6 +168,9 @@ void
 zyre_set_header (zyre_t *self, const char *name, const char *format, ...)
 {
     assert (self);
+    assert (name);
+    assert (format);
+
     va_list argptr;
     va_start (argptr, format);
     char *string = zsys_vprintf (format, argptr);
@@ -248,6 +254,9 @@ zyre_set_interval (zyre_t *self, size_t interval)
 void
 zyre_set_interface (zyre_t *self, const char *value)
 {
+    assert (self);
+    assert (value);
+
     //  Implemented by zsys global for now
     zsys_set_interface (value);
 }
@@ -267,6 +276,8 @@ int
 zyre_set_endpoint (zyre_t *self, const char *format, ...)
 {
     assert (self);
+    assert (format);
+
     va_list argptr;
     va_start (argptr, format);
     char *string = zsys_vprintf (format, argptr);
@@ -283,12 +294,14 @@ zyre_set_advertised_endpoint (zyre_t *self, const char *endpoint)
 {
     assert (self);
     assert (endpoint);
+
     zstr_sendx (self->actor, "SET ADVERTISED ENDPOINT", endpoint, NULL);
 }
 #endif
 
 void zyre_set_zcert(zyre_t *self, zcert_t *zcert)
 {
+    assert (self);
     assert (zcert);
 
     // actor will assert check the keys
@@ -298,7 +311,9 @@ void zyre_set_zcert(zyre_t *self, zcert_t *zcert)
 
 void zyre_set_zap_domain(zyre_t *self, const char *domain)
 {
+    assert (self);
     assert (domain);
+
     zstr_sendx (self->actor, "ZAP DOMAIN", domain, NULL);
 }
 
@@ -308,6 +323,10 @@ int
 zyre_require_peer (zyre_t *self, const char *uuid, const char *endpoint, const char *public_key)
 {
     assert (self);
+    assert (uuid);
+    assert (endpoint);
+    assert (public_key);
+
     return zstr_sendx (self->actor, "REQUIRE PEER", uuid, endpoint, public_key, NULL);
 }
 
@@ -321,6 +340,8 @@ void
 zyre_gossip_bind (zyre_t *self, const char *format, ...)
 {
     assert (self);
+    assert (format);
+
     va_list argptr;
     va_start (argptr, format);
     char *string = zsys_vprintf (format, argptr);
@@ -340,6 +361,8 @@ void
 zyre_gossip_connect (zyre_t *self, const char *format, ...)
 {
     assert (self);
+    assert (format);
+
     va_list argptr;
     va_start (argptr, format);
     char *string = zsys_vprintf (format, argptr);
@@ -353,6 +376,9 @@ void
 zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...)
 {
     assert (self);
+    assert (public_key);
+    assert (format);
+
     va_list argptr;
     va_start (argptr, format);
     char *string = zsys_vprintf (format, argptr);
@@ -374,6 +400,7 @@ int
 zyre_start (zyre_t *self)
 {
     assert (self);
+
     zstr_sendx (self->actor, "START", NULL);
     return zsock_wait (self->actor) == 0? 0: -1;
 }
@@ -388,6 +415,7 @@ void
 zyre_stop (zyre_t *self)
 {
     assert (self);
+
     zstr_sendx (self->actor, "STOP", NULL);
     zsock_wait (self->actor);
 }
@@ -401,6 +429,8 @@ int
 zyre_join (zyre_t *self, const char *group)
 {
     assert (self);
+    assert (group);
+
     zstr_sendx (self->actor, "JOIN", group, NULL);
     return 0;
 }
@@ -413,6 +443,8 @@ int
 zyre_leave (zyre_t *self, const char *group)
 {
     assert (self);
+    assert (group);
+
     zstr_sendx (self->actor, "LEAVE", group, NULL);
     return 0;
 }
@@ -440,6 +472,8 @@ zyre_whisper (zyre_t *self, const char *peer, zmsg_t **msg_p)
 {
     assert (self);
     assert (peer);
+    assert (msg_p);
+
     zstr_sendm (self->actor, "WHISPER");
     zstr_sendm (self->actor, peer);
     zmsg_send (msg_p, self->actor);
@@ -456,6 +490,8 @@ zyre_shout (zyre_t *self, const char *group, zmsg_t **msg_p)
 {
     assert (self);
     assert (group);
+    assert (msg_p);
+
     zstr_sendm (self->actor, "SHOUT");
     zstr_sendm (self->actor, group);
     zmsg_send (msg_p, self->actor);
@@ -516,6 +552,8 @@ zyre_shouts (zyre_t *self, const char *group, const char *format, ...)
 zlist_t *
 zyre_peers (zyre_t *self)
 {
+    assert (self);
+
     zlist_t *peers;
     zstr_send (self->actor, "PEERS");
     zsock_recv (self->actor, "p", &peers);
@@ -530,6 +568,9 @@ zyre_peers (zyre_t *self)
 zlist_t *
 zyre_peers_by_group (zyre_t *self, const char *group)
 {
+    assert (self);
+    assert (group);
+
     zlist_t *peers;
     zstr_sendm (self->actor, "GROUP PEERS");
     zstr_send (self->actor, group);
@@ -546,6 +587,8 @@ char *
 zyre_peer_address (zyre_t *self, const char *peer)
 {
     assert (self);
+    assert (peer);
+
     char *address;
     zstr_sendm (self->actor, "PEER ENDPOINT");
     zstr_send (self->actor, peer);
@@ -563,6 +606,7 @@ zyre_peer_header_value (zyre_t *self, const char *peer, const char *name)
     assert (self);
     assert (peer);
     assert (name);
+
     zstr_sendm (self->actor, "PEER HEADER");
     zstr_sendm (self->actor, peer);
     zstr_send (self->actor, name);
@@ -576,6 +620,8 @@ zyre_peer_header_value (zyre_t *self, const char *peer, const char *name)
 zlist_t *
 zyre_own_groups (zyre_t *self)
 {
+    assert (self);
+
     zlist_t *groups;
     zstr_send (self->actor, "OWN GROUPS");
     zsock_recv (self->actor, "p", &groups);
@@ -590,6 +636,8 @@ zyre_own_groups (zyre_t *self)
 zlist_t *
 zyre_peer_groups (zyre_t *self)
 {
+    assert (self);
+
     zlist_t *groups;
     zstr_send (self->actor, "PEER GROUPS");
     zsock_recv (self->actor, "p", &groups);
@@ -604,6 +652,7 @@ zsock_t *
 zyre_socket (zyre_t *self)
 {
     assert (self);
+
     return self->inbox;
 }
 
@@ -614,6 +663,8 @@ zyre_socket (zyre_t *self)
 void
 zyre_print (zyre_t *self)
 {
+    assert (self);
+
     zstr_send (self->actor, "DUMP");
 }
 
