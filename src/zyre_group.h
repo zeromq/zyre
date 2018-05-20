@@ -45,6 +45,36 @@ ZYRE_PRIVATE void
 ZYRE_PRIVATE zlist_t *
    zyre_group_peers (zyre_group_t *self);
 
+#ifdef ZYRE_BUILD_DRAFT_API
+//  DRAFT-API: Election
+//  Find or create an election for a group
+zyre_election_t *
+    zyre_group_require_election (zyre_group_t *self);
+
+//  Enables peer to actively contest for leadership in this group.
+void
+    zyre_group_set_contest (zyre_group_t *self);
+
+bool
+    zyre_group_contest (zyre_group_t *self);
+
+//  Return the election handler for this group.
+zyre_election_t *
+    zyre_group_election (zyre_group_t *self);
+
+//  Sets the election handler for this group.
+void
+    zyre_group_set_election (zyre_group_t *self, zyre_election_t *election);
+
+//  Return the peer that has been elected leader of this group.
+zyre_peer_t *
+    zyre_group_leader (zyre_group_t *self);
+
+//  Sets the peer that has been elected leader of this group.
+void
+    zyre_group_set_leader (zyre_group_t *self, zyre_peer_t *leader);
+#endif
+
 //  Self test of this class
 ZYRE_PRIVATE void
     zyre_group_test (bool verbose);

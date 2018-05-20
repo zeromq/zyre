@@ -22,6 +22,9 @@
     <ClCompile Include="..\..\..\..\src\zyre_group.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zyre_election.c">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\zyre_node.c">
       <Filter>src</Filter>
     </ClCompile>

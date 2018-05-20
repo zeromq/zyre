@@ -149,6 +149,16 @@ that is meaningful to remote as well as local nodes). Returns 0 if
 the bind was successful, else -1.
 
 ```
+nothing my_zyre.setContestInGroup (String)
+```
+
+This options enables a peer to actively contest for leadership in the
+given group. If this option is not set the peer will still participate in
+elections but never gets elected. This ensures that a consent for a leader
+is reached within a group even though not every peer is contesting for
+leadership.
+
+```
 nothing my_zyre.setAdvertisedEndpoint (String)
 ```
 

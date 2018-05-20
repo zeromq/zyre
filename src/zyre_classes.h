@@ -40,6 +40,10 @@ typedef struct _zyre_peer_t zyre_peer_t;
 typedef struct _zyre_group_t zyre_group_t;
 #define ZYRE_GROUP_T_DEFINED
 #endif
+#ifndef ZYRE_ELECTION_T_DEFINED
+typedef struct _zyre_election_t zyre_election_t;
+#define ZYRE_ELECTION_T_DEFINED
+#endif
 #ifndef ZYRE_NODE_T_DEFINED
 typedef struct _zyre_node_t zyre_node_t;
 #define ZYRE_NODE_T_DEFINED
@@ -50,10 +54,20 @@ typedef struct _zyre_node_t zyre_node_t;
 #include "zre_msg.h"
 #include "zyre_peer.h"
 #include "zyre_group.h"
+#include "zyre_election.h"
 #include "zyre_node.h"
 
 //  *** To avoid double-definitions, only define if building without draft ***
 #ifndef ZYRE_BUILD_DRAFT_API
+
+//  *** Draft method, defined for internal use only ***
+//  This options enables a peer to actively contest for leadership in the
+//  given group. If this option is not set the peer will still participate in
+//  elections but never gets elected. This ensures that a consent for a leader
+//  is reached within a group even though not every peer is contesting for
+//  leadership.
+ZYRE_PRIVATE void
+    zyre_set_contest_in_group (zyre_t *self, const char *group);
 
 //  *** Draft method, defined for internal use only ***
 //  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
@@ -95,6 +109,11 @@ ZYRE_PRIVATE void
 //  Self test of this class.
 ZYRE_PRIVATE void
     zyre_group_test (bool verbose);
+
+//  *** Draft method, defined for internal use only ***
+//  Self test of this class.
+ZYRE_PRIVATE void
+    zyre_election_test (bool verbose);
 
 //  *** Draft method, defined for internal use only ***
 //  Self test of this class.

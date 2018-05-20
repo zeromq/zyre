@@ -83,6 +83,13 @@ public slots:
     //  the bind was successful, else -1.
     int setEndpoint (const QString &format);
 
+    //  This options enables a peer to actively contest for leadership in the
+    //  given group. If this option is not set the peer will still participate in
+    //  elections but never gets elected. This ensures that a consent for a leader
+    //  is reached within a group even though not every peer is contesting for
+    //  leadership.
+    void setContestInGroup (const QString &group);
+
     //  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
     //  if you're advertising an endpoint behind a NAT.
     void setAdvertisedEndpoint (const QString &value);

@@ -44,6 +44,7 @@ all_tests [] = {
     { "zre_msg", NULL, true, false, "zre_msg_test" },
     { "zyre_peer", NULL, true, false, "zyre_peer_test" },
     { "zyre_group", NULL, true, false, "zyre_group_test" },
+    { "zyre_election", NULL, true, false, "zyre_election_test" },
     { "zyre_node", NULL, true, false, "zyre_node_test" },
     { "private_classes", NULL, false, false, "$ALL" }, // compat option for older projects
 #endif // ZYRE_BUILD_DRAFT_API

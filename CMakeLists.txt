@@ -157,6 +157,7 @@ set (zyre_headers
     src/zre_msg.h
     src/zyre_peer.h
     src/zyre_group.h
+    src/zyre_election.h
     src/zyre_node.h
 )
 
@@ -175,6 +176,7 @@ set (zyre_sources
     src/zre_msg.c
     src/zyre_peer.c
     src/zyre_group.c
+    src/zyre_election.c
     src/zyre_node.c
 )
 IF (ENABLE_DRAFTS)

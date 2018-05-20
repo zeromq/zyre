@@ -18,6 +18,7 @@
     <class name = "zre_msg" private = "1" />
     <class name = "zyre_peer" private = "1" />
     <class name = "zyre_group" private = "1" />
+    <class name = "zyre_election" private = "1" />
     <class name = "zyre_node" private = "1" />
     <model name = "zre_msg" />
 

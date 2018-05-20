@@ -109,6 +109,14 @@ Java_org_zeromq_zyre_Zyre__1_1setEndpoint (JNIEnv *env, jclass c, jlong self, js
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1setContestInGroup (JNIEnv *env, jclass c, jlong self, jstring group)
+{
+    char *group_ = (char *) (*env)->GetStringUTFChars (env, group, NULL);
+    zyre_set_contest_in_group ((zyre_t *) (intptr_t) self, group_);
+    (*env)->ReleaseStringUTFChars (env, group, group_);
+}
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setAdvertisedEndpoint (JNIEnv *env, jclass c, jlong self, jstring value)
 {
     char *value_ = (char *) (*env)->GetStringUTFChars (env, value, NULL);

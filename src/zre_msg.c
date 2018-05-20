@@ -53,6 +53,8 @@ struct _zre_msg_t {
     size_t headers_bytes;               //  Size of hash content
     zmsg_t *content;                    //  Wrapped message content
     char group [256];                   //  Group to send to
+    char challenger_id [256];           //  ID of the challenger
+    char leader_id [256];               //  ID of the elected leader
 };
 
 //  --------------------------------------------------------------------------
@@ -305,6 +307,16 @@ zre_msg_t *
     if (streq ("ZRE_MSG_PING_OK", message)) {
         self = zre_msg_new ();
         zre_msg_set_id (self, ZRE_MSG_PING_OK);
+    }
+    else
+    if (streq ("ZRE_MSG_ELECT", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_ELECT);
+    }
+    else
+    if (streq ("ZRE_MSG_LEADER", message)) {
+        self = zre_msg_new ();
+        zre_msg_set_id (self, ZRE_MSG_LEADER);
     }
     else
        {
@@ -657,6 +669,86 @@ zre_msg_t *
             self->sequence = uvalue;
             }
             break;
+        case ZRE_MSG_ELECT:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            {
+            char *s = zconfig_get (content, "group", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->group, s, 256);
+            }
+            {
+            char *s = zconfig_get (content, "challenger_id", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->challenger_id, s, 256);
+            }
+            break;
+        case ZRE_MSG_LEADER:
+            content = zconfig_locate (config, "content");
+            if (!content) {
+                zsys_error ("Can't find 'content' section");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            {
+            char *es = NULL;
+            char *s = zconfig_get (content, "sequence", NULL);
+            if (!s) {
+                zsys_error ("content/sequence not found");
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            uint64_t uvalue = (uint64_t) strtoll (s, &es, 10);
+            if (es != s+strlen (s)) {
+                zsys_error ("content/sequence: %s is not a number", s);
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            self->sequence = uvalue;
+            }
+            {
+            char *s = zconfig_get (content, "group", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->group, s, 256);
+            }
+            {
+            char *s = zconfig_get (content, "leader_id", NULL);
+            if (!s) {
+                zre_msg_destroy (&self);
+                return NULL;
+            }
+            strncpy (self->leader_id, s, 256);
+            }
+            break;
     }
     return self;
 }
@@ -717,6 +809,8 @@ zre_msg_dup (zre_msg_t *other)
         zre_msg_set_content (copy, &dup_msg);
     }
     zre_msg_set_group (copy, zre_msg_group (other));
+    zre_msg_set_challenger_id (copy, zre_msg_challenger_id (other));
+    zre_msg_set_leader_id (copy, zre_msg_leader_id (other));
 
     return copy;
 }
@@ -904,6 +998,36 @@ zre_msg_recv (zre_msg_t *self, zsock_t *input)
             GET_NUMBER2 (self->sequence);
             break;
 
+        case ZRE_MSG_ELECT:
+            {
+                byte version;
+                GET_NUMBER1 (version);
+                if (version != 2) {
+                    zsys_warning ("zre_msg: version is invalid");
+                    rc = -2;    //  Malformed
+                    goto malformed;
+                }
+            }
+            GET_NUMBER2 (self->sequence);
+            GET_STRING (self->group);
+            GET_STRING (self->challenger_id);
+            break;
+
+        case ZRE_MSG_LEADER:
+            {
+                byte version;
+                GET_NUMBER1 (version);
+                if (version != 2) {
+                    zsys_warning ("zre_msg: version is invalid");
+                    rc = -2;    //  Malformed
+                    goto malformed;
+                }
+            }
+            GET_NUMBER2 (self->sequence);
+            GET_STRING (self->group);
+            GET_STRING (self->leader_id);
+            break;
+
         default:
             zsys_warning ("zre_msg: bad message ID");
             rc = -2;            //  Malformed
@@ -990,6 +1114,18 @@ zre_msg_send (zre_msg_t *self, zsock_t *output)
             frame_size += 1;            //  version
             frame_size += 2;            //  sequence
             break;
+        case ZRE_MSG_ELECT:
+            frame_size += 1;            //  version
+            frame_size += 2;            //  sequence
+            frame_size += 1 + strlen (self->group);
+            frame_size += 1 + strlen (self->challenger_id);
+            break;
+        case ZRE_MSG_LEADER:
+            frame_size += 1;            //  version
+            frame_size += 2;            //  sequence
+            frame_size += 1 + strlen (self->group);
+            frame_size += 1 + strlen (self->leader_id);
+            break;
     }
     //  Now serialize message into the frame
     zmq_msg_t frame;
@@ -1067,6 +1203,20 @@ zre_msg_send (zre_msg_t *self, zsock_t *output)
         case ZRE_MSG_PING_OK:
             PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
+            break;
+
+        case ZRE_MSG_ELECT:
+            PUT_NUMBER1 (2);
+            PUT_NUMBER2 (self->sequence);
+            PUT_STRING (self->group);
+            PUT_STRING (self->challenger_id);
+            break;
+
+        case ZRE_MSG_LEADER:
+            PUT_NUMBER1 (2);
+            PUT_NUMBER2 (self->sequence);
+            PUT_STRING (self->group);
+            PUT_STRING (self->leader_id);
             break;
 
     }
@@ -1173,6 +1323,22 @@ zre_msg_print (zre_msg_t *self)
             zsys_debug ("ZRE_MSG_PING_OK:");
             zsys_debug ("    version=2");
             zsys_debug ("    sequence=%ld", (long) self->sequence);
+            break;
+
+        case ZRE_MSG_ELECT:
+            zsys_debug ("ZRE_MSG_ELECT:");
+            zsys_debug ("    version=2");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
+            zsys_debug ("    group='%s'", self->group);
+            zsys_debug ("    challenger_id='%s'", self->challenger_id);
+            break;
+
+        case ZRE_MSG_LEADER:
+            zsys_debug ("ZRE_MSG_LEADER:");
+            zsys_debug ("    version=2");
+            zsys_debug ("    sequence=%ld", (long) self->sequence);
+            zsys_debug ("    group='%s'", self->group);
+            zsys_debug ("    leader_id='%s'", self->leader_id);
             break;
 
     }
@@ -1363,6 +1529,42 @@ zre_msg_zpl (zre_msg_t *self, zconfig_t *parent)
             zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
             break;
             }
+        case ZRE_MSG_ELECT:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_ELECT");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            zconfig_putf (config, "group", "%s", self->group);
+            zconfig_putf (config, "challenger_id", "%s", self->challenger_id);
+            break;
+            }
+        case ZRE_MSG_LEADER:
+        {
+            zconfig_put (root, "message", "ZRE_MSG_LEADER");
+
+            if (self->routing_id) {
+                char *hex = NULL;
+                STR_FROM_BYTES (hex, zframe_data (self->routing_id), zframe_size (self->routing_id));
+                zconfig_putf (root, "routing_id", "%s", hex);
+                zstr_free (&hex);
+            }
+
+            zconfig_t *config = zconfig_new ("content", root);
+            zconfig_putf (config, "version", "%s", "2");
+            zconfig_putf (config, "sequence", "%ld", (long) self->sequence);
+            zconfig_putf (config, "group", "%s", self->group);
+            zconfig_putf (config, "leader_id", "%s", self->leader_id);
+            break;
+            }
     }
     return root;
 }
@@ -1430,6 +1632,12 @@ zre_msg_command (zre_msg_t *self)
             break;
         case ZRE_MSG_PING_OK:
             return ("PING_OK");
+            break;
+        case ZRE_MSG_ELECT:
+            return ("ELECT");
+            break;
+        case ZRE_MSG_LEADER:
+            return ("LEADER");
             break;
     }
     return "?";
@@ -1635,6 +1843,50 @@ zre_msg_set_group (zre_msg_t *self, const char *value)
         return;
     strncpy (self->group, value, 255);
     self->group [255] = 0;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Get/set the challenger_id field
+
+const char *
+zre_msg_challenger_id (zre_msg_t *self)
+{
+    assert (self);
+    return self->challenger_id;
+}
+
+void
+zre_msg_set_challenger_id (zre_msg_t *self, const char *value)
+{
+    assert (self);
+    assert (value);
+    if (value == self->challenger_id)
+        return;
+    strncpy (self->challenger_id, value, 255);
+    self->challenger_id [255] = 0;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Get/set the leader_id field
+
+const char *
+zre_msg_leader_id (zre_msg_t *self)
+{
+    assert (self);
+    return self->leader_id;
+}
+
+void
+zre_msg_set_leader_id (zre_msg_t *self, const char *value)
+{
+    assert (self);
+    assert (value);
+    if (value == self->leader_id)
+        return;
+    strncpy (self->leader_id, value, 255);
+    self->leader_id [255] = 0;
 }
 
 
@@ -1919,6 +2171,70 @@ zre_msg_test (bool verbose)
         if (instance < 2)
             assert (zre_msg_routing_id (self));
         assert (zre_msg_sequence (self) == 123);
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
+    }
+    zre_msg_set_id (self, ZRE_MSG_ELECT);
+
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_group (self, "Life is short but Now lasts for ever");
+    zre_msg_set_challenger_id (self, "Life is short but Now lasts for ever");
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
+    //  Send twice
+    zre_msg_send (self, output);
+    zre_msg_send (self, output);
+
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
+        assert (zre_msg_sequence (self) == 123);
+        assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+        assert (streq (zre_msg_challenger_id (self), "Life is short but Now lasts for ever"));
+        if (instance == 2) {
+            zre_msg_destroy (&self);
+            self = self_temp;
+        }
+    }
+    zre_msg_set_id (self, ZRE_MSG_LEADER);
+
+    zre_msg_set_sequence (self, 123);
+    zre_msg_set_group (self, "Life is short but Now lasts for ever");
+    zre_msg_set_leader_id (self, "Life is short but Now lasts for ever");
+    // convert to zpl
+    config = zre_msg_zpl (self, NULL);
+    if (verbose)
+        zconfig_print (config);
+    //  Send twice
+    zre_msg_send (self, output);
+    zre_msg_send (self, output);
+
+    for (instance = 0; instance < 3; instance++) {
+        zre_msg_t *self_temp = self;
+        if (instance < 2)
+            zre_msg_recv (self, input);
+        else {
+            self = zre_msg_new_zpl (config);
+            assert (self);
+            zconfig_destroy (&config);
+        }
+        if (instance < 2)
+            assert (zre_msg_routing_id (self));
+        assert (zre_msg_sequence (self) == 123);
+        assert (streq (zre_msg_group (self), "Life is short but Now lasts for ever"));
+        assert (streq (zre_msg_leader_id (self), "Life is short but Now lasts for ever"));
         if (instance == 2) {
             zre_msg_destroy (&self);
             self = self_temp;

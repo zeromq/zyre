@@ -45,6 +45,7 @@ EXTRA_DIST += \
     src/zre_msg.h \
     src/zyre_peer.h \
     src/zyre_group.h \
+    src/zyre_election.h \
     src/zyre_node.h \
     LICENSE \
     README.txt \
