@@ -100,7 +100,7 @@ ZYRE_PRIVATE void
     zyre_election_print (zyre_election_t *self);
 
 //  Self test of this class
-ZYRE_EXPORT void
+ZYRE_PRIVATE void
     zyre_election_test (bool verbose);
 
 //  @end
