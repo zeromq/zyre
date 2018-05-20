@@ -277,9 +277,6 @@ zyre_set_endpoint (zyre_t *self, const char *format, ...)
     return zsock_wait (self->actor) == 0? 0: -1;
 }
 
-#ifdef ZYRE_BUILD_DRAFT_API
-//  DRAFT-API: Election
-//  --------------------------------------------------------------------------
 //  This options enables a peer to actively contest for leadership in the
 //  given group. If this option is not set the peer will still participate in
 //  elections but never gets elected. This ensures that a consent for a leader
@@ -292,7 +289,6 @@ zyre_set_contest_in_group (zyre_t *self, const char *group) {
     assert (group);
     zstr_sendx (self->actor, "SET CONTEST" , group, NULL);
 }
-#endif
 
 #ifdef ZYRE_BUILD_DRAFT_API
 void
