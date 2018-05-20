@@ -92,6 +92,8 @@ lib.zyre_set_interface.restype = None
 lib.zyre_set_interface.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_endpoint.restype = c_int
 lib.zyre_set_endpoint.argtypes = [zyre_p, c_char_p]
+lib.zyre_set_contest_in_group.restype = None
+lib.zyre_set_contest_in_group.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_advertised_endpoint.restype = None
 lib.zyre_set_advertised_endpoint.argtypes = [zyre_p, c_char_p]
 lib.zyre_set_zcert.restype = None
@@ -284,6 +286,16 @@ that is meaningful to remote as well as local nodes). Returns 0 if
 the bind was successful, else -1.
         """
         return lib.zyre_set_endpoint(self._as_parameter_, format, *args)
+
+    def set_contest_in_group(self, group):
+        """
+        This options enables a peer to actively contest for leadership in the
+given group. If this option is not set the peer will still participate in
+elections but never gets elected. This ensures that a consent for a leader
+is reached within a group even though not every peer is contesting for
+leadership.
+        """
+        return lib.zyre_set_contest_in_group(self._as_parameter_, group)
 
     def set_advertised_endpoint(self, value):
         """

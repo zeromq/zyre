@@ -44,6 +44,7 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "setInterval", _set_interval);
     Nan::SetPrototypeMethod (tpl, "setInterface", _set_interface);
     Nan::SetPrototypeMethod (tpl, "setEndpoint", _set_endpoint);
+    Nan::SetPrototypeMethod (tpl, "setContestInGroup", _set_contest_in_group);
     Nan::SetPrototypeMethod (tpl, "setAdvertisedEndpoint", _set_advertised_endpoint);
     Nan::SetPrototypeMethod (tpl, "setZcert", _set_zcert);
     Nan::SetPrototypeMethod (tpl, "setZapDomain", _set_zap_domain);
@@ -268,6 +269,21 @@ NAN_METHOD (Zyre::_set_endpoint) {
          //} //bjornw end
     int result = zyre_set_endpoint (zyre->self, "%s", format);
     info.GetReturnValue ().Set (Nan::New<Number>(result));
+}
+
+NAN_METHOD (Zyre::_set_contest_in_group) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *group;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `group`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`group` must be a string");
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String group_utf8 (info [0].As<String>());
+    group = *group_utf8;
+         //} //bjornw end
+    zyre_set_contest_in_group (zyre->self, (const char *)group);
 }
 
 NAN_METHOD (Zyre::_set_advertised_endpoint) {

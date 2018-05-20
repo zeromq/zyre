@@ -63,6 +63,8 @@
         '../../include/zyre.h',
         '../../src/zyre_event.c',
         '../../include/zyre_event.h',
+        '../../src/zyre_election.c',
+        '../../src/zyre_election.h',
         '../../src/zyre_group.c',
         '../../src/zyre_group.h',
         '../../src/zyre_node.c',

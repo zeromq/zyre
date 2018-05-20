@@ -115,6 +115,16 @@ class Zyre(object):
         """
         return utils.lib.zyre_set_endpoint(self._p, format, )
 
+    def set_contest_in_group(self, group):
+        """
+        This options enables a peer to actively contest for leadership in the
+        given group. If this option is not set the peer will still participate in
+        elections but never gets elected. This ensures that a consent for a leader
+        is reached within a group even though not every peer is contesting for
+        leadership.
+        """
+        utils.lib.zyre_set_contest_in_group(self._p, utils.to_bytes(group))
+
     def set_advertised_endpoint(self, value):
         """
         Set an alternative endpoint value when using GOSSIP ONLY. This is useful

@@ -95,6 +95,9 @@
     <ClCompile Include="..\..\..\..\src\zyre_group.c">
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zyre_election.c">
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\zyre_node.c">
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>

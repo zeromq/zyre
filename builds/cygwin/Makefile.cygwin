@@ -10,7 +10,7 @@ INCDIR=-I$(PREFIX)/include -I.
 LIBDIR=-L$(PREFIX)/lib
 CFLAGS=-Wall -Os -g -DZYRE_EXPORTS $(INCDIR)
 
-OBJS = zyre.o zyre_event.o zre_msg.o zyre_peer.o zyre_group.o zyre_node.o zyre_private_selftest.o
+OBJS = zyre.o zyre_event.o zre_msg.o zyre_peer.o zyre_group.o zyre_election.o zyre_node.o zyre_private_selftest.o
 
 %.o: ../../src/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
