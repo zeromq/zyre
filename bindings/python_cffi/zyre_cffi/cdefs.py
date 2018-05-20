@@ -76,8 +76,8 @@ typedef void (zactor_fn) (
 //
 // An example - to send $KTHXBAI string
 //
-//     if (zstr_send (self->pipe, "$KTHXBAI") == 0)
-//         zsock_wait (self->pipe);
+//     if (zstr_send (self, "$KTHXBAI") == 0)
+//         zsock_wait (self);
 typedef void (zactor_destructor_fn) (
     zactor_t *self);
 
@@ -249,30 +249,25 @@ const char *
 const char *
     zargs_param_next (zargs_t *self);
 
-// Return current parameter name, or NULL if there are no named
-// parameters.
+// Return current parameter name, or NULL if there are no named parameters.
 const char *
     zargs_param_name (zargs_t *self);
 
-// Return value of named parameter, NULL if no given parameter has
-// been specified, or special value for wich zargs_param_empty ()
-// returns true.
+// Return value of named parameter or NULL is it has no value (or was not specified)
 const char *
-    zargs_param_lookup (zargs_t *self, const char *keys);
+    zargs_get (zargs_t *self, const char *name);
 
-// Return value of named parameter(s), NULL if no given parameter has
-// been specified, or special value for wich zargs_param_empty ()
-// returns true.
+// Return value of one of parameter(s) or NULL is it has no value (or was not specified)
 const char *
-    zargs_param_lookupx (zargs_t *self, const char *keys, ...);
+    zargs_getx (zargs_t *self, const char *name, ...);
 
-// Returns true if there are --help -h arguments
+// Returns true if named parameter was specified on command line
 bool
-    zargs_has_help (zargs_t *self);
+    zargs_has (zargs_t *self, const char *name);
 
-// Returns true if parameter did not have a value
+// Returns true if named parameter(s) was specified on command line
 bool
-    zargs_param_empty (const char *arg);
+    zargs_hasx (zargs_t *self, const char *name, ...);
 
 // Print an instance of zargs.
 void
@@ -670,6 +665,12 @@ zconfig_t *
 zconfig_t *
     zconfig_loadf (const char *format, ...);
 
+// Create copy of zconfig, caller MUST free the value
+// Create copy of config, as new zconfig object. Returns a fresh zconfig_t
+// object. If config is null, or memory was exhausted, returns null.
+zconfig_t *
+    zconfig_dup (zconfig_t *self);
+
 // Return name of config item
 char *
     zconfig_name (zconfig_t *self);
@@ -976,7 +977,7 @@ void
 zfile_t *
     zfile_new (const char *path, const char *name);
 
-// Create new temporary file for writing via tmpfile. File is automaticaly
+// Create new temporary file for writing via tmpfile. File is automatically
 // deleted on destroy
 zfile_t *
     zfile_tmp (void);
@@ -2266,19 +2267,24 @@ zproc_t *
 void
     zproc_destroy (zproc_t **self_p);
 
+// Return command line arguments (the first item is the executable) or
+// NULL if not set.
+zlist_t *
+    zproc_args (zproc_t *self);
+
 // Setup the command line arguments, the first item must be an (absolute) filename
 // to run.
 void
-    zproc_set_args (zproc_t *self, zlist_t **args);
+    zproc_set_args (zproc_t *self, zlist_t **arguments);
 
 // Setup the command line arguments, the first item must be an (absolute) filename
 // to run. Variadic function, must be NULL terminated.
 void
-    zproc_set_argsx (zproc_t *self, const char *args, ...);
+    zproc_set_argsx (zproc_t *self, const char *arguments, ...);
 
 // Setup the environment variables for the process.
 void
-    zproc_set_env (zproc_t *self, zhash_t **args);
+    zproc_set_env (zproc_t *self, zhash_t **arguments);
 
 // Connects process stdin with a readable ('>', connect) zeromq socket. If
 // socket argument is NULL, zproc creates own managed pair of inproc
@@ -2313,7 +2319,7 @@ void *
 void *
     zproc_stderr (zproc_t *self);
 
-// Starts the process.
+// Starts the process, return just before execve/CreateProcess.
 int
     zproc_run (zproc_t *self);
 
@@ -2329,11 +2335,17 @@ int
 bool
     zproc_running (zproc_t *self);
 
+// The timeout should be zero or greater, or -1 to wait indefinitely.
 // wait or poll process status, return return code
 int
-    zproc_wait (zproc_t *self, bool hang);
+    zproc_wait (zproc_t *self, int timeout);
 
-// return internal actor, usefull for the polling if process died
+// send SIGTERM signal to the subprocess, wait for grace period and
+// eventually send SIGKILL
+void
+    zproc_shutdown (zproc_t *self, int timeout);
+
+// return internal actor, useful for the polling if process died
 void *
     zproc_actor (zproc_t *self);
 
@@ -2344,113 +2356,6 @@ void
 // set verbose mode
 void
     zproc_set_verbose (zproc_t *self, bool verbose);
-
-// Returns CZMQ version as a single 6-digit integer encoding the major
-// version (x 10000), the minor version (x 100) and the patch.
-int
-    zproc_czmq_version (void);
-
-// Returns true if the process received a SIGINT or SIGTERM signal.
-// It is good practice to use this method to exit any infinite loop
-// processing messages.
-bool
-    zproc_interrupted (void);
-
-// Returns true if the underlying libzmq supports CURVE security.
-bool
-    zproc_has_curve (void);
-
-// Return current host name, for use in public tcp:// endpoints.
-// If the host name is not resolvable, returns NULL.
-char *
-    zproc_hostname (void);
-
-// Move the current process into the background. The precise effect
-// depends on the operating system. On POSIX boxes, moves to a specified
-// working directory (if specified), closes all file handles, reopens
-// stdin, stdout, and stderr to the null device, and sets the process to
-// ignore SIGHUP. On Windows, does nothing. Returns 0 if OK, -1 if there
-// was an error.
-void
-    zproc_daemonize (const char *workdir);
-
-// Drop the process ID into the lockfile, with exclusive lock, and
-// switch the process to the specified group and/or user. Any of the
-// arguments may be null, indicating a no-op. Returns 0 on success,
-// -1 on failure. Note if you combine this with zsys_daemonize, run
-// after, not before that method, or the lockfile will hold the wrong
-// process ID.
-void
-    zproc_run_as (const char *lockfile, const char *group, const char *user);
-
-// Configure the number of I/O threads that ZeroMQ will use. A good
-// rule of thumb is one thread per gigabit of traffic in or out. The
-// default is 1, sufficient for most applications. If the environment
-// variable ZSYS_IO_THREADS is defined, that provides the default.
-// Note that this method is valid only before any socket is created.
-void
-    zproc_set_io_threads (size_t io_threads);
-
-// Configure the number of sockets that ZeroMQ will allow. The default
-// is 1024. The actual limit depends on the system, and you can query it
-// by using zsys_socket_limit (). A value of zero means "maximum".
-// Note that this method is valid only before any socket is created.
-void
-    zproc_set_max_sockets (size_t max_sockets);
-
-// Set network interface name to use for broadcasts, particularly zbeacon.
-// This lets the interface be configured for test environments where required.
-// For example, on Mac OS X, zbeacon cannot bind to 255.255.255.255 which is
-// the default when there is no specified interface. If the environment
-// variable ZSYS_INTERFACE is set, use that as the default interface name.
-// Setting the interface to "*" means "use all available interfaces".
-void
-    zproc_set_biface (const char *value);
-
-// Return network interface to use for broadcasts, or "" if none was set.
-const char *
-    zproc_biface (void);
-
-// Set log identity, which is a string that prefixes all log messages sent
-// by this process. The log identity defaults to the environment variable
-// ZSYS_LOGIDENT, if that is set.
-void
-    zproc_set_log_ident (const char *value);
-
-// Sends log output to a PUB socket bound to the specified endpoint. To
-// collect such log output, create a SUB socket, subscribe to the traffic
-// you care about, and connect to the endpoint. Log traffic is sent as a
-// single string frame, in the same format as when sent to stdout. The
-// log system supports a single sender; multiple calls to this method will
-// bind the same sender to multiple endpoints. To disable the sender, call
-// this method with a null argument.
-void
-    zproc_set_log_sender (const char *endpoint);
-
-// Enable or disable logging to the system facility (syslog on POSIX boxes,
-// event log on Windows). By default this is disabled.
-void
-    zproc_set_log_system (bool logsystem);
-
-// Log error condition - highest priority
-void
-    zproc_log_error (const char *format, ...);
-
-// Log warning condition - high priority
-void
-    zproc_log_warning (const char *format, ...);
-
-// Log normal, but significant, condition - normal priority
-void
-    zproc_log_notice (const char *format, ...);
-
-// Log informational message - low priority
-void
-    zproc_log_info (const char *format, ...);
-
-// Log debug-level message - lowest priority
-void
-    zproc_log_debug (const char *format, ...);
 
 // Self test of this class.
 void
@@ -2650,7 +2555,7 @@ int
 //     U = zuuid_t * (creates a zuuid with the data)
 //     h = zhashx_t ** (creates zhashx)
 //     p = void ** (stores pointer)
-//     m = zmsg_t ** (creates a zmsg with the remaing frames)
+//     m = zmsg_t ** (creates a zmsg with the remaining frames)
 //     z = null, asserts empty frame (0 arguments)
 //     u = uint * (stores unsigned integer, deprecated)
 //
@@ -2773,6 +2678,36 @@ bool
 // return the supplied value. Takes a polymorphic socket reference.
 void *
     zsock_resolve (void *self);
+
+// Get socket option `gssapi_principal_nametype`.
+// Available from libzmq 4.3.0.
+int
+    zsock_gssapi_principal_nametype (void *self);
+
+// Set socket option `gssapi_principal_nametype`.
+// Available from libzmq 4.3.0.
+void
+    zsock_set_gssapi_principal_nametype (void *self, int gssapi_principal_nametype);
+
+// Get socket option `gssapi_service_principal_nametype`.
+// Available from libzmq 4.3.0.
+int
+    zsock_gssapi_service_principal_nametype (void *self);
+
+// Set socket option `gssapi_service_principal_nametype`.
+// Available from libzmq 4.3.0.
+void
+    zsock_set_gssapi_service_principal_nametype (void *self, int gssapi_service_principal_nametype);
+
+// Get socket option `bindtodevice`.
+// Available from libzmq 4.3.0.
+char *
+    zsock_bindtodevice (void *self);
+
+// Set socket option `bindtodevice`.
+// Available from libzmq 4.3.0.
+void
+    zsock_set_bindtodevice (void *self, const char *bindtodevice);
 
 // Get socket option `heartbeat_ivl`.
 // Available from libzmq 4.2.0.
@@ -3603,10 +3538,22 @@ void
 
 // Set default interrupt handler, so Ctrl-C or SIGTERM will set
 // zsys_interrupted. Idempotent; safe to call multiple times.
-// Can be supressed by ZSYS_SIGHANDLER=false
+// Can be suppressed by ZSYS_SIGHANDLER=false
 // *** This is for CZMQ internal use only and may change arbitrarily ***
 void
     zsys_catch_interrupts (void);
+
+// Check if default interrupt handler of Ctrl-C or SIGTERM was called.
+// Does not work if ZSYS_SIGHANDLER is false and code does not call
+// set interrupted on signal.
+bool
+    zsys_is_interrupted (void);
+
+// Set interrupted flag. This is done by default signal handler, however
+// this can be handy for language bindings or cases without default
+// signal handler.
+void
+    zsys_set_interrupted (void);
 
 // Return 1 if file exists, else zero
 bool
@@ -3771,6 +3718,16 @@ void
 // Return maximum message size.
 int
     zsys_max_msgsz (void);
+
+// Configure whether to use zero copy strategy in libzmq. If the environment
+// variable ZSYS_ZERO_COPY_RECV is defined, that provides the default.
+// Otherwise the default is 1.
+void
+    zsys_set_zero_copy_recv (int zero_copy);
+
+// Return ZMQ_ZERO_COPY_RECV option.
+int
+    zsys_zero_copy_recv (void);
 
 // Configure the threshold value of filesystem object age per st_mtime
 // that should elapse until we consider that object "stable" at the
