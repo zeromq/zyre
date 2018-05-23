@@ -349,7 +349,7 @@ zyre_node_send_peer (const char *key, void *item, void *argument)
 static int
 zyre_node_log_peer (zyre_peer_t *peer)
 {
-    zsys_info ("   - uuid=%s name=%s endpoint=%s connected=%s ready=%s sent_seq=%" PRIu16 " want_seq=%"PRIu16,
+    zsys_info ("   - uuid=%s name=%s endpoint=%s connected=%s ready=%s sent_seq=%" PRIu16 " want_seq=%" PRIu16,
         zyre_peer_identity(peer),
         zyre_peer_name(peer),
         zyre_peer_endpoint(peer),
