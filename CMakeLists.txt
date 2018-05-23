@@ -221,17 +221,20 @@ if (ZYRE_BUILD_SHARED)
   )
 
   target_link_libraries(zyre
-    ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
+    PUBLIC ${MORE_LIBRARIES}
   )
 
   install(TARGETS zyre
+    EXPORT zyre-targets
     LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
     ARCHIVE DESTINATION "lib${LIB_SUFFIX}" # .lib file
     RUNTIME DESTINATION bin                # .dll file
   )
 
   target_include_directories(zyre
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
   )
 endif()
 
@@ -251,17 +254,20 @@ if (ZYRE_BUILD_STATIC)
   )
 
   target_link_libraries(zyre-static
-    ${ZEROMQ_LIBRARIES} ${MORE_LIBRARIES}
+    PUBLIC ${MORE_LIBRARIES}
   )
 
   install(TARGETS zyre-static
+    EXPORT zyre-targets
     LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
     ARCHIVE DESTINATION "lib${LIB_SUFFIX}" # .lib file
     RUNTIME DESTINATION bin                # .dll file
   )
 
   target_include_directories(zyre-static
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
   )
   target_compile_definitions(zyre-static
     PUBLIC ZYRE_STATIC
@@ -294,6 +300,34 @@ install(
     FILES "${SOURCE_DIR}/src/libzyre.pc"
     DESTINATION "lib${LIB_SUFFIX}/pkgconfig"
 )
+
+########################################################################
+# installer
+########################################################################
+include(CMakePackageConfigHelpers)
+if (WIN32)
+  set(CMAKECONFIG_INSTALL_DIR "CMake" CACHE STRING "install path for zyreConfig.cmake")
+else()
+  # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
+  set(CMAKECONFIG_INSTALL_DIR "share/cmake/zyre" CACHE STRING "install path for zyreConfig.cmake")
+endif()
+
+if (NOT CMAKE_VERSION VERSION_LESS 3.0)
+  export(EXPORT zyre-targets
+         FILE "${CMAKE_CURRENT_BINARY_DIR}/zyreTargets.cmake")
+endif()
+configure_package_config_file(builds/cmake/Config.cmake.in
+                              "${CMAKE_CURRENT_BINARY_DIR}/zyreConfig.cmake"
+                              INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/zyreConfigVersion.cmake
+                                 VERSION ${ZYRE_VERSION}
+                                 COMPATIBILITY AnyNewerVersion)
+install(EXPORT zyre-targets
+        FILE zyreTargets.cmake
+        DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/zyreConfig.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/zyreConfigVersion.cmake
+              DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 
 ########################################################################
 # executables
