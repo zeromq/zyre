@@ -74,8 +74,6 @@ struct _zyre_t {
 zyre_t *
 zyre_new (const char *name)
 {
-    assert(name);
-
     zyre_t *self = (zyre_t *) zmalloc (sizeof (zyre_t));
     assert (self);
 
