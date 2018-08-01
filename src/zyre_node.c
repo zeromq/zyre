@@ -25,7 +25,8 @@ struct _zyre_node_t {
     zsock_t *outbox;            //  Outbox back to application
     bool terminated;            //  API shut us down
     bool verbose;               //  Log all traffic
-    int beacon_port;            //  Beacon port number
+    int beacon_port;            //  Beacon UDP port number
+    int ephemeral_port;         //  Beacon TCP ephemeral port number
 #ifdef ZYRE_BUILD_DRAFT_API
     byte beacon_version;        //  Beacon version
 #endif
@@ -57,6 +58,9 @@ struct _zyre_node_t {
     char *zap_domain;           // ZAP domain if any
 #endif
 };
+
+// By default, let the system choose a random port for us.
+#define ZRE_DEFAULT_EPHEMERAL_PORT 0
 
 //  Beacon frame has this format:
 //
@@ -121,6 +125,7 @@ zyre_node_new (zsock_t *pipe, void *args)
     self->outbox = (zsock_t *) args;
     self->poller = zpoller_new (self->pipe, NULL);
     self->beacon_port = ZRE_DISCOVERY_PORT;
+    self->ephemeral_port = ZRE_DEFAULT_EPHEMERAL_PORT;
     self->evasive_timeout = 5000;
     self->expired_timeout = 30000;
     self->interval = 0;         //  Use default
@@ -476,6 +481,12 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "SET PORT")) {
         char *value = zmsg_popstr (request);
         self->beacon_port = atoi (value);
+        zstr_free (&value);
+    }
+    else
+    if (streq (command, "SET EPHEMERAL PORT")) {
+        char *value = zmsg_popstr(request);
+        self->ephemeral_port = atol(value);
         zstr_free (&value);
     }
     else
@@ -1485,10 +1496,10 @@ zyre_node_actor (zsock_t *pipe, void *args)
             if (!streq(hostname, "")) {
                 const char *iface = zsys_interface ();
                 if (zsys_ipv6() && iface && !streq (iface, "") && !streq (iface, "*") && !streq (zsys_ipv6_address (), "")) {
-                    self->port = zsock_bind(self->inbox, "tcp://%s%%%s:*", zsys_ipv6_address (),
-                        iface);
+                    self->port = zsock_bind(self->inbox, "tcp://%s%%%s:%d", zsys_ipv6_address (),
+                        iface, self->ephemeral_port);
                 } else
-                    self->port = zsock_bind(self->inbox, "tcp://%s:*", hostname);
+                    self->port = zsock_bind(self->inbox, "tcp://%s:%d", hostname, self->ephemeral_port);
 
                 if (self->port > 0) {
                     assert(!self->endpoint);   //  If caller set this, we'd be using gossip

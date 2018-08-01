@@ -285,6 +285,12 @@ This is the class interface:
     ZYRE_EXPORT void
         zyre_set_port (zyre_t *self, int port_nbr);
     
+    // Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+    // This call overrides this, to bypass some firewall issues when ports are
+    // random. Has no effect after zyre_start().
+    ZYRE_EXPORT void
+        zyre_set_ephemeral_port (zyre_t *self, int port_nbr);
+    
     //  Set the peer evasiveness timeout, in milliseconds. Default is 5000.
     //  This can be tuned in order to deal with expected network conditions
     //  and the response time expected by the application. This is tied to 
