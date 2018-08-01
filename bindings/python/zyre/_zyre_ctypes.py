@@ -82,6 +82,8 @@ lib.zyre_set_verbose.restype = None
 lib.zyre_set_verbose.argtypes = [zyre_p]
 lib.zyre_set_port.restype = None
 lib.zyre_set_port.argtypes = [zyre_p, c_int]
+lib.zyre_set_ephemeral_port.restype = None
+lib.zyre_set_ephemeral_port.argtypes = [zyre_p, c_int]
 lib.zyre_set_evasive_timeout.restype = None
 lib.zyre_set_evasive_timeout.argtypes = [zyre_p, c_int]
 lib.zyre_set_expired_timeout.restype = None
@@ -240,6 +242,14 @@ that so you can create independent clusters on the same network, for
 e.g. development vs. production. Has no effect after zyre_start().
         """
         return lib.zyre_set_port(self._as_parameter_, port_nbr)
+
+    def set_ephemeral_port(self, port_nbr):
+        """
+        Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+This call overrides this, to bypass some firewall issues when ports are
+random. Has no effect after zyre_start().
+        """
+        return lib.zyre_set_ephemeral_port(self._as_parameter_, port_nbr)
 
     def set_evasive_timeout(self, interval):
         """

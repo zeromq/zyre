@@ -167,6 +167,20 @@ module Zyre
         result
       end
 
+      # Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+      # This call overrides this, to bypass some firewall issues when ports are
+      # random. Has no effect after zyre_start().
+      #
+      # @param port_nbr [Integer, #to_int, #to_i]
+      # @return [void]
+      def set_ephemeral_port(port_nbr)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        port_nbr = Integer(port_nbr)
+        result = ::Zyre::FFI.zyre_set_ephemeral_port(self_p, port_nbr)
+        result
+      end
+
       # Set the peer evasiveness timeout, in milliseconds. Default is 5000.
       # This can be tuned in order to deal with expected network conditions
       # and the response time expected by the application. This is tied to

@@ -51,6 +51,14 @@ void QmlZyre::setPort (int portNbr) {
 };
 
 ///
+//  Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+//  This call overrides this, to bypass some firewall issues when ports are
+//  random. Has no effect after zyre_start().
+void QmlZyre::setEphemeralPort (int portNbr) {
+    zyre_set_ephemeral_port (self, portNbr);
+};
+
+///
 //  Set the peer evasiveness timeout, in milliseconds. Default is 5000.
 //  This can be tuned in order to deal with expected network conditions
 //  and the response time expected by the application. This is tied to

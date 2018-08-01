@@ -74,6 +74,12 @@ Java_org_zeromq_zyre_Zyre__1_1setPort (JNIEnv *env, jclass c, jlong self, jint p
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1setEphemeralPort (JNIEnv *env, jclass c, jlong self, jint port_nbr)
+{
+    zyre_set_ephemeral_port ((zyre_t *) (intptr_t) self, (int) port_nbr);
+}
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setEvasiveTimeout (JNIEnv *env, jclass c, jlong self, jint interval)
 {
     zyre_set_evasive_timeout ((zyre_t *) (intptr_t) self, (int) interval);
