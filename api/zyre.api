@@ -60,6 +60,13 @@
         <argument name = "port nbr" type = "integer" />
     </method>
 
+    <method name = "set ephemeral port" state = "draft">
+        Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+        This call overrides this, to bypass some firewall issues when ports are
+        random. Has no effect after zyre_start().
+        <argument name = "port nbr" type = "integer" />
+    </method>
+
     <method name = "set evasive timeout">
         Set the peer evasiveness timeout, in milliseconds. Default is 5000.
         This can be tuned in order to deal with expected network conditions
