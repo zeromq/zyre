@@ -69,6 +69,14 @@ class Zyre(object):
         """
         utils.lib.zyre_set_port(self._p, port_nbr)
 
+    def set_ephemeral_port(self, port_nbr):
+        """
+        Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+        This call overrides this, to bypass some firewall issues when ports are
+        random. Has no effect after zyre_start().
+        """
+        utils.lib.zyre_set_ephemeral_port(self._p, port_nbr)
+
     def set_evasive_timeout(self, interval):
         """
         Set the peer evasiveness timeout, in milliseconds. Default is 5000.

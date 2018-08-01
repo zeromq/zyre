@@ -103,6 +103,14 @@ that so you can create independent clusters on the same network, for
 e.g. development vs. production. Has no effect after zyre_start().
 
 ```
+nothing my_zyre.setEphemeralPort (Number)
+```
+
+Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+This call overrides this, to bypass some firewall issues when ports are
+random. Has no effect after zyre_start().
+
+```
 nothing my_zyre.setEvasiveTimeout (Number)
 ```
 

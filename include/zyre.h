@@ -217,6 +217,13 @@ ZYRE_EXPORT void
 
 #ifdef ZYRE_BUILD_DRAFT_API
 //  *** Draft method, for development use, may change without warning ***
+//  Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+//  This call overrides this, to bypass some firewall issues when ports are
+//  random. Has no effect after zyre_start().
+ZYRE_EXPORT void
+    zyre_set_ephemeral_port (zyre_t *self, int port_nbr);
+
+//  *** Draft method, for development use, may change without warning ***
 //  This options enables a peer to actively contest for leadership in the
 //  given group. If this option is not set the peer will still participate in
 //  elections but never gets elected. This ensures that a consent for a leader

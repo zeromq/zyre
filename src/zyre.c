@@ -206,6 +206,20 @@ zyre_set_port (zyre_t *self, int port_nbr)
 
 
 //  --------------------------------------------------------------------------
+//  Set TCP ephemeral port for beacon; defaults to 0, and the port is random.
+//  This call overrides this to bypass some firewall issues with random ports.
+//  Has no effect after zyre_start().
+
+void
+zyre_set_ephemeral_port (zyre_t *self, int port)
+{
+    assert (self);
+    zstr_sendm (self->actor, "SET EPHEMERAL PORT");
+    zstr_sendf (self->actor, "%d", port);
+}
+
+
+//  --------------------------------------------------------------------------
 //  Set the node evasiveness timeout, in milliseconds. Default is 5000.
 //  This can be tuned in order to deal with expected network conditions
 //  and the response time expected by the application. This is tied to

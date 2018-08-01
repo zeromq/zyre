@@ -90,6 +90,15 @@ public class Zyre implements AutoCloseable{
         __setPort (self, portNbr);
     }
     /*
+    Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+    This call overrides this, to bypass some firewall issues when ports are
+    random. Has no effect after zyre_start().
+    */
+    native static void __setEphemeralPort (long self, int portNbr);
+    public void setEphemeralPort (int portNbr) {
+        __setEphemeralPort (self, portNbr);
+    }
+    /*
     Set the peer evasiveness timeout, in milliseconds. Default is 5000.
     This can be tuned in order to deal with expected network conditions
     and the response time expected by the application. This is tied to

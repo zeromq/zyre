@@ -39,6 +39,7 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "setHeader", _set_header);
     Nan::SetPrototypeMethod (tpl, "setVerbose", _set_verbose);
     Nan::SetPrototypeMethod (tpl, "setPort", _set_port);
+    Nan::SetPrototypeMethod (tpl, "setEphemeralPort", _set_ephemeral_port);
     Nan::SetPrototypeMethod (tpl, "setEvasiveTimeout", _set_evasive_timeout);
     Nan::SetPrototypeMethod (tpl, "setExpiredTimeout", _set_expired_timeout);
     Nan::SetPrototypeMethod (tpl, "setInterval", _set_interval);
@@ -191,6 +192,24 @@ NAN_METHOD (Zyre::_set_port) {
     else
         return Nan::ThrowTypeError ("`port nbr` must be a number");
     zyre_set_port (zyre->self, (int) port_nbr);
+}
+
+NAN_METHOD (Zyre::_set_ephemeral_port) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `port nbr`");
+
+    //int port_nbr; // bjornw typedef - if using c_type, then you get 'int * major' but it needs to be 'int major'. later using the FromJust() returns an int
+    int port_nbr;
+
+
+    if (info [0]->IsNumber ())
+    {
+          port_nbr = Nan::To<int>(info [0]).FromJust ();
+    }
+    else
+        return Nan::ThrowTypeError ("`port nbr` must be a number");
+    zyre_set_ephemeral_port (zyre->self, (int) port_nbr);
 }
 
 NAN_METHOD (Zyre::_set_evasive_timeout) {
