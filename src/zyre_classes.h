@@ -51,6 +51,7 @@ typedef struct _zyre_node_t zyre_node_t;
 
 //  Internal API
 
+
 #include "zre_msg.h"
 #include "zyre_peer.h"
 #include "zyre_group.h"
@@ -61,11 +62,12 @@ typedef struct _zyre_node_t zyre_node_t;
 #ifndef ZYRE_BUILD_DRAFT_API
 
 //  *** Draft method, defined for internal use only ***
-//  Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+//  Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
+//  Defaults to * (the port is randomly assigned by the system).
 //  This call overrides this, to bypass some firewall issues when ports are
 //  random. Has no effect after zyre_start().
 ZYRE_PRIVATE void
-    zyre_set_ephemeral_port (zyre_t *self, int port_nbr);
+    zyre_set_beacon_peer_port (zyre_t *self, int port_nbr);
 
 //  *** Draft method, defined for internal use only ***
 //  This options enables a peer to actively contest for leadership in the
