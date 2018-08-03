@@ -69,13 +69,14 @@ class Zyre(object):
         """
         utils.lib.zyre_set_port(self._p, port_nbr)
 
-    def set_ephemeral_port(self, port_nbr):
+    def set_beacon_peer_port(self, port_nbr):
         """
-        Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+        Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
+        Defaults to * (the port is randomly assigned by the system).
         This call overrides this, to bypass some firewall issues when ports are
         random. Has no effect after zyre_start().
         """
-        utils.lib.zyre_set_ephemeral_port(self._p, port_nbr)
+        utils.lib.zyre_set_beacon_peer_port(self._p, port_nbr)
 
     def set_evasive_timeout(self, interval):
         """

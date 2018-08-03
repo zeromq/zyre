@@ -60,7 +60,7 @@
         <argument name = "port nbr" type = "integer" />
     </method>
 
-    <method name = "set ephemeral port" state = "draft">
+    <method name = "set beacon peer port" state = "draft">
         Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
         Defaults to * (the port is randomly assigned by the system).
         This call overrides this, to bypass some firewall issues when ports are

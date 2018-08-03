@@ -90,13 +90,14 @@ public class Zyre implements AutoCloseable{
         __setPort (self, portNbr);
     }
     /*
-    Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+    Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
+    Defaults to * (the port is randomly assigned by the system).
     This call overrides this, to bypass some firewall issues when ports are
     random. Has no effect after zyre_start().
     */
-    native static void __setEphemeralPort (long self, int portNbr);
-    public void setEphemeralPort (int portNbr) {
-        __setEphemeralPort (self, portNbr);
+    native static void __setBeaconPeerPort (long self, int portNbr);
+    public void setBeaconPeerPort (int portNbr) {
+        __setBeaconPeerPort (self, portNbr);
     }
     /*
     Set the peer evasiveness timeout, in milliseconds. Default is 5000.

@@ -48,7 +48,7 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (_set_header);
     static NAN_METHOD (_set_verbose);
     static NAN_METHOD (_set_port);
-    static NAN_METHOD (_set_ephemeral_port);
+    static NAN_METHOD (_set_beacon_peer_port);
     static NAN_METHOD (_set_evasive_timeout);
     static NAN_METHOD (_set_expired_timeout);
     static NAN_METHOD (_set_interval);

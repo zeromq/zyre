@@ -88,12 +88,13 @@ void QZyre::setPort (int portNbr)
 }
 
 ///
-//  Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+//  Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
+//  Defaults to * (the port is randomly assigned by the system).
 //  This call overrides this, to bypass some firewall issues when ports are
 //  random. Has no effect after zyre_start().
-void QZyre::setEphemeralPort (int portNbr)
+void QZyre::setBeaconPeerPort (int portNbr)
 {
-    zyre_set_ephemeral_port (self, portNbr);
+    zyre_set_beacon_peer_port (self, portNbr);
 
 }
 

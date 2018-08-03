@@ -211,7 +211,7 @@ zyre_set_port (zyre_t *self, int port_nbr)
 //  Has no effect after zyre_start().
 
 void
-zyre_set_ephemeral_port (zyre_t *self, int port)
+zyre_set_beacon_peer_port (zyre_t *self, int port)
 {
     assert (self);
     zstr_sendm (self->actor, "SET EPHEMERAL PORT");

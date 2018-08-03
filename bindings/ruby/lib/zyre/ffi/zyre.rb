@@ -167,17 +167,18 @@ module Zyre
         result
       end
 
-      # Set TCP beacon ephemeral port; defaults to 0 (the port is random).
+      # Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
+      # Defaults to * (the port is randomly assigned by the system).
       # This call overrides this, to bypass some firewall issues when ports are
       # random. Has no effect after zyre_start().
       #
       # @param port_nbr [Integer, #to_int, #to_i]
       # @return [void]
-      def set_ephemeral_port(port_nbr)
+      def set_beacon_peer_port(port_nbr)
         raise DestroyedError unless @ptr
         self_p = @ptr
         port_nbr = Integer(port_nbr)
-        result = ::Zyre::FFI.zyre_set_ephemeral_port(self_p, port_nbr)
+        result = ::Zyre::FFI.zyre_set_beacon_peer_port(self_p, port_nbr)
         result
       end
 
