@@ -35,6 +35,20 @@
 #define ZYRE_VERSION \
     ZYRE_MAKE_VERSION(ZYRE_VERSION_MAJOR, ZYRE_VERSION_MINOR, ZYRE_VERSION_PATCH)
 
+// czmq_prelude.h bits
+
+// Windows MSVS doesn't have stdbool
+#if (defined (_MSC_VER) && !defined (true))
+#   if (!defined (__cplusplus) && (!defined (true)))
+#       define true 1
+#       define false 0
+        typedef char bool;
+#   endif
+#else
+#   include <stdbool.h>
+#endif
+// czmq_prelude.h bits
+
 #if defined (__WINDOWS__)
 #   if defined ZYRE_STATIC
 #       define ZYRE_EXPORT
