@@ -21,12 +21,10 @@
 struct _zyre_group_t {
     char *name;                 //  Group name
     zhash_t *peers;             //  Peers in group
-#ifdef ZYRE_BUILD_DRAFT_API
 //  DRAFT-API: Election
     bool contest;               //  Wheather the peer actively contest for leadership of this group
     zyre_peer_t *leader;        //  Peer that has been elected as leader for this group
     zyre_election_t *election;  //  Election handler, is NULL if there's no active election
-#endif
 };
 
 
@@ -49,10 +47,7 @@ zyre_group_new (const char *name, zhash_t *container)
     zyre_group_t *self = (zyre_group_t *) zmalloc (sizeof (zyre_group_t));
     self->name = strdup (name);
     self->peers = zhash_new ();
-#ifdef ZYRE_BUILD_DRAFT_API
-//  DRAFT-API: Election
     self->contest = false;
-#endif
 
     //  Insert into container if requested
     if (container) {
@@ -73,10 +68,7 @@ zyre_group_destroy (zyre_group_t **self_p)
     if (*self_p) {
         zyre_group_t *self = *self_p;
         zhash_destroy (&self->peers);
-#ifdef ZYRE_BUILD_DRAFT_API
-//  DRAFT-API: Election
         zyre_election_destroy (&self->election);
-#endif
         free (self->name);
         free (self);
         *self_p = NULL;
@@ -144,10 +136,6 @@ zyre_group_peers (zyre_group_t *self)
 {
     return zhash_keys (self->peers);
 }
-
-
-#ifdef ZYRE_BUILD_DRAFT_API
-//  DRAFT-API: Election
 
 //  --------------------------------------------------------------------------
 //  Find or create an election for a group
@@ -219,7 +207,6 @@ zyre_group_set_leader (zyre_group_t *self, zyre_peer_t *leader) {
     assert (self);
     self->leader = leader;
 }
-#endif
 
 
 //  --------------------------------------------------------------------------
