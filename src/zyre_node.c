@@ -58,11 +58,17 @@ struct _zyre_node_t {
 //  version     1 byte 0x01 | 0x03
 //  UUID        16 bytes
 //  port        2 bytes in network order
-//  curve key   32 bytes
+//  curve key   32 bytes if version == 0x03
 
 #define BEACON_VERSION_V2 0x01
 #define BEACON_VERSION_V3 0x03
 #define BEACON_VERSION BEACON_VERSION_V2
+#define BEACON_SIZE_V2 22
+#define BEACON_SIZE_V3 54
+#define BEACON_SIZE(b) \
+({ \
+   b.version == BEACON_VERSION_V2 ? BEACON_SIZE_V2 : BEACON_SIZE_V3; \
+})
 
 
 typedef struct {
@@ -290,7 +296,7 @@ zyre_node_stop (zyre_node_t *self)
         beacon.port = 0;            //  Zero means we're stopping
         zuuid_export (self->uuid, beacon.uuid);
         zsock_send (self->beacon, "sbi", "PUBLISH",
-            (byte *) &beacon, sizeof (beacon_t), self->interval);
+            (byte *) &beacon, BEACON_SIZE(beacon), self->interval);
         zclock_sleep (1);           //  Allow 1 msec for beacon to go out
         zpoller_remove (self->poller, self->beacon);
         zactor_destroy (&self->beacon);
@@ -1240,7 +1246,8 @@ zyre_node_recv_beacon (zyre_node_t *self)
     //  Ignore anything that isn't a valid beacon
     beacon_t beacon;
     memset (&beacon, 0, sizeof (beacon_t));
-    if (zframe_size (frame) == sizeof (beacon_t))
+    if (zframe_size (frame) == BEACON_SIZE_V2 ||
+            zframe_size (frame) == BEACON_SIZE_V3)
         memcpy (&beacon, zframe_data (frame), zframe_size (frame));
     zframe_destroy (&frame);
     if (beacon.version != self->beacon_version) {
@@ -1425,7 +1432,7 @@ zyre_node_actor (zsock_t *pipe, void *args)
                         zmq_z85_decode(beacon.public_key, self->public_key);
                     }
                     zsock_send(self->beacon, "sbi", "PUBLISH",
-                        (byte *)&beacon, sizeof(beacon_t), self->interval);
+                        (byte *)&beacon, BEACON_SIZE(beacon), self->interval);
                     zsock_send(self->beacon, "sb", "SUBSCRIBE", (byte *) "ZRE", 3);
                     zpoller_add(self->poller, self->beacon);
 
