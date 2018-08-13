@@ -120,8 +120,6 @@ ZYRE_PRIVATE uint16_t
 ZYRE_PRIVATE uint16_t
     zyre_peer_sent_sequence (zyre_peer_t *self);
 
-// private
-#ifdef ZYRE_BUILD_DRAFT_API
 // curve support
 ZYRE_PRIVATE void
     zyre_peer_set_server_key (zyre_peer_t *self, const char *key);
@@ -131,7 +129,6 @@ ZYRE_PRIVATE void
 
 ZYRE_PRIVATE void
     zyre_peer_set_secret_key (zyre_peer_t *self, const char *key);
-#endif
 
 //  Self test of this class
 ZYRE_PRIVATE void

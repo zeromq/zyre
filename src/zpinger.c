@@ -24,6 +24,7 @@ network.
 @end
 */
 
+#include "platform.h"
 #include "zyre.h"
 
 int main (int argc, char *argv [])
@@ -31,6 +32,7 @@ int main (int argc, char *argv [])
     bool verbose = false;
     char *iface = NULL;
     int ipv6 = 0;
+    int curve = 0;
     int argn;
     for (argn = 1; argn < argc; argn++) {
         if (streq (argv [argn], "--help")
@@ -40,6 +42,7 @@ int main (int argc, char *argv [])
             puts ("  --verbose / -v         verbose test output");
             puts ("  --interface / -i       use this interface");
             puts ("  --ipv6 / -6            use IPv6");
+            puts ("  --curve / -c           use CURVE encryption");
             return 0;
         }
         if (streq (argv [argn], "--verbose")
@@ -53,6 +56,17 @@ int main (int argc, char *argv [])
         if (streq (argv [argn], "--ipv6")
         ||  streq (argv [argn], "-6"))
             ipv6 = 1;
+#ifdef ZYRE_BUILD_DRAFT_API
+        else
+        if (streq (argv [argn], "--curve")
+        ||  streq (argv [argn], "-c")) {
+            if (!zsys_has_curve ()) {
+                printf ("CURVE requested but CZMQ/libzmq do not support it");
+                return 1;
+            }
+            curve = 1;
+        }
+#endif
         else {
             printf ("Unknown option: %s\n", argv [argn]);
             return 1;
@@ -65,6 +79,26 @@ int main (int argc, char *argv [])
         zyre_set_verbose (zyre);
     if (iface)
         zyre_set_interface (zyre, iface);
+    zactor_t *auth = NULL;
+#ifdef ZYRE_BUILD_DRAFT_API
+    if (curve && zsys_has_curve()) {
+        // zap setup
+        auth = zactor_new(zauth, NULL);
+        assert (auth);
+        if (verbose) {
+            zstr_sendx(auth, "VERBOSE", NULL);
+            zsock_wait(auth);
+        }
+        zstr_sendx (auth, "CURVE", CURVE_ALLOW_ANY, NULL);
+        zsock_wait (auth);
+
+        zyre_set_zap_domain(zyre, "ZPINGER");
+        zcert_t *cert = zcert_new ();
+        assert (cert);
+        zyre_set_zcert (zyre, cert);
+        zyre_set_header (zyre, "X-PUBLICKEY", "%s", zcert_public_txt (cert));
+    }
+#endif
     zyre_start (zyre);
     zyre_join (zyre, "GLOBAL");
     if (verbose)
@@ -99,5 +133,6 @@ int main (int argc, char *argv [])
         zyre_event_destroy (&event);
     }
     zyre_destroy (&zyre);
+    zactor_destroy (&auth);
     return 0;
 }

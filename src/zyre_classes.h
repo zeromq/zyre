@@ -61,6 +61,9 @@ typedef struct _zyre_node_t zyre_node_t;
 //  *** To avoid double-definitions, only define if building without draft ***
 #ifndef ZYRE_BUILD_DRAFT_API
 
+//  *** Draft global constants, defined for internal use only ***
+#define ZAP_DOMAIN_DEFAULT  "global"           //  Default ZAP domain (auth)
+
 //  *** Draft method, defined for internal use only ***
 //  Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
 //  Defaults to * (the port is randomly assigned by the system).
