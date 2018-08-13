@@ -195,7 +195,10 @@ zyre_node_start (zyre_node_t *self)
         if (self->verbose)
             zsys_debug ("applying zcert to ->inbox");
 
-        zcert_t *cert = zcert_new_from_txt(self->public_key, self->secret_key);
+        uint8_t pub[32] = { 0 }, sec[32] = { 0 };
+        assert (zmq_z85_decode (pub, self->public_key));
+        assert (zmq_z85_decode (sec, self->secret_key));
+        zcert_t *cert = zcert_new_from(pub, sec);
         zcert_apply(cert, self->inbox);
         zsock_set_curve_server (self->inbox, 1);
         zsock_set_zap_domain (self->inbox, self->zap_domain);
@@ -504,7 +507,10 @@ zyre_node_recv_api (zyre_node_t *self)
             if (self->verbose)
                 zsys_debug ("applying zcert to ->inbox");
 
-            zcert_t *cert = zcert_new_from_txt(self->public_key, self->secret_key);
+            uint8_t pub[32] = { 0 }, sec[32] = { 0 };
+            assert (zmq_z85_decode (pub, self->public_key));
+            assert (zmq_z85_decode (sec, self->secret_key));
+            zcert_t *cert = zcert_new_from(pub, sec);
             zcert_apply(cert, self->inbox);
             zsock_set_curve_server (self->inbox, 1);
             zsock_set_zap_domain (self->inbox, self->zap_domain);
