@@ -1,0 +1,7 @@
+### Note: This file is not generated, so does not conflict with zproject
+
+# Java binding
+jni/.classpath
+jni/.project
+jni/.settings/
+

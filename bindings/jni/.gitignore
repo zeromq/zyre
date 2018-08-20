@@ -6,3 +6,6 @@ build/
 src/native
 gradle-app.setting
 libzyrejni.so
+.classpath
+.project
+.settings/

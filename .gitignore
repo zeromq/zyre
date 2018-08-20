@@ -119,11 +119,6 @@ obj/
 bin/
 *.tlog
 
-# Java binding
-bindings/jni/.classpath
-bindings/jni/.project
-bindings/jni/.settings/
-
 # Qt
 *pro.user
 moc_*
