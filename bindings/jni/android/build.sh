@@ -29,7 +29,7 @@ source ../../../builds/android/android_build_helper.sh
 android_build_env
 
 #   Build any dependent libraries
-( cd ../../../../czmq/bindings/jni/android; ./build.sh )
+( cd ../../../../tmp-deps/czmq/bindings/jni/android; ./build.sh )
 
 #   Ensure we've built dependencies for Android
 echo "********  Building zyre Android native libraries"
@@ -54,7 +54,7 @@ make $MAKE_OPTIONS
 echo "********  Building zyre.jar for Android"
 #   Copy class files into org/zeromq/etc.
 unzip -q ../../build/libs/zyre-jni-2.0.1.jar
-unzip -q -o ../../../../../czmq/bindings/jni/android/czmq-android.jar
+unzip -q -o ../../../../../tmp-deps/czmq/bindings/jni/android/czmq-android.jar
 
 #   Copy native libraries into lib/armeabi
 mkdir -p lib/armeabi
