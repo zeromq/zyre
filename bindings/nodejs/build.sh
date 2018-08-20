@@ -37,8 +37,12 @@ done
 
 BUILD_ROOT=`pwd`
 cd ../../..
+rm -rf tmp-deps
+mkdir -p tmp-deps
 
 #   Check dependent projects
+BASE_PWD=${PWD}
+cd tmp-deps
 if [ ! -d libzmq ]; then
     echo "I:    cloning https://github.com/zeromq/libzmq.git into `pwd`/libzmq..."
     git clone $QUIET https://github.com/zeromq/libzmq.git
@@ -47,8 +51,11 @@ if [ ! -f libzmq/builds/gyp/project.gyp ]; then
     echo "E:    `pwd`/libzmq out of date (builds/gyp/project.gyp missing)"
     exit
 fi
+cd ${BASE_PWD}
 
 #   Check dependent projects
+BASE_PWD=${PWD}
+cd tmp-deps
 if [ ! -d czmq ]; then
     echo "I:    cloning https://github.com/zeromq/czmq.git into `pwd`/czmq..."
     git clone $QUIET https://github.com/zeromq/czmq.git
@@ -57,6 +64,7 @@ if [ ! -f czmq/builds/gyp/project.gyp ]; then
     echo "E:    `pwd`/czmq out of date (builds/gyp/project.gyp missing)"
     exit
 fi
+cd ${BASE_PWD}
 
 
 #   Check Node.js dependencies

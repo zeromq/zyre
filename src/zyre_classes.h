@@ -51,7 +51,6 @@ typedef struct _zyre_node_t zyre_node_t;
 
 //  Internal API
 
-
 #include "zre_msg.h"
 #include "zyre_peer.h"
 #include "zyre_group.h"
