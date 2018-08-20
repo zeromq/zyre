@@ -21,7 +21,6 @@ save.xml
 *.lo
 
 # Executables
-examples/chat/chat
 src/zyre_selftest
 src/perf_local
 src/perf_remote
