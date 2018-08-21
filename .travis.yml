@@ -1,17 +1,48 @@
 # Travis CI script
+# This is a skeleton created by zproject.
+# You can add hand-written code here.
+### NOTE: This file was customized after zproject generation;
+### be careful about updating it (git difftool is your friend)
 
-language: c
+language:
+- c
 
+cache:
+- ccache
+
+### Customization note: added OSX
 os:
 - linux
 - osx
 
-dist: trusty
-
+# Note: some packages or dependencies may require extended permissions
+# which take longer to set up and boot. If your project does not build
+# in the default container with sudo==false, consider requiring a docker
+# image and/or a newer Ubuntu Trusty baseline VM, by uncommenting below.
+# See the current docs on http://travis-ci.org for up-to-date options.
 sudo: false
+#sudo: required
 
+### Customization note: enabled dist:trusty
+dist:
+- trusty
+
+#services:
+#- docker
+
+# Set CI_TIME=true to enable build-step profiling in Travis
+# Set CI_TRACE=true to enable shell script tracing in Travis
+# Set CI_CONFIG_QUIET=true to enable "configure --quiet" (only report stderr)
+# Set CI_REQUIRE_GOOD_GITIGNORE=false to NOT fail if "git status -s" is not clean
+# Set CI_REQUIRE_GOOD_CLANG_FORMAT=true to fail if "clang-format" check is not clean
 env:
   global:
+    - CI_TIME=false
+    - CI_TRACE=false
+    - CI_CONFIG_QUIET=true
+    - CI_REQUIRE_GOOD_GITIGNORE=false
+    - CI_REQUIRE_GOOD_CLANG_FORMAT=false
+    ### Customization note: added credentials data and comments below
     # Note: Secure variables must be global!
     #
     # Bintray upload credentials. (BINTRAY_USER and BINTRAY_KEY are encrypted!)
@@ -25,18 +56,64 @@ env:
     #    capability and encrypt it with travis encrypt --org -r <org>/<repo> GH_TOKEN="<token>"
     # 2) Create 2 OBS tokens with osc token --create network:messaging:zeromq:release-<stable|draft> <project>
     #    encrypt them with travis encrypt --org -r <org>/<repo> OBS_<STABLE|DRAFT>_TOKEN="<token>"
-    # 3) Uncomment the "secure" lines and paste the encrypted tokens
+    # 3) Uncomment the three "secure" lines and paste the three generated hashed
+    #    strings, which include each token's name, as parameters
     - secure: VmpVRSM7UNdF/P6CGac9r+yWYyngU/vBkI1IGPL6gTNm5ctAUzr+ni/3A4K9vHCLXEXFC2BX5XO050e09dw3U/jtG1n463E2JPW/sOmirQZl9N2RPU9fmT07mLWkpNKkPC7P0z/c37z2/xFlDQZ5gwIAnuMKLW1Gzg/XkTVCWh4=
     - secure: kjO5KenouBNcw41x0+7dLBZ4k/32/EQzx2nM4PbsblAODnnKxI6FDWh+25qvu8YFdItvuoRnISVRORWjEJYBBD6JhEbpCvlcn0tQ7RjeTT4mUEl03qrtEmYtjFJklZ1Wf6m1ZA3fokC1uzyaX4eF+vgO//v8j4UrHcSRrr3s2V0=
     - secure: dmmMz3OyX9xZF/IoSYJnyZS37KVx5xdL9qkAj8nH10n9w9T+y86WcQx/vYFOEGTufzCV+eAgHRV7hvJyYyA6MdrhrEvytVgYfZTcdYhVOGJxeANxAUCtp1TTY3EEgamGFYSUMMN6U2mowg7qNHzBkAu61bYF+DjcvUTPhoSasJs=
+  ### Customization note: build/test options
   matrix:
-  - BUILD_TYPE=default
-  - BUILD_TYPE=android
-  - BUILD_TYPE=cmake
-  - BUILD_TYPE=check_zproject
-  - BUILD_TYPE=bindings BINDING=jni
+    - BUILD_TYPE=default
+    - BUILD_TYPE=android
+    - BUILD_TYPE=default-Werror
+    - BUILD_TYPE=cmake
+    - BUILD_TYPE=check_zproject
+    - BUILD_TYPE=bindings BINDING=jni
+#   - BUILD_TYPE=check-py
 
-# osx environment does not have docker
+# Prerequisite packages provided by OS distro and used "as is"
+pkg_deps_prereqs_distro: &pkg_deps_prereqs_distro
+
+# Prerequisite packages that may be built from source or used from
+# prebuilt packages of that source (usually not from an OS distro)
+pkg_deps_prereqs_source: &pkg_deps_prereqs_source
+    - libzmq3-dev
+    - libczmq-dev
+
+pkg_deps_prereqs: &pkg_deps_prereqs
+    - *pkg_deps_prereqs_source
+    - *pkg_deps_prereqs_distro
+
+pkg_deps_doctools: &pkg_deps_doctools
+    - asciidoc
+    - xmlto
+
+pkg_deps_devtools: &pkg_deps_devtools
+    - git
+
+pkg_src_zeromq_ubuntu12: &pkg_src_zeromq_ubuntu12
+- sourceline: 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_12.04/ ./'
+  key_url: 'http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_12.04/Release.key'
+
+pkg_src_zeromq_ubuntu14: &pkg_src_zeromq_ubuntu14
+- sourceline: 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ ./'
+  key_url: 'http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/Release.key'
+
+# Note: refer to ubuntu14 if you use dist==Trusty
+# Also note that as of early 2017, either dist==trusty or services==docker
+# is needed for C++11 support; docker envs are usually faster to start up
+### Customization note: packages referred by older incarnation hardcoded into this list
+addons:
+  apt:
+    sources: *pkg_src_zeromq_ubuntu14
+    packages: &pkg_deps_common
+    - *pkg_deps_devtools
+    - *pkg_deps_prereqs
+    - uuid-dev
+    - zproject
+
+### Customization note: build/test options
+### Note: osx environment does not have docker
 matrix:
   exclude:
   - os: osx
@@ -44,18 +121,23 @@ matrix:
   - os: osx
     env: BUILD_TYPE=bindings BINDING=jni
   include:
+  - env: BUILD_TYPE=default-with-docs
+    os: linux
+    addons:
+      apt:
+        sources: *pkg_src_zeromq_ubuntu14
+        packages:
+        - *pkg_deps_common
+        - *pkg_deps_doctools
   - env: BUILD_TYPE=valgrind
     os: linux
     dist: trusty
     addons:
       apt:
-        sources:
-        - sourceline: 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ ./'
-          key_url: 'http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/Release.key'
+        sources: *pkg_src_zeromq_ubuntu14
         packages:
-        - uuid-dev
         - valgrind
-        - libczmq-dev
+        - *pkg_deps_common
   - env: BUILD_TYPE=check_zproto
     os: linux
     dist: trusty
@@ -70,27 +152,46 @@ matrix:
       apt:
         packages:
         - python3
+  - env: BUILD_TYPE=default ADDRESS_SANITIZER=enabled
+    os: linux
+    dist: trusty
+    addons:
+      apt:
+        sources: *pkg_src_zeromq_ubuntu14
+        packages:
+        - *pkg_deps_common
+  - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=clang-format-5.0
+# For non-cmake users, there is an autotools solution with a bit more overhead
+# to have dependencies ready and pass configure script before making this check).
+# Note that the autotools variant will also require dependencies preinstalled to
+# pass its configure script:
+#  - env: BUILD_TYPE=clang-format-check CLANG_FORMAT=clang-format-5.0
+    os: linux
+    dist: trusty
+    addons:
+      apt:
+        sources:
+        - llvm-toolchain-trusty-5.0
+        packages:
+        - clang-5.0
+        - clang-format-5.0
+#autotools#        - *pkg_deps_prereqs
 
-addons:
-  apt:
-    sources:
-    - sourceline: 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ ./'
-      key_url: 'http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/Release.key'
-    packages:
-    - uuid-dev
-    - zproject
-    - libczmq-dev
-
+### Customization note: python binding
 before_install:
-- if [ $TRAVIS_OS_NAME == "osx" -a $BUILD_TYPE == "android" ] ; then brew install binutils ; fi
-- if [ $TRAVIS_OS_NAME == "osx" -a $BUILD_TYPE == "bindings" -a $BINDING == "python" ] ; then brew upgrade python; brew install python@2 ; fi
+- if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "android" ] ; then brew install binutils ; fi
+- if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "valgrind" ] ; then brew install valgrind ; fi
+- if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "bindings" -a "$BINDING" == "python" ] ; then brew upgrade python; brew install python@2 ; fi
 
-# Build and check this project according to the BUILD_TYPE
-script: "./ci_build.sh"
-before_deploy: . ./ci_deploy.sh
+# Hand off to generated script for each BUILD_TYPE
+### Customization note: credentials and condition for deploy
+script: ./ci_build.sh
+before_deploy: . ./ci_deploy.sh && ./ci_deploy_obs.sh
 deploy:
   provider: releases
   api_key:
+    # To encrypt your access token run: `travis encrypt -r user/repo`
+    #   secure: <encrypted github access token>
     secure: "k0AHi/KbT5uRiugRQdHG4B8Le5Q/clTFM7dwS3V+c5xjCsAa8UOgi4Q/rYEm2EfjnsItg/qtRYn9rJ/9XqahBcIhQKwMFHntblUY7gRYz6CCT0EpRnZkU+hczUvXjzTIIxs1d3goMCdFlfmIz+9aRh/o8LyzgoIF5Fd6AJWX4JY="
   file_glob: true
   file: ${ZYRE_DEPLOYMENT}

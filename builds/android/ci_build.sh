@@ -30,10 +30,13 @@ export TOOLCHAIN_NAME="arm-linux-androideabi-$NDK_ABI_VER"
 export TOOLCHAIN_HOST="arm-linux-androideabi"
 export TOOLCHAIN_ARCH="arm"
 
-export LIBZMQ_ROOT="/tmp/libzmq"
+rm -rf /tmp/tmp-deps
+mkdir -p /tmp/tmp-deps
+
+export LIBZMQ_ROOT="/tmp/tmp-deps/libzmq"
 git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git $LIBZMQ_ROOT
 
-export CZMQ_ROOT="/tmp/czmq"
+export CZMQ_ROOT="/tmp/tmp-deps/czmq"
 git clone --quiet --depth 1 https://github.com/zeromq/czmq.git $CZMQ_ROOT
 
 source ./build.sh

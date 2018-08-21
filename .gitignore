@@ -21,7 +21,6 @@ save.xml
 *.lo
 
 # Executables
-examples/chat/chat
 src/zyre_selftest
 src/perf_local
 src/perf_remote
@@ -34,7 +33,7 @@ src/zyre_selftest
 *.app
 core
 
- # Distcheck workspace and archives
+# Distcheck workspace and archives
 zyre-*/
 zyre-*.tar.gz
 zyre-*.zip
@@ -78,8 +77,7 @@ install_manifest.txt
 Testing/
 
 # Repositories downloaded by CI integration scripts
-libzmq/
-czmq/
+tmp-deps/
 
 # Travis build area
 tmp/
@@ -108,7 +106,7 @@ src/app/gen/
 src/app/obj/
 src/app/local.properties
 
-# Android -dependencies
+# Android - dependencies
 src/app/jni/output
 
 # Python build directory
@@ -118,11 +116,6 @@ build/
 obj/
 bin/
 *.tlog
-
-# Java binding
-bindings/jni/.classpath
-bindings/jni/.project
-bindings/jni/.settings/
 
 # Qt
 *pro.user
@@ -134,6 +127,9 @@ bindings/qt/selftest/selftest
 *.swp
 *.bak
 .test*
+
+# Netbeans directory
+nbproject/
 
 # editor backups
 *~
