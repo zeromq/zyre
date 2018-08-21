@@ -136,8 +136,8 @@ fi
 CCACHE_BASEDIR=${PWD}
 export CCACHE_BASEDIR
 if [ "$DO_CLANG_FORMAT_CHECK" = "1" ] ; then
-    PKG_CONFIG_PATH=${BUILD_PREFIX}/lib/pkgconfig $CI_TIME cmake "${CMAKE_OPTS[@]}" . \
-    && make clang-format-check || { make clang-format-diff && exit 1 ; }
+    { PKG_CONFIG_PATH=${BUILD_PREFIX}/lib/pkgconfig $CI_TIME cmake "${CMAKE_OPTS[@]}" . \
+      && make clang-format-check-CI ; exit $? ; }
 else
     PKG_CONFIG_PATH=${BUILD_PREFIX}/lib/pkgconfig $CI_TIME cmake "${CMAKE_OPTS[@]}" .
     $CI_TIME make all VERBOSE=1 -j4
