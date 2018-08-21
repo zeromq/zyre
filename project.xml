@@ -34,6 +34,9 @@
         <option name = "version" value = "0.0.6" />
         <option name = "repo" value = "https://github.com/hintjens/zyre-nodejs" />
     </target>
+    <target name = "jenkins">
+        <option name = "require_good_clang_format" value = "0" />
+    </target>
 
     <constant name = "ZRE_DISCOVERY_PORT" value = "5670" state = "stable">IANA-assigned UDP port for ZRE</constant>
     <constant name = "REAP_INTERVAL" value = "1000" private = "1" >Once per second</constant>
