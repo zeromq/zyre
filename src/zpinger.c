@@ -98,6 +98,8 @@ int main (int argc, char *argv [])
         zyre_set_zcert (zyre, cert);
         zyre_set_header (zyre, "X-PUBLICKEY", "%s", zcert_public_txt (cert));
     }
+#else
+    (void)curve; //  Avoid unused variable error
 #endif
     zyre_start (zyre);
     zyre_join (zyre, "GLOBAL");
