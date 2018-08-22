@@ -66,9 +66,7 @@ struct _zyre_node_t {
 #define BEACON_SIZE_V2 22
 #define BEACON_SIZE_V3 54
 #define BEACON_SIZE(b) \
-({ \
-   b.version == BEACON_VERSION_V2 ? BEACON_SIZE_V2 : BEACON_SIZE_V3; \
-})
+   b.version == BEACON_VERSION_V2 ? BEACON_SIZE_V2 : BEACON_SIZE_V3
 
 
 typedef struct {
