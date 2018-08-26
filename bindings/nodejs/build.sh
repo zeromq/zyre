@@ -37,34 +37,28 @@ done
 
 BUILD_ROOT=`pwd`
 cd ../../..
-rm -rf tmp-deps
-mkdir -p tmp-deps
+# Note: here we go to parent directory that contains current project,
+# so the checkout is nearby, same as expected for usual developer work
 
 #   Check dependent projects
-BASE_PWD=${PWD}
-cd tmp-deps
 if [ ! -d libzmq ]; then
     echo "I:    cloning https://github.com/zeromq/libzmq.git into `pwd`/libzmq..."
-    git clone $QUIET https://github.com/zeromq/libzmq.git
+    git clone $QUIET https://github.com/zeromq/libzmq.git || exit
 fi
 if [ ! -f libzmq/builds/gyp/project.gyp ]; then
-    echo "E:    `pwd`/libzmq out of date (builds/gyp/project.gyp missing)"
-    exit
+    echo "E:    `pwd`/libzmq out of date (builds/gyp/project.gyp missing)" >&2
+    exit 1
 fi
-cd ${BASE_PWD}
 
 #   Check dependent projects
-BASE_PWD=${PWD}
-cd tmp-deps
 if [ ! -d czmq ]; then
     echo "I:    cloning https://github.com/zeromq/czmq.git into `pwd`/czmq..."
-    git clone $QUIET https://github.com/zeromq/czmq.git
+    git clone $QUIET https://github.com/zeromq/czmq.git || exit
 fi
 if [ ! -f czmq/builds/gyp/project.gyp ]; then
-    echo "E:    `pwd`/czmq out of date (builds/gyp/project.gyp missing)"
-    exit
+    echo "E:    `pwd`/czmq out of date (builds/gyp/project.gyp missing)" >&2
+    exit 1
 fi
-cd ${BASE_PWD}
 
 
 #   Check Node.js dependencies
