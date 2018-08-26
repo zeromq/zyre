@@ -18,7 +18,7 @@ done
 if [ "$FAILED" -eq "1" ] ; then
     if [ "$1" = "--CI" ] ; then
         echo "Style mismatches were found by clang-format; detailing below:" >&2
-        ${MAKE} VERBOSE=1 clang-format-diff
+        ${MAKE} clang-format-diff
         if test x"${CI_REQUIRE_GOOD_CLANG_FORMAT}" = xtrue ; then
             echo "FAILED : Style checks have failed and CI_REQUIRE_GOOD_CLANG_FORMAT==true" >&2
             exit 1
