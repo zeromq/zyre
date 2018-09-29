@@ -314,6 +314,7 @@ zyre_set_contest_in_group (zyre_t *self, const char *group) {
 }
 
 #ifdef ZYRE_BUILD_DRAFT_API
+//  DRAFT-API: Public IP
 void
 zyre_set_advertised_endpoint (zyre_t *self, const char *endpoint)
 {
@@ -863,6 +864,7 @@ zyre_test (bool verbose)
     printf ("OK\n");
 
 #ifdef ZYRE_BUILD_DRAFT_API
+    //  DRAFT-API: Security
     if (zsys_has_curve()){
 
         printf (" * zyre-curve: ");

@@ -357,6 +357,7 @@ zyre_node_dump (zyre_node_t *self)
 
     zsys_info (" - endpoint=%s", self->endpoint);
 #ifdef ZYRE_BUILD_DRAFT_API
+    //  DRAFT-API: Security
     if (self->public_key)
         zsys_info (" - public-key: %s", self->public_key);
 #endif
@@ -489,6 +490,7 @@ zyre_node_recv_api (zyre_node_t *self)
     else
 #endif
 #ifdef ZYRE_BUILD_DRAFT_API
+        //  DRAFT-API: Public IP
     if (streq (command, "SET ADVERTISED ENDPOINT")) {
         self->advertised_endpoint = zmsg_popstr (request);
     }
@@ -535,6 +537,7 @@ zyre_node_recv_api (zyre_node_t *self)
     }
     else
 #ifdef ZYRE_BUILD_DRAFT_API
+    //  DRAFT-API: Security
     if (streq (command, "SET PUBLICKEY")) {
         self->public_key = zmsg_popstr (request);
         zhash_update (self->headers, "X-PUBLICKEY", self->public_key);
@@ -660,6 +663,7 @@ zyre_node_recv_api (zyre_node_t *self)
     if (streq (command, "PEERS"))
         zsock_send (self->pipe, "p", zhash_keys (self->peers));
     #ifdef ZYRE_BUILD_DRAFT_API
+    //  DRAFT-API: Security
     else
     if (streq (command, "REQUIRE PEER")) {
         char *uuidstr = zmsg_popstr (request);

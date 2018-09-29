@@ -57,6 +57,7 @@ int main (int argc, char *argv [])
         ||  streq (argv [argn], "-6"))
             ipv6 = 1;
 #ifdef ZYRE_BUILD_DRAFT_API
+        //  DRAFT-API: Security
         else
         if (streq (argv [argn], "--curve")
         ||  streq (argv [argn], "-c")) {
@@ -81,6 +82,7 @@ int main (int argc, char *argv [])
         zyre_set_interface (zyre, iface);
     zactor_t *auth = NULL;
 #ifdef ZYRE_BUILD_DRAFT_API
+    //  DRAFT-API: Security
     if (curve && zsys_has_curve()) {
         // zap setup
         auth = zactor_new(zauth, NULL);
