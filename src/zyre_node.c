@@ -179,8 +179,6 @@ zyre_node_gossip_start (zyre_node_t *self)
         self->gossip = zactor_new (zgossip, self->name);
         if (self->verbose)
             zstr_send (self->gossip, "VERBOSE");
-
-        zstr_sendx (self->gossip, "SET server/timeout", "60000", NULL);
         assert (self->gossip);
     }
 }
