@@ -210,6 +210,12 @@ nothing my_zyre.gossipConnectCurve (String, String)
 Set-up gossip discovery with CURVE enabled.
 
 ```
+nothing my_zyre.gossipUnpublish (String)
+```
+
+Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
+
+```
 integer my_zyre.start ()
 ```
 

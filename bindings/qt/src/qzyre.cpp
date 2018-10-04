@@ -221,6 +221,14 @@ void QZyre::gossipConnectCurve (const QString &publicKey, const QString &param)
 }
 
 ///
+//  Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
+void QZyre::gossipUnpublish (const QString &node)
+{
+    zyre_gossip_unpublish (self, node.toUtf8().data());
+
+}
+
+///
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
 //  possible to start the node.

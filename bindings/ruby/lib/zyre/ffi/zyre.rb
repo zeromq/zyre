@@ -348,6 +348,17 @@ module Zyre
         result
       end
 
+      # Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
+      #
+      # @param node [String, #to_s, nil]
+      # @return [void]
+      def gossip_unpublish(node)
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_gossip_unpublish(self_p, node)
+        result
+      end
+
       # Start node, after setting header values. When you start a node it
       # begins discovery and connection. Returns 0 if OK, -1 if it wasn't
       # possible to start the node.

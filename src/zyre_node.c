@@ -579,6 +579,15 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_sendx (self->gossip, "CONNECT", self->gossip_connect, server_public_key, NULL);
         zstr_free (&server_public_key);
     }
+#ifdef ZYRE_BUILD_DRAFT_API
+    // DRAFT-API: GOSSIP TTL
+    else
+    if (streq (command, "GOSSIP UNPUBLISH")) {
+        char *msg = zmsg_popstr (request);
+        zstr_sendx (self->gossip, "UNPUBLISH", msg, NULL);
+        zstr_free (&msg);
+    }
+#endif
     else
     if (streq (command, "START"))
         zsock_signal (self->pipe, zyre_node_start (self));
@@ -860,6 +869,8 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
         zyre_node_delete_peer (zhash_cursor (self->peer_groups), item, peer);
     //  To destroy peer, we remove from peers hash table
     zhash_delete (self->peers, zyre_peer_identity (peer));
+
+
 }
 
 

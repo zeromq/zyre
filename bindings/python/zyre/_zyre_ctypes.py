@@ -108,6 +108,8 @@ lib.zyre_gossip_connect.restype = None
 lib.zyre_gossip_connect.argtypes = [zyre_p, c_char_p]
 lib.zyre_gossip_connect_curve.restype = None
 lib.zyre_gossip_connect_curve.argtypes = [zyre_p, c_char_p, c_char_p]
+lib.zyre_gossip_unpublish.restype = None
+lib.zyre_gossip_unpublish.argtypes = [zyre_p, c_char_p]
 lib.zyre_start.restype = c_int
 lib.zyre_start.argtypes = [zyre_p]
 lib.zyre_stop.restype = None
@@ -349,6 +351,12 @@ design, see the CZMQ zgossip class.
         Set-up gossip discovery with CURVE enabled.
         """
         return lib.zyre_gossip_connect_curve(self._as_parameter_, public_key, format, *args)
+
+    def gossip_unpublish(self, node):
+        """
+        Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
+        """
+        return lib.zyre_gossip_unpublish(self._as_parameter_, node)
 
     def start(self):
         """

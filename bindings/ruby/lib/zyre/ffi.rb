@@ -74,6 +74,7 @@ module Zyre
       attach_function :zyre_gossip_bind, [:pointer, :string, :varargs], :void, **opts
       attach_function :zyre_gossip_connect, [:pointer, :string, :varargs], :void, **opts
       attach_function :zyre_gossip_connect_curve, [:pointer, :string, :string, :varargs], :void, **opts
+      attach_function :zyre_gossip_unpublish, [:pointer, :string], :void, **opts
       attach_function :zyre_start, [:pointer], :int, **opts
       attach_function :zyre_stop, [:pointer], :void, **opts
       attach_function :zyre_join, [:pointer, :string], :int, **opts

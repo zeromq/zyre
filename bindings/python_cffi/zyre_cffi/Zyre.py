@@ -176,6 +176,12 @@ class Zyre(object):
         """
         utils.lib.zyre_gossip_connect_curve(self._p, utils.to_bytes(public_key), format, )
 
+    def gossip_unpublish(self, node):
+        """
+        Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
+        """
+        utils.lib.zyre_gossip_unpublish(self._p, utils.to_bytes(node))
+
     def start(self):
         """
         Start node, after setting header values. When you start a node it
