@@ -170,6 +170,14 @@ Java_org_zeromq_zyre_Zyre__1_1gossipConnectCurve (JNIEnv *env, jclass c, jlong s
     (*env)->ReleaseStringUTFChars (env, format, format_);
 }
 
+JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1gossipUnpublish (JNIEnv *env, jclass c, jlong self, jstring node)
+{
+    char *node_ = (char *) (*env)->GetStringUTFChars (env, node, NULL);
+    zyre_gossip_unpublish ((zyre_t *) (intptr_t) self, node_);
+    (*env)->ReleaseStringUTFChars (env, node, node_);
+}
+
 JNIEXPORT jint JNICALL
 Java_org_zeromq_zyre_Zyre__1_1start (JNIEnv *env, jclass c, jlong self)
 {

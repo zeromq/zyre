@@ -52,6 +52,7 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "gossipBind", _gossip_bind);
     Nan::SetPrototypeMethod (tpl, "gossipConnect", _gossip_connect);
     Nan::SetPrototypeMethod (tpl, "gossipConnectCurve", _gossip_connect_curve);
+    Nan::SetPrototypeMethod (tpl, "gossipUnpublish", _gossip_unpublish);
     Nan::SetPrototypeMethod (tpl, "start", _start);
     Nan::SetPrototypeMethod (tpl, "stop", _stop);
     Nan::SetPrototypeMethod (tpl, "join", _join);
@@ -394,6 +395,21 @@ NAN_METHOD (Zyre::_gossip_connect_curve) {
     format = *format_utf8;
          //} //bjornw end
     zyre_gossip_connect_curve (zyre->self, (const char *)public_key, "%s", format);
+}
+
+NAN_METHOD (Zyre::_gossip_unpublish) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    char *node;
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `node`");
+    else
+    if (!info [0]->IsString ())
+        return Nan::ThrowTypeError ("`node` must be a string");
+    //else { // bjornw: remove brackets to keep scope
+    Nan::Utf8String node_utf8 (info [0].As<String>());
+    node = *node_utf8;
+         //} //bjornw end
+    zyre_gossip_unpublish (zyre->self, (const char *)node);
 }
 
 NAN_METHOD (Zyre::_start) {

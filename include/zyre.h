@@ -255,6 +255,11 @@ ZYRE_EXPORT void
     zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);
 
 //  *** Draft method, for development use, may change without warning ***
+//  Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
+ZYRE_EXPORT void
+    zyre_gossip_unpublish (zyre_t *self, const char *node);
+
+//  *** Draft method, for development use, may change without warning ***
 //  Explicitly connect to a peer
 ZYRE_EXPORT int
     zyre_require_peer (zyre_t *self, const char *uuid, const char *endpoint, const char *public_key);

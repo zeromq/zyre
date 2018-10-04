@@ -414,6 +414,19 @@ zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *for
     free (string);
 }
 
+//  --------------------------------------------------------------------------
+//  Inform gossip to remove a node from it's master (tuples) list
+//  Useful when tracking nodes activity across the mesh
+
+void
+zyre_gossip_unpublish (zyre_t *self, const char *node)
+{
+    assert (self);
+    assert (node);
+
+    zstr_sendx (self->actor, "GOSSIP UNPUBLISH", node, NULL);
+}
+
 
 //  --------------------------------------------------------------------------
 //  Start node, after setting header values. When you start a node it
