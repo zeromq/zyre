@@ -527,7 +527,8 @@ zyre_node_recv_api (zyre_node_t *self)
             if (self->secret_key)
                 assert (zsock_mechanism (self->inbox) == ZMQ_CURVE);
 
-        self->endpoint = endpoint;
+        self->endpoint = strdup(zsock_endpoint(self->inbox));
+		zstr_free(&endpoint);
             zsock_signal (self->pipe, 0);
         }
         else {
