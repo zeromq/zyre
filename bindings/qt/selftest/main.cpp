@@ -5,7 +5,7 @@
 ################################################################################
 */
 #include <QDebug>
-#include "qzyre.h"
+#include "qtzyre.h"
 
 int main(int argc, char **argv)
 {
@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     else
         verbose = false;
 
-    qDebug() << "Running qzyre selftests...\n";
+    qDebug() << "Running qtzyre selftests...\n";
 
     QZyre::test (verbose);
     QZyreEvent::test (verbose);

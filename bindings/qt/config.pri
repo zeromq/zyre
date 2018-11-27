@@ -1,1 +1,1 @@
-QZYRE_LIBRARY = yes
+QTZYRE_LIBRARY = yes

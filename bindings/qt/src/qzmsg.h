@@ -7,7 +7,7 @@
 #ifndef Q_ZMSG_H
 #define Q_ZMSG_H
 
-#include "qzyre.h"
+#include "qtzyre.h"
 
 class QT_ZYRE_EXPORT QZmsg : public QObject
 {

@@ -7,7 +7,7 @@
 #ifndef Q_ZYRE_EVENT_H
 #define Q_ZYRE_EVENT_H
 
-#include "qzyre.h"
+#include "qtzyre.h"
 
 class QT_ZYRE_EXPORT QZyreEvent : public QObject
 {

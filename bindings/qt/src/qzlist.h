@@ -7,7 +7,7 @@
 #ifndef Q_ZLIST_H
 #define Q_ZLIST_H
 
-#include "qzyre.h"
+#include "qtzyre.h"
 
 class QT_ZYRE_EXPORT QZlist : public QObject
 {

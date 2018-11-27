@@ -5,7 +5,7 @@
 QT += core
 QT -= gui
 
-include(../src/qzyre.pri)
+include(../src/qtzyre.pri)
 
 CONFIG   += console
 CONFIG   -= app_bundle
