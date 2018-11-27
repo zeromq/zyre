@@ -68,6 +68,7 @@ typedef struct _zsys_t zsys_t;
 typedef struct _ztimerset_t ztimerset_t;
 typedef struct _ztrie_t ztrie_t;
 typedef struct _zuuid_t zuuid_t;
+typedef struct _zhttp_client_t zhttp_client_t;
 // Actors get a pipe and arguments from caller
 typedef void (zactor_fn) (
     zsock_t *pipe, void *args);
@@ -1742,6 +1743,12 @@ zlistx_t *
 void
     zlistx_destroy (zlistx_t **self_p);
 
+// Unpack binary frame into a new list. Packed data must follow format
+// defined by zlistx_pack. List is set to autofree. An empty frame
+// unpacks to an empty list.
+zlistx_t *
+    zlistx_unpack (zframe_t *frame);
+
 // Add an item to the head of the list. Calls the item duplicator, if any,
 // on the item. Resets cursor to list head. Returns an item handle on
 // success, NULL if memory was exhausted.
@@ -1888,6 +1895,21 @@ void
 // or greater than, item2.
 void
     zlistx_set_comparator (zlistx_t *self, zlistx_comparator_fn comparator);
+
+// Serialize list to a binary frame that can be sent in a message.
+// The packed format is compatible with the 'strings' type implemented by zproto:
+//
+//    ; A list of strings
+//    list            = list-count *longstr
+//    list-count      = number-4
+//
+//    ; Strings are always length + text contents
+//    longstr         = number-4 *VCHAR
+//
+//    ; Numbers are unsigned integers in network byte order
+//    number-4        = 4OCTET
+zframe_t *
+    zlistx_pack (zlistx_t *self);
 
 // Self test of this class.
 void
@@ -2521,6 +2543,7 @@ const char *
 //     c = zchunk_t *
 //     f = zframe_t *
 //     h = zhashx_t *
+//     l = zlistx_t * (DRAFT)
 //     U = zuuid_t *
 //     p = void * (sends the pointer value, only meaningful over inproc)
 //     m = zmsg_t * (sends all frames in the zmsg)
@@ -2554,6 +2577,7 @@ int
 //     f = zframe_t ** (creates zframe)
 //     U = zuuid_t * (creates a zuuid with the data)
 //     h = zhashx_t ** (creates zhashx)
+//     l = zlistx_t ** (creates zlistx) (DRAFT)
 //     p = void ** (stores pointer)
 //     m = zmsg_t ** (creates a zmsg with the remaining frames)
 //     z = null, asserts empty frame (0 arguments)
@@ -4081,6 +4105,29 @@ zuuid_t *
 // Self test of this class.
 void
     zuuid_test (bool verbose);
+
+// CLASS: zhttp_client
+// Create a new http client
+zhttp_client_t *
+    zhttp_client_new (bool verbose);
+
+// Destroy an http client
+void
+    zhttp_client_destroy (zhttp_client_t **self_p);
+
+// Send a get request to the url, headers is optional.
+// Use userp to identify response when making multiple requests simultaneously.
+int
+    zhttp_client_get (zhttp_client_t *self, const char *url, zlistx_t *headers, void *userp);
+
+// Receive the response for one of the requests. Blocks until a response is ready.
+// Use userp to identify the request.
+int
+    zhttp_client_recv (zhttp_client_t *self, int *response_code, zchunk_t **data, void **userp);
+
+// Self test of this class.
+void
+    zhttp_client_test (bool verbose);
 
 ''')
 

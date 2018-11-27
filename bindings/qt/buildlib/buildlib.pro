@@ -4,11 +4,11 @@
 ################################################################################
 TEMPLATE = lib
 VERSION = 2.0.1
-CONFIG += qt dll qzyre-buildlib
+CONFIG += qt dll qtzyre-buildlib
 mac:CONFIG += absolute_library_soname
 win32|mac:!wince*:!win32-msvc:!macx-xcode:CONFIG += debug_and_release build_all
 
-include(../src/qzyre.pri)
+include(../src/qtzyre.pri)
 
 TARGET = $$QZYRE_LIBNAME
 DESTDIR = $$QZYRE_LIBDIR

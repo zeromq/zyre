@@ -7,7 +7,7 @@
 #ifndef Q_ZFRAME_H
 #define Q_ZFRAME_H
 
-#include "qzyre.h"
+#include "qtzyre.h"
 
 class QT_ZYRE_EXPORT QZframe : public QObject
 {

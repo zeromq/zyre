@@ -4,24 +4,24 @@
 #  Read the zproject/README.md for information about making permanent changes. #
 ################################################################################
 ```
-# qzyre
+# qtzyre
 
 ## Overview
 
-qzyre is a Qt wrapper for zyre. It's possible to
+qtzyre is a Qt wrapper for zyre. It's possible to
 statically or dynamically link against it as well as use it as internal or external
 library.
 
 ## Internal library
 
 You can use the Qt wrapper as internal library by including the
-`qzyre.pri` file. Here is a minimal example app:
+`qtzyre.pri` file. Here is a minimal example app:
 
 ```make
 QT += core
 QT -= gui
 
-include(<path to pri file>/qzyre.pri)
+include(<path to pri file>/qtzyre.pri)
 
 CONFIG   += console
 CONFIG   -= app_bundle
@@ -32,14 +32,14 @@ SOURCES += main.cpp
 ```
 
 To link statically against the wrapper you need to change the
-`QZYRE_LIBRARY` variable in `config.pri` to `no`.
+`QTZYRE_LIBRARY` variable in `config.pri` to `no`.
 
 To link dynamically against the wrapper you need to change the
-`QZYRE_LIBRARY` variable in `config.pri` to `yes`.
+`QTZYRE_LIBRARY` variable in `config.pri` to `yes`.
 
 ## External library
 
-To install qzyre as a shared library do the following:
+To install qtzyre as a shared library do the following:
 
 ```sh
 qmake

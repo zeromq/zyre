@@ -7,7 +7,7 @@
 #ifndef Q_ZHASH_H
 #define Q_ZHASH_H
 
-#include "qzyre.h"
+#include "qtzyre.h"
 
 class QT_ZYRE_EXPORT QZhash : public QObject
 {

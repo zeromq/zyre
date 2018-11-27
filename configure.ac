@@ -175,7 +175,6 @@ AS_IF([test x"${search_libzmq}" = xyes], [
     PRE_SEARCH_LIBS="${LIBS}"
 
     found_pkgconfig=""
-    found_linkname=""
     PKG_CHECK_MODULES([libzmq], [libzmq >= 0.0.0],
     [
         PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE $libzmq_LIBS"
@@ -205,7 +204,6 @@ AS_IF([test x"${search_libzmq}" = xyes], [
             [
                 was_libzmq_check_lib_detected=yes
                 PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE -lzmq"
-                found_linkname="zmq"
             ],
             [AC_MSG_ERROR([cannot link with -lzmq, install libzmq])])
     ])
@@ -213,12 +211,12 @@ AS_IF([test x"${search_libzmq}" = xyes], [
 dnl END of PKG_CHECK_MODULES and/or direct tests for libzmq
     AS_CASE(["x${was_libzmq_check_lib_detected}"],
         [xpkgcfg], [
-                AC_SUBST([pkgconfig_name_libzmq],[${found_pkgconfig}])
+                AC_SUBST([pkgconfig_name_libzmq],["${found_pkgconfig}"])
                 CFLAGS="${libzmq_CFLAGS} ${CFLAGS}"
                 LIBS="${libzmq_LIBS} ${LIBS}"
             ],
         [xyes], [
-                AC_SUBST([pkgconfig_name_libzmq],[${found_linkname}])
+                AC_SUBST([pkgconfig_name_libzmq],[""])
                 CFLAGS="${libzmq_synthetic_cflags} ${CFLAGS}"
                 LDFLAGS="${libzmq_synthetic_libs} ${LDFLAGS}"
                 LIBS="${libzmq_synthetic_libs} ${LIBS}"
@@ -227,7 +225,7 @@ dnl END of PKG_CHECK_MODULES and/or direct tests for libzmq
                 AC_SUBST([libzmq_LIBS],[${libzmq_synthetic_libs}])
             ],
         [xno], [
-                AC_SUBST([pkgconfig_name_libzmq],[libzmq])
+                AC_SUBST([pkgconfig_name_libzmq],[""])
             AC_MSG_ERROR([Cannot find pkg-config metadata for libzmq 0.0.0 or higher])
     ])
 ])
@@ -264,7 +262,6 @@ AS_IF([test x"${search_libczmq}" = xyes], [
     PRE_SEARCH_LIBS="${LIBS}"
 
     found_pkgconfig=""
-    found_linkname=""
     PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
     [
         PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE $czmq_LIBS"
@@ -294,7 +291,6 @@ AS_IF([test x"${search_libczmq}" = xyes], [
             [
                 was_czmq_check_lib_detected=yes
                 PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE -lczmq"
-                found_linkname="czmq"
             ],
             [AC_MSG_ERROR([cannot link with -lczmq, install libczmq])])
     ])
@@ -302,12 +298,12 @@ AS_IF([test x"${search_libczmq}" = xyes], [
 dnl END of PKG_CHECK_MODULES and/or direct tests for libczmq
     AS_CASE(["x${was_czmq_check_lib_detected}"],
         [xpkgcfg], [
-                AC_SUBST([pkgconfig_name_libczmq],[${found_pkgconfig}])
+                AC_SUBST([pkgconfig_name_libczmq],["${found_pkgconfig}"])
                 CFLAGS="${czmq_CFLAGS} ${CFLAGS}"
                 LIBS="${czmq_LIBS} ${LIBS}"
             ],
         [xyes], [
-                AC_SUBST([pkgconfig_name_libczmq],[${found_linkname}])
+                AC_SUBST([pkgconfig_name_libczmq],[""])
                 CFLAGS="${czmq_synthetic_cflags} ${CFLAGS}"
                 LDFLAGS="${czmq_synthetic_libs} ${LDFLAGS}"
                 LIBS="${czmq_synthetic_libs} ${LIBS}"
@@ -316,7 +312,7 @@ dnl END of PKG_CHECK_MODULES and/or direct tests for libczmq
                 AC_SUBST([czmq_LIBS],[${czmq_synthetic_libs}])
             ],
         [xno], [
-                AC_SUBST([pkgconfig_name_libczmq],[libczmq])
+                AC_SUBST([pkgconfig_name_libczmq],[""])
             AC_MSG_ERROR([Cannot find pkg-config metadata for libczmq 0.0.0 or higher])
     ])
 ])

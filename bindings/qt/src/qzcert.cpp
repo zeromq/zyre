@@ -5,7 +5,7 @@
 ################################################################################
 */
 
-#include "qzyre.h"
+#include "qtzyre.h"
 
 ///
 //  Copy-construct to return the proper wrapped c types

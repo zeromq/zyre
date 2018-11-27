@@ -7,7 +7,7 @@
 #ifndef Q_ZCERT_H
 #define Q_ZCERT_H
 
-#include "qzyre.h"
+#include "qtzyre.h"
 
 class QT_ZYRE_EXPORT QZcert : public QObject
 {
