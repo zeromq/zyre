@@ -20,6 +20,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/builds/cm
 
 # Will be used to add flags to pkg-config useful when apps want to statically link
 set(pkg_config_libs_private "")
+set(pkg_config_names_private "")
 
 ########################################################################
 # options
@@ -112,6 +113,7 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}")
 set(OPTIONAL_LIBRARIES)
+set(OPTIONAL_LIBRARIES_STATIC)
 
 ########################################################################
 # LIBZMQ dependency
@@ -120,7 +122,12 @@ find_package(libzmq REQUIRED)
 IF (LIBZMQ_FOUND)
     include_directories(${LIBZMQ_INCLUDE_DIRS})
     list(APPEND MORE_LIBRARIES ${LIBZMQ_LIBRARIES})
-    set(pkg_config_libs_private "${pkg_config_libs_private} -lzmq")
+  IF (PC_LIBZMQ_FOUND)
+      set(pkg_config_names_private "${pkg_config_names_private} libzmq")
+      list(APPEND OPTIONAL_LIBRARIES_STATIC ${PC_LIBZMQ_STATIC_LDFLAGS})
+  ELSE (PC_LIBZMQ_FOUND)
+      set(pkg_config_libs_private "${pkg_config_libs_private} -lzmq")
+  ENDIF (PC_LIBZMQ_FOUND)
 ELSE (LIBZMQ_FOUND)
     message( FATAL_ERROR "libzmq not found." )
 ENDIF (LIBZMQ_FOUND)
@@ -132,7 +139,12 @@ find_package(czmq REQUIRED)
 IF (CZMQ_FOUND)
     include_directories(${CZMQ_INCLUDE_DIRS})
     list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
-    set(pkg_config_libs_private "${pkg_config_libs_private} -lczmq")
+  IF (PC_CZMQ_FOUND)
+      set(pkg_config_names_private "${pkg_config_names_private} libczmq")
+      list(APPEND OPTIONAL_LIBRARIES_STATIC ${PC_CZMQ_STATIC_LDFLAGS})
+  ELSE (PC_CZMQ_FOUND)
+      set(pkg_config_libs_private "${pkg_config_libs_private} -lczmq")
+  ENDIF (PC_CZMQ_FOUND)
 ELSE (CZMQ_FOUND)
     message( FATAL_ERROR "czmq not found." )
 ENDIF (CZMQ_FOUND)
@@ -352,6 +364,7 @@ target_link_libraries(
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
+    ${OPTIONAL_LIBRARIES_STATIC}
 )
 endif()
 add_executable(
@@ -374,6 +387,7 @@ target_link_libraries(
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
+    ${OPTIONAL_LIBRARIES_STATIC}
 )
 endif()
 add_executable(
@@ -396,6 +410,7 @@ target_link_libraries(
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
+    ${OPTIONAL_LIBRARIES_STATIC}
 )
 endif()
 install(TARGETS zpinger
@@ -421,6 +436,7 @@ target_link_libraries(
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
+    ${OPTIONAL_LIBRARIES_STATIC}
 )
 endif()
 add_executable(
@@ -443,6 +459,7 @@ target_link_libraries(
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
+    ${OPTIONAL_LIBRARIES_STATIC}
 )
 endif()
 add_executable(
@@ -465,6 +482,7 @@ target_link_libraries(
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
+    ${OPTIONAL_LIBRARIES_STATIC}
 )
 endif()
 

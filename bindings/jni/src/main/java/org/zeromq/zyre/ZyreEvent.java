@@ -5,12 +5,14 @@
 ################################################################################
 */
 package org.zeromq.zyre;
+
+import org.scijava.nativelib.NativeLoader;
 import org.zeromq.czmq.*;
 
 public class ZyreEvent implements AutoCloseable{
     static {
         try {
-            System.loadLibrary ("zyrejni");
+            NativeLoader.loadLibrary("zyrejni");
         }
         catch (Exception e) {
             System.exit (-1);

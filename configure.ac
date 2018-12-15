@@ -109,6 +109,23 @@ else
     AC_MSG_RESULT([no])
 fi
 
+# Install Python Bindings
+AC_MSG_CHECKING([whether to install Python bindings])
+
+AC_ARG_ENABLE([bindings-python],
+    AS_HELP_STRING([--enable-bindings-python=yes/no],
+        [Install Python Bindings [default=no]]),
+    [ZPROJECT_BINDINGS_PYTHON=$enableval],
+    [ZPROJECT_BINDINGS_PYTHON=no])
+
+if test "x$ZPROJECT_BINDINGS_PYTHON" == "xyes"; then
+    AM_CONDITIONAL(ENABLE_BINDINGS_PYTHON, true)
+    AC_MSG_RESULT([yes])
+else
+    AM_CONDITIONAL(ENABLE_BINDINGS_PYTHON, false)
+    AC_MSG_RESULT([no])
+fi
+
 # See if clang-format is in PATH; the result unblocks the relevant recipes
 WITH_CLANG_FORMAT=""
 AS_IF([test x"$CLANG_FORMAT" = x],
@@ -139,6 +156,7 @@ AS_IF([test -n "${pkgconfigdir}" -a -d "${pkgconfigdir}"],
 
 # Will be used to add flags to pkg-config useful when apps want to statically link
 PKGCFG_LIBS_PRIVATE=""
+PKGCFG_NAMES_PRIVATE=""
 
 # Archive user supplied flags
 PREVIOUS_CFLAGS="${CFLAGS}"
@@ -177,7 +195,6 @@ AS_IF([test x"${search_libzmq}" = xyes], [
     found_pkgconfig=""
     PKG_CHECK_MODULES([libzmq], [libzmq >= 0.0.0],
     [
-        PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE $libzmq_LIBS"
         was_libzmq_check_lib_detected=pkgcfg
         found_pkgconfig="libzmq"
     ],
@@ -211,12 +228,11 @@ AS_IF([test x"${search_libzmq}" = xyes], [
 dnl END of PKG_CHECK_MODULES and/or direct tests for libzmq
     AS_CASE(["x${was_libzmq_check_lib_detected}"],
         [xpkgcfg], [
-                AC_SUBST([pkgconfig_name_libzmq],["${found_pkgconfig}"])
+                PKGCFG_NAMES_PRIVATE="$PKGCFG_NAMES_PRIVATE ${found_pkgconfig}"
                 CFLAGS="${libzmq_CFLAGS} ${CFLAGS}"
                 LIBS="${libzmq_LIBS} ${LIBS}"
             ],
         [xyes], [
-                AC_SUBST([pkgconfig_name_libzmq],[""])
                 CFLAGS="${libzmq_synthetic_cflags} ${CFLAGS}"
                 LDFLAGS="${libzmq_synthetic_libs} ${LDFLAGS}"
                 LIBS="${libzmq_synthetic_libs} ${LIBS}"
@@ -225,7 +241,6 @@ dnl END of PKG_CHECK_MODULES and/or direct tests for libzmq
                 AC_SUBST([libzmq_LIBS],[${libzmq_synthetic_libs}])
             ],
         [xno], [
-                AC_SUBST([pkgconfig_name_libzmq],[""])
             AC_MSG_ERROR([Cannot find pkg-config metadata for libzmq 0.0.0 or higher])
     ])
 ])
@@ -264,7 +279,6 @@ AS_IF([test x"${search_libczmq}" = xyes], [
     found_pkgconfig=""
     PKG_CHECK_MODULES([czmq], [libczmq >= 0.0.0],
     [
-        PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE $czmq_LIBS"
         was_czmq_check_lib_detected=pkgcfg
         found_pkgconfig="libczmq"
     ],
@@ -298,12 +312,11 @@ AS_IF([test x"${search_libczmq}" = xyes], [
 dnl END of PKG_CHECK_MODULES and/or direct tests for libczmq
     AS_CASE(["x${was_czmq_check_lib_detected}"],
         [xpkgcfg], [
-                AC_SUBST([pkgconfig_name_libczmq],["${found_pkgconfig}"])
+                PKGCFG_NAMES_PRIVATE="$PKGCFG_NAMES_PRIVATE ${found_pkgconfig}"
                 CFLAGS="${czmq_CFLAGS} ${CFLAGS}"
                 LIBS="${czmq_LIBS} ${LIBS}"
             ],
         [xyes], [
-                AC_SUBST([pkgconfig_name_libczmq],[""])
                 CFLAGS="${czmq_synthetic_cflags} ${CFLAGS}"
                 LDFLAGS="${czmq_synthetic_libs} ${LDFLAGS}"
                 LIBS="${czmq_synthetic_libs} ${LIBS}"
@@ -312,7 +325,6 @@ dnl END of PKG_CHECK_MODULES and/or direct tests for libczmq
                 AC_SUBST([czmq_LIBS],[${czmq_synthetic_libs}])
             ],
         [xno], [
-                AC_SUBST([pkgconfig_name_libczmq],[""])
             AC_MSG_ERROR([Cannot find pkg-config metadata for libczmq 0.0.0 or higher])
     ])
 ])
@@ -323,6 +335,7 @@ CFLAGS="${PREVIOUS_CFLAGS}"
 LIBS="${PREVIOUS_LIBS}"
 
 AC_SUBST(pkg_config_libs_private, $PKGCFG_LIBS_PRIVATE)
+AC_SUBST(pkg_config_names_private, $PKGCFG_NAMES_PRIVATE)
 
 # Platform specific checks
 zyre_on_mingw32="no"
@@ -701,6 +714,7 @@ echo Build docs.................... : $zyre_build_doc
 echo Build host.................... : $BUILD_HOST
 echo Build user.................... : $USER
 echo Draft API..................... : $enable_drafts
+echo Python Bindings............... : $ZPROJECT_BINDINGS_PYTHON
 echo Install dir................... : $prefix
 echo Install man pages............. : $zyre_install_man
 
@@ -720,6 +734,7 @@ echo Configure complete! Now proceed with:
 echo "    - 'make'               compile the project"
 echo "    - 'make check'         run the project's selftest"
 echo "    - 'make install'       install the project to $prefix"
+echo "    - 'make bindings       install enabled language bindings (Python, etc)"
 echo
 echo Further options are:
 echo "    - 'make callcheck'     run the project's selftest with valgrind to"

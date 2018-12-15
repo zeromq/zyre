@@ -8,11 +8,12 @@ package org.zeromq.zyre;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.scijava.nativelib.NativeLoader;
 
 public class ZyreEventTest {
     static {
         try {
-            System.loadLibrary ("zyrejni");
+            NativeLoader.loadLibrary("zyrejni");
         }
         catch (Exception e) {
             System.exit (-1);

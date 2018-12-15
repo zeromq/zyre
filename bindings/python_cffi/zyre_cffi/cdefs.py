@@ -2703,6 +2703,56 @@ bool
 void *
     zsock_resolve (void *self);
 
+// Get socket option `router_notify`.
+// Available from libzmq 4.3.0.
+int
+    zsock_router_notify (void *self);
+
+// Set socket option `router_notify`.
+// Available from libzmq 4.3.0.
+void
+    zsock_set_router_notify (void *self, int router_notify);
+
+// Get socket option `multicast_loop`.
+// Available from libzmq 4.3.0.
+int
+    zsock_multicast_loop (void *self);
+
+// Set socket option `multicast_loop`.
+// Available from libzmq 4.3.0.
+void
+    zsock_set_multicast_loop (void *self, int multicast_loop);
+
+// Get socket option `metadata`.
+// Available from libzmq 4.3.0.
+char *
+    zsock_metadata (void *self);
+
+// Set socket option `metadata`.
+// Available from libzmq 4.3.0.
+void
+    zsock_set_metadata (void *self, const char *metadata);
+
+// Get socket option `loopback_fastpath`.
+// Available from libzmq 4.3.0.
+int
+    zsock_loopback_fastpath (void *self);
+
+// Set socket option `loopback_fastpath`.
+// Available from libzmq 4.3.0.
+void
+    zsock_set_loopback_fastpath (void *self, int loopback_fastpath);
+
+// Get socket option `zap_enforce_domain`.
+// Available from libzmq 4.3.0.
+int
+    zsock_zap_enforce_domain (void *self);
+
+// Set socket option `zap_enforce_domain`.
+// Available from libzmq 4.3.0.
+void
+    zsock_set_zap_enforce_domain (void *self, int zap_enforce_domain);
+
 // Get socket option `gssapi_principal_nametype`.
 // Available from libzmq 4.3.0.
 int
@@ -3722,6 +3772,30 @@ void
 // Note that this method is valid only before any socket is created.
 void
     zsys_set_thread_priority (int priority);
+
+// Configure the numeric prefix to each thread created for the internal
+// context's thread pool. This option is only supported on Linux.
+// If the environment variable ZSYS_THREAD_NAME_PREFIX is defined, that
+// provides the default.
+// Note that this method is valid only before any socket is created.
+void
+    zsys_set_thread_name_prefix (int prefix);
+
+// Return thread name prefix.
+int
+    zsys_thread_name_prefix (void);
+
+// Adds a specific CPU to the affinity list of the ZMQ context thread pool.
+// This option is only supported on Linux.
+// Note that this method is valid only before any socket is created.
+void
+    zsys_thread_affinity_cpu_add (int cpu);
+
+// Removes a specific CPU to the affinity list of the ZMQ context thread pool.
+// This option is only supported on Linux.
+// Note that this method is valid only before any socket is created.
+void
+    zsys_thread_affinity_cpu_remove (int cpu);
 
 // Configure the number of sockets that ZeroMQ will allow. The default
 // is 1024. The actual limit depends on the system, and you can query it
