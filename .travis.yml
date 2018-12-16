@@ -15,14 +15,6 @@ os:
 - linux
 - osx
 
-# Note: some packages or dependencies may require extended permissions
-# which take longer to set up and boot. If your project does not build
-# in the default container with sudo==false, consider requiring a docker
-# image and/or a newer Ubuntu Trusty baseline VM, by uncommenting below.
-# See the current docs on http://travis-ci.org for up-to-date options.
-sudo: false
-#sudo: required
-
 ### Customization note: enabled dist:trusty
 dist:
 - trusty
