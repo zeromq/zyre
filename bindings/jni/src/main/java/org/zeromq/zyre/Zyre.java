@@ -5,12 +5,14 @@
 ################################################################################
 */
 package org.zeromq.zyre;
+
+import org.scijava.nativelib.NativeLoader;
 import org.zeromq.czmq.*;
 
 public class Zyre implements AutoCloseable{
     static {
         try {
-            System.loadLibrary ("zyrejni");
+            NativeLoader.loadLibrary("zyrejni");
         }
         catch (Exception e) {
             System.exit (-1);
@@ -358,7 +360,7 @@ public class Zyre implements AutoCloseable{
     major * 10000 + minor * 100 + patch, as a single integer.
     */
     native static long __version ();
-    public long version () {
+    public static long version () {
         return __version ();
     }
     /*

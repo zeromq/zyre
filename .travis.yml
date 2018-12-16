@@ -15,17 +15,9 @@ os:
 - linux
 - osx
 
-# Note: some packages or dependencies may require extended permissions
-# which take longer to set up and boot. If your project does not build
-# in the default container with sudo==false, consider requiring a docker
-# image and/or a newer Ubuntu Trusty baseline VM, by uncommenting below.
-# See the current docs on http://travis-ci.org for up-to-date options.
-sudo: false
-#sudo: required
-
 ### Customization note: enabled dist:trusty
 dist:
-- trusty
+- xenial
 
 #services:
 #- docker
@@ -64,7 +56,6 @@ env:
   ### Customization note: build/test options
   matrix:
     - BUILD_TYPE=default
-    - BUILD_TYPE=android
     - BUILD_TYPE=default-Werror
     - BUILD_TYPE=cmake
     - BUILD_TYPE=check_zproject
@@ -99,13 +90,17 @@ pkg_src_zeromq_ubuntu14: &pkg_src_zeromq_ubuntu14
 - sourceline: 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/ ./'
   key_url: 'http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_14.04/Release.key'
 
-# Note: refer to ubuntu14 if you use dist==Trusty
+pkg_src_zeromq_ubuntu16: &pkg_src_zeromq_ubuntu16
+- sourceline: 'deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_16.04/ ./'
+  key_url: 'http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-draft/xUbuntu_16.04/Release.key'
+
+# Note: refer to ubuntu16 if you use dist==Xenial
 # Also note that as of early 2017, either dist==trusty or services==docker
 # is needed for C++11 support; docker envs are usually faster to start up
 ### Customization note: packages referred by older incarnation hardcoded into this list
 addons:
   apt:
-    sources: *pkg_src_zeromq_ubuntu14
+    sources: *pkg_src_zeromq_ubuntu16
     packages: &pkg_deps_common
     - *pkg_deps_devtools
     - *pkg_deps_prereqs
@@ -125,22 +120,22 @@ matrix:
     os: linux
     addons:
       apt:
-        sources: *pkg_src_zeromq_ubuntu14
+        sources: *pkg_src_zeromq_ubuntu16
         packages:
         - *pkg_deps_common
         - *pkg_deps_doctools
   - env: BUILD_TYPE=valgrind
     os: linux
-    dist: trusty
+    dist: xenial
     addons:
       apt:
-        sources: *pkg_src_zeromq_ubuntu14
+        sources: *pkg_src_zeromq_ubuntu16
         packages:
         - valgrind
         - *pkg_deps_common
   - env: BUILD_TYPE=check_zproto
     os: linux
-    dist: trusty
+    dist: xenial
     services: docker
     addons:
       apt:
@@ -154,10 +149,10 @@ matrix:
         - python3
   - env: BUILD_TYPE=default ADDRESS_SANITIZER=enabled
     os: linux
-    dist: trusty
+    dist: xenial
     addons:
       apt:
-        sources: *pkg_src_zeromq_ubuntu14
+        sources: *pkg_src_zeromq_ubuntu16
         packages:
         - *pkg_deps_common
   - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=clang-format-5.0
@@ -176,6 +171,11 @@ matrix:
         - clang-5.0
         - clang-format-5.0
 #autotools#        - *pkg_deps_prereqs
+  - env: BUILD_TYPE=android
+    os: linux
+    dist: xenial
+    addons:
+      apt:
 
 ### Customization note: python binding
 before_install:
