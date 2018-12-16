@@ -59,7 +59,6 @@ env:
     - BUILD_TYPE=default-Werror
     - BUILD_TYPE=cmake
     - BUILD_TYPE=check_zproject
-    - BUILD_TYPE=bindings BINDING=jni
 #   - BUILD_TYPE=check-py
 
 # Prerequisite packages provided by OS distro and used "as is"
@@ -113,8 +112,6 @@ matrix:
   exclude:
   - os: osx
     env: BUILD_TYPE=check_zproject
-  - os: osx
-    env: BUILD_TYPE=bindings BINDING=jni
   include:
   - env: BUILD_TYPE=default-with-docs
     os: linux
@@ -172,6 +169,11 @@ matrix:
         - clang-format-5.0
 #autotools#        - *pkg_deps_prereqs
   - env: BUILD_TYPE=android
+    os: linux
+    dist: xenial
+    addons:
+      apt:
+  - env: BUILD_TYPE=bindings BINDING=jni
     os: linux
     dist: xenial
     addons:
