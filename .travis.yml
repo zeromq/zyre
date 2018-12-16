@@ -56,7 +56,6 @@ env:
   ### Customization note: build/test options
   matrix:
     - BUILD_TYPE=default
-    - BUILD_TYPE=android
     - BUILD_TYPE=default-Werror
     - BUILD_TYPE=cmake
     - BUILD_TYPE=check_zproject
@@ -172,6 +171,11 @@ matrix:
         - clang-5.0
         - clang-format-5.0
 #autotools#        - *pkg_deps_prereqs
+  - env: BUILD_TYPE=android
+    os: linux
+    dist: xenial
+    addons:
+      apt:
 
 ### Customization note: python binding
 before_install:
