@@ -11,11 +11,14 @@ import org.zeromq.czmq.*;
 
 public class Zyre implements AutoCloseable{
     static {
-        try {
-            NativeLoader.loadLibrary("zyrejni");
-        }
-        catch (Exception e) {
-            System.exit (-1);
+        if (System.getProperty("java.vm.vendor").contains("Android")) {
+            System.loadLibrary("zyrejni");
+        } else {
+            try {
+                NativeLoader.loadLibrary("zyrejni");
+            } catch (Exception e) {
+                System.exit (-1);
+            }
         }
     }
     public long self;
