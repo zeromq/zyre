@@ -22,19 +22,19 @@ uses
   IZyre = interface
 
     // Return our node UUID string, after successful initialization
-    function Uuid: String;
+    function Uuid: string;
 
     // Return our node name, after successful initialization. First 6
     // characters of UUID by default.
-    function Name: String;
+    function Name: string;
 
     // Set the public name of this node overriding the default. The name is
     // provide during discovery and come in each ENTER message.
-    procedure SetName(const Name: String);
+    procedure SetName(const Name: string);
 
     // Set node header; these are provided to other nodes during discovery
     // and come in each ENTER message.
-    procedure SetHeader(const Name: String; const Format: String);
+    procedure SetHeader(const Name: string; const Format: string);
 
     // Set verbose mode; this tells the node to log all traffic as well as
     // all major events.
@@ -70,7 +70,7 @@ uses
     // Set network interface for UDP beacons. If you do not set this, CZMQ will
     // choose an interface for you. On boxes with several interfaces you should
     // specify which one you want to use, or strange things can happen.
-    procedure SetInterface(const Value: String);
+    procedure SetInterface(const Value: string);
 
     // By default, Zyre binds to an ephemeral TCP port and broadcasts the local
     // host name using UDP beaconing. When you call this method, Zyre will use
@@ -80,41 +80,41 @@ uses
     // inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address
     // that is meaningful to remote as well as local nodes). Returns 0 if
     // the bind was successful, else -1.
-    function SetEndpoint(const Format: String): Integer;
+    function SetEndpoint(const Format: string): Integer;
 
     // This options enables a peer to actively contest for leadership in the
     // given group. If this option is not set the peer will still participate in
     // elections but never gets elected. This ensures that a consent for a leader
     // is reached within a group even though not every peer is contesting for
     // leadership.
-    procedure SetContestInGroup(const Group: String);
+    procedure SetContestInGroup(const Group: string);
 
     // Set an alternative endpoint value when using GOSSIP ONLY. This is useful
     // if you're advertising an endpoint behind a NAT.
-    procedure SetAdvertisedEndpoint(const Value: String);
+    procedure SetAdvertisedEndpoint(const Value: string);
 
     // Apply a azcert to a Zyre node.
     procedure SetZcert(const Zcert: IZcert);
 
     // Specify the ZAP domain (for use with CURVE).
-    procedure SetZapDomain(const Domain: String);
+    procedure SetZapDomain(const Domain: string);
 
     // Set-up gossip discovery of other nodes. At least one node in the cluster
     // must bind to a well-known gossip endpoint, so other nodes can connect to
     // it. Note that gossip endpoints are completely distinct from Zyre node
     // endpoints, and should not overlap (they can use the same transport).
-    procedure GossipBind(const Format: String);
+    procedure GossipBind(const Format: string);
 
     // Set-up gossip discovery of other nodes. A node may connect to multiple
     // other nodes, for redundancy paths. For details of the gossip network
     // design, see the CZMQ zgossip class.
-    procedure GossipConnect(const Format: String);
+    procedure GossipConnect(const Format: string);
 
     // Set-up gossip discovery with CURVE enabled.
-    procedure GossipConnectCurve(const PublicKey: String; const Format: String);
+    procedure GossipConnectCurve(const PublicKey: string; const Format: string);
 
     // Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
-    procedure GossipUnpublish(const Node: String);
+    procedure GossipUnpublish(const Node: string);
 
     // Start node, after setting header values. When you start a node it
     // begins discovery and connection. Returns 0 if OK, -1 if it wasn't
@@ -128,10 +128,10 @@ uses
 
     // Join a named group; after joining a group you can send messages to
     // the group and all Zyre nodes in that group will receive them.
-    function Join(const Group: String): Integer;
+    function Join(const Group: string): Integer;
 
     // Leave a group
-    function Leave(const Group: String): Integer;
+    function Leave(const Group: string): Integer;
 
     // Receive next message from network; the message may be a control
     // message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
@@ -140,23 +140,23 @@ uses
 
     // Send message to single peer, specified as a UUID string
     // Destroys message after sending
-    function Whisper(const Peer: String; var MsgP: IZmsg): Integer;
+    function Whisper(const Peer: string; var MsgP: IZmsg): Integer;
 
     // Send message to a named group
     // Destroys message after sending
-    function Shout(const Group: String; var MsgP: IZmsg): Integer;
+    function Shout(const Group: string; var MsgP: IZmsg): Integer;
 
     // Send formatted string to a single peer specified as UUID string
-    function Whispers(const Peer: String; const Format: String): Integer;
+    function Whispers(const Peer: string; const Format: string): Integer;
 
     // Send formatted string to a named group
-    function Shouts(const Group: String; const Format: String): Integer;
+    function Shouts(const Group: string; const Format: string): Integer;
 
     // Return zlist of current peer ids.
     function Peers: IZlist;
 
     // Return zlist of current peers of this group.
-    function PeersByGroup(const Name: String): IZlist;
+    function PeersByGroup(const Name: string): IZlist;
 
     // Return zlist of currently joined groups.
     function OwnGroups: IZlist;
@@ -166,14 +166,14 @@ uses
 
     // Return the endpoint of a connected peer.
     // Returns empty string if peer does not exist.
-    function PeerAddress(const Peer: String): String;
+    function PeerAddress(const Peer: string): string;
 
     // Return the value of a header of a conected peer.
     // Returns null if peer or key doesn't exits.
-    function PeerHeaderValue(const Peer: String; const Name: String): String;
+    function PeerHeaderValue(const Peer: string; const Name: string): string;
 
     // Explicitly connect to a peer
-    function RequirePeer(const Uuid: String; const Endpoint: String; const PublicKey: String): Integer;
+    function RequirePeer(const Uuid: string; const Endpoint: string; const PublicKey: string): Integer;
 
     // Return socket for talking to the Zyre node, for polling
     function Socket: IZsock;
@@ -188,26 +188,26 @@ uses
     // Returns event type, as printable uppercase string. Choices are:
     // "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
     // and for the local node: "STOP"
-    function &Type: String;
+    function &Type: string;
 
     // Return the sending peer's uuid as a string
-    function PeerUuid: String;
+    function PeerUuid: string;
 
     // Return the sending peer's public name as a string
-    function PeerName: String;
+    function PeerName: string;
 
     // Return the sending peer's ipaddress as a string
-    function PeerAddr: String;
+    function PeerAddr: string;
 
     // Returns the event headers, or NULL if there are none
     function Headers: IZhash;
 
     // Returns value of a header from the message headers
     // obtained by ENTER. Return NULL if no value was found.
-    function Header(const Name: String): String;
+    function Header(const Name: string): string;
 
     // Returns the group name that a SHOUT event was sent to
-    function Group: String;
+    function Group: string;
 
     // Returns the incoming message payload; the caller can modify the
     // message but does not own it and should not destroy it.
@@ -234,7 +234,7 @@ uses
     // node it is silent and invisible to other nodes on the network.
     // The node name is provided to other nodes during discovery. If you
     // specify NULL, Zyre generates a randomized node name from the UUID.
-    constructor New(const Name: String);
+    constructor New(const Name: string);
 
     // Destructor, destroys a Zyre node. When you destroy a node, any
     // messages it is sending or receiving will be discarded.
@@ -252,19 +252,19 @@ uses
   protected
 
     // Return our node UUID string, after successful initialization
-    function Uuid: String;
+    function Uuid: string;
 
     // Return our node name, after successful initialization. First 6
     // characters of UUID by default.
-    function Name: String;
+    function Name: string;
 
     // Set the public name of this node overriding the default. The name is
     // provide during discovery and come in each ENTER message.
-    procedure SetName(const Name: String);
+    procedure SetName(const Name: string);
 
     // Set node header; these are provided to other nodes during discovery
     // and come in each ENTER message.
-    procedure SetHeader(const Name: String; const Format: String);
+    procedure SetHeader(const Name: string; const Format: string);
 
     // Set verbose mode; this tells the node to log all traffic as well as
     // all major events.
@@ -300,7 +300,7 @@ uses
     // Set network interface for UDP beacons. If you do not set this, CZMQ will
     // choose an interface for you. On boxes with several interfaces you should
     // specify which one you want to use, or strange things can happen.
-    procedure SetInterface(const Value: String);
+    procedure SetInterface(const Value: string);
 
     // By default, Zyre binds to an ephemeral TCP port and broadcasts the local
     // host name using UDP beaconing. When you call this method, Zyre will use
@@ -310,41 +310,41 @@ uses
     // inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address
     // that is meaningful to remote as well as local nodes). Returns 0 if
     // the bind was successful, else -1.
-    function SetEndpoint(const Format: String): Integer;
+    function SetEndpoint(const Format: string): Integer;
 
     // This options enables a peer to actively contest for leadership in the
     // given group. If this option is not set the peer will still participate in
     // elections but never gets elected. This ensures that a consent for a leader
     // is reached within a group even though not every peer is contesting for
     // leadership.
-    procedure SetContestInGroup(const Group: String);
+    procedure SetContestInGroup(const Group: string);
 
     // Set an alternative endpoint value when using GOSSIP ONLY. This is useful
     // if you're advertising an endpoint behind a NAT.
-    procedure SetAdvertisedEndpoint(const Value: String);
+    procedure SetAdvertisedEndpoint(const Value: string);
 
     // Apply a azcert to a Zyre node.
     procedure SetZcert(const Zcert: IZcert);
 
     // Specify the ZAP domain (for use with CURVE).
-    procedure SetZapDomain(const Domain: String);
+    procedure SetZapDomain(const Domain: string);
 
     // Set-up gossip discovery of other nodes. At least one node in the cluster
     // must bind to a well-known gossip endpoint, so other nodes can connect to
     // it. Note that gossip endpoints are completely distinct from Zyre node
     // endpoints, and should not overlap (they can use the same transport).
-    procedure GossipBind(const Format: String);
+    procedure GossipBind(const Format: string);
 
     // Set-up gossip discovery of other nodes. A node may connect to multiple
     // other nodes, for redundancy paths. For details of the gossip network
     // design, see the CZMQ zgossip class.
-    procedure GossipConnect(const Format: String);
+    procedure GossipConnect(const Format: string);
 
     // Set-up gossip discovery with CURVE enabled.
-    procedure GossipConnectCurve(const PublicKey: String; const Format: String);
+    procedure GossipConnectCurve(const PublicKey: string; const Format: string);
 
     // Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
-    procedure GossipUnpublish(const Node: String);
+    procedure GossipUnpublish(const Node: string);
 
     // Start node, after setting header values. When you start a node it
     // begins discovery and connection. Returns 0 if OK, -1 if it wasn't
@@ -358,10 +358,10 @@ uses
 
     // Join a named group; after joining a group you can send messages to
     // the group and all Zyre nodes in that group will receive them.
-    function Join(const Group: String): Integer;
+    function Join(const Group: string): Integer;
 
     // Leave a group
-    function Leave(const Group: String): Integer;
+    function Leave(const Group: string): Integer;
 
     // Receive next message from network; the message may be a control
     // message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
@@ -370,23 +370,23 @@ uses
 
     // Send message to single peer, specified as a UUID string
     // Destroys message after sending
-    function Whisper(const Peer: String; var MsgP: IZmsg): Integer;
+    function Whisper(const Peer: string; var MsgP: IZmsg): Integer;
 
     // Send message to a named group
     // Destroys message after sending
-    function Shout(const Group: String; var MsgP: IZmsg): Integer;
+    function Shout(const Group: string; var MsgP: IZmsg): Integer;
 
     // Send formatted string to a single peer specified as UUID string
-    function Whispers(const Peer: String; const Format: String): Integer;
+    function Whispers(const Peer: string; const Format: string): Integer;
 
     // Send formatted string to a named group
-    function Shouts(const Group: String; const Format: String): Integer;
+    function Shouts(const Group: string; const Format: string): Integer;
 
     // Return zlist of current peer ids.
     function Peers: IZlist;
 
     // Return zlist of current peers of this group.
-    function PeersByGroup(const Name: String): IZlist;
+    function PeersByGroup(const Name: string): IZlist;
 
     // Return zlist of currently joined groups.
     function OwnGroups: IZlist;
@@ -396,14 +396,14 @@ uses
 
     // Return the endpoint of a connected peer.
     // Returns empty string if peer does not exist.
-    function PeerAddress(const Peer: String): String;
+    function PeerAddress(const Peer: string): string;
 
     // Return the value of a header of a conected peer.
     // Returns null if peer or key doesn't exits.
-    function PeerHeaderValue(const Peer: String; const Name: String): String;
+    function PeerHeaderValue(const Peer: string; const Name: string): string;
 
     // Explicitly connect to a peer
-    function RequirePeer(const Uuid: String; const Endpoint: String; const PublicKey: String): Integer;
+    function RequirePeer(const Uuid: string; const Endpoint: string; const PublicKey: string): Integer;
 
     // Return socket for talking to the Zyre node, for polling
     function Socket: IZsock;
@@ -438,26 +438,26 @@ uses
     // Returns event type, as printable uppercase string. Choices are:
     // "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
     // and for the local node: "STOP"
-    function &Type: String;
+    function &Type: string;
 
     // Return the sending peer's uuid as a string
-    function PeerUuid: String;
+    function PeerUuid: string;
 
     // Return the sending peer's public name as a string
-    function PeerName: String;
+    function PeerName: string;
 
     // Return the sending peer's ipaddress as a string
-    function PeerAddr: String;
+    function PeerAddr: string;
 
     // Returns the event headers, or NULL if there are none
     function Headers: IZhash;
 
     // Returns value of a header from the message headers
     // obtained by ENTER. Return NULL if no value was found.
-    function Header(const Name: String): String;
+    function Header(const Name: string): string;
 
     // Returns the group name that a SHOUT event was sent to
-    function Group: String;
+    function Group: string;
 
     // Returns the incoming message payload; the caller can modify the
     // message but does not own it and should not destroy it.
@@ -481,7 +481,7 @@ uses
 
  (* TZyre *)
 
-  constructor TZyre.New(const Name: String);
+  constructor TZyre.New(const Name: string);
   var
     __Name__: UTF8String;
   begin
@@ -521,17 +521,17 @@ uses
     zyre_test(Verbose);
   end;
 
-  function TZyre.Uuid: String;
+  function TZyre.Uuid: string;
   begin
-    Result := String(UTF8String(zyre_uuid(FHandle)));
+    Result := string(UTF8String(zyre_uuid(FHandle)));
   end;
 
-  function TZyre.Name: String;
+  function TZyre.Name: string;
   begin
-    Result := String(UTF8String(zyre_name(FHandle)));
+    Result := string(UTF8String(zyre_name(FHandle)));
   end;
 
-  procedure TZyre.SetName(const Name: String);
+  procedure TZyre.SetName(const Name: string);
   var
     __Name__: UTF8String;
   begin
@@ -539,7 +539,7 @@ uses
     zyre_set_name(FHandle, PAnsiChar(__Name__));
   end;
 
-  procedure TZyre.SetHeader(const Name: String; const Format: String);
+  procedure TZyre.SetHeader(const Name: string; const Format: string);
   var
     __Name__: UTF8String;
     __Format__: UTF8String;
@@ -579,7 +579,7 @@ uses
     zyre_set_interval(FHandle, Interval);
   end;
 
-  procedure TZyre.SetInterface(const Value: String);
+  procedure TZyre.SetInterface(const Value: string);
   var
     __Value__: UTF8String;
   begin
@@ -587,7 +587,7 @@ uses
     zyre_set_interface(FHandle, PAnsiChar(__Value__));
   end;
 
-  function TZyre.SetEndpoint(const Format: String): Integer;
+  function TZyre.SetEndpoint(const Format: string): Integer;
   var
     __Format__: UTF8String;
   begin
@@ -595,7 +595,7 @@ uses
     Result := zyre_set_endpoint(FHandle, PAnsiChar(__Format__));
   end;
 
-  procedure TZyre.SetContestInGroup(const Group: String);
+  procedure TZyre.SetContestInGroup(const Group: string);
   var
     __Group__: UTF8String;
   begin
@@ -603,7 +603,7 @@ uses
     zyre_set_contest_in_group(FHandle, PAnsiChar(__Group__));
   end;
 
-  procedure TZyre.SetAdvertisedEndpoint(const Value: String);
+  procedure TZyre.SetAdvertisedEndpoint(const Value: string);
   var
     __Value__: UTF8String;
   begin
@@ -616,7 +616,7 @@ uses
     zyre_set_zcert(FHandle, TZcert.UnWrap(Zcert));
   end;
 
-  procedure TZyre.SetZapDomain(const Domain: String);
+  procedure TZyre.SetZapDomain(const Domain: string);
   var
     __Domain__: UTF8String;
   begin
@@ -624,7 +624,7 @@ uses
     zyre_set_zap_domain(FHandle, PAnsiChar(__Domain__));
   end;
 
-  procedure TZyre.GossipBind(const Format: String);
+  procedure TZyre.GossipBind(const Format: string);
   var
     __Format__: UTF8String;
   begin
@@ -632,7 +632,7 @@ uses
     zyre_gossip_bind(FHandle, PAnsiChar(__Format__));
   end;
 
-  procedure TZyre.GossipConnect(const Format: String);
+  procedure TZyre.GossipConnect(const Format: string);
   var
     __Format__: UTF8String;
   begin
@@ -640,7 +640,7 @@ uses
     zyre_gossip_connect(FHandle, PAnsiChar(__Format__));
   end;
 
-  procedure TZyre.GossipConnectCurve(const PublicKey: String; const Format: String);
+  procedure TZyre.GossipConnectCurve(const PublicKey: string; const Format: string);
   var
     __PublicKey__: UTF8String;
     __Format__: UTF8String;
@@ -650,7 +650,7 @@ uses
     zyre_gossip_connect_curve(FHandle, PAnsiChar(__PublicKey__), PAnsiChar(__Format__));
   end;
 
-  procedure TZyre.GossipUnpublish(const Node: String);
+  procedure TZyre.GossipUnpublish(const Node: string);
   var
     __Node__: UTF8String;
   begin
@@ -668,7 +668,7 @@ uses
     zyre_stop(FHandle);
   end;
 
-  function TZyre.Join(const Group: String): Integer;
+  function TZyre.Join(const Group: string): Integer;
   var
     __Group__: UTF8String;
   begin
@@ -676,7 +676,7 @@ uses
     Result := zyre_join(FHandle, PAnsiChar(__Group__));
   end;
 
-  function TZyre.Leave(const Group: String): Integer;
+  function TZyre.Leave(const Group: string): Integer;
   var
     __Group__: UTF8String;
   begin
@@ -689,7 +689,7 @@ uses
     Result := TZmsg.Wrap(zyre_recv(FHandle), true);
   end;
 
-  function TZyre.Whisper(const Peer: String; var MsgP: IZmsg): Integer;
+  function TZyre.Whisper(const Peer: string; var MsgP: IZmsg): Integer;
   var
     __Peer__: UTF8String;
   begin
@@ -699,7 +699,7 @@ uses
       MsgP := nil;
   end;
 
-  function TZyre.Shout(const Group: String; var MsgP: IZmsg): Integer;
+  function TZyre.Shout(const Group: string; var MsgP: IZmsg): Integer;
   var
     __Group__: UTF8String;
   begin
@@ -709,7 +709,7 @@ uses
       MsgP := nil;
   end;
 
-  function TZyre.Whispers(const Peer: String; const Format: String): Integer;
+  function TZyre.Whispers(const Peer: string; const Format: string): Integer;
   var
     __Peer__: UTF8String;
     __Format__: UTF8String;
@@ -719,7 +719,7 @@ uses
     Result := zyre_whispers(FHandle, PAnsiChar(__Peer__), PAnsiChar(__Format__));
   end;
 
-  function TZyre.Shouts(const Group: String; const Format: String): Integer;
+  function TZyre.Shouts(const Group: string; const Format: string): Integer;
   var
     __Group__: UTF8String;
     __Format__: UTF8String;
@@ -734,7 +734,7 @@ uses
     Result := TZlist.Wrap(zyre_peers(FHandle), true);
   end;
 
-  function TZyre.PeersByGroup(const Name: String): IZlist;
+  function TZyre.PeersByGroup(const Name: string): IZlist;
   var
     __Name__: UTF8String;
   begin
@@ -752,7 +752,7 @@ uses
     Result := TZlist.Wrap(zyre_peer_groups(FHandle), true);
   end;
 
-  function TZyre.PeerAddress(const Peer: String): String;
+  function TZyre.PeerAddress(const Peer: string): string;
   var
     __Peer__: UTF8String;
   begin
@@ -760,7 +760,7 @@ uses
     Result := ZFreeString(zyre_peer_address(FHandle, PAnsiChar(__Peer__)));
   end;
 
-  function TZyre.PeerHeaderValue(const Peer: String; const Name: String): String;
+  function TZyre.PeerHeaderValue(const Peer: string; const Name: string): string;
   var
     __Peer__: UTF8String;
     __Name__: UTF8String;
@@ -770,7 +770,7 @@ uses
     Result := ZFreeString(zyre_peer_header_value(FHandle, PAnsiChar(__Peer__), PAnsiChar(__Name__)));
   end;
 
-  function TZyre.RequirePeer(const Uuid: String; const Endpoint: String; const PublicKey: String): Integer;
+  function TZyre.RequirePeer(const Uuid: string; const Endpoint: string; const PublicKey: string): Integer;
   var
     __Uuid__: UTF8String;
     __Endpoint__: UTF8String;
@@ -826,24 +826,24 @@ uses
     zyre_event_test(Verbose);
   end;
 
-  function TZyreEvent.&Type: String;
+  function TZyreEvent.&Type: string;
   begin
-    Result := String(UTF8String(zyre_event_type(FHandle)));
+    Result := string(UTF8String(zyre_event_type(FHandle)));
   end;
 
-  function TZyreEvent.PeerUuid: String;
+  function TZyreEvent.PeerUuid: string;
   begin
-    Result := String(UTF8String(zyre_event_peer_uuid(FHandle)));
+    Result := string(UTF8String(zyre_event_peer_uuid(FHandle)));
   end;
 
-  function TZyreEvent.PeerName: String;
+  function TZyreEvent.PeerName: string;
   begin
-    Result := String(UTF8String(zyre_event_peer_name(FHandle)));
+    Result := string(UTF8String(zyre_event_peer_name(FHandle)));
   end;
 
-  function TZyreEvent.PeerAddr: String;
+  function TZyreEvent.PeerAddr: string;
   begin
-    Result := String(UTF8String(zyre_event_peer_addr(FHandle)));
+    Result := string(UTF8String(zyre_event_peer_addr(FHandle)));
   end;
 
   function TZyreEvent.Headers: IZhash;
@@ -851,17 +851,17 @@ uses
     Result := TZhash.Wrap(zyre_event_headers(FHandle), false);
   end;
 
-  function TZyreEvent.Header(const Name: String): String;
+  function TZyreEvent.Header(const Name: string): string;
   var
     __Name__: UTF8String;
   begin
     __Name__ := UTF8String(Name);
-    Result := String(UTF8String(zyre_event_header(FHandle, PAnsiChar(__Name__))));
+    Result := string(UTF8String(zyre_event_header(FHandle, PAnsiChar(__Name__))));
   end;
 
-  function TZyreEvent.Group: String;
+  function TZyreEvent.Group: string;
   begin
-    Result := String(UTF8String(zyre_event_group(FHandle)));
+    Result := string(UTF8String(zyre_event_group(FHandle)));
   end;
 
   function TZyreEvent.Msg: IZmsg;
