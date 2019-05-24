@@ -92,6 +92,7 @@ class ZyreEvent(object):
         """
         utils.lib.zyre_event_print(self._p)
 
+    @staticmethod
     def test(verbose):
         """
         Self test of this class.
