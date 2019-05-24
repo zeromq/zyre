@@ -25,8 +25,6 @@
 //  External API
 #include "../include/zyre.h"
 
-//  Extra headers
-
 //  Opaque class structures to allow forward references
 #ifndef ZRE_MSG_T_DEFINED
 typedef struct _zre_msg_t zre_msg_t;
@@ -48,6 +46,8 @@ typedef struct _zyre_election_t zyre_election_t;
 typedef struct _zyre_node_t zyre_node_t;
 #define ZYRE_NODE_T_DEFINED
 #endif
+
+//  Extra headers
 
 //  Internal API
 

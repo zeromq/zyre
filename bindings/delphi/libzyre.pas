@@ -9,6 +9,10 @@
 
 unit libzyre;
 
+{$if defined(MSWINDOWS)}
+  {$warn SYMBOL_PLATFORM off}
+{$ifend}
+
 interface
 
 uses
@@ -34,62 +38,62 @@ type
   // node it is silent and invisible to other nodes on the network.
   // The node name is provided to other nodes during discovery. If you
   // specify NULL, Zyre generates a randomized node name from the UUID.
-  function zyre_new(Name: PAnsiChar): PZyre; cdecl; external lib_zyre;
+  function zyre_new(Name: PAnsiChar): PZyre; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Destructor, destroys a Zyre node. When you destroy a node, any
   // messages it is sending or receiving will be discarded.
-  procedure zyre_destroy(var self: PZyre); cdecl; external lib_zyre;
+  procedure zyre_destroy(var self: PZyre); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return our node UUID string, after successful initialization
-  function zyre_uuid(self: PZyre): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_uuid(self: PZyre): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return our node name, after successful initialization. First 6
   // characters of UUID by default.
-  function zyre_name(self: PZyre): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_name(self: PZyre): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set the public name of this node overriding the default. The name is
   // provide during discovery and come in each ENTER message.
-  procedure zyre_set_name(self: PZyre; Name: PAnsiChar); cdecl; external lib_zyre;
+  procedure zyre_set_name(self: PZyre; Name: PAnsiChar); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set node header; these are provided to other nodes during discovery
   // and come in each ENTER message.
-  procedure zyre_set_header(self: PZyre; Name: PAnsiChar; Format: PAnsiChar); cdecl; varargs; external lib_zyre;
+  procedure zyre_set_header(self: PZyre; Name: PAnsiChar; Format: PAnsiChar); cdecl; varargs; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set verbose mode; this tells the node to log all traffic as well as
   // all major events.
-  procedure zyre_set_verbose(self: PZyre); cdecl; external lib_zyre;
+  procedure zyre_set_verbose(self: PZyre); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set UDP beacon discovery port; defaults to 5670, this call overrides
   // that so you can create independent clusters on the same network, for
   // e.g. development vs. production. Has no effect after zyre_start().
-  procedure zyre_set_port(self: PZyre; PortNbr: Integer); cdecl; external lib_zyre;
+  procedure zyre_set_port(self: PZyre; PortNbr: Integer); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
   // Defaults to * (the port is randomly assigned by the system).
   // This call overrides this, to bypass some firewall issues when ports are
   // random. Has no effect after zyre_start().
-  procedure zyre_set_beacon_peer_port(self: PZyre; PortNbr: Integer); cdecl; external lib_zyre;
+  procedure zyre_set_beacon_peer_port(self: PZyre; PortNbr: Integer); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set the peer evasiveness timeout, in milliseconds. Default is 5000.
   // This can be tuned in order to deal with expected network conditions
   // and the response time expected by the application. This is tied to
   // the beacon interval and rate of messages received.
-  procedure zyre_set_evasive_timeout(self: PZyre; Interval: Integer); cdecl; external lib_zyre;
+  procedure zyre_set_evasive_timeout(self: PZyre; Interval: Integer); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set the peer expiration timeout, in milliseconds. Default is 30000.
   // This can be tuned in order to deal with expected network conditions
   // and the response time expected by the application. This is tied to
   // the beacon interval and rate of messages received.
-  procedure zyre_set_expired_timeout(self: PZyre; Interval: Integer); cdecl; external lib_zyre;
+  procedure zyre_set_expired_timeout(self: PZyre; Interval: Integer); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set UDP beacon discovery interval, in milliseconds. Default is instant
   // beacon exploration followed by pinging every 1,000 msecs.
-  procedure zyre_set_interval(self: PZyre; Interval: NativeUInt); cdecl; external lib_zyre;
+  procedure zyre_set_interval(self: PZyre; Interval: NativeUInt); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set network interface for UDP beacons. If you do not set this, CZMQ will
   // choose an interface for you. On boxes with several interfaces you should
   // specify which one you want to use, or strange things can happen.
-  procedure zyre_set_interface(self: PZyre; Value: PAnsiChar); cdecl; external lib_zyre;
+  procedure zyre_set_interface(self: PZyre; Value: PAnsiChar); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // By default, Zyre binds to an ephemeral TCP port and broadcasts the local
   // host name using UDP beaconing. When you call this method, Zyre will use
@@ -99,113 +103,113 @@ type
   // inproc://, ipc://, or tcp:// transports (for tcp://, use an IP address
   // that is meaningful to remote as well as local nodes). Returns 0 if
   // the bind was successful, else -1.
-  function zyre_set_endpoint(self: PZyre; Format: PAnsiChar): Integer; cdecl; varargs; external lib_zyre;
+  function zyre_set_endpoint(self: PZyre; Format: PAnsiChar): Integer; cdecl; varargs; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // This options enables a peer to actively contest for leadership in the
   // given group. If this option is not set the peer will still participate in
   // elections but never gets elected. This ensures that a consent for a leader
   // is reached within a group even though not every peer is contesting for
   // leadership.
-  procedure zyre_set_contest_in_group(self: PZyre; Group: PAnsiChar); cdecl; external lib_zyre;
+  procedure zyre_set_contest_in_group(self: PZyre; Group: PAnsiChar); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set an alternative endpoint value when using GOSSIP ONLY. This is useful
   // if you're advertising an endpoint behind a NAT.
-  procedure zyre_set_advertised_endpoint(self: PZyre; Value: PAnsiChar); cdecl; external lib_zyre;
+  procedure zyre_set_advertised_endpoint(self: PZyre; Value: PAnsiChar); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Apply a azcert to a Zyre node.
-  procedure zyre_set_zcert(self: PZyre; Zcert: PZcert); cdecl; external lib_zyre;
+  procedure zyre_set_zcert(self: PZyre; Zcert: PZcert); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Specify the ZAP domain (for use with CURVE).
-  procedure zyre_set_zap_domain(self: PZyre; Domain: PAnsiChar); cdecl; external lib_zyre;
+  procedure zyre_set_zap_domain(self: PZyre; Domain: PAnsiChar); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set-up gossip discovery of other nodes. At least one node in the cluster
   // must bind to a well-known gossip endpoint, so other nodes can connect to
   // it. Note that gossip endpoints are completely distinct from Zyre node
   // endpoints, and should not overlap (they can use the same transport).
-  procedure zyre_gossip_bind(self: PZyre; Format: PAnsiChar); cdecl; varargs; external lib_zyre;
+  procedure zyre_gossip_bind(self: PZyre; Format: PAnsiChar); cdecl; varargs; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set-up gossip discovery of other nodes. A node may connect to multiple
   // other nodes, for redundancy paths. For details of the gossip network
   // design, see the CZMQ zgossip class.
-  procedure zyre_gossip_connect(self: PZyre; Format: PAnsiChar); cdecl; varargs; external lib_zyre;
+  procedure zyre_gossip_connect(self: PZyre; Format: PAnsiChar); cdecl; varargs; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Set-up gossip discovery with CURVE enabled.
-  procedure zyre_gossip_connect_curve(self: PZyre; PublicKey: PAnsiChar; Format: PAnsiChar); cdecl; varargs; external lib_zyre;
+  procedure zyre_gossip_connect_curve(self: PZyre; PublicKey: PAnsiChar; Format: PAnsiChar); cdecl; varargs; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
-  procedure zyre_gossip_unpublish(self: PZyre; Node: PAnsiChar); cdecl; external lib_zyre;
+  procedure zyre_gossip_unpublish(self: PZyre; Node: PAnsiChar); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Start node, after setting header values. When you start a node it
   // begins discovery and connection. Returns 0 if OK, -1 if it wasn't
   // possible to start the node.
-  function zyre_start(self: PZyre): Integer; cdecl; external lib_zyre;
+  function zyre_start(self: PZyre): Integer; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Stop node; this signals to other peers that this node will go away.
   // This is polite; however you can also just destroy the node without
   // stopping it.
-  procedure zyre_stop(self: PZyre); cdecl; external lib_zyre;
+  procedure zyre_stop(self: PZyre); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Join a named group; after joining a group you can send messages to
   // the group and all Zyre nodes in that group will receive them.
-  function zyre_join(self: PZyre; Group: PAnsiChar): Integer; cdecl; external lib_zyre;
+  function zyre_join(self: PZyre; Group: PAnsiChar): Integer; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Leave a group
-  function zyre_leave(self: PZyre; Group: PAnsiChar): Integer; cdecl; external lib_zyre;
+  function zyre_leave(self: PZyre; Group: PAnsiChar): Integer; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Receive next message from network; the message may be a control
   // message (ENTER, EXIT, JOIN, LEAVE) or data (WHISPER, SHOUT).
   // Returns zmsg_t object, or NULL if interrupted
-  function zyre_recv(self: PZyre): PZmsg; cdecl; external lib_zyre;
+  function zyre_recv(self: PZyre): PZmsg; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Send message to single peer, specified as a UUID string
   // Destroys message after sending
-  function zyre_whisper(self: PZyre; Peer: PAnsiChar; var MsgP: PZmsg): Integer; cdecl; external lib_zyre;
+  function zyre_whisper(self: PZyre; Peer: PAnsiChar; var MsgP: PZmsg): Integer; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Send message to a named group
   // Destroys message after sending
-  function zyre_shout(self: PZyre; Group: PAnsiChar; var MsgP: PZmsg): Integer; cdecl; external lib_zyre;
+  function zyre_shout(self: PZyre; Group: PAnsiChar; var MsgP: PZmsg): Integer; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Send formatted string to a single peer specified as UUID string
-  function zyre_whispers(self: PZyre; Peer: PAnsiChar; Format: PAnsiChar): Integer; cdecl; varargs; external lib_zyre;
+  function zyre_whispers(self: PZyre; Peer: PAnsiChar; Format: PAnsiChar): Integer; cdecl; varargs; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Send formatted string to a named group
-  function zyre_shouts(self: PZyre; Group: PAnsiChar; Format: PAnsiChar): Integer; cdecl; varargs; external lib_zyre;
+  function zyre_shouts(self: PZyre; Group: PAnsiChar; Format: PAnsiChar): Integer; cdecl; varargs; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return zlist of current peer ids.
-  function zyre_peers(self: PZyre): PZlist; cdecl; external lib_zyre;
+  function zyre_peers(self: PZyre): PZlist; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return zlist of current peers of this group.
-  function zyre_peers_by_group(self: PZyre; Name: PAnsiChar): PZlist; cdecl; external lib_zyre;
+  function zyre_peers_by_group(self: PZyre; Name: PAnsiChar): PZlist; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return zlist of currently joined groups.
-  function zyre_own_groups(self: PZyre): PZlist; cdecl; external lib_zyre;
+  function zyre_own_groups(self: PZyre): PZlist; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return zlist of groups known through connected peers.
-  function zyre_peer_groups(self: PZyre): PZlist; cdecl; external lib_zyre;
+  function zyre_peer_groups(self: PZyre): PZlist; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return the endpoint of a connected peer.
   // Returns empty string if peer does not exist.
-  function zyre_peer_address(self: PZyre; Peer: PAnsiChar): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_peer_address(self: PZyre; Peer: PAnsiChar): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return the value of a header of a conected peer.
   // Returns null if peer or key doesn't exits.
-  function zyre_peer_header_value(self: PZyre; Peer: PAnsiChar; Name: PAnsiChar): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_peer_header_value(self: PZyre; Peer: PAnsiChar; Name: PAnsiChar): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Explicitly connect to a peer
-  function zyre_require_peer(self: PZyre; Uuid: PAnsiChar; Endpoint: PAnsiChar; PublicKey: PAnsiChar): Integer; cdecl; external lib_zyre;
+  function zyre_require_peer(self: PZyre; Uuid: PAnsiChar; Endpoint: PAnsiChar; PublicKey: PAnsiChar): Integer; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return socket for talking to the Zyre node, for polling
-  function zyre_socket(self: PZyre): PZsock; cdecl; external lib_zyre;
+  function zyre_socket(self: PZyre): PZsock; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Print zyre node information to stdout
-  procedure zyre_print(self: PZyre); cdecl; external lib_zyre;
+  procedure zyre_print(self: PZyre); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return the Zyre version for run-time API detection; returns
   // major * 10000 + minor * 100 + patch, as a single integer.
-  function zyre_version: UInt64; cdecl; external lib_zyre;
+  function zyre_version: UInt64; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Self test of this class.
-  procedure zyre_test(Verbose: Boolean); cdecl; external lib_zyre;
+  procedure zyre_test(Verbose: Boolean); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
 (* ZyreEvent *)
 (* Parsing Zyre messages *)
@@ -213,48 +217,48 @@ type
   // Constructor: receive an event from the zyre node, wraps zyre_recv.
   // The event may be a control message (ENTER, EXIT, JOIN, LEAVE) or
   // data (WHISPER, SHOUT).
-  function zyre_event_new(Node: PZyre): PZyreEvent; cdecl; external lib_zyre;
+  function zyre_event_new(Node: PZyre): PZyreEvent; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Destructor; destroys an event instance
-  procedure zyre_event_destroy(var self: PZyreEvent); cdecl; external lib_zyre;
+  procedure zyre_event_destroy(var self: PZyreEvent); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Returns event type, as printable uppercase string. Choices are:
   // "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
   // and for the local node: "STOP"
-  function zyre_event_type(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_event_type(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return the sending peer's uuid as a string
-  function zyre_event_peer_uuid(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_event_peer_uuid(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return the sending peer's public name as a string
-  function zyre_event_peer_name(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_event_peer_name(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Return the sending peer's ipaddress as a string
-  function zyre_event_peer_addr(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_event_peer_addr(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Returns the event headers, or NULL if there are none
-  function zyre_event_headers(self: PZyreEvent): PZhash; cdecl; external lib_zyre;
+  function zyre_event_headers(self: PZyreEvent): PZhash; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Returns value of a header from the message headers
   // obtained by ENTER. Return NULL if no value was found.
-  function zyre_event_header(self: PZyreEvent; Name: PAnsiChar): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_event_header(self: PZyreEvent; Name: PAnsiChar): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Returns the group name that a SHOUT event was sent to
-  function zyre_event_group(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre;
+  function zyre_event_group(self: PZyreEvent): PAnsiChar; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Returns the incoming message payload; the caller can modify the
   // message but does not own it and should not destroy it.
-  function zyre_event_msg(self: PZyreEvent): PZmsg; cdecl; external lib_zyre;
+  function zyre_event_msg(self: PZyreEvent): PZmsg; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Returns the incoming message payload, and pass ownership to the
   // caller. The caller must destroy the message when finished with it.
   // After called on the given event, further calls will return NULL.
-  function zyre_event_get_msg(self: PZyreEvent): PZmsg; cdecl; external lib_zyre;
+  function zyre_event_get_msg(self: PZyreEvent): PZmsg; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Print event to zsys log
-  procedure zyre_event_print(self: PZyreEvent); cdecl; external lib_zyre;
+  procedure zyre_event_print(self: PZyreEvent); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
   // Self test of this class.
-  procedure zyre_event_test(Verbose: Boolean); cdecl; external lib_zyre;
+  procedure zyre_event_test(Verbose: Boolean); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 implementation
 end.

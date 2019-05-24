@@ -47,12 +47,12 @@ class Zyre(object):
         """
         utils.lib.zyre_set_name(self._p, utils.to_bytes(name))
 
-    def set_header(self, name, format, ):
+    def set_header(self, name, format, *format_args):
         """
         Set node header; these are provided to other nodes during discovery
         and come in each ENTER message.
         """
-        utils.lib.zyre_set_header(self._p, utils.to_bytes(name), format, )
+        utils.lib.zyre_set_header(self._p, utils.to_bytes(name), format, *format_args)
 
     def set_verbose(self):
         """
@@ -111,7 +111,7 @@ class Zyre(object):
         """
         utils.lib.zyre_set_interface(self._p, utils.to_bytes(value))
 
-    def set_endpoint(self, format, ):
+    def set_endpoint(self, format, *format_args):
         """
         By default, Zyre binds to an ephemeral TCP port and broadcasts the local
         host name using UDP beaconing. When you call this method, Zyre will use
@@ -122,7 +122,7 @@ class Zyre(object):
         that is meaningful to remote as well as local nodes). Returns 0 if
         the bind was successful, else -1.
         """
-        return utils.lib.zyre_set_endpoint(self._p, format, )
+        return utils.lib.zyre_set_endpoint(self._p, format, *format_args)
 
     def set_contest_in_group(self, group):
         """
@@ -153,28 +153,28 @@ class Zyre(object):
         """
         utils.lib.zyre_set_zap_domain(self._p, utils.to_bytes(domain))
 
-    def gossip_bind(self, format, ):
+    def gossip_bind(self, format, *format_args):
         """
         Set-up gossip discovery of other nodes. At least one node in the cluster
         must bind to a well-known gossip endpoint, so other nodes can connect to
         it. Note that gossip endpoints are completely distinct from Zyre node
         endpoints, and should not overlap (they can use the same transport).
         """
-        utils.lib.zyre_gossip_bind(self._p, format, )
+        utils.lib.zyre_gossip_bind(self._p, format, *format_args)
 
-    def gossip_connect(self, format, ):
+    def gossip_connect(self, format, *format_args):
         """
         Set-up gossip discovery of other nodes. A node may connect to multiple
         other nodes, for redundancy paths. For details of the gossip network
         design, see the CZMQ zgossip class.
         """
-        utils.lib.zyre_gossip_connect(self._p, format, )
+        utils.lib.zyre_gossip_connect(self._p, format, *format_args)
 
-    def gossip_connect_curve(self, public_key, format, ):
+    def gossip_connect_curve(self, public_key, format, *format_args):
         """
         Set-up gossip discovery with CURVE enabled.
         """
-        utils.lib.zyre_gossip_connect_curve(self._p, utils.to_bytes(public_key), format, )
+        utils.lib.zyre_gossip_connect_curve(self._p, utils.to_bytes(public_key), format, *format_args)
 
     def gossip_unpublish(self, node):
         """
@@ -224,26 +224,26 @@ class Zyre(object):
         Send message to single peer, specified as a UUID string
         Destroys message after sending
         """
-        return utils.lib.zyre_whisper(self._p, utils.to_bytes(peer), msg_p._p)
+        return utils.lib.zyre_whisper(self._p, utils.to_bytes(peer), utils.ffi.new("zmsg_t **", msg_p._p))
 
     def shout(self, group, msg_p):
         """
         Send message to a named group
         Destroys message after sending
         """
-        return utils.lib.zyre_shout(self._p, utils.to_bytes(group), msg_p._p)
+        return utils.lib.zyre_shout(self._p, utils.to_bytes(group), utils.ffi.new("zmsg_t **", msg_p._p))
 
-    def whispers(self, peer, format, ):
+    def whispers(self, peer, format, *format_args):
         """
         Send formatted string to a single peer specified as UUID string
         """
-        return utils.lib.zyre_whispers(self._p, utils.to_bytes(peer), format, )
+        return utils.lib.zyre_whispers(self._p, utils.to_bytes(peer), format, *format_args)
 
-    def shouts(self, group, format, ):
+    def shouts(self, group, format, *format_args):
         """
         Send formatted string to a named group
         """
-        return utils.lib.zyre_shouts(self._p, utils.to_bytes(group), format, )
+        return utils.lib.zyre_shouts(self._p, utils.to_bytes(group), format, *format_args)
 
     def peers(self):
         """
@@ -301,6 +301,7 @@ class Zyre(object):
         """
         utils.lib.zyre_print(self._p)
 
+    @staticmethod
     def version():
         """
         Return the Zyre version for run-time API detection; returns
@@ -308,6 +309,7 @@ class Zyre(object):
         """
         return utils.lib.zyre_version()
 
+    @staticmethod
     def test(verbose):
         """
         Self test of this class.
