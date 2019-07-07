@@ -2,9 +2,16 @@ add_executable(
     chat
     "${SOURCE_DIR}/examples/chat/chat.c"
 )
+
+if (TARGET zyre)
+    set(zyre_target zyre)
+else ()
+    set(zyre_target zyre-static)
+endif ()
+
 target_link_libraries(
     chat
-    zyre
+    ${zyre_target}
     ${LIBZMQ_LIBRARIES}
     ${CZMQ_LIBRARIES}
     ${OPTIONAL_LIBRARIES}
