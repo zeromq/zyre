@@ -185,6 +185,18 @@ Include `zyre.h` in your application and link with libzyre. Here is a typical gc
 
     gcc myapp.c -lzyre -lczmq -lzmq -o myapp
 
+### Use from Other Languages
+
+This is a list of auto-generated bindings:
+
+* https://github.com/zeromq/zyre/tree/master/bindings/jni - Java ([Examples](https://github.com/zeromq/zyre/tree/master/examples/jni))
+* https://github.com/zeromq/zyre/tree/master/bindings/nodejs - NodeJS
+* https://github.com/zeromq/zyre/tree/master/bindings/python - Python
+* https://github.com/zeromq/zyre/tree/master/bindings/python_cffi - Python (cffi)
+* https://github.com/zeromq/zyre/tree/master/bindings/qml - QML
+* https://github.com/zeromq/zyre/tree/master/bindings/qt - Qt
+* https://github.com/zeromq/zyre/tree/master/bindings/ruby - Ruby (FFI)
+
 ### API Summary
 
 This is the API provided by Zyre 2.x, in alphabetical order.
