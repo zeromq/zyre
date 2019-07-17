@@ -6,29 +6,15 @@
 */
 package org.zeromq.zyre;
 
-import java.util.stream.Stream;
 import org.zeromq.tools.ZmqNativeLoader;
 import org.zeromq.czmq.*;
 
-public class ZyreEvent implements AutoCloseable{
+public class ZyreEvent implements AutoCloseable {
     static {
-        Stream.of(
-                "zmq",
-                "czmq",
-                "zyre"
-            )
-            .forEach(lib -> {
-                try {
-                    ZmqNativeLoader.loadLibrary(lib);
-                } catch (Exception e) {
-                    System.err.println("[WARN] " + e.getMessage() +" from jar. Assuming it is installed on the system.");
-                }
-            });
-        try {
-            ZmqNativeLoader.loadLibrary("zyrejni");
-        } catch (Exception e) {
-            System.exit (-1);
-        }
+        ZmqNativeLoader.loadLibrary("zmq", true);
+        ZmqNativeLoader.loadLibrary("czmq", true);
+        ZmqNativeLoader.loadLibrary("zyre", true);
+        ZmqNativeLoader.loadLibrary("zyrejni", false);
     }
     public long self;
     /*
