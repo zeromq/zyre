@@ -26,7 +26,9 @@
         ENTER fromnode name headers ipaddress:port
             a new peer has entered the network
         EVASIVE fromnode name
-            a peer is being evasive (quiet for too long)
+            a peer is being evasive (i.e. quiet) and will be pinged manually
+        SILENT fromnode name
+            a peer has been quiet and has not answered ping after 1 second
         EXIT fromnode name
             a peer has left the network
         JOIN fromnode name groupname
@@ -229,6 +231,25 @@ zyre_set_evasive_timeout (zyre_t *self, int interval)
 {
     assert (self);
     zstr_sendm (self->actor, "SET EVASIVE TIMEOUT");
+    zstr_sendf (self->actor, "%d", interval);
+}
+
+//  --------------------------------------------------------------------------
+//  Set the node silence timeout, in milliseconds. Default is 5000.
+//  Silence means that a peer does not send messages and does not
+//  answer to ping. SILENT event is triggered one second after the
+//  configured silence timeout, and every second after that until
+//  the expired timeout is reached.
+//  This can be tuned in order to deal with expected network conditions
+//  and the response time expected by the application. This is tied to
+//  the beacon interval and rate of messages received.
+//  NB: in current implementation, zyre_set_silent_timeout is redundant
+//  with zyre_set_evasive_timeout and calls the same code underneath.
+void
+zyre_set_silent_timeout (zyre_t *self, int interval)
+{
+    assert (self);
+    zstr_sendm (self->actor, "SET SILENT TIMEOUT");
     zstr_sendf (self->actor, "%d", interval);
 }
 

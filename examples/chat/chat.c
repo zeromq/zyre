@@ -83,6 +83,9 @@ chat_actor (zsock_t *pipe, void *args)
             else
             if (streq (event, "EVASIVE"))
                 printf ("%s is being evasive\n", name);
+            else
+            if (streq (event, "SILENT"))
+                printf ("%s is being silent\n", name);
 
             free (event);
             free (peer);
