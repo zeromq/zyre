@@ -1370,27 +1370,25 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
             zsys_info ("(%s) peer expired name=%s endpoint=%s",
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
         zyre_node_remove_peer (self, peer);
-        return 0;
     }
     else
     if (zclock_mono () >= zyre_peer_evasive_at (peer)) {
+        //  If peer is being evasive, force a TCP ping.
         //  TODO: do this only once for a peer in this state;
         //  it would be nicer to use a proper state machine
         //  for peer management.
         if (self->verbose)
             zsys_info ("(%s) peer seems dead/slow name=%s endpoint=%s",
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
+        zre_msg_t *msg = zre_msg_new ();
+        zre_msg_set_id (msg, ZRE_MSG_PING);
+        zyre_peer_send (peer, &msg);
+        zre_msg_destroy (&msg);
         // Inform the calling application this peer is being evasive
         zstr_sendm (self->outbox, "EVASIVE");
         zstr_sendm (self->outbox, zyre_peer_identity (peer));
         zstr_send (self->outbox, zyre_peer_name (peer));
     }
-    
-    //actually ping peer
-    zre_msg_t *msg = zre_msg_new ();
-    zre_msg_set_id (msg, ZRE_MSG_PING);
-    zyre_peer_send (peer, &msg);
-    zre_msg_destroy (&msg);
     return 0;
 }
 
