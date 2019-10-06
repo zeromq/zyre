@@ -467,6 +467,12 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&value);
     }
     else
+    if (streq (command, "SET SILENT TIMEOUT")) {
+        char *value = zmsg_popstr (request);
+        self->evasive_timeout = atoi (value);
+        zstr_free (&value);
+    }
+    else
     if (streq (command, "SET EXPIRED TIMEOUT")) {
         char *value = zmsg_popstr (request);
         self->expired_timeout = atoi (value);
@@ -1378,7 +1384,7 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
         //  it would be nicer to use a proper state machine
         //  for peer management.
         if (self->verbose)
-            zsys_info ("(%s) peer seems dead/slow name=%s endpoint=%s",
+            zsys_info ("(%s) peer does not send messages (evasive) name=%s endpoint=%s",
                 self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
         zre_msg_t *msg = zre_msg_new ();
         zre_msg_set_id (msg, ZRE_MSG_PING);
@@ -1388,6 +1394,19 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
         zstr_sendm (self->outbox, "EVASIVE");
         zstr_sendm (self->outbox, zyre_peer_identity (peer));
         zstr_send (self->outbox, zyre_peer_name (peer));
+        if (zclock_mono () >= zyre_peer_evasive_at (peer) + REAP_INTERVAL) {
+            // Inform the calling application this peer is being silent
+            // despite having tried to ping it. Something is wrong with
+            // the connection to this peer (or with the network).
+            // NB: this is an improvement of the EVASIVE event which triggers
+            // before getting ping result and thus has poor meaning.
+            if (self->verbose)
+                zsys_info ("(%s) peer has not answered ping after %d milliseconds (silent)",
+                    self->name, REAP_INTERVAL);
+            zstr_sendm (self->outbox, "SILENT");
+            zstr_sendm (self->outbox, zyre_peer_identity (peer));
+            zstr_send (self->outbox, zyre_peer_name (peer));
+        }
     }
     return 0;
 }
