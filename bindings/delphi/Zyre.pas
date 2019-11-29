@@ -57,6 +57,16 @@ uses
     // the beacon interval and rate of messages received.
     procedure SetEvasiveTimeout(Interval: Integer);
 
+    // Set the peer silence timeout, in milliseconds. Default is 5000.
+    // This can be tuned in order to deal with expected network conditions
+    // and the response time expected by the application. This is tied to
+    // the beacon interval and rate of messages received.
+    // Silence is triggered one second after the timeout if peer has not
+    // answered ping and has not sent any message.
+    // NB: this is currently redundant with the evasiveness timeout. Both
+    // affect the same timeout value.
+    procedure SetSilentTimeout(Interval: Integer);
+
     // Set the peer expiration timeout, in milliseconds. Default is 30000.
     // This can be tuned in order to deal with expected network conditions
     // and the response time expected by the application. This is tied to
@@ -286,6 +296,16 @@ uses
     // and the response time expected by the application. This is tied to
     // the beacon interval and rate of messages received.
     procedure SetEvasiveTimeout(Interval: Integer);
+
+    // Set the peer silence timeout, in milliseconds. Default is 5000.
+    // This can be tuned in order to deal with expected network conditions
+    // and the response time expected by the application. This is tied to
+    // the beacon interval and rate of messages received.
+    // Silence is triggered one second after the timeout if peer has not
+    // answered ping and has not sent any message.
+    // NB: this is currently redundant with the evasiveness timeout. Both
+    // affect the same timeout value.
+    procedure SetSilentTimeout(Interval: Integer);
 
     // Set the peer expiration timeout, in milliseconds. Default is 30000.
     // This can be tuned in order to deal with expected network conditions
@@ -567,6 +587,11 @@ uses
   procedure TZyre.SetEvasiveTimeout(Interval: Integer);
   begin
     zyre_set_evasive_timeout(FHandle, Interval);
+  end;
+
+  procedure TZyre.SetSilentTimeout(Interval: Integer);
+  begin
+    zyre_set_silent_timeout(FHandle, Interval);
   end;
 
   procedure TZyre.SetExpiredTimeout(Interval: Integer);

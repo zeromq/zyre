@@ -86,8 +86,8 @@ ZYRE_EXPORT void
 //  answered ping and has not sent any message.
 //  NB: this is currently redundant with the evasiveness timeout. Both
 //  affect the same timeout value.
-    ZYRE_EXPORT void
-        zyre_set_silent_timeout (zyre_t *self, int interval);
+ZYRE_EXPORT void
+    zyre_set_silent_timeout (zyre_t *self, int interval);
 
 //  Set the peer expiration timeout, in milliseconds. Default is 30000.
 //  This can be tuned in order to deal with expected network conditions

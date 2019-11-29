@@ -87,6 +87,19 @@ class Zyre(object):
         """
         utils.lib.zyre_set_evasive_timeout(self._p, interval)
 
+    def set_silent_timeout(self, interval):
+        """
+        Set the peer silence timeout, in milliseconds. Default is 5000.
+        This can be tuned in order to deal with expected network conditions
+        and the response time expected by the application. This is tied to
+        the beacon interval and rate of messages received.
+        Silence is triggered one second after the timeout if peer has not
+        answered ping and has not sent any message.
+        NB: this is currently redundant with the evasiveness timeout. Both
+        affect the same timeout value.
+        """
+        utils.lib.zyre_set_silent_timeout(self._p, interval)
+
     def set_expired_timeout(self, interval):
         """
         Set the peer expiration timeout, in milliseconds. Default is 30000.

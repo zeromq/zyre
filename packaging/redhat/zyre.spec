@@ -149,7 +149,7 @@ exit 1
 sh autogen.sh
 %{configure} --enable-drafts=%{DRAFTS}
 make %{_smp_mflags}
-%if %{with python_cffi}
+%if %{with python_cffi} || %{with python3_cffi}
 # Problem: we need pkg-config points to built and not yet installed copy of zyre
 # Solution: chicken-egg problem - let's make "fake" pkg-config file
 sed -e "s@^libdir.*@libdir=.libs/@" \
@@ -160,20 +160,11 @@ cd bindings/python_cffi
 ln -sfr ../../include/ .
 ln -sfr ../../src/.libs/ .
 export PKG_CONFIG_PATH=`pwd`
+%endif
+%if %{with python_cffi}
 python2 setup.py build
 %endif
-
 %if %{with python3_cffi}
-# Problem: we need pkg-config points to built and not yet installed copy of zyre
-# Solution: chicken-egg problem - let's make "fake" pkg-config file
-sed -e "s@^libdir.*@libdir=.libs/@" \
-    -e "s@^includedir.*@includedir=include/@" \
-    src/libzyre.pc > bindings/python_cffi/libzyre.pc
-cd bindings/python_cffi
-# This avoids problem with "weird" character quoting between shell and python3
-ln -sfr ../../include/ .
-ln -sfr ../../src/.libs/ .
-export PKG_CONFIG_PATH=`pwd`
 python3 setup.py build
 %endif
 
@@ -184,17 +175,17 @@ make install DESTDIR=%{buildroot} %{?_smp_mflags}
 find %{buildroot} -name '*.a' | xargs rm -f
 find %{buildroot} -name '*.la' | xargs rm -f
 
-%if %{with python_cffi}
+%if %{with python_cffi} || %{with python3_cffi}
 cd bindings/python_cffi
 export PKG_CONFIG_PATH=`pwd`
+%endif
+%if %{with python_cffi}
 python2 setup.py install --root=%{buildroot} --skip-build --prefix %{_prefix}
 %endif
-
 %if %{with python3_cffi}
-cd bindings/python_cffi
-export PKG_CONFIG_PATH=`pwd`
 python3 setup.py install --root=%{buildroot} --skip-build --prefix %{_prefix}
 %endif
+
 %files
 %defattr(-,root,root)
 %doc README.md

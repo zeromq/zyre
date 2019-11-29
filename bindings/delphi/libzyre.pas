@@ -80,6 +80,16 @@ type
   // the beacon interval and rate of messages received.
   procedure zyre_set_evasive_timeout(self: PZyre; Interval: Integer); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
+  // Set the peer silence timeout, in milliseconds. Default is 5000.
+  // This can be tuned in order to deal with expected network conditions
+  // and the response time expected by the application. This is tied to
+  // the beacon interval and rate of messages received.
+  // Silence is triggered one second after the timeout if peer has not
+  // answered ping and has not sent any message.
+  // NB: this is currently redundant with the evasiveness timeout. Both
+  // affect the same timeout value.
+  procedure zyre_set_silent_timeout(self: PZyre; Interval: Integer); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
+
   // Set the peer expiration timeout, in milliseconds. Default is 30000.
   // This can be tuned in order to deal with expected network conditions
   // and the response time expected by the application. This is tied to

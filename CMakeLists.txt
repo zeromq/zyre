@@ -218,11 +218,15 @@ ENDIF (NOT MSVC)
 
 # shared
 if (ZYRE_BUILD_SHARED)
-  IF (MSVC)
+  IF (APPLE)
     add_library(zyre SHARED ${zyre_sources})
-  ELSE (MSVC)
-    add_library(zyre SHARED $<TARGET_OBJECTS:zyre_objects>)
-  ENDIF (MSVC)
+  ELSE (APPLE)
+    IF (MSVC)
+      add_library(zyre SHARED ${zyre_sources})
+    ELSE (MSVC)
+      add_library(zyre SHARED $<TARGET_OBJECTS:zyre_objects>)
+    ENDIF (MSVC)
+  ENDIF(APPLE)
 
   set_target_properties (zyre PROPERTIES
     PUBLIC_HEADER "${public_headers}"
@@ -254,11 +258,15 @@ endif()
 
 # static
 if (ZYRE_BUILD_STATIC)
-  IF (MSVC)
+  IF (APPLE)
     add_library(zyre-static STATIC ${zyre_sources})
-  ELSE (MSVC)
-    add_library(zyre-static STATIC $<TARGET_OBJECTS:zyre_objects>)
-  ENDIF (MSVC)
+  ELSE (APPLE)
+    IF (MSVC)
+      add_library(zyre-static STATIC ${zyre_sources})
+    ELSE (MSVC)
+      add_library(zyre-static STATIC $<TARGET_OBJECTS:zyre_objects>)
+    ENDIF (MSVC)
+  ENDIF (APPLE)
 
   set_target_properties(zyre-static PROPERTIES
     PUBLIC_HEADER "${public_headers}"
