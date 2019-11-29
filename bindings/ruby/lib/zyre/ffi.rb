@@ -63,6 +63,7 @@ module Zyre
       attach_function :zyre_set_port, [:pointer, :int], :void, **opts
       attach_function :zyre_set_beacon_peer_port, [:pointer, :int], :void, **opts
       attach_function :zyre_set_evasive_timeout, [:pointer, :int], :void, **opts
+      attach_function :zyre_set_silent_timeout, [:pointer, :int], :void, **opts
       attach_function :zyre_set_expired_timeout, [:pointer, :int], :void, **opts
       attach_function :zyre_set_interval, [:pointer, :size_t], :void, **opts
       attach_function :zyre_set_interface, [:pointer, :string], :void, **opts

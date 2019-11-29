@@ -1,1 +1,4 @@
 rootProject.name = 'zyre-jni'
+include 'zyre-jni'
+include 'zyre-jni-native'
+include 'zyre-jni-all'

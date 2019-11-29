@@ -41,6 +41,7 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "setPort", _set_port);
     Nan::SetPrototypeMethod (tpl, "setBeaconPeerPort", _set_beacon_peer_port);
     Nan::SetPrototypeMethod (tpl, "setEvasiveTimeout", _set_evasive_timeout);
+    Nan::SetPrototypeMethod (tpl, "setSilentTimeout", _set_silent_timeout);
     Nan::SetPrototypeMethod (tpl, "setExpiredTimeout", _set_expired_timeout);
     Nan::SetPrototypeMethod (tpl, "setInterval", _set_interval);
     Nan::SetPrototypeMethod (tpl, "setInterface", _set_interface);
@@ -229,6 +230,24 @@ NAN_METHOD (Zyre::_set_evasive_timeout) {
     else
         return Nan::ThrowTypeError ("`interval` must be a number");
     zyre_set_evasive_timeout (zyre->self, (int) interval);
+}
+
+NAN_METHOD (Zyre::_set_silent_timeout) {
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    if (info [0]->IsUndefined ())
+        return Nan::ThrowTypeError ("method requires a `interval`");
+
+    //int interval; // bjornw typedef - if using c_type, then you get 'int * major' but it needs to be 'int major'. later using the FromJust() returns an int
+    int interval;
+
+
+    if (info [0]->IsNumber ())
+    {
+          interval = Nan::To<int>(info [0]).FromJust ();
+    }
+    else
+        return Nan::ThrowTypeError ("`interval` must be a number");
+    zyre_set_silent_timeout (zyre->self, (int) interval);
 }
 
 NAN_METHOD (Zyre::_set_expired_timeout) {
