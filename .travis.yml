@@ -183,7 +183,7 @@ matrix:
 before_install:
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "android" ] ; then brew install binutils ; fi
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "valgrind" ] ; then brew install valgrind ; fi
-- if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "bindings" -a "$BINDING" == "python" ] ; then brew upgrade python; brew install python@2 ; fi
+- if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "bindings" -a "$BINDING" == "python" ] ; then brew upgrade python@3; brew upgrade python@2 ; fi
 
 # Hand off to generated script for each BUILD_TYPE
 ### Customization note: credentials and condition for deploy
