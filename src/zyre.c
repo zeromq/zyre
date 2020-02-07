@@ -552,10 +552,15 @@ zyre_shout (zyre_t *self, const char *group, zmsg_t **msg_p)
     assert (group);
     assert (msg_p);
 
-    zstr_sendm (self->actor, "SHOUT");
-    zstr_sendm (self->actor, group);
-    zmsg_send (msg_p, self->actor);
-    return 0;
+    if (zstr_sendm (self->actor, "SHOUT") == -1) {
+        return -1;
+    }
+
+    if (zstr_sendm (self->actor, group) == -1) {
+        return -1;
+    }
+
+    return zmsg_send (msg_p, self->actor);
 }
 
 
