@@ -169,15 +169,24 @@ matrix:
         - clang-format-5.0
 #autotools#        - *pkg_deps_prereqs
   - env: BUILD_TYPE=android
-    os: linux
-    dist: xenial
-    addons:
-      apt:
+    compiler: clang
+  - env: BUILD_TYPE=bindings BINDING=jni
+    os: osx
+    language: java
+    jdk: openjdk13
+    compiler: clang
   - env: BUILD_TYPE=bindings BINDING=jni
     os: linux
-    dist: xenial
-    addons:
-      apt:
+    dist: trusty
+    language: java
+    jdk: openjdk8
+    compiler: clang
+  - env: BUILD_TYPE=bindings BINDING=jni BINDING_OPTS=android
+    os: linux
+    dist: trusty
+    language: java
+    jdk: openjdk8
+    compiler: clang
 
 ### Customization note: python binding
 before_install:
