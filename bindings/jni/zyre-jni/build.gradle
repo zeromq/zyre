@@ -5,8 +5,12 @@
 ################################################################################
 */
 
+ext {
+    jni_dependencies_version = hasProperty('isRelease') ? 'latest.release' : 'latest.integration'
+}
+
 dependencies {
-    compile 'org.zeromq.czmq:czmq-jni:latest.release'
+    compile "org.zeromq.czmq:czmq-jni:$jni_dependencies_version"
     compile 'org.scijava:native-lib-loader:2.3.4'
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
