@@ -59,7 +59,6 @@ env:
     - BUILD_TYPE=default-Werror
     - BUILD_TYPE=cmake
     - BUILD_TYPE=check_zproject
-#   - BUILD_TYPE=check-py
 
 # Prerequisite packages provided by OS distro and used "as is"
 pkg_deps_prereqs_distro: &pkg_deps_prereqs_distro
@@ -123,19 +122,13 @@ matrix:
         - *pkg_deps_doctools
   - env: BUILD_TYPE=valgrind
     os: linux
-    dist: xenial
     addons:
       apt:
-        sources: *pkg_src_zeromq_ubuntu16
         packages:
         - valgrind
-        - *pkg_deps_common
   - env: BUILD_TYPE=check_zproto
     os: linux
-    dist: xenial
     services: docker
-    addons:
-      apt:
   - env: BUILD_TYPE=bindings BINDING=python
     os: osx
   - env: BUILD_TYPE=bindings BINDING=python
@@ -146,28 +139,15 @@ matrix:
         - python3
   - env: BUILD_TYPE=default ADDRESS_SANITIZER=enabled
     os: linux
-    dist: xenial
-    addons:
-      apt:
-        sources: *pkg_src_zeromq_ubuntu16
-        packages:
-        - *pkg_deps_common
   - env: BUILD_TYPE=cmake DO_CLANG_FORMAT_CHECK=1 CLANG_FORMAT=clang-format-5.0
-# For non-cmake users, there is an autotools solution with a bit more overhead
-# to have dependencies ready and pass configure script before making this check).
-# Note that the autotools variant will also require dependencies preinstalled to
-# pass its configure script:
-#  - env: BUILD_TYPE=clang-format-check CLANG_FORMAT=clang-format-5.0
     os: linux
-    dist: trusty
     addons:
       apt:
         sources:
-        - llvm-toolchain-trusty-5.0
+        - llvm-toolchain-xenial-5.0
         packages:
         - clang-5.0
         - clang-format-5.0
-#autotools#        - *pkg_deps_prereqs
   - env: BUILD_TYPE=android
     compiler: clang
   - env: BUILD_TYPE=bindings BINDING=jni
@@ -177,13 +157,11 @@ matrix:
     compiler: clang
   - env: BUILD_TYPE=bindings BINDING=jni
     os: linux
-    dist: trusty
     language: java
     jdk: openjdk8
     compiler: clang
   - env: BUILD_TYPE=bindings BINDING=jni BINDING_OPTS=android
     os: linux
-    dist: trusty
     language: java
     jdk: openjdk8
     compiler: clang
