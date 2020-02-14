@@ -34,9 +34,9 @@ src/zyre_selftest
 core
 
 # Distcheck workspace and archives
-zyre-*/
-zyre-*.tar.gz
-zyre-*.zip
+/zyre-*/
+/zyre-*.tar.gz
+/zyre-*.zip
 
 # Man pages
 doc/*.1
