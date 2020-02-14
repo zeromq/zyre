@@ -131,10 +131,10 @@ matrix:
     services: docker
   - env: BUILD_TYPE=bindings BINDING=python
     os: osx
-	addons:
-	  homebrew:
-		packages:
-		- python
+    addons:
+      homebrew:
+        packages:
+        - python
   - env: BUILD_TYPE=bindings BINDING=python
     os: linux
     addons:
