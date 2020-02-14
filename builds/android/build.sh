@@ -100,7 +100,7 @@ fi
     rm -rf "${cache}/zyre"
     (cp -r ../.. "${cache}/zyre" && cd "${cache}/zyre" \
         && make clean && rm -f configure config.status)
-#
+
     # Remove *.la files as they might cause errors with cross compiled libraries
     find ${ANDROID_BUILD_PREFIX} -name '*.la' -exec rm {} +
 
