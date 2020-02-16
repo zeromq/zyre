@@ -129,12 +129,10 @@ matrix:
   - env: BUILD_TYPE=check_zproto
     os: linux
     services: docker
-  - env: BUILD_TYPE=bindings BINDING=python
-    os: osx
-    addons:
-      homebrew:
-        packages:
-        - python3
+  # Python build are currently not supported by travis on macOS.
+  # See https://docs.travis-ci.com/user/languages/python/
+  # - env: BUILD_TYPE=bindings BINDING=python
+  #   os: osx
   - env: BUILD_TYPE=bindings BINDING=python
     os: linux
     addons:
