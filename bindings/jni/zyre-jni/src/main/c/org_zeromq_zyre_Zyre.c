@@ -86,6 +86,12 @@ Java_org_zeromq_zyre_Zyre__1_1setEvasiveTimeout (JNIEnv *env, jclass c, jlong se
 }
 
 JNIEXPORT void JNICALL
+Java_org_zeromq_zyre_Zyre__1_1setSilentTimeout (JNIEnv *env, jclass c, jlong self, jint interval)
+{
+    zyre_set_silent_timeout ((zyre_t *) (intptr_t) self, (int) interval);
+}
+
+JNIEXPORT void JNICALL
 Java_org_zeromq_zyre_Zyre__1_1setExpiredTimeout (JNIEnv *env, jclass c, jlong self, jint interval)
 {
     zyre_set_expired_timeout ((zyre_t *) (intptr_t) self, (int) interval);

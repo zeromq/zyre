@@ -11,16 +11,10 @@ import org.junit.Test;
 import org.scijava.nativelib.NativeLoader;
 
 public class ZyreEventTest {
-    static {
-        try {
-            NativeLoader.loadLibrary("zyrejni");
-        }
-        catch (Exception e) {
-            System.exit (-1);
-        }
-    }
+
     @Test
     public void test () {
         ZyreEvent.test (false);
     }
+
 }

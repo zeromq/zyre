@@ -7,14 +7,19 @@
 package org.zeromq.zyre;
 
 import org.zeromq.tools.ZmqNativeLoader;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.zeromq.czmq.*;
 
 public class Zyre implements AutoCloseable {
     static {
-        ZmqNativeLoader.loadLibrary("zmq", true);
-        ZmqNativeLoader.loadLibrary("czmq", true);
-        ZmqNativeLoader.loadLibrary("zyre", true);
-        ZmqNativeLoader.loadLibrary("zyrejni", false);
+        Map<String, Boolean> libraries = new LinkedHashMap<>();
+        libraries.put("zmq", false);
+        libraries.put("czmq", false);
+        libraries.put("zyre", false);
+        libraries.put("zyrejni", false);
+        ZmqNativeLoader.loadLibraries(libraries);
     }
     public long self;
     /*
@@ -108,6 +113,20 @@ public class Zyre implements AutoCloseable {
     native static void __setEvasiveTimeout (long self, int interval);
     public void setEvasiveTimeout (int interval) {
         __setEvasiveTimeout (self, interval);
+    }
+    /*
+    Set the peer silence timeout, in milliseconds. Default is 5000.
+    This can be tuned in order to deal with expected network conditions
+    and the response time expected by the application. This is tied to
+    the beacon interval and rate of messages received.
+    Silence is triggered one second after the timeout if peer has not
+    answered ping and has not sent any message.
+    NB: this is currently redundant with the evasiveness timeout. Both
+    affect the same timeout value.
+    */
+    native static void __setSilentTimeout (long self, int interval);
+    public void setSilentTimeout (int interval) {
+        __setSilentTimeout (self, interval);
     }
     /*
     Set the peer expiration timeout, in milliseconds. Default is 30000.

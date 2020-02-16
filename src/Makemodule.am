@@ -185,6 +185,56 @@ check-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_buildd
 	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v
 	$(MAKE) check-empty-selftest-rw
 
+check-zyre: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -t zyre
+	$(MAKE) check-empty-selftest-rw
+check-zyre-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v -t zyre
+	$(MAKE) check-empty-selftest-rw
+
+check-zyre_event: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -t zyre_event
+	$(MAKE) check-empty-selftest-rw
+check-zyre_event-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v -t zyre_event
+	$(MAKE) check-empty-selftest-rw
+
+check-zre_msg: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -t zre_msg
+	$(MAKE) check-empty-selftest-rw
+check-zre_msg-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v -t zre_msg
+	$(MAKE) check-empty-selftest-rw
+
+check-zyre_peer: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -t zyre_peer
+	$(MAKE) check-empty-selftest-rw
+check-zyre_peer-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v -t zyre_peer
+	$(MAKE) check-empty-selftest-rw
+
+check-zyre_group: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -t zyre_group
+	$(MAKE) check-empty-selftest-rw
+check-zyre_group-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v -t zyre_group
+	$(MAKE) check-empty-selftest-rw
+
+check-zyre_election: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -t zyre_election
+	$(MAKE) check-empty-selftest-rw
+check-zyre_election-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v -t zyre_election
+	$(MAKE) check-empty-selftest-rw
+
+check-zyre_node: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -t zyre_node
+	$(MAKE) check-empty-selftest-rw
+check-zyre_node-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute $(builddir)/src/zyre_selftest -v -t zyre_node
+	$(MAKE) check-empty-selftest-rw
+
+
 # Run the selftest binary under valgrind to check for memory leaks
 memcheck: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
 	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
@@ -202,6 +252,105 @@ memcheck-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_bui
 		$(builddir)/src/zyre_selftest -v
 	$(MAKE) check-empty-selftest-rw
 
+memcheck-zyre: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_event: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_event
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_event-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_event
+	$(MAKE) check-empty-selftest-rw
+memcheck-zre_msg: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zre_msg
+	$(MAKE) check-empty-selftest-rw
+memcheck-zre_msg-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zre_msg
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_peer: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_peer
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_peer-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_peer
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_group: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_group
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_group-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_group
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_election: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_election
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_election-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_election
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_node: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_node
+	$(MAKE) check-empty-selftest-rw
+memcheck-zyre_node-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=memcheck \
+		--leak-check=full --show-reachable=yes --error-exitcode=1 \
+		--suppressions=$(srcdir)/src/.valgrind.supp \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_node
+	$(MAKE) check-empty-selftest-rw
+
 # Run the selftest binary under valgrind to check for performance leaks
 callcheck: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
 	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
@@ -215,6 +364,77 @@ callcheck-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_bu
 		$(builddir)/src/zyre_selftest -v
 	$(MAKE) check-empty-selftest-rw
 
+callcheck-zyre: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_event: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_event
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_event-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_event
+	$(MAKE) check-empty-selftest-rw
+callcheck-zre_msg: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zre_msg
+	$(MAKE) check-empty-selftest-rw
+callcheck-zre_msg-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zre_msg
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_peer: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_peer
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_peer-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_peer
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_group: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_group
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_group-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_group
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_election: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_election
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_election-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_election
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_node: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -t zyre_node
+	$(MAKE) check-empty-selftest-rw
+callcheck-zyre_node-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute valgrind --tool=callgrind \
+		$(VALGRIND_OPTIONS) \
+		$(builddir)/src/zyre_selftest -v -t zyre_node
+	$(MAKE) check-empty-selftest-rw
+
 # Run the selftest binary under gdb for debugging
 debug: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
 	$(LIBTOOL) --mode=execute gdb -q \
@@ -223,7 +443,64 @@ debug: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SE
 
 debug-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
 	$(LIBTOOL) --mode=execute gdb -q \
-		$(builddir)/src/zyre_selftest -v
+		--args $(builddir)/src/zyre_selftest -v
+	$(MAKE) check-empty-selftest-rw
+
+debug-zyre: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -t zyre
+	$(MAKE) check-empty-selftest-rw
+debug-zyre-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -v -t zyre
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_event: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -t zyre_event
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_event-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -v -t zyre_event
+	$(MAKE) check-empty-selftest-rw
+debug-zre_msg: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -t zre_msg
+	$(MAKE) check-empty-selftest-rw
+debug-zre_msg-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -v -t zre_msg
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_peer: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -t zyre_peer
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_peer-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -v -t zyre_peer
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_group: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -t zyre_group
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_group-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -v -t zyre_group
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_election: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -t zyre_election
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_election-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -v -t zyre_election
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_node: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -t zyre_node
+	$(MAKE) check-empty-selftest-rw
+debug-zyre_node-verbose: src/zyre_selftest $(top_builddir)/$(SELFTEST_DIR_RW) $(top_builddir)/$(SELFTEST_DIR_RO)
+	$(LIBTOOL) --mode=execute gdb -q \
+		--args $(builddir)/src/zyre_selftest -v -t zyre_node
 	$(MAKE) check-empty-selftest-rw
 
 # Run the selftest binary with verbose switch for tracing

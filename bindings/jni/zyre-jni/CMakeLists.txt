@@ -8,14 +8,14 @@ project (zyrejni CXX)
 enable_language (C)
 
 # Search for Find*.cmake files in the following locations
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../..")
 
 ########################################################################
 # JNI dependency
 ########################################################################
 find_package (JNI REQUIRED)
-include_directories (${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2} ../src/native/include)
+include_directories (${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2} src/native/include)
 
 ########################################################################
 # LIBZMQ dependency
@@ -51,8 +51,8 @@ ELSE (ZYRE_FOUND)
 ENDIF (ZYRE_FOUND)
 
 set (zyrejni_sources
-    ../src/main/c/org_zeromq_zyre_Zyre.c
-    ../src/main/c/org_zeromq_zyre_ZyreEvent.c
+    src/main/c/org_zeromq_zyre_Zyre.c
+    src/main/c/org_zeromq_zyre_ZyreEvent.c
 )
 
 add_library (zyrejni SHARED ${zyrejni_sources})

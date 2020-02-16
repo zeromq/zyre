@@ -7,14 +7,19 @@
 package org.zeromq.zyre;
 
 import org.zeromq.tools.ZmqNativeLoader;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.zeromq.czmq.*;
 
 public class ZyreEvent implements AutoCloseable {
     static {
-        ZmqNativeLoader.loadLibrary("zmq", true);
-        ZmqNativeLoader.loadLibrary("czmq", true);
-        ZmqNativeLoader.loadLibrary("zyre", true);
-        ZmqNativeLoader.loadLibrary("zyrejni", false);
+        Map<String, Boolean> libraries = new LinkedHashMap<>();
+        libraries.put("zmq", false);
+        libraries.put("czmq", false);
+        libraries.put("zyre", false);
+        libraries.put("zyrejni", false);
+        ZmqNativeLoader.loadLibraries(libraries);
     }
     public long self;
     /*
