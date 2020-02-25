@@ -1279,7 +1279,8 @@ zyre_node_recv_beacon (zyre_node_t *self)
     if (beacon.version != self->beacon_version) {
         zstr_free (&ipaddress);
         if (self->verbose)
-            zsys_debug ("tossing beacon, version mis-match");
+            zsys_debug ("tossing beacon, version mis-match. Got %d but expected %d.", beacon.version, self->beacon_version);
+
         return;
     }
 
