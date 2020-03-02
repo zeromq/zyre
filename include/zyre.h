@@ -213,6 +213,10 @@ ZYRE_EXPORT char *
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
+//  Return ZMQ socket for talking to the Zyre node, for polling
+ZYRE_EXPORT void *
+    zyre_socket_zmq (zyre_t *self);
+
 //  Print zyre node information to stdout
 ZYRE_EXPORT void
     zyre_print (zyre_t *self);

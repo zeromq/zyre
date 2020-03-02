@@ -721,6 +721,13 @@ zyre_socket (zyre_t *self)
     return self->inbox;
 }
 
+void *zyre_socket_zmq (zyre_t *self)
+{
+    assert (self);
+
+    return zsock_resolve (self->inbox);
+}
+
 
 //  --------------------------------------------------------------------------
 //  Prints zyre node information
