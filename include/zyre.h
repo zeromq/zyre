@@ -213,11 +213,6 @@ ZYRE_EXPORT char *
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
-//  Return underlying ZMQ socket for talking to the Zyre node,
-//  for polling with libzmq (base ZMQ library)
-ZYRE_EXPORT void *
-    zyre_socket_zmq (zyre_t *self);
-
 //  Print zyre node information to stdout
 ZYRE_EXPORT void
     zyre_print (zyre_t *self);
@@ -232,6 +227,11 @@ ZYRE_EXPORT void
     zyre_test (bool verbose);
 
 #ifdef ZYRE_BUILD_DRAFT_API
+//  *** Draft method, for development use, may change without warning ***
+//  Return underlying ZMQ socket for talking to the Zyre node,
+//  for polling with libzmq (base ZMQ library)
+ZYRE_EXPORT void *zyre_socket_zmq (zyre_t *self);
+
 //  *** Draft method, for development use, may change without warning ***
 //  Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
 //  Defaults to * (the port is randomly assigned by the system).

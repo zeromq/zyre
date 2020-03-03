@@ -285,10 +285,10 @@
         <return type = "zsock" />
     </method>
 	
-	<method name = "socket_zmq">
+	<method name = "socket_zmq" state = "draft">
         Return underlying ZMQ socket for talking to the Zyre node, 
         for polling with libzmq (base ZMQ library)
-        <return type = "void *" />
+        <return type = "sockish" />
     </method>
 
     <method name = "print">
