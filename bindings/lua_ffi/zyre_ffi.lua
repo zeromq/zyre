@@ -245,6 +245,11 @@ int
 zsock_t *
     zyre_socket (zyre_t *self);
 
+// Return underlying ZMQ socket for talking to the Zyre node,
+// for polling with libzmq (base ZMQ library)
+void *
+    zyre_socket_zmq (zyre_t *self);
+
 // Print zyre node information to stdout
 void
     zyre_print (zyre_t *self);

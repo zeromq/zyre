@@ -195,6 +195,10 @@ public slots:
     //  Return socket for talking to the Zyre node, for polling
     zsock_t *socket ();
 
+    //  Return underlying ZMQ socket for talking to the Zyre node,
+    //  for polling with libzmq (base ZMQ library)
+    void *socketZmq ();
+
     //  Print zyre node information to stdout
     void print ();
 };

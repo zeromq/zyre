@@ -308,6 +308,13 @@ class Zyre(object):
         """
         return utils.lib.zyre_socket(self._p)
 
+    def socket_zmq(self):
+        """
+        Return underlying ZMQ socket for talking to the Zyre node,
+        for polling with libzmq (base ZMQ library)
+        """
+        return utils.lib.zyre_socket_zmq(self._p)
+
     def print_py(self):
         """
         Print zyre node information to stdout

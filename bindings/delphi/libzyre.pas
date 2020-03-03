@@ -211,6 +211,10 @@ type
   // Return socket for talking to the Zyre node, for polling
   function zyre_socket(self: PZyre): PZsock; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 
+  // Return underlying ZMQ socket for talking to the Zyre node,
+  // for polling with libzmq (base ZMQ library)
+  function zyre_socket_zmq(self: PZyre): PZSock; cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
+
   // Print zyre node information to stdout
   procedure zyre_print(self: PZyre); cdecl; external lib_zyre {$IFDEF MSWINDOWS}delayed{$ENDIF};
 

@@ -395,6 +395,15 @@ QZsock * QZyre::socket ()
 }
 
 ///
+//  Return underlying ZMQ socket for talking to the Zyre node,
+//  for polling with libzmq (base ZMQ library)
+void * QZyre::socketZmq ()
+{
+    void * rv = zyre_socket_zmq (self);
+    return rv;
+}
+
+///
 //  Print zyre node information to stdout
 void QZyre::print ()
 {
