@@ -213,7 +213,8 @@ ZYRE_EXPORT char *
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
-//  Return ZMQ socket for talking to the Zyre node, for polling
+//  Return underlying ZMQ socket for talking to the Zyre node,
+//  for polling with libzmq (base ZMQ library)
 ZYRE_EXPORT void *
     zyre_socket_zmq (zyre_t *self);
 
