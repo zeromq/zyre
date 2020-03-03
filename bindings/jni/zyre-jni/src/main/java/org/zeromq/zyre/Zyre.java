@@ -366,6 +366,14 @@ public class Zyre implements AutoCloseable {
         return new Zsock (__socket (self));
     }
     /*
+    Return underlying ZMQ socket for talking to the Zyre node,
+    for polling with libzmq (base ZMQ library)
+    */
+    native static long __socketZmq (long self);
+    public long socketZmq () {
+        return __socketZmq (self);
+    }
+    /*
     Print zyre node information to stdout
     */
     native static void __print (long self);

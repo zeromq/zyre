@@ -93,6 +93,7 @@ module Zyre
       attach_function :zyre_peer_header_value, [:pointer, :string, :string], :pointer, **opts
       attach_function :zyre_require_peer, [:pointer, :string, :string, :string], :int, **opts
       attach_function :zyre_socket, [:pointer], :pointer, **opts
+      attach_function :zyre_socket_zmq, [:pointer], :pointer, **opts
       attach_function :zyre_print, [:pointer], :void, **opts
       attach_function :zyre_version, [], :uint64, **opts
       attach_function :zyre_test, [:bool], :void, **opts

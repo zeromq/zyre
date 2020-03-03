@@ -213,10 +213,6 @@ ZYRE_EXPORT char *
 ZYRE_EXPORT zsock_t *
     zyre_socket (zyre_t *self);
 
-//  Return ZMQ socket for talking to the Zyre node, for polling
-ZYRE_EXPORT void *
-    zyre_socket_zmq (zyre_t *self);
-
 //  Print zyre node information to stdout
 ZYRE_EXPORT void
     zyre_print (zyre_t *self);
@@ -278,6 +274,12 @@ ZYRE_EXPORT void
 //  Explicitly connect to a peer
 ZYRE_EXPORT int
     zyre_require_peer (zyre_t *self, const char *uuid, const char *endpoint, const char *public_key);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Return underlying ZMQ socket for talking to the Zyre node,
+//  for polling with libzmq (base ZMQ library)
+ZYRE_EXPORT void *
+    zyre_socket_zmq (zyre_t *self);
 
 #endif // ZYRE_BUILD_DRAFT_API
 //  @end

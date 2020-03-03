@@ -146,6 +146,8 @@ lib.zyre_require_peer.restype = c_int
 lib.zyre_require_peer.argtypes = [zyre_p, c_char_p, c_char_p, c_char_p]
 lib.zyre_socket.restype = czmq.zsock_p
 lib.zyre_socket.argtypes = [zyre_p]
+lib.zyre_socket_zmq.restype = c_void_p
+lib.zyre_socket_zmq.argtypes = [zyre_p]
 lib.zyre_print.restype = None
 lib.zyre_print.argtypes = [zyre_p]
 lib.zyre_version.restype = c_long
@@ -485,6 +487,13 @@ Returns null if peer or key doesn't exits.
         Return socket for talking to the Zyre node, for polling
         """
         return czmq.Zsock(lib.zyre_socket(self._as_parameter_), False)
+
+    def socket_zmq(self):
+        """
+        Return underlying ZMQ socket for talking to the Zyre node,
+for polling with libzmq (base ZMQ library)
+        """
+        return c_void_p(lib.zyre_socket_zmq(self._as_parameter_))
 
     def print(self):
         """

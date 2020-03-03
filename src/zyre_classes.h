@@ -112,6 +112,12 @@ ZYRE_PRIVATE int
     zyre_require_peer (zyre_t *self, const char *uuid, const char *endpoint, const char *public_key);
 
 //  *** Draft method, defined for internal use only ***
+//  Return underlying ZMQ socket for talking to the Zyre node,
+//  for polling with libzmq (base ZMQ library)
+ZYRE_PRIVATE void *
+    zyre_socket_zmq (zyre_t *self);
+
+//  *** Draft method, defined for internal use only ***
 //  Self test of this class.
 ZYRE_PRIVATE void
     zre_msg_test (bool verbose);

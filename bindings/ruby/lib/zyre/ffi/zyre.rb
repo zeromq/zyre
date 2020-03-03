@@ -580,6 +580,17 @@ module Zyre
         result
       end
 
+      # Return underlying ZMQ socket for talking to the Zyre node,
+      # for polling with libzmq (base ZMQ library)
+      #
+      # @return [::FFI::Pointer]
+      def socket_zmq()
+        raise DestroyedError unless @ptr
+        self_p = @ptr
+        result = ::Zyre::FFI.zyre_socket_zmq(self_p)
+        result
+      end
+
       # Print zyre node information to stdout
       #
       # @return [void]

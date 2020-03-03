@@ -188,6 +188,10 @@ uses
     // Return socket for talking to the Zyre node, for polling
     function Socket: IZsock;
 
+    // Return underlying ZMQ socket for talking to the Zyre node,
+    // for polling with libzmq (base ZMQ library)
+    function SocketZmq: IZSock;
+
     // Print zyre node information to stdout
     procedure Print;
   end;
@@ -427,6 +431,10 @@ uses
 
     // Return socket for talking to the Zyre node, for polling
     function Socket: IZsock;
+
+    // Return underlying ZMQ socket for talking to the Zyre node,
+    // for polling with libzmq (base ZMQ library)
+    function SocketZmq: IZSock;
 
     // Print zyre node information to stdout
     procedure Print;
@@ -810,6 +818,11 @@ uses
   function TZyre.Socket: IZsock;
   begin
     Result := TZsock.Wrap(zyre_socket(FHandle), false);
+  end;
+
+  function TZyre.SocketZmq: IZSock;
+  begin
+    Result := TZsock.Wrap(zyre_socket_zmq(FHandle), false);
   end;
 
   procedure TZyre.Print;
