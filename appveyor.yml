@@ -70,9 +70,8 @@ build_script:
 
 after_build:
   - cmd: cd "%ZYRE_BUILDDIR%\%Configuration%"
-  - cmd: copy "%LIBZMQ_BUILDDIR%\bin\%Configuration%\*dll" .
-  - cmd: copy "%CZMQ_BUILDDIR%\bin\%Configuration%\*dll" .
-  - cmd: 7z a -y -bd -mx=9 zyre.zip zyre_selftest.exe *.dll
+  - cmd: copy "%INSTALL_PREFIX%\bin\*.dll" .
+  - cmd: 7z a -y -bd -mx=9 zyre.zip zyre_selftest.exe perf_local.exe perf_remote.exe zpinger.exe ztester_beacon.exe ztester_gossip.exe libzmq*.dll libczmq*.dll libzyre*.dll
   - ps: Push-AppveyorArtifact "zyre.zip" -Filename "zyre-${env:Platform}-${env:Configuration}.zip"
 
 test:
