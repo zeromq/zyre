@@ -4643,6 +4643,8 @@ void
 // Set network interface for UDP beacons. If you do not set this, CZMQ will
 // choose an interface for you. On boxes with several interfaces you should
 // specify which one you want to use, or strange things can happen.
+// The interface may by specified by either the interface name e.g. "eth0" or
+// an IP address associalted with the interface e.g. "192.168.0.1"
 void
     zyre_set_interface (zyre_t *self, const char *value);
 
