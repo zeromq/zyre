@@ -250,6 +250,9 @@ zyre_group_test (bool verbose)
     zhash_destroy (&peers);
     zhash_destroy (&groups);
     zsock_destroy (&mailbox);
+#if defined (__WINDOWS__)
+    zsys_shutdown();
+#endif
     printf ("OK\n");
 }
 

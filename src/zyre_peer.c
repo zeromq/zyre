@@ -558,6 +558,8 @@ zyre_peer_test (bool verbose)
     zuuid_destroy (&me);
     zuuid_destroy (&you);
     zsock_destroy (&mailbox);
-
+#if defined (__WINDOWS__)
+    zsys_shutdown();
+#endif
     printf ("OK\n");
 }

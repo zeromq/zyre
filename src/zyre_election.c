@@ -391,6 +391,9 @@ zyre_election_test (bool verbose)
 
     zyre_destroy (&node1);
     zyre_destroy (&node2);
+#if defined (__WINDOWS__)
+    zsys_shutdown();
+#endif
     //  @end
     printf ("OK\n");
 }
