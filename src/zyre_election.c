@@ -293,6 +293,7 @@ zyre_election_test (bool verbose)
     assert (node1);
     if (verbose)
         zyre_set_verbose (node1);
+
     //  Set inproc endpoint for this node
     rc = zyre_set_endpoint (node1, "inproc://zyre-node1");
     assert (rc == 0);
@@ -315,23 +316,20 @@ zyre_election_test (bool verbose)
     assert (rc == 0);
 
     //  Give time for them to interconnect
-    zclock_sleep (500);
+    zclock_sleep (250);
 
     //  Join topology
-    zyre_join (node1, "GROUP_1");
     zyre_set_contest_in_group (node1, "GROUP_1");
-    zyre_join (node2, "GROUP_1");
     zyre_set_contest_in_group (node2, "GROUP_1");
+    zyre_join (node1, "GROUP_1");
+    zyre_join (node2, "GROUP_1");
 
+    zyre_set_contest_in_group (node2, "GROUP_2");
     zyre_join (node1, "GROUP_2");
     zyre_join (node2, "GROUP_2");
-    zyre_set_contest_in_group (node2, "GROUP_2");
 
     zyre_join (node1, "GROUP_3");
     zyre_join (node2, "GROUP_3");
-
-    //  Give peers time to perform elections
-    zclock_sleep (1500);
 
     //  Check election results
     int num_of_global_leaders = 0;
