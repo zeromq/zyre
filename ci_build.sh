@@ -31,6 +31,10 @@ windows)
     choco install openjdk
     export JAVA_HOME="C:\Program Files\OpenJDK\jdk-13.0.2"
     export BUILD_PREFIX=$TEMP/ci_build
+    # Build will fail if processes are still running at the end of the script.
+    # Gradle by default starts a daemon so consequtive builds are faster.
+    # Therefore instruct gradle not to use its daemon.
+    export GRADLE_OPTS=-Dorg.gradle.daemon=false
 
     cd ..
 
@@ -50,6 +54,10 @@ windows)
     cmake --build . --config Release --target install
     cd ../..
 
+    cd czmq/bindings/jni
+    ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
+    cd ../../..
+
     cd zyre
     mkdir build
     cd build
@@ -58,12 +66,7 @@ windows)
     ctest --build-config Release
     cd ../..
 
-    cd zyre
-    cd bindings/jni
-    # Build will fail if processes are still running at the end of the script.
-    # Gradle by default starts a daemon so consequtive builds are faster.
-    # Therefore instruct gradle not to use its daemon.
-    export GRADLE_OPTS=-Dorg.gradle.daemon=false
+    cd zyre/bindings/jni
     ./gradlew build jar -PbuildPrefix=$BUILD_PREFIX -x test --info
     ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
 

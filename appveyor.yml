@@ -48,6 +48,10 @@ before_build:
       cd "%CZMQ_BUILDDIR%"
       cmake .. -DCZMQ_BUILD_STATIC=OFF -DCZMQ_BUILD_SHARED=ON -DCMAKE_PREFIX_PATH="C:\tmp\ci_build" -DCMAKE_INSTALL_PREFIX="%INSTALL_PREFIX%"
       cmake --build . --config %Configuration% --target install
+  - cmd: |
+      cd "%CZMQ_SOURCEDIR%"
+      cd bindings\jni
+      gradlew.bat publishToMavenLocal -PbuildPrefix="%INSTALL_PREFIX%" -x test --info
 
 clone_folder: C:\projects\zyre
 
