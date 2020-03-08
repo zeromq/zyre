@@ -63,6 +63,14 @@
 #   endif
 #endif
 
+#ifdef NDEBUG
+  #undef NDEBUG
+  #include <assert.h> 
+  #define NDEBUG
+#else
+  #include <assert.h>
+#endif
+
 //  Opaque class structures to allow forward references
 //  These classes are stable or legacy and built in all releases
 typedef struct _zyre_t zyre_t;
