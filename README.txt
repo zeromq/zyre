@@ -59,30 +59,25 @@ To report an issue, use the [Zyre issue tracker](https://github.com/zeromq/zyre/
 
 ## Using Zyre
 
-### Building on Linux
+### Building on Linux and macOS
 
 To start with, you need at least these packages:
-
-* {{git-all}} -- git is how we share code with other people.
-
-* {{build-essential}}, {{libtool}}, {{pkg-config}} - the C compiler and related tools.
-
-* {{autotools-dev}}, {{autoconf}}, {{automake}} - the GNU autoconf makefile generators.
-
-* {{cmake}} - the CMake makefile generators (an alternative to autoconf).
+* `git` -- git is how we share code with other people.
+* `build-essential`, `libtool`, `pkg-config` - the C compiler and related tools.
+* `autotools-dev`, `autoconf`, `automake` - the GNU autoconf makefile generators.
+* `cmake` - the CMake makefile generators (an alternative to autoconf).
 
 Plus some others:
-
-* {{uuid-dev}}, {{libpcre3-dev}} - utility libraries.
-
-* {{valgrind}} - a useful tool for checking your code.
+* `uuid-dev`, `libpcre3-dev` - utility libraries.
+* `valgrind` - a useful tool for checking your code.
+* `pkg-config` - an optional useful tool to make building with dependencies easier.
 
 Which we install like this (using the Debian-style apt-get package manager):
 
 ```
     sudo apt-get update
     sudo apt-get install -y \
-    git-all build-essential libtool \
+    git build-essential libtool \
     pkg-config autotools-dev autoconf automake cmake \
     uuid-dev libpcre3-dev valgrind
 
@@ -177,6 +172,71 @@ Test by running `zpinger` from two or more PCs:
 
     :: select your choice and run it
     zyre\builds\msvc\vs2013\ReleaseDEXE\zpinger.exe
+```
+
+### Building on Windows
+
+To start with, you need MS Visual Studio (C/C++). The free community edition works well.
+
+Then, install git, and make sure it works from a DevStudio command prompt:
+
+```
+git
+```
+
+#### Using CMake
+
+`zyre` requires `czmq` and `libzmq`, so we need to build `libzmq` first. For `libzmq`, you can optionally use [libsodium](https://github.com/jedisct1/libsodium) as the curve encryption library. So we will start from building `libsodium` in the following (and you can bypass the building of `libsodium` if you are ok with libzmq's default curve encryption library):
+
+```
+git clone --depth 1 -b stable https://github.com/jedisct1/libsodium.git
+cd libsodium\builds\msvc\build
+buildall.bat
+cd ..\..\..\..
+```
+
+Once done, you can find the library files under `libsodium\bin\<Win32|x64>\<Debug|Release>\<Platform Toolset>\<dynamic|ltcg|static>`.
+
+Here, the `<Platform Toolset>` is the platform toolset you are using: `v100` for `VS2010`, `v140` for `VS2015`, `v141` for `VS2017`, etc.
+
+```
+git clone git://github.com/zeromq/libzmq.git
+cd libzmq
+mkdir build
+cd build
+cmake .. -DBUILD_STATIC=OFF -DBUILD_SHARED=ON -DZMQ_BUILD_TESTS=ON -DWITH_LIBSODIUM=ON -DCMAKE_INCLUDE_PATH=..\libsodium\src\libsodium\include -DCMAKE_LIBRARY_PATH=..\libsodium\bin\Win32\Release\<Platform Toolset>\dynamic -DCMAKE_INSTALL_PREFIX=C:\projects\libs
+cmake --build . --config Release --target install
+cd ..\..\
+```
+`-DWITH_LIBSODIUM=ON` is necessary if you want to build `libzmq` with `libsodium`. `CMAKE_INCLUDE_PATH` option tells `libzmq` where to search for `libsodium`'s header files. And the `CMAKE_LIBRARY_PATH` option tells where to search for libsodium library files. If you don't need `libsodium` support, you can omit these three options.
+
+`-DCMAKE_INSTALL_PREFIX=C:\libzmq` means we want to install `libzmq` into the `C:\libzmq`. You may need to run your shell with administrator privilege in order to write to the system disk.
+
+Next, let's build `czmq`:
+
+```
+git clone git://github.com/zeromq/czmq.git
+cd czmq
+mkdir build
+cd build
+cmake .. -DCZMQ_BUILD_SHARED=ON -DCZMQ_BUILD_STATIC=OFF -DCMAKE_PREFIX_PATH=C:\projects\libs -DCMAKE_INSTALL_PREFIX=C:\projects\libs
+cmake --build . --config Release --target install
+```
+
+Remember that we installed `libzmq` to `C:\projects\libs` through specifying `-DCMAKE_INSTALL_PREFIX` in the previous step. We here use `-DCMAKE_PREFIX_PATH=C:\projects\libs` to tell `czmq` where to search for `libzmq`.
+
+That is not the whole story. We didn't mention the building of `libcurl`, `lz4`, `libuuid` and other `czmq` optional libraries above. In fact, to build all of these optional libraries successfully is really tricky. Please refer issue [#1972](https://github.com/zeromq/czmq/issues/1972) for more details.
+
+Now, it is time to build `zyre`:
+
+```
+git clone git://github.com/zeromq/zyre.git
+cd zyre
+mkdir build
+cd build
+cmake .. -DZYRE_BUILD_SHARED=ON -DZYRE_BUILD_STATIC=OFF -DCMAKE_PREFIX_PATH=C:\projects\libs
+cmake --build . --config Release
+ctest -C Release
 ```
 
 ### Linking with an Application
