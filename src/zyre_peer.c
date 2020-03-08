@@ -527,22 +527,24 @@ zyre_peer_sent_sequence (zyre_peer_t *self)
 void
 zyre_peer_test (bool verbose)
 {
-    printf (" * zyre_peer:");
+    printf (" * zyre_peer: ");
 
-    zsock_t *mailbox = zsock_new_dealer ("@tcp://127.0.0.1:5551");
+    zsock_t *mailbox = zsock_new_dealer ("@inproc://selftest-zyre_peer");
     zhash_t *peers = zhash_new ();
     zuuid_t *you = zuuid_new ();
     zuuid_t *me = zuuid_new ();
     zyre_peer_t *peer = zyre_peer_new (peers, you);
+    peer->verbose = verbose;
+
     assert (!zyre_peer_connected (peer));
-    assert (!zyre_peer_connect (peer, me, "tcp://127.0.0.1:5551", 30000));
+    assert (!zyre_peer_connect (peer, me, "inproc://selftest-zyre_peer", 30000));
     assert (zyre_peer_connected (peer));
     zyre_peer_set_name (peer, "peer");
     assert (streq (zyre_peer_name (peer), "peer"));
 
     zre_msg_t *msg = zre_msg_new ();
     zre_msg_set_id (msg, ZRE_MSG_HELLO);
-    zre_msg_set_endpoint (msg, "tcp://127.0.0.1:5552");
+    zre_msg_set_endpoint (msg, "inproc://selftest-zyre_peer");
     int rc = zyre_peer_send (peer, &msg);
     assert (rc == 0);
 

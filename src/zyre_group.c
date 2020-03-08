@@ -217,7 +217,7 @@ zyre_group_test (bool verbose)
 {
     printf (" * zyre_group: ");
     zsock_t *mailbox = zsock_new (ZMQ_DEALER);
-    zsock_bind (mailbox, "tcp://127.0.0.1:5552");
+    zsock_bind (mailbox, "inproc://selftest-zyre_group");
 
     zhash_t *groups = zhash_new ();
     zyre_group_t *group = zyre_group_new ("tests", groups);
@@ -227,14 +227,14 @@ zyre_group_test (bool verbose)
     zuuid_t *me = zuuid_new ();
     zyre_peer_t *peer = zyre_peer_new (peers, you);
     assert (!zyre_peer_connected (peer));
-    assert (!zyre_peer_connect (peer, me, "tcp://127.0.0.1:5552", 30000));
+    assert (!zyre_peer_connect (peer, me, "inproc://selftest-zyre_group", 30000));
     assert (zyre_peer_connected (peer));
 
     zyre_group_join (group, peer);
 
     zre_msg_t *msg = zre_msg_new ();
     zre_msg_set_id (msg, ZRE_MSG_HELLO);
-    zre_msg_set_endpoint (msg, "tcp://127.0.0.1:5552");
+    zre_msg_set_endpoint (msg, "inproc://selftest-zyre_group");
     zyre_group_send (group, &msg);
 
     msg = zre_msg_new ();
