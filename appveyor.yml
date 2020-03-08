@@ -1,0 +1,75 @@
+version: build-{build}
+
+clone_depth: 1
+
+skip_tags: true
+
+image: Visual Studio 2019
+
+environment:
+  matrix:
+    - platform: Win32
+      configuration: Debug
+    - platform: Win32
+      configuration: Release
+    - platform: x64
+      configuration: Debug
+    - platform: x64
+      configuration: Release
+
+matrix:
+  fast_finish: false
+
+init:
+  - cmake --version
+  - msbuild /version
+  - cmd: reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" /v UserAuthentication /t REG_DWORD /d 0 /f
+  - cmd: echo "Platform='%env:Platform%'"
+  - cmd: set INSTALL_PREFIX=C:\tmp\ci_build 
+
+install:
+  - cmd: |
+      set LIBZMQ_SOURCEDIR=C:\projects\libzmq
+      set LIBZMQ_BUILDDIR=%LIBZMQ_SOURCEDIR%\build
+      git clone --depth 1 --quiet https://github.com/zeromq/libzmq.git "%LIBZMQ_SOURCEDIR%" &&
+      md "%LIBZMQ_BUILDDIR%"
+  - cmd: |
+      set CZMQ_SOURCEDIR=C:\projects\czmq
+      set CZMQ_BUILDDIR="%CZMQ_SOURCEDIR%\build"
+      git clone --depth 1 --quiet https://github.com/zeromq/czmq.git "%CZMQ_SOURCEDIR%" &&
+      md "%CZMQ_BUILDDIR%"
+
+before_build:
+  - cmd: |
+      cd "%LIBZMQ_BUILDDIR%"
+      cmake .. -DBUILD_STATIC=OFF -DBUILD_SHARED=ON -DZMQ_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX="%INSTALL_PREFIX%"
+      cmake --build . --config %Configuration% --target install
+  - cmd: |
+      cd "%CZMQ_BUILDDIR%"
+      cmake .. -DCZMQ_BUILD_STATIC=OFF -DCZMQ_BUILD_SHARED=ON -DCMAKE_PREFIX_PATH="C:\tmp\ci_build" -DCMAKE_INSTALL_PREFIX="%INSTALL_PREFIX%"
+      cmake --build . --config %Configuration% --target install
+
+clone_folder: C:\projects\zyre
+
+build_script:
+  - cmd: |
+      set ZYRE_BUILDDIR="%APPVEYOR_BUILD_FOLDER%\build"
+      md "%ZYRE_BUILDDIR%"
+      cd "%ZYRE_BUILDDIR%"
+      cmake .. -DZYRE_BUILD_STATIC=OFF -DZYRE_BUILD_SHARED=ON -DCMAKE_PREFIX_PATH="C:\tmp\ci_build" -DCMAKE_INSTALL_PREFIX="%INSTALL_PREFIX%"
+      cmake --build . --config %Configuration% --target install
+      ctest -C %Configuration% -V
+  - cmd: |
+      cd "%APPVEYOR_BUILD_FOLDER%"
+      cd bindings\jni
+      gradlew.bat build jar -PbuildPrefix="%INSTALL_PREFIX%" -x test --info
+
+after_build:
+  - cmd: cd "%ZYRE_BUILDDIR%\%Configuration%"
+  - cmd: copy "%LIBZMQ_BUILDDIR%\bin\%Configuration%\*dll" .
+  - cmd: copy "%CZMQ_BUILDDIR%\bin\%Configuration%\*dll" .
+  - cmd: 7z a -y -bd -mx=9 zyre.zip zyre_selftest.exe *.dll
+  - ps: Push-AppveyorArtifact "zyre.zip" -Filename "zyre-${env:Platform}-${env:Configuration}.zip"
+
+test:
+  none
