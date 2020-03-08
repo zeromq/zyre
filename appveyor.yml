@@ -31,12 +31,12 @@ install:
   - cmd: |
       set LIBZMQ_SOURCEDIR=C:\projects\libzmq
       set LIBZMQ_BUILDDIR=%LIBZMQ_SOURCEDIR%\build
-      git clone --depth 1 --quiet https://github.com/zeromq/libzmq.git "%LIBZMQ_SOURCEDIR%" &&
+      git clone --depth 1 --quiet https://github.com/zeromq/libzmq.git "%LIBZMQ_SOURCEDIR%"
       md "%LIBZMQ_BUILDDIR%"
   - cmd: |
       set CZMQ_SOURCEDIR=C:\projects\czmq
       set CZMQ_BUILDDIR="%CZMQ_SOURCEDIR%\build"
-      git clone --depth 1 --quiet https://github.com/zeromq/czmq.git "%CZMQ_SOURCEDIR%" &&
+      git clone --depth 1 --quiet https://github.com/zeromq/czmq.git "%CZMQ_SOURCEDIR%"
       md "%CZMQ_BUILDDIR%"
 
 before_build:
