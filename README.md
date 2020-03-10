@@ -7,10 +7,9 @@
 
 # Zyre - Local Area Clustering for Peer-to-Peer Applications
 
-| Linux & MacOSX |
-|:--------------:|
-|[![Build Status](https://travis-ci.org/zeromq/zyre.png?branch=master)](https://travis-ci.org/zeromq/zyre)|
-
+| Linux & MacOSX | Windows  |
+|:--------------:|:--------:|
+|[![Build Status](https://travis-ci.org/zeromq/zyre.png?branch=master)](https://travis-ci.org/zeromq/zyre)|[![Build status](https://ci.appveyor.com/api/projects/status/kuugogjji97yblqe?svg=true)](https://ci.appveyor.com/project/zeromq/zyre)|
 ## Contents
 
 
