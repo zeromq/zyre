@@ -46,6 +46,12 @@ windows)
     cmake --build . --config Release --target install
     cd ../..
 
+    if [ -d "libzmq/bindings/jni" ]; then
+        cd libzmq/bindings/jni
+        ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
+        cd ../../..
+    fi
+
     git clone --quiet --depth 1 https://github.com/zeromq/czmq.git czmq
     cd czmq
     mkdir build
@@ -54,9 +60,11 @@ windows)
     cmake --build . --config Release --target install
     cd ../..
 
-    cd czmq/bindings/jni
-    ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
-    cd ../../..
+    if [ -d "czmq/bindings/jni" ]; then
+        cd czmq/bindings/jni
+        ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
+        cd ../../..
+    fi
 
     cd zyre
     mkdir build
@@ -66,7 +74,8 @@ windows)
     ctest --build-config Release
     cd ../..
 
-    cd zyre/bindings/jni
+    cd zyre
+    cd bindings/jni
     ./gradlew build jar -PbuildPrefix=$BUILD_PREFIX -x test --info
     ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
 
