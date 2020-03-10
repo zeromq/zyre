@@ -1139,7 +1139,9 @@ zyre_test (bool verbose)
         zyre_destroy (&node5);
         zyre_destroy (&node6);
         zactor_destroy (&auth);
-
+#if defined (__WINDOWS__)
+    zsys_shutdown();
+#endif
         printf ("OK\n");
 
     }

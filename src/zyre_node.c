@@ -1536,5 +1536,8 @@ zyre_node_test (bool verbose)
     zyre_node_destroy (&node);
     zsock_destroy (&pipe);
     //  Node takes ownership of outbox and destroys it
+#if defined (__WINDOWS__)
+    zsys_shutdown();
+#endif
     printf ("OK\n");
 }

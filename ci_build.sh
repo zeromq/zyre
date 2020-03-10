@@ -25,6 +25,63 @@ case "$CI_TRACE" in
         set -x ;;
 esac
 
+case $TRAVIS_OS_NAME in
+windows)
+    export
+    choco install openjdk
+    export JAVA_HOME="C:\Program Files\OpenJDK\jdk-13.0.2"
+    export BUILD_PREFIX=$TEMP/ci_build
+    # Build will fail if processes are still running at the end of the script.
+    # Gradle by default starts a daemon so consequtive builds are faster.
+    # Therefore instruct gradle not to use its daemon.
+    export GRADLE_OPTS=-Dorg.gradle.daemon=false
+
+    cd ..
+
+    git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git libzmq
+    cd libzmq
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_PREFIX_PATH=$BUILD_PREFIX
+    cmake --build . --config Release --target install
+    cd ../..
+
+    if [ -d "libzmq/bindings/jni" ]; then
+        cd libzmq/bindings/jni
+        ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
+        cd ../../..
+    fi
+
+    git clone --quiet --depth 1 https://github.com/zeromq/czmq.git czmq
+    cd czmq
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_PREFIX_PATH=$BUILD_PREFIX
+    cmake --build . --config Release --target install
+    cd ../..
+
+    if [ -d "czmq/bindings/jni" ]; then
+        cd czmq/bindings/jni
+        ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
+        cd ../../..
+    fi
+
+    cd zyre
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_PREFIX_PATH=$BUILD_PREFIX
+    cmake --build . --config Release --target install
+    ctest --build-config Release
+    cd ../..
+
+    cd zyre
+    cd bindings/jni
+    ./gradlew build jar -PbuildPrefix=$BUILD_PREFIX -x test --info
+    ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info
+
+    exit 0
+esac
+
 case "$BUILD_TYPE" in
 default|default-Werror|default-with-docs|valgrind|clang-format-check)
     LANG=C

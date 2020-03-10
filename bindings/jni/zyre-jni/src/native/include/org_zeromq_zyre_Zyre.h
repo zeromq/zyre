@@ -329,6 +329,14 @@ JNIEXPORT jlong JNICALL Java_org_zeromq_zyre_Zyre__1_1socket
 
 /*
  * Class:     org_zeromq_zyre_Zyre
+ * Method:    __socketZmq
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_org_zeromq_zyre_Zyre__1_1socketZmq
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_zeromq_zyre_Zyre
  * Method:    __print
  * Signature: (J)V
  */
