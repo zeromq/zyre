@@ -43,12 +43,10 @@ env:
     - secure: Dm9Hg0hqE1K9uDSrfW/fWj0ehzBTeevlP87J/d4bXQ2HHTqn7JoJpXFu2b0CkCquZ/raZIOQIXPA0heGmVyafNKIHl1Wotb1TVxB7VS6cLb67BxH9M7LIxwU2vPk/qpsSUGqRt73uDe6HNIqOQubokyWHJ/KwIDVCDa8sP1CpEs=
     - secure: LZxtiweZGsN2Eu1ck7yDBYDRmcE4+q7SWuFSUZzYeXhyZIilBCUwuvKa3FNkC3SwoUpBfZ+T5wyKfSvhZKFUn0p3FVykpbEZxpDCke5sclu9Q9uDP2t3926/Wf8kFT3NG51qxAJwgk9vXh5Rz9JcIlyPJY6/MCm5n/HBo+BpJ9A=
     - BINTRAY_USER_ORG=zeromq
-    # tokens to deploy releases on OBS and create/delete temporary branch on Github.
-    # 1) Create a token on https://github.com/settings/tokens/new with "public_repo"
-    #    capability and encrypt it with travis encrypt --org -r <org>/<repo> GH_TOKEN="<token>"
-    # 2) Create 2 OBS tokens with osc token --create network:messaging:zeromq:release-<stable|draft> <project>
+    # tokens to deploy releases on OBS.
+    # 1) Create 2 OBS tokens with osc token --create network:messaging:zeromq:release-<stable|draft> <project>
     #    encrypt them with travis encrypt --org -r <org>/<repo> OBS_<STABLE|DRAFT>_TOKEN="<token>"
-    # 3) Uncomment the three "secure" lines and paste the three generated hashed
+    # 2) Uncomment the three "secure" lines and paste the three generated hashed
     #    strings, which include each token's name, as parameters
     - secure: VmpVRSM7UNdF/P6CGac9r+yWYyngU/vBkI1IGPL6gTNm5ctAUzr+ni/3A4K9vHCLXEXFC2BX5XO050e09dw3U/jtG1n463E2JPW/sOmirQZl9N2RPU9fmT07mLWkpNKkPC7P0z/c37z2/xFlDQZ5gwIAnuMKLW1Gzg/XkTVCWh4=
     - secure: kjO5KenouBNcw41x0+7dLBZ4k/32/EQzx2nM4PbsblAODnnKxI6FDWh+25qvu8YFdItvuoRnISVRORWjEJYBBD6JhEbpCvlcn0tQ7RjeTT4mUEl03qrtEmYtjFJklZ1Wf6m1ZA3fokC1uzyaX4eF+vgO//v8j4UrHcSRrr3s2V0=
