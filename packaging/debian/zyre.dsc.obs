@@ -1,7 +1,7 @@
 Format: 3.0 (quilt)
 Binary: zyre
 Source: zyre
-Version: 2.0.1
+Version: 2.0.1-0.1
 Maintainer: zyre Developers <zeromq-dev@lists.zeromq.org>
 Architecture: any
 Build-Depends: debhelper (>= 9),

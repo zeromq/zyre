@@ -10,14 +10,29 @@ case "$CI_TIME" in
         CI_TIME="" ;;
 esac
 
-# Set this to enable verbose tracing
-[ -n "${CI_TRACE-}" ] || CI_TRACE="no"
-case "$CI_TRACE" in
-    [Nn][Oo]|[Oo][Ff][Ff]|[Ff][Aa][Ll][Ss][Ee])
-        set +x ;;
-    [Yy][Ee][Ss]|[Oo][Nn]|[Tt][Rr][Uu][Ee])
-        set -x ;;
-esac
+configure_tracing() {
+	# Set this to enable verbose tracing
+	[ -n "${CI_TRACE-}" ] || CI_TRACE="no"
+	case "$CI_TRACE" in
+		[Nn][Oo]|[Oo][Ff][Ff]|[Ff][Aa][Ll][Ss][Ee])
+			set +x ;;
+		[Yy][Ee][Ss]|[Oo][Nn]|[Tt][Rr][Uu][Ee])
+			set -x ;;
+	esac
+}
+configure_tracing
+
+fold_start() {
+  set +x
+  echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
+  configure_tracing
+}
+
+fold_end() {
+  set +x
+  echo -e "\ntravis_fold:end:$1\r"
+  configure_tracing
+}
 
 LANG=C
 LC_ALL=C
@@ -60,10 +75,14 @@ if [ "$CLANG_FORMAT" != "" ] ; then
     CMAKE_OPTS+=("-DCLANG_FORMAT=${CLANG_FORMAT}")
 fi
 
-# Clone and build dependencies
+# Clone and build dependencies, if not yet installed to Travis env as DEBs
+# or MacOS packages; other OSes are not currently supported by Travis cloud
 [ -z "$CI_TIME" ] || echo "`date`: Starting build of dependencies (if any)..."
-if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libzmq3-dev >/dev/null 2>&1) || \
-       (command -v brew >/dev/null 2>&1 && brew ls --versions libzmq >/dev/null 2>&1)); then
+
+# Start of recipe for dependency: libzmq
+fold_start dependency.libzmq "Install dependency libzmq"
+if ! ((command -v dpkg >/dev/null 2>&1 && dpkg -s libzmq3-dev >/dev/null 2>&1) || \
+      (command -v brew >/dev/null 2>&1 && brew ls --versions libzmq >/dev/null 2>&1)); then
     BASE_PWD=${PWD}
     cd tmp-deps
     $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git libzmq
@@ -85,13 +104,27 @@ if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libzmq3-dev >/
         $CI_TIME autoconf || \
         $CI_TIME autoreconf -fiv
     fi
-    $CI_TIME ./configure "${CONFIG_OPTS[@]}"
-    $CI_TIME make -j4
-    $CI_TIME make install
+    if [ -e ./configure ]; then
+        $CI_TIME ./configure "${CONFIG_OPTS[@]}"
+    else
+        mkdir build
+        cd build
+        $CI_TIME cmake .. -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_PREFIX_PATH=$BUILD_PREFIX
+    fi
+    if [ -e ./configure ]; then
+        $CI_TIME make -j4
+        $CI_TIME make install
+    else
+        $CI_TIME cmake --build . --config Release --target install
+    fi
     cd "${BASE_PWD}"
 fi
-if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libczmq-dev >/dev/null 2>&1) || \
-       (command -v brew >/dev/null 2>&1 && brew ls --versions czmq >/dev/null 2>&1)); then
+fold_end dependency.libzmq
+
+# Start of recipe for dependency: czmq
+fold_start dependency.czmq "Install dependency czmq"
+if ! ((command -v dpkg >/dev/null 2>&1 && dpkg -s libczmq-dev >/dev/null 2>&1) || \
+      (command -v brew >/dev/null 2>&1 && brew ls --versions czmq >/dev/null 2>&1)); then
     BASE_PWD=${PWD}
     cd tmp-deps
     $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/czmq.git czmq
@@ -113,25 +146,40 @@ if ! ((command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libczmq-dev >/
         $CI_TIME autoconf || \
         $CI_TIME autoreconf -fiv
     fi
-    $CI_TIME ./configure "${CONFIG_OPTS[@]}"
-    $CI_TIME make -j4
-    $CI_TIME make install
+    if [ -e ./configure ]; then
+        $CI_TIME ./configure "${CONFIG_OPTS[@]}"
+    else
+        mkdir build
+        cd build
+        $CI_TIME cmake .. -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_PREFIX_PATH=$BUILD_PREFIX
+    fi
+    if [ -e ./configure ]; then
+        $CI_TIME make -j4
+        $CI_TIME make install
+    else
+        $CI_TIME cmake --build . --config Release --target install
+    fi
     cd "${BASE_PWD}"
 fi
+fold_end dependency.czmq
+
 
 cd ../..
 
 # always install custom builds from dist if the autotools chain exists
 # to make sure that `make dist` doesn't omit any files required to build & test
 if [ -z "$DO_CLANG_FORMAT_CHECK" -a -f configure.ac ]; then
+    fold_start check.clang_format_check "Do clang format check"
     $CI_TIME ./autogen.sh
     $CI_TIME ./configure "${CONFIG_OPTS[@]}"
     $CI_TIME make -j5 dist-gzip
     $CI_TIME tar -xzf zyre-2.0.1.tar.gz
     cd zyre-2.0.1
+    fold_end check.clang_format_check
 fi
 
 # Build and check this project
+fold_start build.project "Build and check this project"
 [ -z "$CI_TIME" ] || echo "`date`: Starting build of currently tested project..."
 CCACHE_BASEDIR=${PWD}
 export CCACHE_BASEDIR
@@ -149,3 +197,4 @@ fi
 echo "=== Are GitIgnores good after making the project '$BUILD_TYPE'? (should have no output below)"
 git status -s || true
 echo "==="
+fold_end build.project
