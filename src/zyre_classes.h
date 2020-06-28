@@ -35,6 +35,8 @@
 //  External API
 #include "../include/zyre.h"
 
+//  Private external dependencies
+
 //  Opaque class structures to allow forward references
 #ifndef ZRE_MSG_T_DEFINED
 typedef struct _zre_msg_t zre_msg_t;
