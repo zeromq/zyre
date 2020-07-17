@@ -178,8 +178,8 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint6
         zarmour_set_mode (armour, ZARMOUR_MODE_Z85);
         zarmour_set_pad (armour, false);
         zarmour_set_line_breaks (armour, false);
-        // convert keys from Z85 strings (40 bytes) to raw byte arrays (32 bytes)
 
+        // convert keys from Z85 strings (40 bytes) to raw byte arrays (32 bytes)
         zchunk_t *decoded_public_key =
           zarmour_decode (armour, self->public_key);
         zchunk_t *decoded_secret_key =
