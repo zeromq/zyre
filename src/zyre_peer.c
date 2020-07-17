@@ -170,14 +170,31 @@ zyre_peer_connect (zyre_peer_t *self, zuuid_t *from, const char *endpoint, uint6
     zrex_destroy (&rex);
 
     if (self->server_key) {
-        uint8_t pub[32] = { 0 }, sec[32] = { 0 };
-        assert (zmq_z85_decode (pub, self->public_key));
-        assert (zmq_z85_decode (sec, self->secret_key));
-        zcert_t *cert = zcert_new_from(pub, sec);
-        zcert_apply(cert, self->mailbox);
-        zcert_destroy(&cert);
+        assert (self->public_key);
+        assert (self->secret_key);
 
+        // zarmour use for string conversion
+        zarmour_t *armour = zarmour_new ();
+        zarmour_set_mode (armour, ZARMOUR_MODE_Z85);
+        zarmour_set_pad (armour, false);
+        zarmour_set_line_breaks (armour, false);
+
+        // convert keys from Z85 strings (40 bytes) to raw byte arrays (32 bytes)
+        zchunk_t *decoded_public_key =
+          zarmour_decode (armour, self->public_key);
+        zchunk_t *decoded_secret_key =
+          zarmour_decode (armour, self->secret_key);
+
+        zcert_t *cert = zcert_new_from (zchunk_data (decoded_public_key), zchunk_data (decoded_secret_key));
+
+        zcert_apply(cert, self->mailbox);
         zsock_set_curve_serverkey (self->mailbox, self->server_key);
+
+        zcert_destroy (&cert);
+        zchunk_destroy (&decoded_secret_key);
+        zchunk_destroy (&decoded_public_key);
+        zarmour_destroy (&armour);
+
 #ifndef ZMQ_CURVE
         // legacy ZMQ support
         // inline incase the underlying assert is removed
