@@ -285,6 +285,16 @@ zyre_node_start (zyre_node_t *self)
 static int
 zyre_node_stop (zyre_node_t *self)
 {
+    if (self->gossip) {
+        zyre_peer_t *peer = zhash_first (self->peers);
+        while (peer) {
+            zre_msg_t *msg = zre_msg_new ();
+            zre_msg_set_id (msg, ZRE_MSG_GOODBYE);
+            zyre_peer_send (peer, &msg);
+            peer = zhash_next (self->peers);
+        }
+    }
+    
     if (self->beacon) {
         //  Stop broadcast/listen beacon
         beacon_t beacon;
@@ -302,7 +312,8 @@ zyre_node_stop (zyre_node_t *self)
         zpoller_remove (self->poller, self->beacon);
         zactor_destroy (&self->beacon);
     }
-    //  Stop polling on inbox
+    
+    //  Stop polling on inbox and stop outbox
     zpoller_remove (self->poller, self->inbox);
     zstr_sendm (self->outbox, "STOP");
     zstr_sendm (self->outbox, zuuid_str (self->uuid));
@@ -865,6 +876,12 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
     zstr_sendm (self->outbox, "EXIT");
     zstr_sendm (self->outbox, zyre_peer_identity (peer));
     zstr_send (self->outbox, zyre_peer_name (peer));
+    
+#ifdef ZYRE_BUILD_DRAFT_API
+    // Clean this peer in our gossip table if needed
+    if (self->gossip_bind)
+        zstr_sendx (self->gossip, "UNPUBLISH", zyre_peer_identity (peer), NULL);
+#endif
 
     if (self->verbose)
         zsys_info ("(%s) EXIT name=%s endpoint=%s",
@@ -1248,6 +1265,18 @@ zyre_node_recv_peer (zyre_node_t *self)
             zyre_group_set_election (group, NULL);
         }
     }
+    
+    else
+    if (zre_msg_id (msg) == ZRE_MSG_GOODBYE) {
+        // If discovery mode is UDP, beacons do the job for peer removal (see zyre_node_recv_beacon)
+        // If discovery mode is Gossip, we need to remove here
+        if (self->gossip) {
+            zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
+            if (peer)
+                zyre_node_remove_peer (self, peer);
+        }
+    }
+    
     zuuid_destroy (&uuid);
     zre_msg_destroy (&msg);
 
@@ -1384,9 +1413,9 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
         //  TODO: do this only once for a peer in this state;
         //  it would be nicer to use a proper state machine
         //  for peer management.
-        if (self->verbose)
-            zsys_info ("(%s) peer does not send messages (evasive) name=%s endpoint=%s",
-                self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
+//        if (self->verbose)
+//            zsys_info ("(%s) peer does not send messages (evasive) name=%s endpoint=%s",
+//                       self->name, zyre_peer_name (peer), zyre_peer_endpoint (peer));
         zre_msg_t *msg = zre_msg_new ();
         zre_msg_set_id (msg, ZRE_MSG_PING);
         zyre_peer_send (peer, &msg);
@@ -1402,8 +1431,8 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
             // NB: this is an improvement of the EVASIVE event which triggers
             // before getting ping result and thus has poor meaning.
             if (self->verbose)
-                zsys_info ("(%s) peer has not answered ping after %d milliseconds (silent)",
-                    self->name, REAP_INTERVAL);
+                zsys_info ("(%s) peer '%s' has not answered ping after %d milliseconds (silent)",
+                    self->name, zyre_peer_name(peer), REAP_INTERVAL);
             zstr_sendm (self->outbox, "SILENT");
             zstr_sendm (self->outbox, zyre_peer_identity (peer));
             zstr_send (self->outbox, zyre_peer_name (peer));
