@@ -13,7 +13,7 @@
     <grammar>
     zre             = greeting *traffic
     greeting        = hello
-    traffic         = elect / leader / whisper / shout / join / leave / ping / ping-ok
+    traffic         = elect / leader / whisper / shout / join / leave / ping / ping-ok / goodbye
     </grammar>
 
     <!-- Header for all messages -->
@@ -71,5 +71,9 @@
     <message name = "LEADER" id = "9">
         <field name = "group" type = "string">Name of group</field>
         <field name = "leader id" type = "string">ID of the elected leader</field>
+    </message>
+
+    <message name = "GOODBYE" id = "10">
+    Peer is leaving
     </message>
 </class>
