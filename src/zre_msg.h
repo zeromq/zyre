@@ -79,10 +79,6 @@
         sequence            number 2    Cyclic sequence number
         group               string      Name of group
         leader_id           string      ID of the elected leader
-
-    GOODBYE - Peer is leaving
-        version             number 1    Version number (2)
-        sequence            number 2    Cyclic sequence number
 */
 
 
@@ -95,7 +91,6 @@
 #define ZRE_MSG_PING_OK                     7
 #define ZRE_MSG_ELECT                       8
 #define ZRE_MSG_LEADER                      9
-#define ZRE_MSG_GOODBYE                     10
 
 #include <czmq.h>
 
@@ -135,12 +130,6 @@ ZYRE_PRIVATE int
 //  Send the zre_msg to the output socket, does not destroy it
 ZYRE_PRIVATE int
     zre_msg_send (zre_msg_t *self, zsock_t *output);
-
-//  Encode the first frame of zre_msg. Does not destroy it. Returns the frame if
-//  OK, else NULL.
-ZYRE_PRIVATE zframe_t *
-zre_msg_encode (zre_msg_t *self);
-
 
 
 //  Print contents of message to stdout
@@ -226,15 +215,15 @@ ZYRE_PRIVATE void
     zre_msg_set_group (zre_msg_t *self, const char *value);
 
 //  Get/set the challenger_id field
-ZYRE_PRIVATE const char *
+ZYRE_EXPORT const char *
     zre_msg_challenger_id (zre_msg_t *self);
-ZYRE_PRIVATE void
+ZYRE_EXPORT void
     zre_msg_set_challenger_id (zre_msg_t *self, const char *value);
 
 //  Get/set the leader_id field
-ZYRE_PRIVATE const char *
+ZYRE_EXPORT const char *
     zre_msg_leader_id (zre_msg_t *self);
-ZYRE_PRIVATE void
+ZYRE_EXPORT void
     zre_msg_set_leader_id (zre_msg_t *self, const char *value);
 
 //  Self test of this class
