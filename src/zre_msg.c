@@ -35,7 +35,7 @@
 #endif
 
 #include "../include/zyre.h"
-#include "../include/zre_msg.h"
+#include "./zre_msg.h"
 
 //  Structure of our class
 
