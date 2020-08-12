@@ -1425,7 +1425,6 @@ zre_msg_encode (zre_msg_t *self)
             PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             nbr_frames += self->content? zmsg_size (self->content): 1;
-            have_content = true;
             break;
 
         case ZRE_MSG_SHOUT:
@@ -1433,7 +1432,6 @@ zre_msg_encode (zre_msg_t *self)
             PUT_NUMBER2 (self->sequence);
             PUT_STRING (self->group);
             nbr_frames += self->content? zmsg_size (self->content): 1;
-            have_content = true;
             break;
 
         case ZRE_MSG_JOIN:
