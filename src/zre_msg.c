@@ -35,7 +35,7 @@
 #endif
 
 #include "../include/zyre.h"
-#include "../include/zre_msg.h"
+#include "./zre_msg.h"
 
 //  Structure of our class
 
@@ -1389,7 +1389,6 @@ zre_msg_encode (zre_msg_t *self)
     //  Now serialize message into the frame
     PUT_NUMBER2 (0xAAA0 | 1);
     PUT_NUMBER1 (self->id);
-    bool have_content = false;
     size_t nbr_frames = 1;              //  Total number of frames to send
 
     switch (self->id) {
@@ -1426,7 +1425,6 @@ zre_msg_encode (zre_msg_t *self)
             PUT_NUMBER1 (2);
             PUT_NUMBER2 (self->sequence);
             nbr_frames += self->content? zmsg_size (self->content): 1;
-            have_content = true;
             break;
 
         case ZRE_MSG_SHOUT:
@@ -1434,7 +1432,6 @@ zre_msg_encode (zre_msg_t *self)
             PUT_NUMBER2 (self->sequence);
             PUT_STRING (self->group);
             nbr_frames += self->content? zmsg_size (self->content): 1;
-            have_content = true;
             break;
 
         case ZRE_MSG_JOIN:
