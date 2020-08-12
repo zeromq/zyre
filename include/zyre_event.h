@@ -36,7 +36,7 @@ ZYRE_EXPORT void
     zyre_event_destroy (zyre_event_t **self_p);
 
 //  Returns event type, as printable uppercase string. Choices are:
-//  "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "SILENT", "WHISPER" and "SHOUT"
+//  "ENTER", "EXIT", "JOIN", "LEAVE", "EVASIVE", "WHISPER" and "SHOUT"
 //  and for the local node: "STOP"
 ZYRE_EXPORT const char *
     zyre_event_type (zyre_event_t *self);
