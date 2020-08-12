@@ -1389,7 +1389,6 @@ zre_msg_encode (zre_msg_t *self)
     //  Now serialize message into the frame
     PUT_NUMBER2 (0xAAA0 | 1);
     PUT_NUMBER1 (self->id);
-    bool have_content = false;
     size_t nbr_frames = 1;              //  Total number of frames to send
 
     switch (self->id) {
