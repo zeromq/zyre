@@ -1308,10 +1308,9 @@ zyre_node_recv_peer (zyre_node_t *self)
     if (zre_msg_id (msg) == ZRE_MSG_GOODBYE) {
         //  If discovery mode is UDP, beacons do the job for peer removal (see zyre_node_recv_beacon)
         //  If discovery mode is Gossip, we need to remove here
-        if (self->gossip) {
-            zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
-            if (peer)
-                zyre_node_remove_peer (self, peer);
+        if (self->gossip && peer) {
+            zyre_node_remove_peer (self, peer);
+            peer = NULL;
         }
     }
     
@@ -1319,7 +1318,8 @@ zyre_node_recv_peer (zyre_node_t *self)
     zre_msg_destroy (&msg);
 
     //  Activity from peer resets peer timers
-    zyre_peer_refresh (peer, self->evasive_timeout, self->expired_timeout);
+    if (peer)
+        zyre_peer_refresh (peer, self->evasive_timeout, self->expired_timeout);
 }
 
 //  Handle beacon data
