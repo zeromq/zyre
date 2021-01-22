@@ -1,6 +1,32 @@
-Zyre version 2.0.1 stable, released on 20xx/xx/xx
+Zyre version 2.0.1 stable, released on 2021/01/22
 =================================================
 
+* New features in DRAFT state
+
+  - Leader election, allows to elect a group leader between participating peers
+
+* The following new APIs have been added to the Zyre class:
+
+  - zyre_set_silent_timeout (zyre_t *self, int interval)
+
+* The following new DRAFT APIs have been added to the Zyre class:
+
+  - zyre_set_beacon_peer_port (zyre_t *self, int port_nbr)
+  - zyre_set_contest_in_group (zyre_t *self, const char *group)
+  - zyre_set_advertised_endpoint (zyre_t *self, const char *group)
+  - zyre_set_zcert (zyre_t *self, zcert_t *zcert_t)
+  - zyre_set_zap_domain (zyre_t *self, const char *domain)
+  - zyre_gossip_connect_curve (zyre_t *self, const)
+  - zyre_gossip_unpublish (zyre_t *self, const char *node)
+  - zyre_require_peer (zyre_t *self, const char *uuid, const char *endpoint, const char *public_key)
+  - zyre_socket_zmq (zyre_t *self)
+
+* The following new DRAFT symbols have been added:
+
+  - #define ZAP_DOMAIN_DEFAULT "global"     # Default ZAP domain (auth)
+
+* Many bug fixes. See git log on https://github.com/zeromq/zyre/commits/master
+  for more information.
 
 Zyre version 2.0.0 stable, released on 2017/01/20
 =================================================
