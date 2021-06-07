@@ -38,7 +38,7 @@ Name:           zyre
 Version:        2.0.1
 Release:        1
 Summary:        an open-source framework for proximity-based p2p apps
-License:        MPL-2.0
+License:        MPLv2
 URL:            https://github.com/zeromq/zyre
 Source0:        %{name}-%{version}.tar.gz
 Group:          System/Libraries

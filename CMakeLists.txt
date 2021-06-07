@@ -127,35 +127,35 @@ set(OPTIONAL_LIBRARIES_STATIC)
 # LIBZMQ dependency
 ########################################################################
 find_package(libzmq REQUIRED)
-IF (LIBZMQ_FOUND)
-    include_directories(${LIBZMQ_INCLUDE_DIRS})
-    list(APPEND MORE_LIBRARIES ${LIBZMQ_LIBRARIES})
+IF (libzmq_FOUND)
+    include_directories(${libzmq_INCLUDE_DIRS})
+    list(APPEND MORE_LIBRARIES ${libzmq_LIBRARIES})
   IF (PC_LIBZMQ_FOUND)
       set(pkg_config_names_private "${pkg_config_names_private} libzmq")
       list(APPEND OPTIONAL_LIBRARIES_STATIC ${PC_LIBZMQ_STATIC_LDFLAGS})
   ELSE (PC_LIBZMQ_FOUND)
       set(pkg_config_libs_private "${pkg_config_libs_private} -lzmq")
   ENDIF (PC_LIBZMQ_FOUND)
-ELSE (LIBZMQ_FOUND)
+ELSE (libzmq_FOUND)
     message( FATAL_ERROR "libzmq not found." )
-ENDIF (LIBZMQ_FOUND)
+ENDIF (libzmq_FOUND)
 
 ########################################################################
 # CZMQ dependency
 ########################################################################
 find_package(czmq REQUIRED)
-IF (CZMQ_FOUND)
-    include_directories(${CZMQ_INCLUDE_DIRS})
-    list(APPEND MORE_LIBRARIES ${CZMQ_LIBRARIES})
+IF (czmq_FOUND)
+    include_directories(${czmq_INCLUDE_DIRS})
+    list(APPEND MORE_LIBRARIES ${czmq_LIBRARIES})
   IF (PC_CZMQ_FOUND)
       set(pkg_config_names_private "${pkg_config_names_private} libczmq")
       list(APPEND OPTIONAL_LIBRARIES_STATIC ${PC_CZMQ_STATIC_LDFLAGS})
   ELSE (PC_CZMQ_FOUND)
       set(pkg_config_libs_private "${pkg_config_libs_private} -lczmq")
   ENDIF (PC_CZMQ_FOUND)
-ELSE (CZMQ_FOUND)
+ELSE (czmq_FOUND)
     message( FATAL_ERROR "czmq not found." )
-ENDIF (CZMQ_FOUND)
+ENDIF (czmq_FOUND)
 
 ########################################################################
 # version
