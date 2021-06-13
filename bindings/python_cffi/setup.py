@@ -7,7 +7,7 @@ from setuptools import setup
 setup(
     name = "zyre_cffi",
     version = "2.0.1",
-    license = "mplv2",
+    license = "mpl-2.0",
     description = """Python cffi bindings of: an open-source framework for proximity-based p2p apps""",
     packages = ["zyre_cffi", ],
     setup_requires=["cffi"],
