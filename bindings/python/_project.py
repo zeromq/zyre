@@ -4,7 +4,7 @@
 ################################################################################
 NAME        = "zyre"
 VERSION     = "2.0.1"
-LICENSE     = "mplv2"
+LICENSE     = "mpl-2.0"
 DESCRIPTION = """Python bindings of: an open-source framework for proximity-based p2p apps"""
 URL         = "https://github.com/zeromq/zyre"
 PACKAGES    = ["zyre"]
