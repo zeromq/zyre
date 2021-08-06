@@ -276,7 +276,7 @@ zyre_node_start (zyre_node_t *self)
             zstr_free (&t1);
         }
 
-        zstr_sendx (self->gossip, "PUBLISH", published_endpoint, zuuid_str (self->uuid), NULL);
+        zstr_sendx (self->gossip, "PUBLISH", zuuid_str (self->uuid), published_endpoint, NULL);
         zstr_free (&published_endpoint);
 
         //  Start polling on zgossip
@@ -917,9 +917,9 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 
 #ifdef ZYRE_BUILD_DRAFT_API
     //  Clean this peer in our gossip table if needed
-    if (self->gossip)
-        zstr_sendx (self->gossip, "UNPUBLISH", zyre_peer_endpoint (peer), NULL);
-    
+    if (self->gossip_bind)
+        zstr_sendx (self->gossip, "UNPUBLISH", zyre_peer_identity (peer), NULL);
+
     //  Restart election if leaving peer was leader in a group
     const char *group_name = (const char *) zlist_first (self->own_groups);
     while (group_name) {
@@ -1463,9 +1463,9 @@ zyre_node_recv_beacon (zyre_node_t *self)
 static void
 zyre_node_recv_gossip (zyre_node_t *self)
 {
-    //  Get peer endpoint and  uuid
-    char *command = NULL, *endpoint, *uuidstr;
-    zstr_recvx (self->gossip, &command, &endpoint, &uuidstr, NULL);
+    //  Get IP address and beacon of peer
+    char *command = NULL, *uuidstr, *endpoint;
+    zstr_recvx (self->gossip, &command, &uuidstr, &endpoint, NULL);
     if (command == NULL)
         return;                 //  Interrupted
 
