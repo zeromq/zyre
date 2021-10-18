@@ -15,7 +15,7 @@ SET target=%1
 if NOT "%target%" == "" set target=/t:%target%&set action=Cleaning
 
 SET solution=zyre.sln
-SET version=12
+SET version=16
 SET log=build.log
 SET tools=Microsoft Visual Studio %version%.0\VC\vcvarsall.bat
 if "%version%" == "15" SET tools=Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat
@@ -25,16 +25,16 @@ IF NOT EXIST %environment% SET environment="%programfiles%\%tools%"
 IF NOT EXIST %environment% GOTO no_tools
 
 SET packages=
-IF EXIST "..\..\..\..\libzmq\builds/msvc/vs2013\libzmq.import.props" (
-    COPY /Y "..\..\..\..\libzmq\builds/msvc/vs2013\libzmq.import.props" . > %log%
+IF EXIST "..\..\..\..\libzmq\builds/msvc/vs2019\libzmq.import.props" (
+    COPY /Y "..\..\..\..\libzmq\builds/msvc/vs2019\libzmq.import.props" . > %log%
     IF errorlevel 1 GOTO error
 ) ELSE (
     ECHO Did not find libzmq, aborting.
     ECHO Please clone from https://github.com/zeromq/libzmq.git, and then build.
     GOTO error
 )
-IF EXIST "..\..\..\..\czmq\builds/msvc/vs2013\czmq.import.props" (
-    COPY /Y "..\..\..\..\czmq\builds/msvc/vs2013\czmq.import.props" . > %log%
+IF EXIST "..\..\..\..\czmq\builds/msvc/vs2019\czmq.import.props" (
+    COPY /Y "..\..\..\..\czmq\builds/msvc/vs2019\czmq.import.props" . > %log%
     IF errorlevel 1 GOTO error
 ) ELSE (
     ECHO Did not find czmq, aborting.
