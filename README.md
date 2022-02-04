@@ -146,11 +146,11 @@ Here's how to build Zyre from GitHub (building from packages is very similar, yo
 
 Test by running the `zyre_selftest` command:
 
-    zyre\src\.libs\zyre_selftest
+    zyre/src/.libs/zyre_selftest
 
 Test by running the `zpinger` command, from two or more PCs.
 
-    zyre\src\.libs\zpinger
+    zyre/src/.libs/zpinger
 
 ### Building on Windows
 
