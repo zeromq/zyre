@@ -8,9 +8,8 @@ Build-Depends: debhelper (>= 9),
     pkg-config,
     libzmq3-dev,
     libczmq-dev,
-    dh-python,
-    python-all-dev, python-cffi, python-setuptools,
-    python3-all-dev, python3-cffi, python3-setuptools,
+    dh-python <!nopython>,
+    python3-all-dev <!nopython>, python3-cffi <!nopython>, python3-setuptools <!nopython>,
     asciidoc-base | asciidoc, xmlto,
     dh-autoreconf
 
