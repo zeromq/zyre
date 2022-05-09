@@ -6,11 +6,11 @@
 */
 
 dependencies {
-    compile project(':zyre-jni')
+    implementation project(':zyre-jni')
     runtimeOnly "org.zeromq.zyre:zyre-jni-linux-x86_64:${project.version}"
     runtimeOnly "org.zeromq.zyre:zyre-jni-osx-x86_64:${project.version}"
     runtimeOnly "org.zeromq.zyre:zyre-jni-windows-x86_64:${project.version}"
-    compile 'org.zeromq.czmq:czmq-jni:latest.release'
+    implementation 'org.zeromq.czmq:czmq-jni:latest.release'
     runtimeOnly 'org.zeromq.czmq:czmq-jni-all:latest.release'
 }
 

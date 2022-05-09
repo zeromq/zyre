@@ -6,7 +6,7 @@
 */
 
 dependencies {
-    compile project(':zyre-jni')
+    implementation project(':zyre-jni')
     runtimeOnly "org.zeromq.czmq:czmq-jni-${osdetector.classifier}:latest.release"
 }
 
