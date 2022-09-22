@@ -117,7 +117,7 @@ Here's how to build Zyre from GitHub (building from packages is very similar, yo
     sudo make install
     cd ..
 
-    git clone git://github.com/zeromq/libzmq.git
+    git clone https://github.com/zeromq/libzmq.git
     cd libzmq
     ./autogen.sh
     # do not specify "--with-libsodium" if you prefer to use internal tweetnacl
@@ -128,14 +128,14 @@ Here's how to build Zyre from GitHub (building from packages is very similar, yo
     sudo ldconfig
     cd ..
 
-    git clone git://github.com/zeromq/czmq.git
+    git clone https://github.com/zeromq/czmq.git
     cd czmq
     ./autogen.sh && ./configure && make check
     sudo make install
     sudo ldconfig
     cd ..
 
-    git clone git://github.com/zeromq/zyre.git
+    git clone https://github.com/zeromq/zyre.git
     cd zyre
     ./autogen.sh && ./configure && make check
     sudo make install
@@ -166,9 +166,9 @@ Now let's build Zyre from GitHub:
 
 ```
     git clone --depth 1 -b stable https://github.com/jedisct1/libsodium.git
-    git clone git://github.com/zeromq/libzmq.git
-    git clone git://github.com/zeromq/czmq.git
-    git clone git://github.com/zeromq/zyre.git
+    git clone https://github.com/zeromq/libzmq.git
+    git clone https://github.com/zeromq/czmq.git
+    git clone https://github.com/zeromq/zyre.git
     cd zyre\builds\msvc
     configure.bat
     cd build
@@ -223,7 +223,7 @@ Once done, you can find the library files under `libsodium\bin\<Win32|x64>\<Debu
 Here, the `<Platform Toolset>` is the platform toolset you are using: `v100` for `VS2010`, `v140` for `VS2015`, `v141` for `VS2017`, etc.
 
 ```
-git clone git://github.com/zeromq/libzmq.git
+git clone https://github.com/zeromq/libzmq.git
 cd libzmq
 mkdir build
 cd build
@@ -238,7 +238,7 @@ cd ..\..\
 Next, let's build `czmq`:
 
 ```
-git clone git://github.com/zeromq/czmq.git
+git clone https://github.com/zeromq/czmq.git
 cd czmq
 mkdir build
 cd build
@@ -253,7 +253,7 @@ That is not the whole story. We didn't mention the building of `libcurl`, `lz4`,
 Now, it is time to build `zyre`:
 
 ```
-git clone git://github.com/zeromq/zyre.git
+git clone https://github.com/zeromq/zyre.git
 cd zyre
 mkdir build
 cd build
