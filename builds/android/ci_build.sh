@@ -40,20 +40,20 @@ mkdir -p /tmp/tmp-deps
 
 if [ -d "${LIBZMQ_ROOT}" ] ; then
     echo "ZYRE - Cleaning LIBZMQ folder '${LIBZMQ_ROOT}' ..."
-    ( cd "${LIBZMQ_ROOT}" && ( make clean || ; ))
+    ( cd "${LIBZMQ_ROOT}" && ( make clean || : ))
 else
     echo "ZYRE - Cloning 'https://github.com/zeromq/libzmq.git' (default branch) under '${LIBZMQ_ROOT}' ..."
     git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git "${LIBZMQ_ROOT}"
-    ( cd ${LIBZMQ_ROOT} && git clone --oneline -n 1 )
+    ( cd ${LIBZMQ_ROOT} && git log --oneline -n 1 )
 fi
 
 if [ -d "${CZMQ_ROOT}" ] ; then
     echo "ZYRE - Cleaning LIBCZMQ folder '${CZMQ_ROOT}' ..."
-    ( cd "${CZMQ_ROOT}" && ( make clean || ; ))
+    ( cd "${CZMQ_ROOT}" && ( make clean || : ))
 else
     echo "ZYRE - Cloning 'https://github.com/zeromq/czmq.git' (default branch) under '${CZMQ_ROOT}' ..."
     git clone --quiet --depth 1 https://github.com/zeromq/czmq.git "${CZMQ_ROOT}"
-    ( cd ${CZMQ_ROOT} && git clone --oneline -n 1 )
+    ( cd ${CZMQ_ROOT} && git log --oneline -n 1 )
 fi
 
 ./build.sh "arm"
