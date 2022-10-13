@@ -7,6 +7,9 @@
 #   Exit if any step fails
 set -e
 
+export LIBZMQ_ROOT="${LIBZMQ_ROOT:-/tmp/tmp-deps/libzmq}"
+export CZMQ_ROOT="${CZMQ_ROOT:-/tmp/tmp-deps/czmq}"
+
 # Set this to enable verbose profiling
 [ -n "${CI_TIME-}" ] || CI_TIME=""
 case "$CI_TIME" in
@@ -50,9 +53,13 @@ mkdir -p /tmp/tmp-deps
 
 # Clone and build dependencies
 [ -z "$CI_TIME" ] || echo "`date`: Starting build of dependencies (if any)..."
-export LIBZMQ_ROOT="/tmp/tmp-deps/libzmq"
-$CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git $LIBZMQ_ROOT
-
+if [ -d "${LIBZMQ_ROOT}" ] ; then
+    echo "ZYRE - Cleaning LIBZMQ folder '${LIBZMQ_ROOT}' ..."
+    ( cd "${LIBZMQ_ROOT}" && ( make clean || ; ))
+else
+    echo "ZYRE - Cloning 'https://github.com/zeromq/libzmq.git' (default branch) under '${LIBZMQ_ROOT}' ..."
+    $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git $LIBZMQ_ROOT
+fi
 cd $LIBZMQ_ROOT
 git --no-pager log --oneline -n1
 if [ -e autogen.sh ]; then
@@ -74,9 +81,13 @@ $CI_TIME make -j4
 $CI_TIME make install
 
 
-export CZMQ_ROOT="/tmp/tmp-deps/czmq"
-$CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/czmq.git $CZMQ_ROOT
-
+if [ -d "${CZMQ_ROOT}" ] ; then
+    echo "ZYRE - Cleaning LIBCZMQ folder '${CZMQ_ROOT}' ..."
+    ( cd "${CZMQ_ROOT}" && ( make clean || ; ))
+else
+    echo "ZYRE - Cloning 'https://github.com/zeromq/czmq.git' (default branch) under '${CZMQ_ROOT}' ..."
+    $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/czmq.git $CZMQ_ROOT
+fi
 cd $CZMQ_ROOT
 git --no-pager log --oneline -n1
 if [ -e autogen.sh ]; then
