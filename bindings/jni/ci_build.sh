@@ -57,6 +57,7 @@ if [ -d "${LIBZMQ_ROOT}" ] ; then
     echo "ZYRE - Cleaning LIBZMQ folder '${LIBZMQ_ROOT}' ..."
     ( cd "${LIBZMQ_ROOT}" && ( make clean || : ))
 else
+    mkdir -p "$(dirname "${LIBZMQ_ROOT}")"
     echo "ZYRE - Cloning 'https://github.com/zeromq/libzmq.git' (default branch) under '${LIBZMQ_ROOT}' ..."
     $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git $LIBZMQ_ROOT
 fi
@@ -85,6 +86,7 @@ if [ -d "${CZMQ_ROOT}" ] ; then
     echo "ZYRE - Cleaning LIBCZMQ folder '${CZMQ_ROOT}' ..."
     ( cd "${CZMQ_ROOT}" && ( make clean || : ))
 else
+    mkdir -p "$(dirname "${CZMQ_ROOT}")"
     echo "ZYRE - Cloning 'https://github.com/zeromq/czmq.git' (default branch) under '${CZMQ_ROOT}' ..."
     $CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/czmq.git $CZMQ_ROOT
 fi
