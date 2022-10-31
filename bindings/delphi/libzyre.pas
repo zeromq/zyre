@@ -27,6 +27,15 @@ const
 const
   lib_zyre = 'libzyre.dll';
 
+  // IANA-assigned UDP port for ZRE
+  ZYRE_ZRE_DISCOVERY_PORT = 5670;
+
+  // Once per second
+  ZYRE_REAP_INTERVAL = 1000;
+
+  // Default ZAP domain (auth)
+  ZYRE_ZAP_DOMAIN_DEFAULT = "global";
+
 type
   PZyre = Pointer;
   PZyreEvent = Pointer;
