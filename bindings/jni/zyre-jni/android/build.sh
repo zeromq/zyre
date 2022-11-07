@@ -60,6 +60,10 @@ source ../../../../builds/android/android_build_helper.sh
 export MIN_SDK_VERSION=21
 export ANDROID_BUILD_DIR=/tmp/android_build
 
+GRADLEW_OPTS=()
+GRADLEW_OPTS+=("-PbuildPrefix=$BUILD_PREFIX")
+GRADLEW_OPTS+=("--info")
+
 #   Build any dependent libraries
 #   Use a default value assuming that dependent libraries sits alongside this one
 ( cd ${CZMQ_ROOT:-../../../../../czmq}/bindings/jni/czmq-jni/android; ./build.sh $BUILD_ARCH )
@@ -70,7 +74,7 @@ echo "********  Building zyre Android native libraries"
 
 #   Ensure we've built JNI interface
 echo "********  Building zyre JNI interface & classes"
-( cd ../.. && TERM=dumb ./gradlew build jar -PbuildPrefix=$BUILD_PREFIX --info )
+( cd ../.. && TERM=dumb ./gradlew build jar ${GRADLEW_OPTS[@]} ${ZYRE_GRADLEW_OPTS} )
 
 echo "********  Building zyre JNI for Android"
 rm -rf build && mkdir build && cd build
