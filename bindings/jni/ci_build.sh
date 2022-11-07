@@ -48,6 +48,10 @@ if [ -z "${CI_CONFIG_QUIET-}" ] || [ "${CI_CONFIG_QUIET-}" = yes ] || [ "${CI_CO
     CONFIG_OPTS+=("--quiet")
 fi
 
+GRADLEW_OPTS=()
+GRADLEW_OPTS+=("-PbuildPrefix=$BUILD_PREFIX")
+GRADLEW_OPTS+=("--info")
+
 rm -rf /tmp/tmp-deps
 mkdir -p /tmp/tmp-deps
 
@@ -111,7 +115,7 @@ $CI_TIME make -j4
 $CI_TIME make install
 
 # Build jni dependency
-( cd bindings/jni && TERM=dumb $CI_TIME ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info )
+( cd bindings/jni && TERM=dumb $CI_TIME ./gradlew publishToMavenLocal ${GRADLEW_OPTS[@]} ${CZMQ_GRADLEW_OPTS} )
 
 cd $ZYRE_ROOT
 [ -z "$CI_TIME" ] || echo "`date`: Starting build of currently tested project..."
@@ -138,7 +142,7 @@ $CI_TIME make install
 cd ${ZYRE_JNI_ROOT}
 [ -z "$TRAVIS_TAG" ] || IS_RELEASE="-PisRelease"
 
-TERM=dumb $CI_TIME ./gradlew build jar -PbuildPrefix=$BUILD_PREFIX $IS_RELEASE --info
+TERM=dumb $CI_TIME ./gradlew build jar ${GRADLEW_OPTS[@]} ${ZYRE_GRADLEW_OPTS} $IS_RELEASE
 TERM=dumb $CI_TIME ./gradlew clean
 
 ########################################################################
