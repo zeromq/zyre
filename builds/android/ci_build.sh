@@ -7,55 +7,26 @@
 #   Exit if any step fails
 set -e
 
-export NDK_VERSION=android-ndk-r25
-export ANDROID_NDK_ROOT="/tmp/${NDK_VERSION}"
+# Use directory of current script as the working directory
+cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-export LIBZMQ_ROOT="${LIBZMQ_ROOT:-/tmp/tmp-deps/libzmq}"
-export CZMQ_ROOT="${CZMQ_ROOT:-/tmp/tmp-deps/czmq}"
+# Configuration
+export NDK_VERSION="${NDK_VERSION:-android-ndk-r25}"
+export ANDROID_NDK_ROOT="${ANDROID_NDK_ROOT:-/tmp/${NDK_VERSION}}"
+export MIN_SDK_VERSION=${MIN_SDK_VERSION:-21}
+export ANDROID_BUILD_DIR="${ANDROID_BUILD_DIR:-${PWD}/.build}"
+export ANDROID_BUILD_CLEAN="${ANDROID_BUILD_CLEAN:-yes}"
+export ANDROID_DEPENDENCIES_DIR="${ANDROID_DEPENDENCIES_DIR:-${PWD}/.deps}"
 
-case $(uname | tr '[:upper:]' '[:lower:]') in
-  linux*)
-    HOST_PLATFORM=linux
-    ;;
-  darwin*)
-    HOST_PLATFORM=darwin
-    ;;
-  *)
-    echo "Unsupported platform"
-    exit 1
-    ;;
-esac
+# Cleanup.
+if [ "${ANDROID_BUILD_CLEAN}" = "yes" ] ; then
+    rm -rf   "${ANDROID_BUILD_DIR}/prefix"
+    mkdir -p "${ANDROID_BUILD_DIR}/prefix"
+    rm -rf   "${ANDROID_DEPENDENCIES_DIR}"
+    mkdir -p "${ANDROID_DEPENDENCIES_DIR}"
 
-if [ ! -d "${ANDROID_NDK_ROOT}" ]; then
-    export FILENAME=$NDK_VERSION-$HOST_PLATFORM.zip
-
-    (cd '/tmp' \
-        && wget http://dl.google.com/android/repository/$FILENAME -O $FILENAME &> /dev/null \
-        && unzip -q $FILENAME) || exit 1
-    unset FILENAME
-fi
-
-rm -rf /tmp/tmp-deps
-mkdir -p /tmp/tmp-deps
-
-if [ -d "${LIBZMQ_ROOT}" ] ; then
-    echo "ZYRE - Cleaning LIBZMQ folder '${LIBZMQ_ROOT}' ..."
-    ( cd "${LIBZMQ_ROOT}" && ( make clean || : ))
-else
-    mkdir -p "$(dirname "${LIBZMQ_ROOT}")"
-    echo "ZYRE - Cloning 'https://github.com/zeromq/libzmq.git' (default branch) under '${LIBZMQ_ROOT}' ..."
-    git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git "${LIBZMQ_ROOT}"
-    ( cd ${LIBZMQ_ROOT} && git log --oneline -n 1 )
-fi
-
-if [ -d "${CZMQ_ROOT}" ] ; then
-    echo "ZYRE - Cleaning LIBCZMQ folder '${CZMQ_ROOT}' ..."
-    ( cd "${CZMQ_ROOT}" && ( make clean || : ))
-else
-    mkdir -p "$(dirname "${CZMQ_ROOT}")"
-    echo "ZYRE - Cloning 'https://github.com/zeromq/czmq.git' (default branch) under '${CZMQ_ROOT}' ..."
-    git clone --quiet --depth 1 https://github.com/zeromq/czmq.git "${CZMQ_ROOT}"
-    ( cd ${CZMQ_ROOT} && git log --oneline -n 1 )
+    # Called shells MUST not clean after ourselves !
+    export ANDROID_BUILD_CLEAN="no"
 fi
 
 ./build.sh "arm"
