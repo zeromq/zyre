@@ -7,12 +7,76 @@
 #   Exit if any step fails
 set -e
 
-# By default, use directory of current script as the Android build directory.
-# ANDROID_BUILD_DIR must be an absolute path:
-export ANDROID_BUILD_DIR="${ANDROID_BUILD_DIR:-$(cd $(dirname ${BASH_SOURCE[0]}) ; pwd)}"
+# Use directory of current script as the working directory
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+PROJECT_ROOT="$(cd ../.. && pwd)"
+
+########################################################################
+# Configuration & tuning options.
+########################################################################
+# Set default values used in ci builds
+export NDK_VERSION="${NDK_VERSION:-android-ndk-r25}"
+
+# Set default path to find Android NDK.
+# Must be of the form <path>/${NDK_VERSION} !!
+export ANDROID_NDK_ROOT="${ANDROID_NDK_ROOT:-/tmp/${NDK_VERSION}}"
+
+# With NDK r22b, the minimum SDK version range is [16, 31].
+# Since NDK r24, the minimum SDK version range is [19, 31].
+# SDK version 21 is the minimum version for 64-bit builds.
+export MIN_SDK_VERSION=${MIN_SDK_VERSION:-21}
+
+# Where to download our dependencies: default to /tmp/tmp-deps
+export ANDROID_DEPENDENCIES_DIR="${ANDROID_DEPENDENCIES_DIR:-/tmp/tmp-deps}"
+
+# Use directory of current script as the build directory
+# ${ANDROID_BUILD_DIR}/prefix/<build_arch>/lib will contain produced libraries
+export ANDROID_BUILD_DIR="${ANDROID_BUILD_DIR:-${PWD}}"
+
+# Clean before processing
+export ANDROID_BUILD_CLEAN="${ANDROID_BUILD_CLEAN:-no}"
+
+# Set this to 'no', to enable verbose ./configure
+export CI_CONFIG_QUIET="${CI_CONFIG_QUIET:-no}"
 
 # Set this to enable verbose profiling
-[ -n "${CI_TIME-}" ] || CI_TIME=""
+export CI_TIME="${CI_TIME:-}"
+
+# Set this to enable verbose tracing
+export CI_TRACE="${CI_TRACE:-no}"
+
+# By default, dependencies will be cloned to /tmp/tmp-deps.
+# If you have your own source tree for XXX, uncomment its
+# XXX_ROOT configuration line below, and provide its absolute tree:
+#    export LIBZMQ_ROOT="<absolute_path_to_LIBZMQ_source_tree>"
+#    export CZMQ_ROOT="<absolute_path_to_CZMQ_source_tree>"
+
+########################################################################
+# Utilities
+########################################################################
+# Get access to android_build functions and variables
+# Perform some sanity checks and calculate some variables.
+source "${PROJECT_ROOT}/builds/android/android_build_helper.sh"
+
+function usage {
+    echo "ZYRE - Usage:"
+    echo "  export XXX=xxx"
+    echo "  ./build.sh [ arm | arm64 | x86 | x86_64 ]"
+    echo ""
+    echo "See this file (configuration & tuning options) for details"
+    echo "on variables XXX and their values xxx"
+    exit 1
+}
+
+########################################################################
+# Sanity checks
+########################################################################
+BUILD_ARCH="$1"
+[ -z "${BUILD_ARCH}" ] && usage
+
+android_init_dependency_root "libzmq"             # Check or initialize LIBZMQ_ROOT
+android_init_dependency_root "libczmq"            # Check or initialize LIBCZMQ_ROOT
+
 case "$CI_TIME" in
     [Yy][Ee][Ss]|[Oo][Nn]|[Tt][Rr][Uu][Ee])
         CI_TIME="time -p " ;;
@@ -20,8 +84,6 @@ case "$CI_TIME" in
         CI_TIME="" ;;
 esac
 
-# Set this to enable verbose tracing
-[ -n "${CI_TRACE-}" ] || CI_TRACE="no"
 case "$CI_TRACE" in
     [Nn][Oo]|[Oo][Ff][Ff]|[Ff][Aa][Ll][Ss][Ee])
         set +x ;;
@@ -29,115 +91,83 @@ case "$CI_TRACE" in
         set -x ;;
 esac
 
-function usage {
-    echo "Usage ./build.sh [ arm | arm64 | x86 | x86_64 ]"
-}
-
-# Use directory of current script as the working directory
-cd "$( dirname "${BASH_SOURCE[0]}" )"
-
-# Get access to android_build functions and variables
-source ./android_build_helper.sh
-
+########################################################################
+# Compilation
+########################################################################
 # Choose a C++ standard library implementation from the ndk
 export ANDROID_BUILD_CXXSTL="gnustl_shared_49"
 
 # Additional flags for LIBTOOL, for LIBZMQ and other dependencies.
 export LIBTOOL_EXTRA_LDFLAGS='-avoid-version'
 
-BUILD_ARCH=$1
-if [ -z $BUILD_ARCH ]; then
-    usage
-    exit 1
-fi
-
-case $(uname | tr '[:upper:]' '[:lower:]') in
-  linux*)
-    export HOST_PLATFORM=linux-x86_64
-    ;;
-  darwin*)
-    export HOST_PLATFORM=darwin-x86_64
-    ;;
-  *)
-    echo "Unsupported platform"
-    exit 1
-    ;;
-esac
-
-# Set default values used in ci builds
-export NDK_VERSION=${NDK_VERSION:-android-ndk-r25}
-# With NDK r22b, the minimum SDK version range is [16, 31].
-# Since NDK r24, the minimum SDK version range is [19, 31].
-# SDK version 21 is the minimum version for 64-bit builds.
-export MIN_SDK_VERSION=${MIN_SDK_VERSION:-21}
-
 # Set up android build environment and set ANDROID_BUILD_OPTS array
-android_build_set_env $BUILD_ARCH
+android_build_set_env "${BUILD_ARCH}"
+android_download_ndk
 android_build_env
 android_build_opts
 
-# Use a temporary build directory
-cache="/tmp/android_build/${TOOLCHAIN_ARCH}"
-rm -rf "${cache}"
-mkdir -p "${cache}"
-
 # Check for environment variable to clear the prefix and do a clean build
-if [[ $ANDROID_BUILD_CLEAN ]]; then
-    echo "Doing a clean build (removing previous build and depedencies)..."
+if [ "${ANDROID_BUILD_CLEAN}" = "yes" ]; then
+    android_build_trace "Doing a clean build (removing previous build and dependencies)..."
     rm -rf "${ANDROID_BUILD_PREFIX}"/*
+
+    # Called shells MUST not clean after ourselves !
+    export ANDROID_BUILD_CLEAN="no"
 fi
 
-##
-# Make sure czmq is built and copy the prefix
+DEPENDENCIES=()
 
+########################################################################
+# Make sure CZMQ is built and copy the prefix
+
+DEPENDENCIES+=("libczmq.so")
 (android_build_verify_so "libczmq.so" &> /dev/null) || {
-    # Use a default value assuming the czmq project sits alongside this one
-    test -z "$CZMQ_ROOT" && CZMQ_ROOT="$(cd ../../../czmq && pwd)"
-
-    if [ ! -d "$CZMQ_ROOT" ]; then
-        echo "The CZMQ_ROOT directory does not exist"
-        echo "  ${CZMQ_ROOT}" run run
-        exit 1
+    if [ ! -d "${CZMQ_ROOT}" ] ; then
+        android_clone_library "CZMQ" "${CZMQ_ROOT}" "https://github.com/zeromq/czmq.git" ""
     fi
-    echo "Building czmq in ${CZMQ_ROOT}..."
 
-    (bash ${CZMQ_ROOT}/builds/android/build.sh $BUILD_ARCH) || exit 1
-    UPSTREAM_PREFIX=${CZMQ_ROOT}/builds/android/prefix/${TOOLCHAIN_ARCH}
-    cp -rn ${UPSTREAM_PREFIX}/* ${ANDROID_BUILD_PREFIX} || :
+    if [ -f "${CZMQ_ROOT}/builds/android/build.sh" ] ; then
+        (
+            bash "${CZMQ_ROOT}/builds/android/build.sh" "${BUILD_ARCH}"
+        ) || exit 1
+    else
+        (
+            CONFIG_OPTS=()
+            [ "${CI_CONFIG_QUIET}" = "yes" ] && CONFIG_OPTS+=("--quiet")
+            CONFIG_OPTS+=("${ANDROID_BUILD_OPTS[@]}")
+            CONFIG_OPTS+=("--without-docs")
+
+            android_build_library "CZMQ" "${CZMQ_ROOT}"
+        ) || exit 1
+    fi
+
+    UPSTREAM_PREFIX="${CZMQ_ROOT}/builds/android/prefix/${TOOLCHAIN_ARCH}"
+    cp -rn "${UPSTREAM_PREFIX}"/* "${ANDROID_BUILD_PREFIX}" || :
 }
 
-##
+########################################################################
 [ -z "$CI_TIME" ] || echo "`date`: Build zyre from local source"
 
-(android_build_verify_so "libzyre.so" "libczmq.so" &> /dev/null) || {
-    rm -rf "${cache}/zyre"
-    (cp -r ../.. "${cache}/zyre" && cd "${cache}/zyre" \
-        && ( make clean || : ) && rm -f configure config.status)
-
-    # Remove *.la files as they might cause errors with cross compiled libraries
-    find ${ANDROID_BUILD_PREFIX} -name '*.la' -exec rm {} +
-
+(android_build_verify_so "libzyre.so" "${DEPENDENCIES[@]}" &> /dev/null) || {
     (
         CONFIG_OPTS=()
-        CONFIG_OPTS+=("--quiet")
+        [ "${CI_CONFIG_QUIET}" = "yes" ] && CONFIG_OPTS+=("--quiet")
         CONFIG_OPTS+=("${ANDROID_BUILD_OPTS[@]}")
         CONFIG_OPTS+=("--without-docs")
 
-        cd "${cache}/zyre" \
-        && $CI_TIME ./autogen.sh 2> /dev/null \
-        && android_show_configure_opts "LIBZYRE" "${CONFIG_OPTS[@]}" \
-        && $CI_TIME ./configure "${CONFIG_OPTS[@]}" \
-        && $CI_TIME make -j 4 \
-        && $CI_TIME make install
+        android_build_library "LIBZYRE" "${PROJECT_ROOT}"
     ) || exit 1
 }
 
 ##
 # Verify shared libraries in prefix
+for library in "libzyre.so" "${DEPENDENCIES[@]}" ; do
+    android_build_verify_so "${library}"
+done
 
-android_build_verify_so "libczmq.so"
-android_build_verify_so "libzyre.so" "libczmq.so"
-echo "Android (${TOOLCHAIN_ARCH}) build successful"
+android_build_verify_so "libzyre.so" "${DEPENDENCIES[@]}"
+android_build_trace "Android build successful"
+
 ################################################################################
 #  THIS FILE IS 100% GENERATED BY ZPROJECT; DO NOT EDIT EXCEPT EXPERIMENTALLY  #
 #  Read the zproject/README.md for information about making permanent changes. #
