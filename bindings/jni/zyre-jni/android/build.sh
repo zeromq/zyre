@@ -79,7 +79,7 @@ GRADLEW_OPTS+=("--info")
 
 #   Build any dependent libraries
 #   Use a default value assuming that dependent libraries sit alongside this one
-( cd ${LIBCZMQ_ROOT:-../../../../../czmq}/bindings/jni/czmq-jni/android; ./build.sh $BUILD_ARCH )
+( cd ${CZMQ_ROOT}/bindings/jni/czmq-jni/android; ./build.sh $BUILD_ARCH )
 
 #   Ensure we've built dependencies for Android
 android_build_trace "Building Android native libraries"
@@ -112,7 +112,7 @@ make $MAKE_OPTIONS
 android_build_trace "Building jar for $TOOLCHAIN_ABI"
 #   Copy class files into org/zeromq/etc.
 find ../../build/libs/ -type f -name 'zyre-jni-*.jar' ! -name '*javadoc.jar' ! -name '*sources.jar' -exec unzip -q {} +
-unzip -qo "${LIBCZMQ_ROOT:-../../../../../../czmq}/bindings/jni/czmq-jni/android/czmq-android*$TOOLCHAIN_ABI*.jar"
+unzip -qo "${CZMQ_ROOT}/bindings/jni/czmq-jni/android/czmq-android*$TOOLCHAIN_ABI*.jar"
 
 #   Copy native libraries into lib/$TOOLCHAIN_ABI
 mkdir -p lib/$TOOLCHAIN_ABI

@@ -32,7 +32,7 @@ export CI_TRACE="${CI_TRACE:-no}"
 # If you have your own source tree for XXX, uncomment its
 # XXX_ROOT configuration line below, and provide its absolute tree:
 #    export LIBZMQ_ROOT="<absolute_path_to_LIBZMQ_source_tree>"
-#    export LIBCZMQ_ROOT="<absolute_path_to_CZMQ_source_tree>"
+#    export CZMQ_ROOT="<absolute_path_to_CZMQ_source_tree>"
 
 ########################################################################
 # Preparation
@@ -41,8 +41,13 @@ export CI_TRACE="${CI_TRACE:-no}"
 # Perform some sanity checks and calculate some variables.
 source "${PROJECT_ROOT}/builds/android/android_build_helper.sh"
 
+# Initialize our dependency _ROOT variables:
 android_init_dependency_root "libzmq"             # Check or initialize LIBZMQ_ROOT
-android_init_dependency_root "libczmq"            # Check or initialize LIBCZMQ_ROOT
+android_init_dependency_root "czmq"               # Check or initialize CZMQ_ROOT
+
+# Fetch required dependencies:
+[ ! -d "${LIBZMQ_ROOT}" ]           && android_clone_library "LIBZMQ" "${LIBZMQ_ROOT}" "https://github.com/zeromq/libzmq.git" ""
+[ ! -d "${CZMQ_ROOT}" ]             && android_clone_library "CZMQ" "${CZMQ_ROOT}" "https://github.com/zeromq/czmq.git" ""
 
 android_download_ndk
 
@@ -84,10 +89,6 @@ mkdir -p /tmp/tmp-deps
 
 ######################
 #  Build native 'libzmq.so'
-if [ ! -d "${LIBZMQ_ROOT}" ] ; then
-    android_clone_library "LIBZMQ" "${LIBZMQ_ROOT}" "https://github.com/zeromq/libzmq.git" ""
-fi
-
 (
     android_build_library "LIBZMQ" "${LIBZMQ_ROOT}"
 )
@@ -95,16 +96,12 @@ fi
 
 ######################
 #  Build native 'libczmq.so'
-if [ ! -d "${LIBCZMQ_ROOT}" ] ; then
-    android_clone_library "CZMQ" "${LIBCZMQ_ROOT}" "https://github.com/zeromq/czmq.git" ""
-fi
-
 (
-    android_build_library "CZMQ" "${LIBCZMQ_ROOT}"
+    android_build_library "CZMQ" "${CZMQ_ROOT}"
 )
 
 # Build jni dependency
-( cd ${LIBCZMQ_ROOT}/bindings/jni && TERM=dumb $CI_TIME ./gradlew publishToMavenLocal ${GRADLEW_OPTS[@]} ${CZMQ_GRADLEW_OPTS} )
+( cd ${CZMQ_ROOT}/bindings/jni && TERM=dumb $CI_TIME ./gradlew publishToMavenLocal ${GRADLEW_OPTS[@]} ${CZMQ_GRADLEW_OPTS} )
 
 ######################
 # Build native 'libzyre.so'

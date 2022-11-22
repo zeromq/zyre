@@ -74,8 +74,13 @@ function usage {
 BUILD_ARCH="$1"
 [ -z "${BUILD_ARCH}" ] && usage
 
+# Initialize our dependency _ROOT variables:
 android_init_dependency_root "libzmq"             # Check or initialize LIBZMQ_ROOT
-android_init_dependency_root "libczmq"            # Check or initialize LIBCZMQ_ROOT
+android_init_dependency_root "czmq"               # Check or initialize CZMQ_ROOT
+
+# Fetch required dependencies:
+[ ! -d "${LIBZMQ_ROOT}" ]           && android_clone_library "LIBZMQ" "${LIBZMQ_ROOT}" "https://github.com/zeromq/libzmq.git" ""
+[ ! -d "${CZMQ_ROOT}" ]             && android_clone_library "CZMQ" "${CZMQ_ROOT}" "https://github.com/zeromq/czmq.git" ""
 
 case "$CI_TIME" in
     [Yy][Ee][Ss]|[Oo][Nn]|[Tt][Rr][Uu][Ee])
@@ -122,10 +127,6 @@ DEPENDENCIES=()
 
 DEPENDENCIES+=("libczmq.so")
 (android_build_verify_so "libczmq.so" &> /dev/null) || {
-    if [ ! -d "${CZMQ_ROOT}" ] ; then
-        android_clone_library "CZMQ" "${CZMQ_ROOT}" "https://github.com/zeromq/czmq.git" ""
-    fi
-
     if [ -f "${CZMQ_ROOT}/builds/android/build.sh" ] ; then
         (
             bash "${CZMQ_ROOT}/builds/android/build.sh" "${BUILD_ARCH}"
