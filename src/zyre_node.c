@@ -930,9 +930,8 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
                 group_leader
                 && streq (zyre_peer_identity (group_leader), zyre_peer_identity (peer));
         if (zyre_group_contest (group)
-            && (!election
-                || !zyre_election_lrec_complete(election, group)
-                || leader_left)) {
+            && ((election && !zyre_election_lrec_complete(election, group))
+                 || leader_left)) {
             // leader left: start elections in group
             if (election) {
                 //  Discard running election because the number of peers changed
