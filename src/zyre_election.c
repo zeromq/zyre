@@ -29,7 +29,7 @@ struct _zyre_election_t {
     zyre_peer_t *father;    //  Father in the current active wave
     unsigned int erec;      //  Number of received election messages
     unsigned int lrec;      //  Number of received leader messages
-    bool state;             //  True if leader else false
+    bool isLeader;          //  True if leader else false
 
     char *leader;           //  Leader identity
 };
@@ -48,7 +48,7 @@ zyre_election_new ()
     self->father = NULL;
     self->erec = 0;
     self->lrec = 0;
-    self->state = false;
+    self->isLeader = false;
 
     self->leader = NULL;
     return self;
@@ -235,7 +235,7 @@ bool
 zyre_election_won (zyre_election_t *self)
 {
     assert (self);
-    return self->leader? self->state: false;
+    return self->leader? self->isLeader: false;
 }
 
 //  --------------------------------------------------------------------------
@@ -259,7 +259,7 @@ zyre_election_print (zyre_election_t *self) {
     printf ("    CAW: %s\n", self->caw);
     printf ("    election count: %d\n", self->erec);
     printf ("    leader count: %d\n", self->lrec);
-    printf ("    state: %s\n", !self->leader? "undecided": self->state? "leader": "looser");
+    printf ("    state: %s\n", !self->leader? "undecided": self->isLeader? "leader": "loser");
     printf ("    leader: %s\n", self->leader);
     printf ("}\n");
 }

@@ -49,7 +49,7 @@ fold_end() {
 case $TRAVIS_OS_NAME in
 windows)
     export
-    choco install openjdk
+    choco install openjdk13
     export JAVA_HOME="C:\Program Files\OpenJDK\jdk-13.0.2"
     export BUILD_PREFIX=$TEMP/ci_build
     # Build will fail if processes are still running at the end of the script.
@@ -203,6 +203,11 @@ default|default-Werror|default-with-docs|valgrind|clang-format-check)
     if [ -z "${CI_CONFIG_QUIET-}" ] || [ "${CI_CONFIG_QUIET-}" = yes ] || [ "${CI_CONFIG_QUIET-}" = true ]; then
         CONFIG_OPTS+=("--quiet")
     fi
+    if [ -z "${CI_SELFTEST-}" ] || [ "${CI_SELFTEST-}" = yes ] || [ "${CI_SELFTEST-}" = true ]; then
+        CONFIG_OPTS+=("--enable-zyre_selftest")
+    else
+        CONFIG_OPTS+=("--disable-zyre_selftest")
+    fi
 
     if [ "$HAVE_CCACHE" = yes ] && [ "${COMPILER_FAMILY}" = GCC ]; then
         PATH="/usr/lib/ccache:$PATH"
@@ -264,7 +269,7 @@ default|default-Werror|default-with-docs|valgrind|clang-format-check)
     # Start of recipe for dependency: libzmq
 	fold_start dependency.libzmq "Install dependency libzmq"
     if ! ((command -v dpkg >/dev/null 2>&1 && dpkg -s libzmq3-dev >/dev/null 2>&1) || \
-          (command -v brew >/dev/null 2>&1 && brew ls --versions libzmq >/dev/null 2>&1)) \
+          (command -v brew >/dev/null 2>&1 && brew ls --versions zeromq >/dev/null 2>&1)) \
     ; then
         echo ""
         BASE_PWD=${PWD}

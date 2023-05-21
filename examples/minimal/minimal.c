@@ -30,6 +30,11 @@
 //  start two clients, each will SHOUT 10 messages
 //
 // gcc `pkg-config --libs --cflags libzyre` minimal.c -o minimal
+//
+// Or if you've build zyre from source:
+//
+// gcc -lzyre -lczmq -lzmq minimal.c -o minimal 
+//
 // ./minimal node1
 // ./minimal node2
 

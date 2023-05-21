@@ -181,7 +181,7 @@ deploy:
   api_key:
     # To encrypt your access token run: `travis encrypt -r user/repo`
     #   secure: <encrypted github access token>
-    secure: "k0AHi/KbT5uRiugRQdHG4B8Le5Q/clTFM7dwS3V+c5xjCsAa8UOgi4Q/rYEm2EfjnsItg/qtRYn9rJ/9XqahBcIhQKwMFHntblUY7gRYz6CCT0EpRnZkU+hczUvXjzTIIxs1d3goMCdFlfmIz+9aRh/o8LyzgoIF5Fd6AJWX4JY="
+    secure: "u4QpBmGyamzTNRBB3sN6ZCf1duxBMGnKWey+2OE6bn8veA/UCrPlxooTi9h706PFKHRMm5pqIhb4trbPuZB1uAo8X/ru2T8GIifDmKnDjxNUHiYhLYqv+AUi3VPwVtkiZ9wpzUhxIxkVbJQyrlQ73EXOJOa4X32jYNZxBQUttz8="
   file_glob: true
   file: ${ZYRE_DEPLOYMENT}
   skip_cleanup: true

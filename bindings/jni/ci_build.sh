@@ -7,8 +7,50 @@
 #   Exit if any step fails
 set -e
 
-# Set this to enable verbose profiling
-[ -n "${CI_TIME-}" ] || CI_TIME=""
+# Use directory of current script as the working directory
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+PROJECT_ROOT="$(cd ../.. && pwd)"
+PROJECT_JNI_ROOT="${PROJECT_ROOT}/bindings/jni"
+
+# Configuration
+export NDK_VERSION="${NDK_VERSION:-android-ndk-r25}"
+export ANDROID_NDK_ROOT="${ANDROID_NDK_ROOT:-/tmp/${NDK_VERSION}}"
+export MIN_SDK_VERSION=${MIN_SDK_VERSION:-21}
+export ANDROID_BUILD_DIR="${ANDROID_BUILD_DIR:-${PWD}/.build}"
+export ANDROID_DEPENDENCIES_DIR="${ANDROID_DEPENDENCIES_DIR:-${PWD}/.deps}"
+export BUILD_PREFIX="${BUILD_PREFIX:-/tmp/jni_build}"
+
+export TRAVIS_TAG="${TRAVIS_TAG:-no}"
+export TRAVIS_OS_NAME="${TRAVIS_OS_NAME:-}"
+export BINDING_OPTS="${BINDING_OPTS:-}"
+
+export CI_CONFIG_QUIET="${CI_CONFIG_QUIET:-yes}"
+export CI_TIME="${CI_TIME:-}"
+export CI_TRACE="${CI_TRACE:-no}"
+
+# By default, dependencies will be cloned to /tmp/tmp-deps.
+# If you have your own source tree for XXX, uncomment its
+# XXX_ROOT configuration line below, and provide its absolute tree:
+#    export LIBZMQ_ROOT="<absolute_path_to_LIBZMQ_source_tree>"
+#    export CZMQ_ROOT="<absolute_path_to_CZMQ_source_tree>"
+
+########################################################################
+# Preparation
+########################################################################
+# Get access to android_build functions and variables
+# Perform some sanity checks and calculate some variables.
+source "${PROJECT_ROOT}/builds/android/android_build_helper.sh"
+
+# Initialize our dependency _ROOT variables:
+android_init_dependency_root "libzmq"             # Check or initialize LIBZMQ_ROOT
+android_init_dependency_root "czmq"               # Check or initialize CZMQ_ROOT
+
+# Fetch required dependencies:
+[ ! -d "${LIBZMQ_ROOT}" ]           && android_clone_library "LIBZMQ" "${LIBZMQ_ROOT}" "https://github.com/zeromq/libzmq.git" ""
+[ ! -d "${CZMQ_ROOT}" ]             && android_clone_library "CZMQ" "${CZMQ_ROOT}" "https://github.com/zeromq/czmq.git" ""
+
+android_download_ndk
+
 case "$CI_TIME" in
     [Yy][Ee][Ss]|[Oo][Nn]|[Tt][Rr][Uu][Ee])
         CI_TIME="time -p " ;;
@@ -16,22 +58,12 @@ case "$CI_TIME" in
         CI_TIME="" ;;
 esac
 
-# Set this to enable verbose tracing
-[ -n "${CI_TRACE-}" ] || CI_TRACE="no"
 case "$CI_TRACE" in
     [Nn][Oo]|[Oo][Ff][Ff]|[Ff][Aa][Ll][Ss][Ee])
         set +x ;;
     [Yy][Ee][Ss]|[Oo][Nn]|[Tt][Rr][Uu][Ee])
         set -x ;;
 esac
-
-########################################################################
-# Build and check the jni binding
-########################################################################
-
-export BUILD_PREFIX=/tmp/jni_build
-ZYRE_JNI_ROOT=${PWD}
-ZYRE_ROOT=${PWD}/../..
 
 CONFIG_OPTS=()
 CONFIG_OPTS+=("CFLAGS=-I${BUILD_PREFIX}/include")
@@ -41,125 +73,57 @@ CONFIG_OPTS+=("LDFLAGS=-L${BUILD_PREFIX}/lib")
 CONFIG_OPTS+=("PKG_CONFIG_PATH=${BUILD_PREFIX}/lib/pkgconfig")
 CONFIG_OPTS+=("--prefix=${BUILD_PREFIX}")
 CONFIG_OPTS+=("--with-docs=no")
-if [ -z "${CI_CONFIG_QUIET-}" ] || [ "${CI_CONFIG_QUIET-}" = yes ] || [ "${CI_CONFIG_QUIET-}" = true ]; then
-    CONFIG_OPTS+=("--quiet")
-fi
+[ "${CI_CONFIG_QUIET}" = "yes" ] && CONFIG_OPTS+=("--quiet")
+
+GRADLEW_OPTS=()
+GRADLEW_OPTS+=("-PbuildPrefix=$BUILD_PREFIX")
+GRADLEW_OPTS+=("--info")
 
 rm -rf /tmp/tmp-deps
 mkdir -p /tmp/tmp-deps
 
-# Clone and build dependencies
+########################################################################
+# Clone and build native dependencies
+########################################################################
 [ -z "$CI_TIME" ] || echo "`date`: Starting build of dependencies (if any)..."
-export LIBZMQ_ROOT="/tmp/tmp-deps/libzmq"
-$CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/libzmq.git $LIBZMQ_ROOT
 
-cd $LIBZMQ_ROOT
-git --no-pager log --oneline -n1
-if [ -e autogen.sh ]; then
-    $CI_TIME ./autogen.sh 2> /dev/null
-fi
-if [ -e buildconf ]; then
-    $CI_TIME ./buildconf 2> /dev/null
-fi
-if [ ! -e autogen.sh ] && [ ! -e buildconf ] && [ ! -e ./configure ] && [ -s ./configure.ac ]; then
-    $CI_TIME libtoolize --copy --force && \
-    $CI_TIME aclocal -I . && \
-    $CI_TIME autoheader && \
-    $CI_TIME automake --add-missing --copy && \
-    $CI_TIME autoconf || \
-    $CI_TIME autoreconf -fiv
-fi
-$CI_TIME ./configure "${CONFIG_OPTS[@]}"
-$CI_TIME make -j4
-$CI_TIME make install
+######################
+#  Build native 'libzmq.so'
+(
+    android_build_library "LIBZMQ" "${LIBZMQ_ROOT}"
+)
 
 
-export CZMQ_ROOT="/tmp/tmp-deps/czmq"
-$CI_TIME git clone --quiet --depth 1 https://github.com/zeromq/czmq.git $CZMQ_ROOT
-
-cd $CZMQ_ROOT
-git --no-pager log --oneline -n1
-if [ -e autogen.sh ]; then
-    $CI_TIME ./autogen.sh 2> /dev/null
-fi
-if [ -e buildconf ]; then
-    $CI_TIME ./buildconf 2> /dev/null
-fi
-if [ ! -e autogen.sh ] && [ ! -e buildconf ] && [ ! -e ./configure ] && [ -s ./configure.ac ]; then
-    $CI_TIME libtoolize --copy --force && \
-    $CI_TIME aclocal -I . && \
-    $CI_TIME autoheader && \
-    $CI_TIME automake --add-missing --copy && \
-    $CI_TIME autoconf || \
-    $CI_TIME autoreconf -fiv
-fi
-$CI_TIME ./configure "${CONFIG_OPTS[@]}"
-$CI_TIME make -j4
-$CI_TIME make install
+######################
+#  Build native 'libczmq.so'
+(
+    android_build_library "CZMQ" "${CZMQ_ROOT}"
+)
 
 # Build jni dependency
-( cd bindings/jni && TERM=dumb $CI_TIME ./gradlew publishToMavenLocal -PbuildPrefix=$BUILD_PREFIX --info )
+( cd ${CZMQ_ROOT}/bindings/jni && TERM=dumb $CI_TIME ./gradlew publishToMavenLocal ${GRADLEW_OPTS[@]} ${CZMQ_GRADLEW_OPTS} )
 
-cd $ZYRE_ROOT
+######################
+# Build native 'libzyre.so'
+cd "${PROJECT_ROOT}"
 [ -z "$CI_TIME" ] || echo "`date`: Starting build of currently tested project..."
-git --no-pager log --oneline -n1
-if [ -e autogen.sh ]; then
-    $CI_TIME ./autogen.sh 2> /dev/null
-fi
-if [ -e buildconf ]; then
-    $CI_TIME ./buildconf 2> /dev/null
-fi
-if [ ! -e autogen.sh ] && [ ! -e buildconf ] && [ ! -e ./configure ] && [ -s ./configure.ac ]; then
-    $CI_TIME libtoolize --copy --force && \
-    $CI_TIME aclocal -I . && \
-    $CI_TIME autoheader && \
-    $CI_TIME automake --add-missing --copy && \
-    $CI_TIME autoconf || \
-    $CI_TIME autoreconf -fiv
-fi
-$CI_TIME ./configure "${CONFIG_OPTS[@]}"
-$CI_TIME make -j4
-$CI_TIME make install
+
+(
+    android_build_library "LIBZYRE" "${PROJECT_ROOT}"
+)
+
 [ -z "$CI_TIME" ] || echo "`date`: Build completed without fatal errors!"
-
-cd ${ZYRE_JNI_ROOT}
-[ -z "$TRAVIS_TAG" ] || IS_RELEASE="-PisRelease"
-
-TERM=dumb $CI_TIME ./gradlew build jar -PbuildPrefix=$BUILD_PREFIX $IS_RELEASE --info
-TERM=dumb $CI_TIME ./gradlew clean
 
 ########################################################################
 #  Build and check the jni android binding
 ########################################################################
+cd "${PROJECT_JNI_ROOT}"
+[ "${TRAVIS_TAG}" = "yes" ] && IS_RELEASE="-PisRelease"
+
+TERM=dumb $CI_TIME ./gradlew build jar ${GRADLEW_OPTS[@]} ${ZYRE_GRADLEW_OPTS} $IS_RELEASE
+TERM=dumb $CI_TIME ./gradlew clean
 
 if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$BINDING_OPTS" == "android" ]; then
-    pushd ../../builds/android
-        export NDK_VERSION=android-ndk-r21d
-        export ANDROID_NDK_ROOT="/tmp/${NDK_VERSION}"
-
-        case $(uname | tr '[:upper:]' '[:lower:]') in
-          linux*)
-            HOST_PLATFORM=linux-x86_64
-            ;;
-          darwin*)
-            HOST_PLATFORM=darwin-x86_64
-            ;;
-          *)
-            echo "Unsupported platform"
-            exit 1
-            ;;
-        esac
-
-        if [ ! -d "${ANDROID_NDK_ROOT}" ]; then
-            export FILENAME=$NDK_VERSION-$HOST_PLATFORM.zip
-
-            (cd '/tmp' \
-                && wget http://dl.google.com/android/repository/$FILENAME -O $FILENAME &> /dev/null \
-                && unzip -q $FILENAME) || exit 1
-            unset FILENAME
-        fi
-    popd
-
     pushd zyre-jni/android
         $CI_TIME ./build.sh "arm"
         $CI_TIME ./build.sh "arm64"
@@ -167,3 +131,8 @@ if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$BINDING_OPTS" == "android" ]; then
         $CI_TIME ./build.sh "x86_64"
     popd
 fi
+
+################################################################################
+#  THIS FILE IS 100% GENERATED BY ZPROJECT; DO NOT EDIT EXCEPT EXPERIMENTALLY  #
+#  Read the zproject/README.md for information about making permanent changes. #
+################################################################################
