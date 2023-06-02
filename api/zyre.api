@@ -124,7 +124,7 @@
         <return type = "integer" />
     </method>
 
-    <method name = "set contest in group" state = "draft">
+    <method name = "set contest in group">
         This options enables a peer to actively contest for leadership in the
         given group. If this option is not set the peer will still participate in
         elections but never gets elected. This ensures that a consent for a leader
@@ -133,18 +133,18 @@
         <argument name = "group" type = "string" />
     </method>
 
-    <method name = "set advertised endpoint" state = "draft">
+    <method name = "set advertised endpoint">
         Set an alternative endpoint value when using GOSSIP ONLY. This is useful
         if you're advertising an endpoint behind a NAT.
         <argument name = "value" type = "string" />
     </method>
 
-    <method name = "set zcert" state = "draft">
+    <method name = "set zcert">
         Apply a azcert to a Zyre node.
         <argument name = "zcert" type = "zcert"></argument>
     </method>
 
-    <method name = "set zap domain" state = "draft">
+    <method name = "set zap domain">
         Specify the ZAP domain (for use with CURVE).
         <argument name = "domain" type = "string"/>
     </method>
@@ -164,7 +164,7 @@
         <argument name = "format" type = "format" />
     </method>
 
-    <method name = "gossip connect curve" state = "draft">
+    <method name = "gossip connect curve">
         Set-up gossip discovery with CURVE enabled.
         <argument name = "public_key" type = "string" />
         <argument name = "format" type = "format" />

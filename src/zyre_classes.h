@@ -84,36 +84,6 @@ ZYRE_PRIVATE void
     zyre_set_beacon_peer_port (zyre_t *self, int port_nbr);
 
 //  *** Draft method, defined for internal use only ***
-//  This options enables a peer to actively contest for leadership in the
-//  given group. If this option is not set the peer will still participate in
-//  elections but never gets elected. This ensures that a consent for a leader
-//  is reached within a group even though not every peer is contesting for
-//  leadership.
-ZYRE_PRIVATE void
-    zyre_set_contest_in_group (zyre_t *self, const char *group);
-
-//  *** Draft method, defined for internal use only ***
-//  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
-//  if you're advertising an endpoint behind a NAT.
-ZYRE_PRIVATE void
-    zyre_set_advertised_endpoint (zyre_t *self, const char *value);
-
-//  *** Draft method, defined for internal use only ***
-//  Apply a azcert to a Zyre node.
-ZYRE_PRIVATE void
-    zyre_set_zcert (zyre_t *self, zcert_t *zcert);
-
-//  *** Draft method, defined for internal use only ***
-//  Specify the ZAP domain (for use with CURVE).
-ZYRE_PRIVATE void
-    zyre_set_zap_domain (zyre_t *self, const char *domain);
-
-//  *** Draft method, defined for internal use only ***
-//  Set-up gossip discovery with CURVE enabled.
-ZYRE_PRIVATE void
-    zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);
-
-//  *** Draft method, defined for internal use only ***
 //  Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
 ZYRE_PRIVATE void
     zyre_gossip_unpublish (zyre_t *self, const char *node);

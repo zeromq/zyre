@@ -334,8 +334,6 @@ zyre_set_contest_in_group (zyre_t *self, const char *group) {
     zstr_sendx (self->actor, "SET CONTEST" , group, NULL);
 }
 
-#ifdef ZYRE_BUILD_DRAFT_API
-//  DRAFT-API: Public IP
 void
 zyre_set_advertised_endpoint (zyre_t *self, const char *endpoint)
 {
@@ -344,7 +342,6 @@ zyre_set_advertised_endpoint (zyre_t *self, const char *endpoint)
 
     zstr_sendx (self->actor, "SET ADVERTISED ENDPOINT", endpoint, NULL);
 }
-#endif
 
 void zyre_set_zcert(zyre_t *self, zcert_t *zcert)
 {
@@ -909,8 +906,6 @@ zyre_test (bool verbose)
 
     printf ("OK\n");
 
-#ifdef ZYRE_BUILD_DRAFT_API
-    //  DRAFT-API: Security
     if (zsys_has_curve()){
 
         printf (" * zyre-curve: ");
@@ -1145,5 +1140,4 @@ zyre_test (bool verbose)
         printf ("OK\n");
 
     }
-#endif
 }

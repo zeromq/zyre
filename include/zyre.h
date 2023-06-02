@@ -120,6 +120,27 @@ ZYRE_EXPORT void
 ZYRE_EXPORT int
     zyre_set_endpoint (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 
+//  This options enables a peer to actively contest for leadership in the
+//  given group. If this option is not set the peer will still participate in
+//  elections but never gets elected. This ensures that a consent for a leader
+//  is reached within a group even though not every peer is contesting for
+//  leadership.
+ZYRE_EXPORT void
+    zyre_set_contest_in_group (zyre_t *self, const char *group);
+
+//  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
+//  if you're advertising an endpoint behind a NAT.
+ZYRE_EXPORT void
+    zyre_set_advertised_endpoint (zyre_t *self, const char *value);
+
+//  Apply a azcert to a Zyre node.
+ZYRE_EXPORT void
+    zyre_set_zcert (zyre_t *self, zcert_t *zcert);
+
+//  Specify the ZAP domain (for use with CURVE).
+ZYRE_EXPORT void
+    zyre_set_zap_domain (zyre_t *self, const char *domain);
+
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
 //  must bind to a well-known gossip endpoint, so other nodes can connect to
 //  it. Note that gossip endpoints are completely distinct from Zyre node
@@ -132,6 +153,10 @@ ZYRE_EXPORT void
 //  design, see the CZMQ zgossip class.
 ZYRE_EXPORT void
     zyre_gossip_connect (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
+
+//  Set-up gossip discovery with CURVE enabled.
+ZYRE_EXPORT void
+    zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);
 
 //  Start node, after setting header values. When you start a node it
 //  begins discovery and connection. Returns 0 if OK, -1 if it wasn't
@@ -236,36 +261,6 @@ ZYRE_EXPORT void
 //  random. Has no effect after zyre_start().
 ZYRE_EXPORT void
     zyre_set_beacon_peer_port (zyre_t *self, int port_nbr);
-
-//  *** Draft method, for development use, may change without warning ***
-//  This options enables a peer to actively contest for leadership in the
-//  given group. If this option is not set the peer will still participate in
-//  elections but never gets elected. This ensures that a consent for a leader
-//  is reached within a group even though not every peer is contesting for
-//  leadership.
-ZYRE_EXPORT void
-    zyre_set_contest_in_group (zyre_t *self, const char *group);
-
-//  *** Draft method, for development use, may change without warning ***
-//  Set an alternative endpoint value when using GOSSIP ONLY. This is useful
-//  if you're advertising an endpoint behind a NAT.
-ZYRE_EXPORT void
-    zyre_set_advertised_endpoint (zyre_t *self, const char *value);
-
-//  *** Draft method, for development use, may change without warning ***
-//  Apply a azcert to a Zyre node.
-ZYRE_EXPORT void
-    zyre_set_zcert (zyre_t *self, zcert_t *zcert);
-
-//  *** Draft method, for development use, may change without warning ***
-//  Specify the ZAP domain (for use with CURVE).
-ZYRE_EXPORT void
-    zyre_set_zap_domain (zyre_t *self, const char *domain);
-
-//  *** Draft method, for development use, may change without warning ***
-//  Set-up gossip discovery with CURVE enabled.
-ZYRE_EXPORT void
-    zyre_gossip_connect_curve (zyre_t *self, const char *public_key, const char *format, ...) CHECK_PRINTF (3);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Unpublish a GOSSIP node from local list, useful in removing nodes from list when they EXIT
