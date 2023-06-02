@@ -889,6 +889,24 @@ zyre_node_delete_peer (const char *key, void *item, void *argument)
     return 0;
 }
 
+static void
+zyre_node_leader_peer_group (zyre_node_t *self, const char *identity,
+                             const char *name, const char *group)
+{
+    //  Now tell the caller about the elected leader peer
+    zstr_sendm (self->outbox, "LEADER");
+    zstr_sendm (self->outbox, identity);
+    zstr_sendm (self->outbox, name);
+    zstr_send (self->outbox, group);
+
+    if (self->verbose)
+        zsys_info ("(%s) LEADER name=%s group=%s identity=%s",
+                   self->name,
+                   name,
+                   group,
+                   identity);
+}
+
 //  Remove a peer from our data structures
 
 static void
@@ -923,17 +941,35 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
                 //  Discard running election because the number of peers changed
                 zyre_election_destroy (&election);
             }
-            election = zyre_election_new ();
-            zyre_group_set_election (group, election);
-            zyre_group_set_leader(group, NULL);
-            //  Start challenge for leadership
-            zyre_election_set_caw (election, strdup (zuuid_str (self->uuid)));
-            zre_msg_t *election_msg = zyre_election_build_elect_msg (election);
-            zre_msg_set_group (election_msg, group_name);
-            if (self->verbose)
-                zsys_info ("(%s) [%s] send ELECT message - %s",
-                           self->name, group_name, zuuid_str (self->uuid));
-            zyre_group_send (group, &election_msg);
+
+            zlist_t *peer_attendees = zyre_group_peers (group);
+            size_t nb = zlist_size (peer_attendees);
+            if (nb == 1) {
+                // We are last in an election because leader left
+                zyre_node_leader_peer_group (self,
+                                             zuuid_str (self->uuid),
+                                             self->name,
+                                             group_name);
+                if (self->verbose)
+                    zsys_info ("(%s) [%s] Election finished %s, LEADER!\n",
+                               self->name, group_name, zuuid_str (self->uuid));
+            }
+            else {
+                election = zyre_election_new ();
+                zyre_group_set_election (group, election);
+                zyre_group_set_leader(group, NULL);
+
+                //  Start challenge for leadership
+                zyre_election_set_caw (election, strdup (zuuid_str (self->uuid)));
+                zre_msg_t *election_msg = zyre_election_build_elect_msg (election);
+                zre_msg_set_group (election_msg, group_name);
+
+                if (self->verbose)
+                    zsys_info ("(%s) [%s] send ELECT message - %s",
+                               self->name, group_name, zuuid_str (self->uuid));
+                zyre_group_send (group, &election_msg);
+            }
+            zlist_destroy (&peer_attendees);
         }
         group_name = (const char *) zlist_next (self->own_groups);
     }
@@ -1001,24 +1037,6 @@ zyre_node_leave_peer_group (zyre_node_t *self, zyre_peer_t *peer, const char *na
                 self->name, zyre_peer_name (peer), name);
 
     return group;
-}
-
-static void
-zyre_node_leader_peer_group (zyre_node_t *self, const char *identity,
-                             const char *name, const char *group)
-{
-    //  Now tell the caller about the elected leader peer
-    zstr_sendm (self->outbox, "LEADER");
-    zstr_sendm (self->outbox, identity);
-    zstr_sendm (self->outbox, name);
-    zstr_send (self->outbox, group);
-
-    if (self->verbose)
-        zsys_info ("(%s) LEADER name=%s group=%s identity=%s",
-                   self->name,
-                   name,
-                   group,
-                   identity);
 }
 
 //  Here we handle messages coming from other peers
@@ -1214,19 +1232,34 @@ zyre_node_recv_peer (zyre_node_t *self)
                             //  Discard a running election because the number of peers change
                             zyre_election_destroy (&election);
                         }
-                        election = zyre_election_new ();
-                        zyre_group_set_election (group, election);
-                        zyre_group_set_leader(group, NULL);
+                        zlist_t *peer_attendees = zyre_group_peers (group);
+                        size_t nb = zlist_size (peer_attendees);
+                        if (nb == 0) {
+                            // We are alone in an election
+                            zyre_node_leader_peer_group (self,
+                                                         zuuid_str (self->uuid),
+                                                         self->name,
+                                                         zre_msg_group (msg));
+                            if (self->verbose)
+                                zsys_info ("(%s) [%s] Election finished %s, LEADER!\n",
+                                           self->name, zre_msg_group (msg), zuuid_str (self->uuid));
+                        }
+                        else {
+                            election = zyre_election_new ();
+                            zyre_group_set_election (group, election);
+                            zyre_group_set_leader(group, NULL);
 
-                        //  Start challenge for leadership
-                        zyre_election_set_caw (election, strdup (zuuid_str (self->uuid)));
-                        zre_msg_t *election_msg = zyre_election_build_elect_msg (election);
-                        zre_msg_set_group (election_msg, zre_msg_group (msg));
-                        if (self->verbose)
-                            zsys_info ("(%s) [%s] send ELECT message - %s",
-                                self->name, zre_msg_group (msg), zuuid_str (self->uuid));
+                            //  Start challenge for leadership
+                            zyre_election_set_caw (election, strdup (zuuid_str (self->uuid)));
+                            zre_msg_t *election_msg = zyre_election_build_elect_msg (election);
+                            zre_msg_set_group (election_msg, zre_msg_group (msg));
 
-                        zyre_group_send (group, &election_msg);
+                            if (self->verbose)
+                                zsys_info ("(%s) [%s] send ELECT message - %s",
+                                           self->name, zre_msg_group (msg), zuuid_str (self->uuid));
+                            zyre_group_send (group, &election_msg);
+                        }
+                        zlist_destroy (&peer_attendees);
                     }
                 }
             }
