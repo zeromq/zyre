@@ -386,11 +386,8 @@ zyre_node_dump (zyre_node_t *self)
     zsys_info (" - name=%s uuid=%s", self->name, zuuid_str (self->uuid));
 
     zsys_info (" - endpoint=%s", self->endpoint);
-#ifdef ZYRE_BUILD_DRAFT_API
-    //  DRAFT-API: Security
     if (self->public_key)
         zsys_info (" - public-key: %s", self->public_key);
-#endif
     if (self->beacon_port)
         zsys_info (" - discovery=beacon port=%d interval=%zu",
                    self->beacon_port, self->interval);
@@ -515,8 +512,6 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&value);
     }
     else
-#ifdef ZYRE_BUILD_DRAFT_API
-//  DRAFT-API: Election
     if (streq (command, "SET CONTEST")) {
         char *groupname = zmsg_popstr (request);
         zyre_group_t *group = zyre_node_require_peer_group (self, groupname);
@@ -524,14 +519,10 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&groupname);
     }
     else
-#endif
-#ifdef ZYRE_BUILD_DRAFT_API
-        //  DRAFT-API: Public IP
     if (streq (command, "SET ADVERTISED ENDPOINT")) {
         self->advertised_endpoint = zmsg_popstr (request);
     }
     else
-#endif
     if (streq (command, "SET ENDPOINT")) {
         zyre_node_gossip_start (self);
         char *endpoint = zmsg_popstr (request);
@@ -592,8 +583,6 @@ zyre_node_recv_api (zyre_node_t *self)
         }
     }
     else
-#ifdef ZYRE_BUILD_DRAFT_API
-    //  DRAFT-API: Security
     if (streq (command, "SET PUBLICKEY")) {
         self->public_key = zmsg_popstr (request);
         zhash_update (self->headers, "X-PUBLICKEY", self->public_key);
@@ -611,7 +600,6 @@ zyre_node_recv_api (zyre_node_t *self)
         assert (self->zap_domain);
     }
     else
-#endif
     if (streq (command, "GOSSIP BIND")) {
         zyre_node_gossip_start (self);
         zstr_free (&self->gossip_bind);
@@ -727,8 +715,6 @@ zyre_node_recv_api (zyre_node_t *self)
     else
     if (streq (command, "PEERS"))
         zsock_send (self->pipe, "p", zhash_keys (self->peers));
-    #ifdef ZYRE_BUILD_DRAFT_API
-    //  DRAFT-API: Security
     else
     if (streq (command, "REQUIRE PEER")) {
         char *uuidstr = zmsg_popstr (request);
@@ -744,7 +730,6 @@ zyre_node_recv_api (zyre_node_t *self)
         zstr_free (&endpoint);
         zstr_free (&public_key);
     }
-    #endif
     else
     if (streq (command, "GROUP PEERS")) {
         char *name = zmsg_popstr (request);
@@ -937,6 +922,7 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
     //  Clean this peer in our gossip table if needed
     if (self->gossip_bind)
         zstr_sendx (self->gossip, "UNPUBLISH", zyre_peer_identity (peer), NULL);
+#endif
 
     //  Restart election if leaving peer was leader in a group
     const char *group_name = (const char *) zlist_first (self->own_groups);
@@ -987,7 +973,6 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
         }
         group_name = (const char *) zlist_next (self->own_groups);
     }
-#endif
 
     if (self->verbose)
         zsys_info ("(%s) EXIT name=%s endpoint=%s",
@@ -1153,7 +1138,6 @@ zyre_node_recv_peer (zyre_node_t *self)
         zlist_t *groups = zre_msg_groups (msg);
         const char *name = (const char *) zlist_first (groups);
         while (name) {
-#ifdef ZYRE_BUILD_DRAFT_API
             zyre_group_t *group = zyre_node_join_peer_group (self, peer, name);
             if (zyre_group_contest (zyre_node_require_peer_group (self, name))) {
                 //  Start election and if there's an active election, abort it
@@ -1175,9 +1159,6 @@ zyre_node_recv_peer (zyre_node_t *self)
                                self->name, name, zuuid_str (self->uuid));
                 zyre_group_send (group, &election_msg);
             }
-#else
-            zyre_node_join_peer_group (self, peer, name);
-#endif
             name = (const char *) zlist_next (groups);
         }
         //  Now take peer's status from HELLO, after joining groups
