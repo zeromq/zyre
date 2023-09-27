@@ -940,18 +940,20 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
             if (election) {
                 //  Discard running election because the number of peers changed
                 zyre_election_destroy (&election);
+                zyre_group_set_election (group, NULL);
             }
 
             zlist_t *peer_attendees = zyre_group_peers (group);
             size_t nb = zlist_size (peer_attendees);
             if (nb == 1) {
-                // We are last in an election because leader left
+                // We are last in an election because leader left, we are therefore the leader
+                zyre_group_set_leader(group, self);
                 zyre_node_leader_peer_group (self,
                                              zuuid_str (self->uuid),
                                              self->name,
                                              group_name);
                 if (self->verbose)
-                    zsys_info ("(%s) [%s] Election finished %s, LEADER!\n",
+                    zsys_info ("(%s) [%s] Election finished %s, LEADER (because alone)!\n",
                                self->name, group_name, zuuid_str (self->uuid));
             }
             else {
@@ -1231,17 +1233,19 @@ zyre_node_recv_peer (zyre_node_t *self)
                         if (election) {
                             //  Discard a running election because the number of peers change
                             zyre_election_destroy (&election);
+                            zyre_group_set_election (group, NULL);
                         }
                         zlist_t *peer_attendees = zyre_group_peers (group);
                         size_t nb = zlist_size (peer_attendees);
                         if (nb == 0) {
-                            // We are alone in an election
+                            // We are alone in an election, we are therefore the leader
+                            zyre_group_set_leader(group, self);
                             zyre_node_leader_peer_group (self,
                                                          zuuid_str (self->uuid),
                                                          self->name,
                                                          zre_msg_group (msg));
                             if (self->verbose)
-                                zsys_info ("(%s) [%s] Election finished %s, LEADER!\n",
+                                zsys_info ("(%s) [%s] Election finished %s, LEADER (because alone)!\n",
                                            self->name, zre_msg_group (msg), zuuid_str (self->uuid));
                         }
                         else {
