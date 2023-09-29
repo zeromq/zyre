@@ -76,8 +76,8 @@ jobs:
       uses: myci-actions/add-deb-repo@10
       with:
         repo-name: obs
-        repo: deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-stable/xUbuntu_20.04/ ./
-        keys-asc: https://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-stable/xUbuntu_20.04/Release.key
+        repo: deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-stable/xUbuntu_22.04/ ./
+        keys-asc: https://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-stable/xUbuntu_22.04/Release.key
         install: ${{ matrix.PACKAGES }}
     - name: Add brew packages
       if: matrix.os == 'macos-latest'
