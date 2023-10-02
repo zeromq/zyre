@@ -928,48 +928,48 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
     const char *group_name = (const char *) zlist_first (self->own_groups);
     while (group_name) {
         zyre_group_t *group = zyre_node_require_peer_group (self, group_name);
-        zyre_election_t *election = zyre_group_election (group);
-        zyre_peer_t *group_leader = zyre_group_leader (group);
-        bool leader_left =
-                group_leader
-                && streq (zyre_peer_identity (group_leader), zyre_peer_identity (peer));
-        if (zyre_group_contest (group)
-            && ((election && !zyre_election_lrec_complete(election, group))
-                 || leader_left)) {
-            // leader left: start elections in group
-            if (election) {
-                //  Discard running election because the number of peers changed
-                zyre_election_destroy (&election);
-            }
+        if (zyre_group_contest (group)) {
+            zyre_election_t *election = zyre_group_election (group);
+            zyre_peer_t *group_leader = zyre_group_leader (group);
+            bool leader_left = group_leader && streq (zyre_peer_identity (group_leader), zyre_peer_identity (peer));
+            if ((election && !zyre_election_lrec_complete(election, group)) || leader_left) {
+                // leader left: start elections in group
+                if (election) {
+                    //  Discard running election because the number of peers changed
+                    zyre_election_destroy (&election);
+                    zyre_group_set_election (group, NULL);
+                }
 
-            zlist_t *peer_attendees = zyre_group_peers (group);
-            size_t nb = zlist_size (peer_attendees);
-            if (nb == 1) {
-                // We are last in an election because leader left
-                zyre_node_leader_peer_group (self,
-                                             zuuid_str (self->uuid),
-                                             self->name,
-                                             group_name);
-                if (self->verbose)
-                    zsys_info ("(%s) [%s] Election finished %s, LEADER!\n",
-                               self->name, group_name, zuuid_str (self->uuid));
-            }
-            else {
-                election = zyre_election_new ();
-                zyre_group_set_election (group, election);
-                zyre_group_set_leader(group, NULL);
+                zlist_t *peer_attendees = zyre_group_peers (group);
+                size_t nb = zlist_size (peer_attendees);
+                if (nb == 1) {
+                    // We are last in an election because leader left, we are therefore the leader
+                    zyre_group_set_leader(group, NULL);
+                    zyre_node_leader_peer_group (self,
+                                                zuuid_str (self->uuid),
+                                                self->name,
+                                                group_name);
+                    if (self->verbose)
+                        zsys_info ("(%s) [%s] Election finished %s, LEADER (because alone)!\n",
+                                self->name, group_name, zuuid_str (self->uuid));
+                }
+                else {
+                    election = zyre_election_new ();
+                    zyre_group_set_election (group, election);
+                    zyre_group_set_leader(group, NULL);
 
-                //  Start challenge for leadership
-                zyre_election_set_caw (election, strdup (zuuid_str (self->uuid)));
-                zre_msg_t *election_msg = zyre_election_build_elect_msg (election);
-                zre_msg_set_group (election_msg, group_name);
+                    //  Start challenge for leadership
+                    zyre_election_set_caw (election, strdup (zuuid_str (self->uuid)));
+                    zre_msg_t *election_msg = zyre_election_build_elect_msg (election);
+                    zre_msg_set_group (election_msg, group_name);
 
-                if (self->verbose)
-                    zsys_info ("(%s) [%s] send ELECT message - %s",
-                               self->name, group_name, zuuid_str (self->uuid));
-                zyre_group_send (group, &election_msg);
+                    if (self->verbose)
+                        zsys_info ("(%s) [%s] send ELECT message - %s",
+                                self->name, group_name, zuuid_str (self->uuid));
+                    zyre_group_send (group, &election_msg);
+                }
+                zlist_destroy (&peer_attendees);
             }
-            zlist_destroy (&peer_attendees);
         }
         group_name = (const char *) zlist_next (self->own_groups);
     }
@@ -1222,45 +1222,47 @@ zyre_node_recv_peer (zyre_node_t *self)
         zyre_group_t *group = zyre_node_leave_peer_group (self, peer, zre_msg_group (msg));
         assert (zre_msg_status (msg) == zyre_peer_status (peer));
         if (zlist_exists (self->own_groups, (char *) zre_msg_group (msg))) {
-            zyre_peer_t *group_leader = zyre_group_leader (group);
-            if (group_leader) {
-                if (streq (zyre_peer_identity (group_leader), zyre_peer_identity (peer))) {
+            if (zyre_group_contest(group)){
+                zyre_peer_t *group_leader = zyre_group_leader (group);
+                if (group_leader && streq (zyre_peer_identity (group_leader), zyre_peer_identity (peer))) {
                     // If leader left, do election
-                    if (zyre_group_contest (zyre_node_require_peer_group (self, zre_msg_group (msg)))) {
-                        zyre_election_t *election = zyre_group_election (group);
-                        if (election) {
-                            //  Discard a running election because the number of peers change
-                            zyre_election_destroy (&election);
-                        }
-                        zlist_t *peer_attendees = zyre_group_peers (group);
-                        size_t nb = zlist_size (peer_attendees);
-                        if (nb == 0) {
-                            // We are alone in an election
-                            zyre_node_leader_peer_group (self,
-                                                         zuuid_str (self->uuid),
-                                                         self->name,
-                                                         zre_msg_group (msg));
-                            if (self->verbose)
-                                zsys_info ("(%s) [%s] Election finished %s, LEADER!\n",
-                                           self->name, zre_msg_group (msg), zuuid_str (self->uuid));
-                        }
-                        else {
-                            election = zyre_election_new ();
-                            zyre_group_set_election (group, election);
-                            zyre_group_set_leader(group, NULL);
-
-                            //  Start challenge for leadership
-                            zyre_election_set_caw (election, strdup (zuuid_str (self->uuid)));
-                            zre_msg_t *election_msg = zyre_election_build_elect_msg (election);
-                            zre_msg_set_group (election_msg, zre_msg_group (msg));
-
-                            if (self->verbose)
-                                zsys_info ("(%s) [%s] send ELECT message - %s",
-                                           self->name, zre_msg_group (msg), zuuid_str (self->uuid));
-                            zyre_group_send (group, &election_msg);
-                        }
-                        zlist_destroy (&peer_attendees);
+                    zyre_election_t *election = zyre_group_election (group);
+                    if (election) {
+                        //  Discard a running election because the number of peers change
+                        zyre_election_destroy (&election);
+                        zyre_group_set_election (group, NULL);
                     }
+                    zlist_t *peer_attendees = zyre_group_peers (group);
+                    size_t nb = zlist_size (peer_attendees);
+                    if (nb == 0) {
+                        // We are alone in an election, we are therefore the leader
+                        zyre_group_set_leader(group, NULL);
+                        zyre_node_leader_peer_group (self,
+                                                    zuuid_str (self->uuid),
+                                                    self->name,
+                                                    zre_msg_group (msg));
+
+
+                        if (self->verbose)
+                            zsys_info ("(%s) [%s] Election finished %s, LEADER (because alone)!\n",
+                                    self->name, zre_msg_group (msg), zuuid_str (self->uuid));
+                    }
+                    else {
+                        election = zyre_election_new ();
+                        zyre_group_set_election (group, election);
+                        zyre_group_set_leader(group, NULL);
+
+                        //  Start challenge for leadership
+                        zyre_election_set_caw (election, strdup (zuuid_str (self->uuid)));
+                        zre_msg_t *election_msg = zyre_election_build_elect_msg (election);
+                        zre_msg_set_group (election_msg, zre_msg_group (msg));
+
+                        if (self->verbose)
+                            zsys_info ("(%s) [%s] send ELECT message - %s",
+                                    self->name, zre_msg_group (msg), zuuid_str (self->uuid));
+                        zyre_group_send (group, &election_msg);
+                    }
+                    zlist_destroy (&peer_attendees);
                 }
             }
         }
