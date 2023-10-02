@@ -944,7 +944,7 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
                 size_t nb = zlist_size (peer_attendees);
                 if (nb == 1) {
                     // We are last in an election because leader left, we are therefore the leader
-                    zyre_group_set_leader(group, self);
+                    zyre_group_set_leader(group, NULL);
                     zyre_node_leader_peer_group (self,
                                                 zuuid_str (self->uuid),
                                                 self->name,
@@ -1236,7 +1236,7 @@ zyre_node_recv_peer (zyre_node_t *self)
                     size_t nb = zlist_size (peer_attendees);
                     if (nb == 0) {
                         // We are alone in an election, we are therefore the leader
-                        zyre_group_set_leader(group, self);
+                        zyre_group_set_leader(group, NULL);
                         zyre_node_leader_peer_group (self,
                                                     zuuid_str (self->uuid),
                                                     self->name,
