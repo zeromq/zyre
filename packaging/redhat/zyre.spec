@@ -194,3 +194,5 @@ python3 setup.py install --root=%{buildroot} --skip-build --prefix %{_prefix}
 %{_mandir}/man1/zpinger*
 
 %changelog
+* Wed Dec 31 2014 zyre Developers <zeromq-dev@lists.zeromq.org
+- Initial packaging.
