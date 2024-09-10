@@ -73,7 +73,9 @@ typedef struct _zyre_node_t zyre_node_t;
 #ifndef ZYRE_BUILD_DRAFT_API
 
 //  *** Draft global constants, defined for internal use only ***
-#define ZAP_DOMAIN_DEFAULT  "global"           //  Default ZAP domain (auth)
+// Default ZAP domain (auth)
+#define ZAP_DOMAIN_DEFAULT	"global"
+
 
 //  *** Draft method, defined for internal use only ***
 //  Set the TCP port bound by the ROUTER peer-to-peer socket (beacon mode).
@@ -131,5 +133,8 @@ ZYRE_PRIVATE void
 #endif // ZYRE_BUILD_DRAFT_API
 
 //  Private constants
-#define REAP_INTERVAL	1000 //                   Once per second
+
+// Once per second
+#define REAP_INTERVAL	1000
+
 #endif

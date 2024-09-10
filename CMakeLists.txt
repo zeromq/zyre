@@ -126,7 +126,9 @@ set(OPTIONAL_LIBRARIES_STATIC)
 ########################################################################
 # LIBZMQ dependency
 ########################################################################
-find_package(libzmq REQUIRED)
+IF (NOT libzmq_FOUND)
+    find_package(libzmq REQUIRED)
+ENDIF(NOT libzmq_FOUND)
 IF (libzmq_FOUND)
     include_directories(${libzmq_INCLUDE_DIRS})
     list(APPEND MORE_LIBRARIES ${libzmq_LIBRARIES})
@@ -143,7 +145,9 @@ ENDIF (libzmq_FOUND)
 ########################################################################
 # CZMQ dependency
 ########################################################################
-find_package(czmq REQUIRED)
+IF (NOT czmq_FOUND)
+    find_package(czmq REQUIRED)
+ENDIF(NOT czmq_FOUND)
 IF (czmq_FOUND)
     include_directories(${czmq_INCLUDE_DIRS})
     list(APPEND MORE_LIBRARIES ${czmq_LIBRARIES})

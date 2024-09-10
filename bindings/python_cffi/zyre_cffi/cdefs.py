@@ -891,6 +891,11 @@ size_t
 zlist_t *
     zdir_list (zdir_t *self);
 
+// Returns a sorted list of char*; Each entry in the list is a path of a file
+// or directory contained in self.
+zlist_t *
+    zdir_list_paths (zdir_t *self);
+
 // Remove directory, optionally including all files that it contains, at
 // all levels. If force is false, will only remove the directory if empty.
 // If force is true, will remove all files and all subdirectories.
@@ -1635,6 +1640,10 @@ const char *
 const char *
     ziflist_netmask (ziflist_t *self);
 
+// Return the current interface MAC address as a printable string
+const char *
+    ziflist_mac (ziflist_t *self);
+
 // Return the list of interfaces.
 void
     ziflist_print (ziflist_t *self);
@@ -1694,13 +1703,13 @@ void *
     zlist_item (zlist_t *self);
 
 // Append an item to the end of the list, return 0 if OK or -1 if this
-// failed for some reason (out of memory). Note that if a duplicator has
+// failed for some reason (invalid input). Note that if a duplicator has
 // been set, this method will also duplicate the item.
 int
     zlist_append (zlist_t *self, void *item);
 
 // Push an item to the start of the list, return 0 if OK or -1 if this
-// failed for some reason (out of memory). Note that if a duplicator has
+// failed for some reason (invalid input). Note that if a duplicator has
 // been set, this method will also duplicate the item.
 int
     zlist_push (zlist_t *self, void *item);
@@ -1791,13 +1800,13 @@ zlistx_t *
 
 // Add an item to the head of the list. Calls the item duplicator, if any,
 // on the item. Resets cursor to list head. Returns an item handle on
-// success, NULL if memory was exhausted.
+// success.
 void *
     zlistx_add_start (zlistx_t *self, void *item);
 
 // Add an item to the tail of the list. Calls the item duplicator, if any,
 // on the item. Resets cursor to list head. Returns an item handle on
-// success, NULL if memory was exhausted.
+// success.
 void *
     zlistx_add_end (zlistx_t *self, void *item);
 
@@ -1902,8 +1911,7 @@ void
 // duplicator, if any, on the item. If low_value is true, starts searching
 // from the start of the list, otherwise searches from the end. Use the item
 // comparator, if any, to find where to place the new node. Returns a handle
-// to the new node, or NULL if memory was exhausted. Resets the cursor to the
-// list head.
+// to the new node. Resets the cursor to the list head.
 void *
     zlistx_insert (zlistx_t *self, void *item, bool low_value);
 
@@ -2360,19 +2368,19 @@ void
 
 // Connects process stdin with a readable ('>', connect) zeromq socket. If
 // socket argument is NULL, zproc creates own managed pair of inproc
-// sockets.  The writable one is then accessbile via zproc_stdin method.
+// sockets.  The writable one is then accessible via zproc_stdin method.
 void
     zproc_set_stdin (zproc_t *self, void *socket);
 
 // Connects process stdout with a writable ('@', bind) zeromq socket. If
 // socket argument is NULL, zproc creates own managed pair of inproc
-// sockets.  The readable one is then accessbile via zproc_stdout method.
+// sockets.  The readable one is then accessible via zproc_stdout method.
 void
     zproc_set_stdout (zproc_t *self, void *socket);
 
 // Connects process stderr with a writable ('@', bind) zeromq socket. If
 // socket argument is NULL, zproc creates own managed pair of inproc
-// sockets.  The readable one is then accessbile via zproc_stderr method.
+// sockets.  The readable one is then accessible via zproc_stderr method.
 void
     zproc_set_stderr (zproc_t *self, void *socket);
 
@@ -4649,6 +4657,11 @@ zosc_t *
 zosc_t *
     zosc_frommem (char *data, size_t size);
 
+// Create a new zosc message from a string. This the same syntax as
+// zosc_create but written as a single line string.
+zosc_t *
+    zosc_fromstring (const char *oscstring);
+
 // Create a new zosc message from the given format and arguments.
 // The format type tags are as follows:
 //   i - 32bit integer
@@ -4751,6 +4764,10 @@ zframe_t *
 // Transform a zframe into a zosc.
 zosc_t *
     zosc_unpack (zframe_t *frame);
+
+// Return a string describing the the OSC message. The returned string must be freed by the caller.
+char *
+    zosc_dump (zosc_t *self);
 
 // Dump OSC message to stdout, for debugging and tracing.
 void
