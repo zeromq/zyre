@@ -890,6 +890,64 @@ zyre_test (bool verbose)
     zstr_free (&command);
     zmsg_destroy (&msg);
 
+    // First node should also receive ENTER and JOINs from second node
+    msg = zyre_recv (node1);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "ENTER"));
+    zstr_free (&command);
+    assert (zmsg_size (msg) == 4);
+    peerid = zmsg_popstr (msg);
+    name = zmsg_popstr (msg);
+    assert (streq (name, "node2"));
+    zstr_free (&peerid);
+    zstr_free (&name);
+    zmsg_destroy (&msg);
+
+    msg = zyre_recv (node1);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "JOIN"));
+    zstr_free (&command);
+    assert (zmsg_size (msg) == 3);
+    zmsg_destroy (&msg);
+
+    msg = zyre_recv (node1);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "JOIN"));
+    zstr_free (&command);
+    assert (zmsg_size (msg) == 3);
+    zmsg_destroy (&msg);
+
+    // Test evasive timeout
+    const int evasive_test_interval = 100;
+    zyre_set_evasive_timeout (node1, evasive_test_interval);
+    // Refresh peers to apply new timeouts immediately
+    zyre_shouts (node1, "GLOBAL", "Hello again");
+    zyre_shouts (node2, "GLOBAL", "Hello again");
+    msg = zyre_recv (node1);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "SHOUT"));
+    zstr_free (&command);
+    zmsg_destroy (&msg);
+    msg = zyre_recv (node2);
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "SHOUT"));
+    zstr_free (&command);
+    zmsg_destroy (&msg);
+
+    int64_t recv_start = zclock_mono ();
+    msg = zyre_recv (node1);
+    assert ((zclock_mono () - recv_start) < (evasive_test_interval + 100));
+    assert (msg);
+    command = zmsg_popstr (msg);
+    assert (streq (command, "EVASIVE"));
+    zstr_free (&command);
+    zmsg_destroy (&msg);
+
     zyre_stop (node2);
 
     msg = zyre_recv (node2);

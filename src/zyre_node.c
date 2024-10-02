@@ -91,6 +91,17 @@ s_string_compare (void *item1, void *item2)
     return strcmp (str1, str2);
 }
 
+static int64_t
+s_reap_interval (zyre_node_t *self)
+{
+    uint64_t interval = self->evasive_timeout;
+    if (self->expired_timeout < interval)
+        interval = self->expired_timeout;
+    if (interval > REAP_INTERVAL)
+        interval = REAP_INTERVAL;
+    return interval;
+}
+
 //  --------------------------------------------------------------------------
 //  Constructor
 
@@ -1547,7 +1558,7 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
         zstr_sendm (self->outbox, "EVASIVE");
         zstr_sendm (self->outbox, zyre_peer_identity (peer));
         zstr_send (self->outbox, zyre_peer_name (peer));
-        if (zclock_mono () >= zyre_peer_evasive_at (peer) + REAP_INTERVAL) {
+        if (zclock_mono () >= zyre_peer_evasive_at (peer) + s_reap_interval (self)) {
             // Inform the calling application this peer is being silent
             // despite having tried to ping it. Something is wrong with
             // the connection to this peer (or with the network).
@@ -1555,7 +1566,7 @@ zyre_node_ping_peer (const char *key, void *item, void *argument)
             // before getting ping result and thus has poor meaning.
             if (self->verbose)
                 zsys_info ("(%s) peer '%s' has not answered ping after %d milliseconds (silent)",
-                           self->name, zyre_peer_name(peer), REAP_INTERVAL);
+                           self->name, zyre_peer_name(peer), s_reap_interval (self));
             zstr_sendm (self->outbox, "SILENT");
             zstr_sendm (self->outbox, zyre_peer_identity (peer));
             zstr_send (self->outbox, zyre_peer_name (peer));
@@ -1581,7 +1592,7 @@ zyre_node_actor (zsock_t *pipe, void *args)
     zsock_signal (self->pipe, 0);
 
     //  Loop until the agent is terminated one way or another
-    int64_t reap_at = zclock_mono () + REAP_INTERVAL;
+    int64_t last_reaped_at = zclock_mono ();
     while (!self->terminated) {
 
         // Start beacon as soon as we can
@@ -1635,10 +1646,8 @@ zyre_node_actor (zsock_t *pipe, void *args)
             zstr_free(&hostname);
         }
 
-        int timeout = (int) (reap_at - zclock_mono ());
-        if (timeout > REAP_INTERVAL)
-            timeout = REAP_INTERVAL;
-        else
+        // If nothing else happens, wait until the next reap
+        int timeout = (int) ((last_reaped_at + s_reap_interval (self)) - zclock_mono ());
         if (timeout < 0)
             timeout = 0;
 
@@ -1661,9 +1670,9 @@ zyre_node_actor (zsock_t *pipe, void *args)
             break;          //  Interrupted, check before expired
         else
         if (zpoller_expired (self->poller)) {
-            if (zclock_mono () >= reap_at) {
+            if (zclock_mono () >= (last_reaped_at + s_reap_interval (self))) {
                 void *item;
-                reap_at = zclock_mono () + REAP_INTERVAL;
+                last_reaped_at = zclock_mono ();
                 //  Ping all peers and reap any expired ones
                 for (item = zhash_first (self->peers); item != NULL;
                         item = zhash_next (self->peers))
