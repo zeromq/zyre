@@ -15,21 +15,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-24.04
             BUILD_TYPE: default
             DRAFT: enabled
-            CLANG_FORMAT: clang-format-11
-            PACKAGES: automake autoconf clang-format-11 git libzmq3-dev libczmq-dev asciidoc xmlto
-          - os: ubuntu-20.04
+            CLANG_FORMAT: clang-format-18
+            PACKAGES: automake autoconf clang-format-18 git libzmq3-dev libczmq-dev asciidoc xmlto
+          - os: ubuntu-24.04
             BUILD_TYPE: default
             DRAFT: disabled
-            CLANG_FORMAT: clang-format-11
-            PACKAGES: automake autoconf clang-format-11 git libzmq3-dev libczmq-dev
-          - os: ubuntu-20.04
+            CLANG_FORMAT: clang-format-18
+            PACKAGES: automake autoconf clang-format-18 git libzmq3-dev libczmq-dev
+          - os: ubuntu-24.04
             BUILD_TYPE: valgrind
             DRAFT: enabled
             PACKAGES: automake autoconf valgrind git libzmq3-dev libczmq-dev
-          - os: ubuntu-20.04
+          - os: ubuntu-24.04
             BUILD_TYPE: cmake
             DRAFT: enabled
             PACKAGES: cmake git libzmq3-dev libczmq-dev
@@ -45,11 +45,11 @@ jobs:
 # to have dependencies ready and pass configure script before making this check).
 # Note that the autotools variant will also require dependencies preinstalled to
 # pass its configure script:
-          - os: ubuntu-20.04
+          - os: ubuntu-24.04
             BUILD_TYPE: cmake
             DO_CLANG_FORMAT_CHECK: 1
-            CLANG_FORMAT: clang-format-11
-            PACKAGES: cmake clang-format-11 git libzmq3-dev libczmq-dev
+            CLANG_FORMAT: clang-format-18
+            PACKAGES: cmake clang-format-18 git libzmq3-dev libczmq-dev
     env:
 # Set CI_TIME: true to enable build-step profiling
 # Set CI_TRACE: true to enable shell script tracing
@@ -72,12 +72,12 @@ jobs:
       CI_SELFTEST: ${{ matrix.CI_SELFTEST }}
     steps:
     - name: Add debian packages
-      if: matrix.os == 'ubuntu-20.04'
+      if: matrix.os == 'ubuntu-24.04'
       uses: myci-actions/add-deb-repo@10
       with:
         repo-name: obs
-        repo: deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-stable/xUbuntu_20.04/ ./
-        keys-asc: https://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-stable/xUbuntu_20.04/Release.key
+        repo: deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-stable/xUbuntu_24.04/ ./
+        keys-asc: https://download.opensuse.org/repositories/network:/messaging:/zeromq:/git-stable/xUbuntu_24.04/Release.key
         install: ${{ matrix.PACKAGES }}
     - name: Add brew packages
       if: matrix.os == 'macos-latest'
@@ -87,7 +87,7 @@ jobs:
       with:
         path: zyre
     - name: build
-      if: matrix.os == 'ubuntu-20.04' || matrix.os == 'macos-latest'
+      if: matrix.os == 'ubuntu-24.04' || matrix.os == 'macos-latest'
       shell: bash
       working-directory: zyre
       run: ./ci_build.sh
