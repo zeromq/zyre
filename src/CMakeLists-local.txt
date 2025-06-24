@@ -1,6 +1,6 @@
 add_executable(
     chat
-    "${SOURCE_DIR}/examples/chat/chat.c"
+    "${PROJECT_SOURCE_DIR}/examples/chat/chat.c"
 )
 
 if (TARGET zyre)
@@ -18,5 +18,5 @@ target_link_libraries(
 )
 set_target_properties(
     chat
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${SOURCE_DIR}/examples/chat"
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/examples/chat"
 )

@@ -6,12 +6,13 @@
 ########################################################################
 # Project setup
 ########################################################################
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 2.8...4.0)
 project(zyre)
 enable_language(C)
 enable_testing()
 
-set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+include(GNUInstallDirs)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 # Select flags
 if(MSVC)
@@ -30,7 +31,7 @@ set(pkg_config_names_private "")
 # options
 ########################################################################
 if (NOT CMAKE_BUILD_TYPE)
-    if (EXISTS "${SOURCE_DIR}/.git")
+    if (EXISTS "${PROJECT_SOURCE_DIR}/.git")
         set (CMAKE_BUILD_TYPE Debug)
     else ()
 # http://xit0.org/2013/04/cmake-use-git-branch-and-commit-details-in-project/
@@ -76,7 +77,7 @@ if (NOT HAVE_NET_IF_H)
     CHECK_INCLUDE_FILE("net/if.h" HAVE_NET_IF_H)
 endif()
 
-file(REMOVE "${SOURCE_DIR}/src/platform.h")
+file(REMOVE "${PROJECT_SOURCE_DIR}/src/platform.h")
 
 file(WRITE "${PROJECT_BINARY_DIR}/platform.h.in" "
 #cmakedefine HAVE_LINUX_WIRELESS_H
@@ -93,7 +94,7 @@ if (WIN32)
     #so the sources have to be compiled as c++
     if (MSVC AND NOT (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
         enable_language(CXX)
-        file(GLOB sources "${SOURCE_DIR}/src/*.c")
+        file(GLOB sources "${PROJECT_SOURCE_DIR}/src/*.c")
         set_source_files_properties(
             ${sources}
             PROPERTIES LANGUAGE CXX
@@ -119,7 +120,7 @@ if (CYGWIN)
     set(MORE_LIBRARIES)
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${SOURCE_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}")
 set(OPTIONAL_LIBRARIES)
 set(OPTIONAL_LIBRARIES_STATIC)
 
@@ -186,14 +187,14 @@ set (zyre_headers
 )
 
 source_group ("Header Files" FILES ${zyre_headers})
-install(FILES ${zyre_headers} DESTINATION include)
+install(FILES ${zyre_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 ########################################################################
 # library
 ########################################################################
 
 
-include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}")
+include_directories("${PROJECT_SOURCE_DIR}/src" "${PROJECT_SOURCE_DIR}/include" "${PROJECT_BINARY_DIR}")
 set (zyre_sources
     src/zyre.c
     src/zyre_event.c
@@ -254,15 +255,12 @@ if (ZYRE_BUILD_SHARED)
 
   install(TARGETS zyre
     EXPORT zyre-targets
-    LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
-    ARCHIVE DESTINATION "lib${LIB_SUFFIX}" # .lib file
-    RUNTIME DESTINATION bin                # .dll file
   )
 
   target_include_directories(zyre
     PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
 endif()
 
@@ -291,15 +289,12 @@ if (ZYRE_BUILD_STATIC)
 
   install(TARGETS zyre-static
     EXPORT zyre-targets
-    LIBRARY DESTINATION "lib${LIB_SUFFIX}" # .so file
-    ARCHIVE DESTINATION "lib${LIB_SUFFIX}" # .lib file
-    RUNTIME DESTINATION bin                # .dll file
   )
 
   target_include_directories(zyre-static
     PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
   target_compile_definitions(zyre-static
     PUBLIC ZYRE_STATIC
@@ -316,21 +311,21 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/src/CMakeLists-local.txt) # Optional project
 set (VERSION "2.0.1")
 set (prefix "${CMAKE_INSTALL_PREFIX}")
 set (exec_prefix "\${prefix}")
-set (libdir "\${prefix}/lib${LIB_SUFFIX}")
-set (includedir "\${prefix}/include")
+set (libdir "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+set (includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
 IF (ENABLE_DRAFTS)
     set (pkg_config_defines "-DZYRE_BUILD_DRAFT_API=1")
 ELSE (ENABLE_DRAFTS)
     set (pkg_config_defines "")
 ENDIF (ENABLE_DRAFTS)
 configure_file(
-    "${SOURCE_DIR}/src/libzyre.pc.in"
-    "${SOURCE_DIR}/src/libzyre.pc"
+    "${PROJECT_SOURCE_DIR}/src/libzyre.pc.in"
+    "${PROJECT_SOURCE_DIR}/src/libzyre.pc"
 @ONLY)
 
 install(
-    FILES "${SOURCE_DIR}/src/libzyre.pc"
-    DESTINATION "lib${LIB_SUFFIX}/pkgconfig"
+    FILES "${PROJECT_SOURCE_DIR}/src/libzyre.pc"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
 
 ########################################################################
@@ -340,8 +335,7 @@ include(CMakePackageConfigHelpers)
 if (WIN32)
   set(CMAKECONFIG_INSTALL_DIR "CMake" CACHE STRING "install path for zyreConfig.cmake")
 else()
-  # GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
-  set(CMAKECONFIG_INSTALL_DIR "share/cmake/zyre" CACHE STRING "install path for zyreConfig.cmake")
+  set(CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/zyre" CACHE STRING "install path for zyreConfig.cmake")
 endif()
 
 if (NOT CMAKE_VERSION VERSION_LESS 3.0)
@@ -366,7 +360,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/zyreConfig.cmake
 ########################################################################
 add_executable(
     perf_local
-    "${SOURCE_DIR}/src/perf_local.c"
+    "${PROJECT_SOURCE_DIR}/src/perf_local.c"
 )
 if (TARGET zyre)
 target_link_libraries(
@@ -389,7 +383,7 @@ target_link_libraries(
 endif()
 add_executable(
     perf_remote
-    "${SOURCE_DIR}/src/perf_remote.c"
+    "${PROJECT_SOURCE_DIR}/src/perf_remote.c"
 )
 if (TARGET zyre)
 target_link_libraries(
@@ -412,7 +406,7 @@ target_link_libraries(
 endif()
 add_executable(
     zpinger
-    "${SOURCE_DIR}/src/zpinger.c"
+    "${PROJECT_SOURCE_DIR}/src/zpinger.c"
 )
 if (TARGET zyre)
 target_link_libraries(
@@ -433,12 +427,10 @@ target_link_libraries(
     ${OPTIONAL_LIBRARIES_STATIC}
 )
 endif()
-install(TARGETS zpinger
-    RUNTIME DESTINATION bin
-)
+install(TARGETS zpinger)
 add_executable(
     ztester_beacon
-    "${SOURCE_DIR}/src/ztester_beacon.c"
+    "${PROJECT_SOURCE_DIR}/src/ztester_beacon.c"
 )
 if (TARGET zyre)
 target_link_libraries(
@@ -461,7 +453,7 @@ target_link_libraries(
 endif()
 add_executable(
     ztester_gossip
-    "${SOURCE_DIR}/src/ztester_gossip.c"
+    "${PROJECT_SOURCE_DIR}/src/ztester_gossip.c"
 )
 if (TARGET zyre)
 target_link_libraries(
@@ -484,7 +476,7 @@ target_link_libraries(
 endif()
 add_executable(
     zyre_selftest
-    "${SOURCE_DIR}/src/zyre_selftest.c"
+    "${PROJECT_SOURCE_DIR}/src/zyre_selftest.c"
 )
 if (TARGET zyre)
 target_link_libraries(
@@ -579,36 +571,35 @@ include(CTest)
 # cleanup
 ########################################################################
 if (NOT TARGET distclean)
-    add_custom_target (distclean @echo Cleaning for source distribution)
+    if (CMAKE_VERSION VERSION_LESS 3.17)
+        set(rm_command rm -rf)
+    else()
+        set(rm_command ${CMAKE_COMMAND} -E rm -rf --)
+    endif()
+    set(cmake_generated ${PROJECT_BINARY_DIR}/CMakeCache.txt
+                        ${PROJECT_BINARY_DIR}/cmake_install.cmake
+                        ${PROJECT_BINARY_DIR}/Makefile
+                        ${PROJECT_BINARY_DIR}/CMakeFiles
+                        ${PROJECT_BINARY_DIR}/CTestTestfile.cmake
+                        ${PROJECT_BINARY_DIR}/DartConfiguration.tcl
+                        ${PROJECT_BINARY_DIR}/Testing
+                        ${PROJECT_BINARY_DIR}/compile_commands.json
+                        ${PROJECT_BINARY_DIR}/platform.h
+                        ${PROJECT_BINARY_DIR}/src/libzyre.pc
+                        ${PROJECT_BINARY_DIR}/src/libzyre.so
+                        ${PROJECT_BINARY_DIR}/src/zyre_selftest
+                        ${PROJECT_BINARY_DIR}/src/perf_local
+                        ${PROJECT_BINARY_DIR}/src/perf_remote
+                        ${PROJECT_BINARY_DIR}/src/zpinger
+                        ${PROJECT_BINARY_DIR}/src/ztester_beacon
+                        ${PROJECT_BINARY_DIR}/src/ztester_gossip
+                        ${PROJECT_BINARY_DIR}/src/zyre_selftest
+    )
+    add_custom_target(distclean
+        COMMAND ${rm_command} CMakeTmp ${cmake_generated}
+        COMMENT Cleaning for source distribution
+    )
 endif()
-
-set(cmake_generated ${PROJECT_BINARY_DIR}/CMakeCache.txt
-                    ${PROJECT_BINARY_DIR}/cmake_install.cmake
-                    ${PROJECT_BINARY_DIR}/Makefile
-                    ${PROJECT_BINARY_DIR}/CMakeFiles
-                    ${PROJECT_BINARY_DIR}/CTestTestfile.cmake
-                    ${PROJECT_BINARY_DIR}/DartConfiguration.tcl
-                    ${PROJECT_BINARY_DIR}/Testing
-                    ${PROJECT_BINARY_DIR}/compile_commands.json
-                    ${PROJECT_BINARY_DIR}/platform.h
-                    ${PROJECT_BINARY_DIR}/src/libzyre.pc
-                    ${PROJECT_BINARY_DIR}/src/libzyre.so
-                    ${PROJECT_BINARY_DIR}/src/zyre_selftest
-                    ${PROJECT_BINARY_DIR}/src/perf_local
-                    ${PROJECT_BINARY_DIR}/src/perf_remote
-                    ${PROJECT_BINARY_DIR}/src/zpinger
-                    ${PROJECT_BINARY_DIR}/src/ztester_beacon
-                    ${PROJECT_BINARY_DIR}/src/ztester_gossip
-                    ${PROJECT_BINARY_DIR}/src/zyre_selftest
-)
-
-add_custom_command(
-    DEPENDS clean
-    COMMENT "distribution clean"
-    COMMAND rm
-    ARGS    -rf CMakeTmp ${cmake_generated}
-    TARGET  distclean
-)
 
 include(ClangFormat OPTIONAL)
 
