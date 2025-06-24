@@ -536,9 +536,6 @@ AC_ARG_ENABLE([perf_local],
 AM_CONDITIONAL([ENABLE_PERF_LOCAL], [test x$enable_perf_local != xno])
 AM_COND_IF([ENABLE_PERF_LOCAL], [AC_MSG_NOTICE([ENABLE_PERF_LOCAL defined])])
 
-AM_CONDITIONAL([ENABLE_ZYRE_SELFTEST], [test x$enable_zyre_selftest != xno])
-AM_COND_IF([ENABLE_ZYRE_SELFTEST], [AC_MSG_NOTICE([ENABLE_ZYRE_SELFTEST defined])])
-
 # Check for perf_remote intent
 AC_ARG_ENABLE([perf_remote],
     AS_HELP_STRING([--enable-perf_remote],
@@ -548,9 +545,6 @@ AC_ARG_ENABLE([perf_remote],
 
 AM_CONDITIONAL([ENABLE_PERF_REMOTE], [test x$enable_perf_remote != xno])
 AM_COND_IF([ENABLE_PERF_REMOTE], [AC_MSG_NOTICE([ENABLE_PERF_REMOTE defined])])
-
-AM_CONDITIONAL([ENABLE_ZYRE_SELFTEST], [test x$enable_zyre_selftest != xno])
-AM_COND_IF([ENABLE_ZYRE_SELFTEST], [AC_MSG_NOTICE([ENABLE_ZYRE_SELFTEST defined])])
 
 # Check for zpinger intent
 AC_ARG_ENABLE([zpinger],
@@ -562,9 +556,6 @@ AC_ARG_ENABLE([zpinger],
 AM_CONDITIONAL([ENABLE_ZPINGER], [test x$enable_zpinger != xno])
 AM_COND_IF([ENABLE_ZPINGER], [AC_MSG_NOTICE([ENABLE_ZPINGER defined])])
 
-AM_CONDITIONAL([ENABLE_ZYRE_SELFTEST], [test x$enable_zyre_selftest != xno])
-AM_COND_IF([ENABLE_ZYRE_SELFTEST], [AC_MSG_NOTICE([ENABLE_ZYRE_SELFTEST defined])])
-
 # Check for ztester_beacon intent
 AC_ARG_ENABLE([ztester_beacon],
     AS_HELP_STRING([--enable-ztester_beacon],
@@ -574,9 +565,6 @@ AC_ARG_ENABLE([ztester_beacon],
 
 AM_CONDITIONAL([ENABLE_ZTESTER_BEACON], [test x$enable_ztester_beacon != xno])
 AM_COND_IF([ENABLE_ZTESTER_BEACON], [AC_MSG_NOTICE([ENABLE_ZTESTER_BEACON defined])])
-
-AM_CONDITIONAL([ENABLE_ZYRE_SELFTEST], [test x$enable_zyre_selftest != xno])
-AM_COND_IF([ENABLE_ZYRE_SELFTEST], [AC_MSG_NOTICE([ENABLE_ZYRE_SELFTEST defined])])
 
 # Check for ztester_gossip intent
 AC_ARG_ENABLE([ztester_gossip],
@@ -588,18 +576,12 @@ AC_ARG_ENABLE([ztester_gossip],
 AM_CONDITIONAL([ENABLE_ZTESTER_GOSSIP], [test x$enable_ztester_gossip != xno])
 AM_COND_IF([ENABLE_ZTESTER_GOSSIP], [AC_MSG_NOTICE([ENABLE_ZTESTER_GOSSIP defined])])
 
-AM_CONDITIONAL([ENABLE_ZYRE_SELFTEST], [test x$enable_zyre_selftest != xno])
-AM_COND_IF([ENABLE_ZYRE_SELFTEST], [AC_MSG_NOTICE([ENABLE_ZYRE_SELFTEST defined])])
-
 # Check for zyre_selftest intent
 AC_ARG_ENABLE([zyre_selftest],
     AS_HELP_STRING([--enable-zyre_selftest],
         [Compile 'zyre_selftest' in src [default=yes]]),
     [enable_zyre_selftest=$enableval],
     [enable_zyre_selftest=yes])
-
-AM_CONDITIONAL([ENABLE_ZYRE_SELFTEST], [test x$enable_zyre_selftest != xno])
-AM_COND_IF([ENABLE_ZYRE_SELFTEST], [AC_MSG_NOTICE([ENABLE_ZYRE_SELFTEST defined])])
 
 AM_CONDITIONAL([ENABLE_ZYRE_SELFTEST], [test x$enable_zyre_selftest != xno])
 AM_COND_IF([ENABLE_ZYRE_SELFTEST], [AC_MSG_NOTICE([ENABLE_ZYRE_SELFTEST defined])])
