@@ -931,7 +931,7 @@ zyre_node_remove_peer (zyre_node_t *self, zyre_peer_t *peer)
 
 #ifdef ZYRE_BUILD_DRAFT_API
     //  Clean this peer in our gossip table if needed
-    if (self->gossip_bind)
+    if (self->gossip)
         zstr_sendx (self->gossip, "UNPUBLISH", zyre_peer_identity (peer), NULL);
 #endif
 
