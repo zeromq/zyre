@@ -1082,18 +1082,10 @@ zyre_node_recv_peer (zyre_node_t *self)
     zyre_peer_t *peer = (zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid));
     if (zre_msg_id (msg) == ZRE_MSG_HELLO) {
         if (peer) {
-            //  ignore already existing peers
+            //  Remove fake peers
             if (zyre_peer_ready (peer)) {
-                /*
-                 NB: we ignore peer here instead of destroying due to possible erroneous
-                 destruction in case of rapid deconnection/reconnection of our node, (e.g.,
-                 when wrongly using zyre_start/zyre_stop), in which case the ZRE_MSG_HELLO
-                 may be received twice from other peers and subsequent peers removal would
-                 provoke a HELLO/GOODBYE storm with the erroneously destroyed peers.
-                 In the case of a peer reconnecting with the same endpoint and the previous
-                 one being non-responsive, ping mechanism will take care of cleaning it.
-                 */
-                return;
+                zyre_node_remove_peer (self, peer);
+                assert (!(zyre_peer_t *) zhash_lookup (self->peers, zuuid_str (uuid)));
             }
             else
             if (streq (zyre_peer_endpoint (peer), self->endpoint)) {
