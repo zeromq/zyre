@@ -31,6 +31,8 @@ int main (int argc, char *argv [])
 {
     bool verbose = false;
     char *iface = NULL;
+    char *endpoint = NULL;
+    char *gossip = NULL;
     int ipv6 = 0;
     int curve = 0;
     int argn;
@@ -41,6 +43,8 @@ int main (int argc, char *argv [])
             puts ("  --help / -h            this help");
             puts ("  --verbose / -v         verbose test output");
             puts ("  --interface / -i       use this interface");
+            puts ("  --endpoint / -e        set node endpoint");
+            puts ("  --gossip / -g          connect to gossip endpoint");
             puts ("  --ipv6 / -6            use IPv6");
             puts ("  --curve / -c           use CURVE encryption");
             return 0;
@@ -52,6 +56,14 @@ int main (int argc, char *argv [])
         if (streq (argv [argn], "--interface")
         ||  streq (argv [argn], "-i"))
             iface = argv [++argn];
+        else
+        if (streq (argv [argn], "--endpoint")
+        ||  streq (argv [argn], "-e"))
+            endpoint = argv [++argn];
+        else
+        if (streq (argv [argn], "--gossip")
+        ||  streq (argv [argn], "-g"))
+            gossip = argv [++argn];
         else
         if (streq (argv [argn], "--ipv6")
         ||  streq (argv [argn], "-6"))
@@ -80,6 +92,19 @@ int main (int argc, char *argv [])
         zyre_set_verbose (zyre);
     if (iface)
         zyre_set_interface (zyre, iface);
+    if (gossip) {
+        zsys_info ("Connecting to gossip endpoint at %s", gossip);
+        zyre_gossip_connect (zyre, "%s", gossip);
+    }
+    if (endpoint) {
+        zsys_info ("Setting endpoint to %s", endpoint);
+        int rc = zyre_set_endpoint (zyre, "%s", endpoint);
+        if (rc != 0) {
+            zsys_error ("Could not set endpoint '%s'", endpoint);
+            zyre_destroy (&zyre);
+            return 1;
+        }
+    }
     zactor_t *auth = NULL;
 #ifdef ZYRE_BUILD_DRAFT_API
     //  DRAFT-API: Security
