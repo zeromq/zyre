@@ -1281,8 +1281,12 @@ zre_msg_send (zre_msg_t *self, zsock_t *output)
     }
 
     //  Now send the data frame
-    zmq_msg_send (&frame, zsock_resolve (output), --nbr_frames? ZMQ_SNDMORE: 0);
-
+    int num_bytes = zmq_msg_send (&frame, zsock_resolve (output), --nbr_frames? ZMQ_SNDMORE: 0);
+    if(num_bytes < 0) {
+        zmq_msg_close(&frame);
+        return -1;
+    }
+    
     //  Now send the content if necessary
     if (have_content) {
         if (self->content) {

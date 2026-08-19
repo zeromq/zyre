@@ -268,6 +268,7 @@ zyre_peer_send (zyre_peer_t *self, zre_msg_t **msg_p)
                     zsys_info ("(%s) disconnect from peer (EAGAIN): name=%s",
                         self->origin, self->name);
                 zyre_peer_disconnect (self);
+                zre_msg_destroy (msg_p);
                 return -1;
             }
             //  Can't get any other error here
